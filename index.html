@@ -11,44 +11,35 @@
     --err:#b23b3b; --errbg:#fbeaea; --muted:#6b6862;
   }
   *{box-sizing:border-box}
-  body{
-    margin:0; min-height:100vh; background:var(--ivory); color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  }
+  body{ margin:0; min-height:100vh; background:var(--ivory); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
   .wrap{ max-width:520px; margin:0 auto; padding:20px 16px 48px; }
-
-  /* header */
   .top{ display:flex; align-items:center; justify-content:space-between; padding:12px 2px 22px; }
   .brand .name{ font-size:19px; letter-spacing:5px; font-weight:600; }
   .brand .sub{ font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-top:2px; }
   .logout{ background:none; border:1px solid var(--line); color:var(--muted);
     border-radius:20px; padding:7px 14px; font-size:13px; cursor:pointer; }
-
-  /* login */
   .login-card{ background:var(--card); border:1px solid var(--line); border-radius:16px;
     padding:28px 24px; box-shadow:0 10px 40px rgba(0,0,0,.06); margin-top:40px; }
   .login-card h1{ font-size:17px; text-align:center; margin:0 0 4px; }
   .login-card .lead{ text-align:center; color:var(--muted); font-size:13px; margin:0 0 20px; }
   label{ display:block; font-size:12px; color:var(--muted); margin:14px 0 6px; }
-  input{ width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:10px;
-    font-size:15px; background:#fafafa; }
-  input:focus{ outline:none; border-color:var(--ink); background:#fff; }
+  input,textarea{ width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:10px;
+    font-size:15px; background:#fafafa; font-family:inherit; }
+  input:focus,textarea:focus{ outline:none; border-color:var(--ink); background:#fff; }
   button.primary{ width:100%; margin-top:22px; padding:14px; border:none; border-radius:10px;
     background:var(--ink); color:var(--ivory); font-size:15px; letter-spacing:.5px; cursor:pointer; }
   button.primary:disabled{ opacity:.5; cursor:default; }
+  button.ghost{ width:100%; margin-top:10px; padding:13px; border:1px solid var(--line);
+    border-radius:10px; background:#fff; color:var(--ink); font-size:14px; cursor:pointer; }
   .msg{ margin-top:16px; font-size:13px; padding:12px 14px; border-radius:10px; display:none; }
   .msg.show{ display:block; }
   .msg.err{ background:var(--errbg); color:var(--err); }
-
-  /* dashboard */
   .greet{ font-size:22px; font-weight:600; margin:4px 2px 2px; }
   .greet .sub{ font-size:14px; color:var(--muted); font-weight:400; margin-top:2px; }
-  .card{ background:var(--card); border:1px solid var(--line); border-radius:14px;
-    padding:18px; margin-top:14px; }
-  .card h2{ font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--muted);
-    margin:0 0 12px; font-weight:600; }
-  .row{ display:flex; justify-content:space-between; align-items:baseline; padding:6px 0;
-    font-size:15px; gap:12px; }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-top:14px; }
+  .card h2{ font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin:0 0 12px; font-weight:600; }
+  .row{ display:flex; justify-content:space-between; align-items:baseline; padding:6px 0; font-size:15px; gap:12px; }
   .row .k{ color:var(--muted); font-size:13px; }
   .row .v{ text-align:right; font-weight:500; word-break:break-word; }
   .badge{ display:inline-block; padding:4px 12px; border-radius:20px; font-size:13px; font-weight:600; }
@@ -58,32 +49,43 @@
   .sub-note{ margin-top:12px; font-size:13px; padding:10px 12px; border-radius:10px; }
   .sub-note.warn{ background:var(--warnbg); color:var(--warn); }
   .sub-note.err{ background:var(--errbg); color:var(--err); }
-
-  .soon{ opacity:.6; }
-  .soon .card{ border-style:dashed; }
-  .soon .tag{ float:right; font-size:11px; background:var(--ivory); border:1px solid var(--line);
-    border-radius:12px; padding:2px 9px; color:var(--muted); letter-spacing:.5px; }
-  .soon p{ margin:0; font-size:13px; color:var(--muted); }
-
+  .nav-card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px;
+    margin-top:14px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
+  .nav-card:active{ background:#fafafa; }
+  .nav-card .t{ font-weight:600; font-size:15px; }
+  .nav-card .d{ font-size:13px; color:var(--muted); margin-top:3px; }
+  .nav-card .chev{ color:var(--muted); font-size:22px; }
+  .count{ background:var(--ivory); border:1px solid var(--line); border-radius:12px; padding:2px 10px; font-size:12px; color:var(--muted); }
+  .subtop{ display:flex; align-items:center; gap:10px; padding:10px 2px 16px; }
+  .back{ background:none; border:none; font-size:15px; color:var(--muted); cursor:pointer; padding:6px 4px; }
+  .subtop h1{ font-size:19px; margin:0; }
+  .cli-item{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px;
+    margin-top:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
+  .cli-item:active{ background:#fafafa; }
+  .cli-item .nm{ font-weight:600; font-size:15px; }
+  .cli-item .ph{ font-size:13px; color:var(--muted); margin-top:2px; }
+  .empty{ text-align:center; color:var(--muted); padding:40px 20px; font-size:14px; }
+  .mgrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px 12px; margin-top:4px; }
+  .mgrid label{ margin:6px 0 4px; }
+  .mline{ display:flex; justify-content:space-between; padding:7px 0; font-size:15px; border-bottom:1px solid var(--line); }
+  .mline:last-child{ border-bottom:none; }
+  .mline .k{ color:var(--muted); font-size:14px; }
+  .mline .v{ font-weight:600; }
+  .del{ width:100%; margin-top:10px; padding:12px; border:1px solid var(--errbg); border-radius:10px;
+    background:var(--errbg); color:var(--err); font-size:14px; cursor:pointer; }
   .foot{ text-align:center; font-size:11px; color:var(--muted); margin-top:28px; }
   .center{ text-align:center; color:var(--muted); padding:60px 20px; font-size:14px; }
   .hidden{ display:none; }
+  .fab{ position:fixed; bottom:22px; left:50%; transform:translateX(-50%); max-width:490px; width:calc(100% - 32px);
+    padding:15px; border:none; border-radius:12px; background:var(--ink); color:var(--ivory); font-size:15px;
+    letter-spacing:.3px; cursor:pointer; box-shadow:0 6px 24px rgba(0,0,0,.18); }
 </style>
 </head>
 <body>
 <div class="wrap">
-
-  <!-- CHARGEMENT -->
   <div id="loading" class="center">Chargement…</div>
-
-  <!-- CONNEXION -->
   <div id="login" class="hidden">
-    <div class="top">
-      <div class="brand">
-        <div class="name">SANAAPRO</div>
-        <div class="sub">votre atelier, en ligne</div>
-      </div>
-    </div>
+    <div class="top"><div class="brand"><div class="name">SANAAPRO</div><div class="sub">votre atelier, en ligne</div></div></div>
     <div class="login-card">
       <h1>Connexion à votre espace</h1>
       <p class="lead">Entrez les identifiants créés à l'inscription.</p>
@@ -96,20 +98,12 @@
     </div>
     <div class="foot">SanaaPro — propulsé par votre atelier</div>
   </div>
-
-  <!-- TABLEAU DE BORD -->
   <div id="dash" class="hidden">
     <div class="top">
-      <div class="brand">
-        <div class="name">SANAAPRO</div>
-        <div class="sub">votre atelier, en ligne</div>
-      </div>
+      <div class="brand"><div class="name">SANAAPRO</div><div class="sub">votre atelier, en ligne</div></div>
       <button class="logout" id="logout-btn">Déconnexion</button>
     </div>
-
     <div class="greet">Bonjour <span id="d-owner"></span><div class="sub" id="d-name"></div></div>
-
-    <!-- Abonnement -->
     <div class="card">
       <h2>Abonnement</h2>
       <div class="row"><span class="k">Statut</span><span class="v"><span id="d-badge" class="badge"></span></span></div>
@@ -117,8 +111,15 @@
       <div class="row"><span class="k">Échéance</span><span class="v" id="d-expiry"></span></div>
       <div id="d-subnote" class="sub-note hidden"></div>
     </div>
-
-    <!-- Infos boutique -->
+    <div class="nav-card" id="open-clientes">
+      <div><div class="t">Clientes &amp; mesures</div><div class="d">Vos clientes et leurs mesures</div></div>
+      <div style="display:flex;align-items:center;gap:10px"><span class="count" id="cli-count">—</span><span class="chev">›</span></div>
+    </div>
+    <div class="card" style="opacity:.6;border-style:dashed">
+      <span style="float:right;font-size:11px;background:var(--ivory);border:1px solid var(--line);border-radius:12px;padding:2px 9px;color:var(--muted)">BIENTÔT</span>
+      <h2>Commandes</h2>
+      <p style="margin:0;font-size:13px;color:var(--muted)">Suivez vos commandes de couture, du devis à la livraison.</p>
+    </div>
     <div class="card">
       <h2>Ma boutique</h2>
       <div class="row"><span class="k">Nom</span><span class="v" id="d-shopname"></span></div>
@@ -126,27 +127,57 @@
       <div class="row"><span class="k">Email</span><span class="v" id="d-email"></span></div>
       <div class="row" id="d-wa-row"><span class="k">WhatsApp</span><span class="v" id="d-wa"></span></div>
     </div>
-
-    <!-- Prochaines étapes -->
-    <div class="soon">
-      <div class="card"><span class="tag">BIENTÔT</span><h2>Clientes &amp; mesures</h2>
-        <p>Enregistrez vos clientes et leurs mesures pour les retrouver à chaque commande.</p></div>
-      <div class="card"><span class="tag">BIENTÔT</span><h2>Commandes</h2>
-        <p>Suivez vos commandes de couture, du devis à la livraison.</p></div>
-    </div>
-
     <div class="foot">SanaaPro — propulsé par votre atelier</div>
   </div>
-
+  <div id="clientes" class="hidden">
+    <div class="subtop"><button class="back" id="cli-back">‹ Retour</button><h1>Clientes</h1></div>
+    <div id="cli-list"></div>
+    <div id="cli-empty" class="empty hidden">Aucune cliente pour le moment.<br>Ajoutez-en une avec le bouton ci-dessous.</div>
+    <div style="height:70px"></div>
+    <button class="fab" id="cli-add">+ Nouvelle cliente</button>
+  </div>
+  <div id="fiche" class="hidden">
+    <div class="subtop"><button class="back" id="fiche-back">‹ Clientes</button><h1 id="f-name">Cliente</h1></div>
+    <div class="card">
+      <h2>Coordonnées</h2>
+      <div class="row" id="f-phone-row"><span class="k">Téléphone</span><span class="v" id="f-phone"></span></div>
+      <div class="row" id="f-notes-row"><span class="k">Notes</span><span class="v" id="f-notes"></span></div>
+    </div>
+    <div class="card">
+      <h2>Mesures (cm)</h2>
+      <div id="f-mesures"></div>
+    </div>
+    <button class="ghost" id="f-edit">Modifier la fiche</button>
+    <button class="del" id="f-del">Supprimer cette cliente</button>
+    <div style="height:20px"></div>
+  </div>
+  <div id="form" class="hidden">
+    <div class="subtop"><button class="back" id="form-back">‹ Annuler</button><h1 id="form-title">Nouvelle cliente</h1></div>
+    <div class="card">
+      <h2>Coordonnées</h2>
+      <label>Nom de la cliente *</label>
+      <input id="in-name" type="text" placeholder="Ex. Awa Diallo">
+      <label>Téléphone / WhatsApp</label>
+      <input id="in-phone" type="tel" placeholder="+220 …">
+      <label>Notes (optionnel)</label>
+      <textarea id="in-notes" rows="2" placeholder="Préférences, tissu, remarques…"></textarea>
+    </div>
+    <div class="card">
+      <h2>Mesures (cm)</h2>
+      <div class="mgrid" id="in-mesures"></div>
+    </div>
+    <button class="primary" id="form-save">Enregistrer</button>
+    <div class="msg err" id="form-msg"></div>
+    <div style="height:24px"></div>
+  </div>
 </div>
-
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { getFirestore, doc, getDoc }
+  import { getFirestore, doc, getDoc, collection, addDoc, getDocs, updateDoc,
+           deleteDoc, query, orderBy, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
   const firebaseConfig = {
     apiKey: "AIzaSyCqfAGGU7yFs_QYg70u3e5cNYPXQjRHzsI",
     authDomain: "sanaapro-app.firebaseapp.com",
@@ -155,96 +186,155 @@
     messagingSenderId: "451762519937",
     appId: "1:451762519937:web:0507928bc9f6ef0c937280"
   };
-
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
-
+  const MESURES = [
+    ["poitrine","Tour de poitrine"], ["taille","Tour de taille"],
+    ["bassin","Tour de bassin"], ["epaule","Épaule"],
+    ["carrure","Carrure dos"], ["longCorsage","Longueur corsage"],
+    ["longManche","Longueur manche"], ["tourManche","Tour de manche"],
+    ["longRobe","Longueur robe"], ["longJupe","Longueur jupe"],
+    ["longPantalon","Longueur pantalon"], ["cuisse","Tour de cuisse"],
+    ["cou","Tour de cou"], ["poignet","Tour de poignet"]
+  ];
   const $ = id => document.getElementById(id);
-  const show = view => {
-    ["loading","login","dash"].forEach(v => $(v).classList.add("hidden"));
-    $(view).classList.remove("hidden");
-  };
-
-  // --- Connexion ---
+  const views = ["loading","login","dash","clientes","fiche","form"];
+  const show = v => { views.forEach(x=>$(x).classList.add("hidden")); $(v).classList.remove("hidden"); window.scrollTo(0,0); };
+  let BID = null, editingId = null, currentCliente = null;
   $("login-btn").addEventListener("click", async () => {
-    const email = $("email").value.trim();
-    const pass = $("pass").value;
-    const msg = $("login-msg");
+    const email = $("email").value.trim(), pass = $("pass").value, msg = $("login-msg");
     msg.classList.remove("show");
-    if(!email || !pass){ msg.textContent = "Renseigne ton email et ton mot de passe."; msg.classList.add("show"); return; }
+    if(!email || !pass){ msg.textContent="Renseigne ton email et ton mot de passe."; msg.classList.add("show"); return; }
     $("login-btn").disabled = true;
-    try{
-      await signInWithEmailAndPassword(auth, email, pass);
-      // la suite est gérée par onAuthStateChanged
-    }catch(e){
-      let m = "Connexion impossible. Réessaie.";
-      if(e.code === "auth/invalid-credential" || e.code === "auth/wrong-password" || e.code === "auth/user-not-found")
-        m = "Email ou mot de passe incorrect.";
-      else if(e.code === "auth/invalid-email") m = "Email invalide.";
-      else if(e.code === "auth/too-many-requests") m = "Trop de tentatives. Patiente un instant.";
-      msg.textContent = m; msg.classList.add("show");
-      $("login-btn").disabled = false;
+    try{ await signInWithEmailAndPassword(auth, email, pass); }
+    catch(e){
+      let m="Connexion impossible. Réessaie.";
+      if(["auth/invalid-credential","auth/wrong-password","auth/user-not-found"].includes(e.code)) m="Email ou mot de passe incorrect.";
+      else if(e.code==="auth/invalid-email") m="Email invalide.";
+      else if(e.code==="auth/too-many-requests") m="Trop de tentatives. Patiente un instant.";
+      msg.textContent=m; msg.classList.add("show"); $("login-btn").disabled=false;
     }
   });
-
   $("logout-btn").addEventListener("click", () => signOut(auth));
-
-  // --- État de connexion ---
   onAuthStateChanged(auth, async (user) => {
-    if(!user){ show("login"); $("login-btn").disabled = false; return; }
+    if(!user){ show("login"); $("login-btn").disabled=false; return; }
     show("loading");
     try{
-      const snap = await getDoc(doc(db, "boutiques", user.uid));
-      if(!snap.exists()){
-        // compte sans boutique (ex. admin)
-        $("loading").textContent = "Aucune boutique liée à ce compte.";
-        show("loading");
-        return;
-      }
-      renderDashboard(snap.data());
-      show("dash");
-    }catch(e){
-      $("loading").textContent = "Impossible de charger votre espace. Réessaie.";
-      show("loading");
-    }
+      const snap = await getDoc(doc(db,"boutiques",user.uid));
+      if(!snap.exists()){ $("loading").textContent="Aucune boutique liée à ce compte."; show("loading"); return; }
+      BID = user.uid; renderDashboard(snap.data()); refreshCount(); show("dash");
+    }catch(e){ $("loading").textContent="Impossible de charger votre espace. Réessaie."; show("loading"); }
   });
-
   function renderDashboard(b){
-    $("d-owner").textContent = b.ownerName || "";
-    $("d-name").textContent = b.name || "";
-    $("d-shopname").textContent = b.name || "—";
-    $("d-slug").textContent = b.slug || "—";
-    $("d-email").textContent = b.email || "—";
-    if(b.whatsapp){ $("d-wa").textContent = b.whatsapp; }
-    else { $("d-wa-row").style.display = "none"; }
-
-    const sub = b.subscription || {};
-    $("d-plan").textContent = sub.plan === "trial" ? "Essai gratuit" : (sub.plan || "—");
-
-    const badge = $("d-badge");
-    const note = $("d-subnote");
-    note.className = "sub-note hidden";
-
+    $("d-owner").textContent = b.ownerName||"";
+    $("d-name").textContent = b.name||"";
+    $("d-shopname").textContent = b.name||"—";
+    $("d-slug").textContent = b.slug||"—";
+    $("d-email").textContent = b.email||"—";
+    if(b.whatsapp){ $("d-wa").textContent = b.whatsapp; } else { $("d-wa-row").style.display="none"; }
+    const sub=b.subscription||{}, badge=$("d-badge"), note=$("d-subnote");
+    note.className="sub-note hidden";
+    $("d-plan").textContent = sub.plan==="trial" ? "Essai gratuit" : (sub.plan||"—");
     if(sub.expiresAt && sub.expiresAt.toDate){
-      const exp = sub.expiresAt.toDate();
-      $("d-expiry").textContent = exp.toLocaleDateString("fr-FR",
-        { day:"numeric", month:"long", year:"numeric" });
-      const days = Math.ceil((exp - new Date()) / 86400000);
-      if(days > 3){
-        badge.className = "badge ok"; badge.textContent = days + " jours restants";
-      } else if(days > 0){
-        badge.className = "badge warn"; badge.textContent = days + (days===1?" jour restant":" jours restants");
-        note.className = "sub-note warn"; note.textContent = "Votre essai se termine bientôt. Pensez à le renouveler pour ne pas perdre l'accès.";
-      } else {
-        badge.className = "badge err"; badge.textContent = "Expiré";
-        note.className = "sub-note err"; note.textContent = "Votre abonnement a expiré. Renouvelez-le pour continuer à modifier votre boutique.";
-      }
-    } else {
-      $("d-expiry").textContent = "—";
-      badge.className = "badge ok"; badge.textContent = sub.status || "actif";
-    }
+      const exp=sub.expiresAt.toDate();
+      $("d-expiry").textContent = exp.toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"});
+      const days=Math.ceil((exp-new Date())/86400000);
+      if(days>3){ badge.className="badge ok"; badge.textContent=days+" jours restants"; }
+      else if(days>0){ badge.className="badge warn"; badge.textContent=days+(days===1?" jour restant":" jours restants");
+        note.className="sub-note warn"; note.textContent="Votre essai se termine bientôt. Pensez à le renouveler."; }
+      else { badge.className="badge err"; badge.textContent="Expiré";
+        note.className="sub-note err"; note.textContent="Abonnement expiré. Renouvelez-le pour continuer à enregistrer."; }
+    } else { $("d-expiry").textContent="—"; badge.className="badge ok"; badge.textContent=sub.status||"actif"; }
   }
-</script>
-</body>
-</html>
+  $("open-clientes").addEventListener("click", loadClientes);
+  $("cli-back").addEventListener("click", ()=>show("dash"));
+  $("fiche-back").addEventListener("click", loadClientes);
+  $("cli-add").addEventListener("click", ()=>openForm(null));
+  $("form-back").addEventListener("click", ()=> editingId ? openFiche(editingId) : loadClientes());
+  $("f-edit").addEventListener("click", ()=>openForm(currentCliente));
+  async function refreshCount(){
+    try{ const s=await getDocs(collection(db,"boutiques",BID,"clientes")); $("cli-count").textContent=s.size; }
+    catch(e){ $("cli-count").textContent="—"; }
+  }
+  async function loadClientes(){
+    show("loading"); $("loading").textContent="Chargement…";
+    try{
+      const q = query(collection(db,"boutiques",BID,"clientes"), orderBy("name"));
+      const snap = await getDocs(q);
+      const list=$("cli-list"); list.innerHTML="";
+      if(snap.empty){ $("cli-empty").classList.remove("hidden"); }
+      else{
+        $("cli-empty").classList.add("hidden");
+        snap.forEach(d=>{
+          const c=d.data(), el=document.createElement("div");
+          el.className="cli-item";
+          el.innerHTML='<div><div class="nm"></div><div class="ph"></div></div><span class="chev" style="color:var(--muted);font-size:22px">›</span>';
+          el.querySelector(".nm").textContent=c.name||"(sans nom)";
+          el.querySelector(".ph").textContent=c.phone||"—";
+          el.addEventListener("click", ()=>openFiche(d.id));
+          list.appendChild(el);
+        });
+      }
+      show("clientes");
+    }catch(e){ $("loading").textContent="Impossible de charger les clientes."; show("loading"); }
+  }
+  async function openFiche(id){
+    show("loading"); $("loading").textContent="Chargement…";
+    try{
+      const snap=await getDoc(doc(db,"boutiques",BID,"clientes",id));
+      if(!snap.exists()){ loadClientes(); return; }
+      const c=snap.data(); currentCliente=id;
+      $("f-name").textContent=c.name||"Cliente";
+      if(c.phone){ $("f-phone").textContent=c.phone; $("f-phone-row").style.display=""; } else $("f-phone-row").style.display="none";
+      if(c.notes){ $("f-notes").textContent=c.notes; $("f-notes-row").style.display=""; } else $("f-notes-row").style.display="none";
+      const m=c.mesures||{}, box=$("f-mesures"); box.innerHTML=""; let any=false;
+      MESURES.forEach(([k,label])=>{
+        if(m[k]!==undefined && m[k]!==null && m[k]!==""){
+          any=true;
+          const row=document.createElement("div"); row.className="mline";
+          row.innerHTML='<span class="k"></span><span class="v"></span>';
+          row.querySelector(".k").textContent=label;
+          row.querySelector(".v").textContent=m[k]+" cm";
+          box.appendChild(row);
+        }
+      });
+      if(!any){ box.innerHTML='<div style="color:var(--muted);font-size:14px;padding:6px 0">Aucune mesure enregistrée.</div>'; }
+      show("fiche");
+    }catch(e){ $("loading").textContent="Impossible d'ouvrir la fiche."; show("loading"); }
+  }
+  $("f-del").addEventListener("click", async ()=>{
+    if(!currentCliente) return;
+    if(!confirm("Supprimer définitivement cette cliente et ses mesures ?")) return;
+    try{ await deleteDoc(doc(db,"boutiques",BID,"clientes",currentCliente)); refreshCount(); loadClientes(); }
+    catch(e){ alert("Suppression impossible. Réessaie."); }
+  });
+  async function openForm(id){
+    editingId = id;
+    $("form-title").textContent = id ? "Modifier la fiche" : "Nouvelle cliente";
+    const grid=$("in-mesures"); grid.innerHTML="";
+    MESURES.forEach(([k,label])=>{
+      const wrap=document.createElement("div");
+      wrap.innerHTML='<label></label><input type="number" inputmode="decimal" min="0" step="0.5" id="m-'+k+'" placeholder="—">';
+      wrap.querySelector("label").textContent=label;
+      grid.appendChild(wrap);
+    });
+    $("in-name").value=""; $("in-phone").value=""; $("in-notes").value="";
+    $("form-msg").classList.remove("show");
+    if(id){
+      show("loading"); $("loading").textContent="Chargement…";
+      try{
+        const snap=await getDoc(doc(db,"boutiques",BID,"clientes",id)); const c=snap.data()||{};
+        $("in-name").value=c.name||""; $("in-phone").value=c.phone||""; $("in-notes").value=c.notes||"";
+        const m=c.mesures||{}; MESURES.forEach(([k])=>{ if(m[k]!=null) $("m-"+k).value=m[k]; });
+      }catch(e){}
+    }
+    show("form");
+  }
+  $("form-save").addEventListener("click", async ()=>{
+    const name=$("in-name").value.trim(), msg=$("form-msg");
+    msg.classList.remove("show");
+    if(!name){ msg.textContent="Le nom de la cliente est obligatoire."; msg.classList.add("show"); return; }
+    const mesures={};
+    MESURES.forEach(([k])=>{ const v=$("m-"+k).value.trim(); if(v!=="") mesures[k]=Number(v); });
+    const dat
