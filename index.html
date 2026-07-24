@@ -207,7 +207,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { initializeFirestore, persistentLocalCache, persistentSingleTabManager,
+  import { getFirestore, enableIndexedDbPersistence,
            doc, getDoc, getDocFromCache, collection, setDoc, getDocs, getDocsFromCache,
            deleteDoc, query, orderBy, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -223,9 +223,8 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = initializeFirestore(app, {
-    localCache: persistentLocalCache({ tabManager: persistentSingleTabManager() })
-  });
+  const db = getFirestore(app);
+  enableIndexedDbPersistence(db).catch(function(){ /* déjà actif ou non supporté : on continue */ });
 
   const MESURES = [
     ["poitrine","Tour de poitrine"], ["taille","Tour de taille"],
@@ -353,4 +352,4 @@
         const row=document.createElement("div"); row.className="mline";
         row.innerHTML='<span class="k"></span><span class="v"></span>';
         row.querySelector(".k").textContent=label;
-        row.querySe
+        row.querySelector(".v").textContent
