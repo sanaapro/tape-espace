@@ -82,8 +82,26 @@
 </style>
 </head>
 <body>
+<script>
+  window.addEventListener("error", function(e){
+    var l=document.getElementById("loading");
+    if(l){ l.style.color="#b23b3b"; l.textContent="Erreur : "+(e.message||"")+(e.filename?(" ["+e.filename.split('/').pop()+":"+e.lineno+"]"):""); }
+  });
+  window.addEventListener("unhandledrejection", function(e){
+    var l=document.getElementById("loading");
+    if(l){ l.style.color="#b23b3b"; l.textContent="Erreur : "+(((e.reason&&e.reason.message)||e.reason)||"")+(e.reason&&e.reason.code?(" ("+e.reason.code+")"):""); }
+  });
+  setTimeout(function(){
+    var l=document.getElementById("loading");
+    if(l && !l.classList.contains("hidden") && l.textContent.indexOf("Chargement")===0){
+      l.innerHTML="Le chargement est trop long — Firebase ne répond pas.<br>Vérifie ta connexion, puis recharge la page.";
+    }
+  }, 12000);
+</script>
 <div class="wrap">
+
   <div id="loading" class="center">Chargement…</div>
+
   <div id="login" class="hidden">
     <div class="top"><div class="brand"><div class="name">SANAAPRO</div><div class="sub">votre atelier, en ligne</div></div></div>
     <div class="login-card">
@@ -98,12 +116,14 @@
     </div>
     <div class="foot">SanaaPro — propulsé par votre atelier</div>
   </div>
+
   <div id="dash" class="hidden">
     <div class="top">
       <div class="brand"><div class="name">SANAAPRO</div><div class="sub">votre atelier, en ligne</div></div>
       <button class="logout" id="logout-btn">Déconnexion</button>
     </div>
     <div class="greet">Bonjour <span id="d-owner"></span><div class="sub" id="d-name"></div></div>
+
     <div class="card">
       <h2>Abonnement</h2>
       <div class="row"><span class="k">Statut</span><span class="v"><span id="d-badge" class="badge"></span></span></div>
@@ -111,15 +131,18 @@
       <div class="row"><span class="k">Échéance</span><span class="v" id="d-expiry"></span></div>
       <div id="d-subnote" class="sub-note hidden"></div>
     </div>
+
     <div class="nav-card" id="open-clientes">
       <div><div class="t">Clientes &amp; mesures</div><div class="d">Vos clientes et leurs mesures</div></div>
       <div style="display:flex;align-items:center;gap:10px"><span class="count" id="cli-count">—</span><span class="chev">›</span></div>
     </div>
+
     <div class="card" style="opacity:.6;border-style:dashed">
       <span style="float:right;font-size:11px;background:var(--ivory);border:1px solid var(--line);border-radius:12px;padding:2px 9px;color:var(--muted)">BIENTÔT</span>
       <h2>Commandes</h2>
       <p style="margin:0;font-size:13px;color:var(--muted)">Suivez vos commandes de couture, du devis à la livraison.</p>
     </div>
+
     <div class="card">
       <h2>Ma boutique</h2>
       <div class="row"><span class="k">Nom</span><span class="v" id="d-shopname"></span></div>
@@ -129,6 +152,7 @@
     </div>
     <div class="foot">SanaaPro — propulsé par votre atelier</div>
   </div>
+
   <div id="clientes" class="hidden">
     <div class="subtop"><button class="back" id="cli-back">‹ Retour</button><h1>Clientes</h1></div>
     <div id="cli-list"></div>
@@ -136,6 +160,7 @@
     <div style="height:70px"></div>
     <button class="fab" id="cli-add">+ Nouvelle cliente</button>
   </div>
+
   <div id="fiche" class="hidden">
     <div class="subtop"><button class="back" id="fiche-back">‹ Clientes</button><h1 id="f-name">Cliente</h1></div>
     <div class="card">
@@ -151,6 +176,7 @@
     <button class="del" id="f-del">Supprimer cette cliente</button>
     <div style="height:20px"></div>
   </div>
+
   <div id="form" class="hidden">
     <div class="subtop"><button class="back" id="form-back">‹ Annuler</button><h1 id="form-title">Nouvelle cliente</h1></div>
     <div class="card">
@@ -170,7 +196,9 @@
     <div class="msg err" id="form-msg"></div>
     <div style="height:24px"></div>
   </div>
+
 </div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
@@ -178,6 +206,7 @@
   import { getFirestore, doc, getDoc, collection, addDoc, getDocs, updateDoc,
            deleteDoc, query, orderBy, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
   const firebaseConfig = {
     apiKey: "AIzaSyCqfAGGU7yFs_QYg70u3e5cNYPXQjRHzsI",
     authDomain: "sanaapro-app.firebaseapp.com",
@@ -186,9 +215,11 @@
     messagingSenderId: "451762519937",
     appId: "1:451762519937:web:0507928bc9f6ef0c937280"
   };
+
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+
   const MESURES = [
     ["poitrine","Tour de poitrine"], ["taille","Tour de taille"],
     ["bassin","Tour de bassin"], ["epaule","Épaule"],
@@ -198,10 +229,13 @@
     ["longPantalon","Longueur pantalon"], ["cuisse","Tour de cuisse"],
     ["cou","Tour de cou"], ["poignet","Tour de poignet"]
   ];
+
   const $ = id => document.getElementById(id);
   const views = ["loading","login","dash","clientes","fiche","form"];
   const show = v => { views.forEach(x=>$(x).classList.add("hidden")); $(v).classList.remove("hidden"); window.scrollTo(0,0); };
+
   let BID = null, editingId = null, currentCliente = null;
+
   $("login-btn").addEventListener("click", async () => {
     const email = $("email").value.trim(), pass = $("pass").value, msg = $("login-msg");
     msg.classList.remove("show");
@@ -217,6 +251,7 @@
     }
   });
   $("logout-btn").addEventListener("click", () => signOut(auth));
+
   onAuthStateChanged(auth, async (user) => {
     if(!user){ show("login"); $("login-btn").disabled=false; return; }
     show("loading");
@@ -226,6 +261,7 @@
       BID = user.uid; renderDashboard(snap.data()); refreshCount(); show("dash");
     }catch(e){ $("loading").textContent="Impossible de charger votre espace. Réessaie."; show("loading"); }
   });
+
   function renderDashboard(b){
     $("d-owner").textContent = b.ownerName||"";
     $("d-name").textContent = b.name||"";
@@ -247,16 +283,19 @@
         note.className="sub-note err"; note.textContent="Abonnement expiré. Renouvelez-le pour continuer à enregistrer."; }
     } else { $("d-expiry").textContent="—"; badge.className="badge ok"; badge.textContent=sub.status||"actif"; }
   }
+
   $("open-clientes").addEventListener("click", loadClientes);
   $("cli-back").addEventListener("click", ()=>show("dash"));
   $("fiche-back").addEventListener("click", loadClientes);
   $("cli-add").addEventListener("click", ()=>openForm(null));
   $("form-back").addEventListener("click", ()=> editingId ? openFiche(editingId) : loadClientes());
   $("f-edit").addEventListener("click", ()=>openForm(currentCliente));
+
   async function refreshCount(){
     try{ const s=await getDocs(collection(db,"boutiques",BID,"clientes")); $("cli-count").textContent=s.size; }
     catch(e){ $("cli-count").textContent="—"; }
   }
+
   async function loadClientes(){
     show("loading"); $("loading").textContent="Chargement…";
     try{
@@ -279,6 +318,7 @@
       show("clientes");
     }catch(e){ $("loading").textContent="Impossible de charger les clientes."; show("loading"); }
   }
+
   async function openFiche(id){
     show("loading"); $("loading").textContent="Chargement…";
     try{
@@ -303,12 +343,14 @@
       show("fiche");
     }catch(e){ $("loading").textContent="Impossible d'ouvrir la fiche."; show("loading"); }
   }
+
   $("f-del").addEventListener("click", async ()=>{
     if(!currentCliente) return;
     if(!confirm("Supprimer définitivement cette cliente et ses mesures ?")) return;
     try{ await deleteDoc(doc(db,"boutiques",BID,"clientes",currentCliente)); refreshCount(); loadClientes(); }
     catch(e){ alert("Suppression impossible. Réessaie."); }
   });
+
   async function openForm(id){
     editingId = id;
     $("form-title").textContent = id ? "Modifier la fiche" : "Nouvelle cliente";
@@ -319,22 +361,4 @@
       wrap.querySelector("label").textContent=label;
       grid.appendChild(wrap);
     });
-    $("in-name").value=""; $("in-phone").value=""; $("in-notes").value="";
-    $("form-msg").classList.remove("show");
-    if(id){
-      show("loading"); $("loading").textContent="Chargement…";
-      try{
-        const snap=await getDoc(doc(db,"boutiques",BID,"clientes",id)); const c=snap.data()||{};
-        $("in-name").value=c.name||""; $("in-phone").value=c.phone||""; $("in-notes").value=c.notes||"";
-        const m=c.mesures||{}; MESURES.forEach(([k])=>{ if(m[k]!=null) $("m-"+k).value=m[k]; });
-      }catch(e){}
-    }
-    show("form");
-  }
-  $("form-save").addEventListener("click", async ()=>{
-    const name=$("in-name").value.trim(), msg=$("form-msg");
-    msg.classList.remove("show");
-    if(!name){ msg.textContent="Le nom de la cliente est obligatoire."; msg.classList.add("show"); return; }
-    const mesures={};
-    MESURES.forEach(([k])=>{ const v=$("m-"+k).value.trim(); if(v!=="") mesures[k]=Number(v); });
-    const dat
+    $("in-name").value=""; $("in-phone").value=""; $("in-notes").va
