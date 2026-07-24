@@ -16,24 +16,6 @@
   .wrap{ max-width:520px; margin:0 auto; padding:20px 16px 48px; }
   .top{ display:flex; align-items:center; justify-content:space-between; padding:12px 2px 22px; }
   .brand .name{ font-size:19px; letter-spacing:5px; font-weight:600; }
-  .brand .sub{ font-size:1<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SanaaPro — Mon espace</title>
-<style>
-  :root{
-    --ivory:#F0EFED; --ink:#141414; --line:#d8d6d1; --card:#ffffff;
-    --ok:#1f7a4d; --okbg:#eaf5ee; --warn:#b26a1f; --warnbg:#fbf1e6;
-    --err:#b23b3b; --errbg:#fbeaea; --muted:#6b6862;
-  }
-  *{box-sizing:border-box}
-  body{ margin:0; min-height:100vh; background:var(--ivory); color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
-  .wrap{ max-width:520px; margin:0 auto; padding:20px 16px 48px; }
-  .top{ display:flex; align-items:center; justify-content:space-between; padding:12px 2px 22px; }
-  .brand .name{ font-size:19px; letter-spacing:5px; font-weight:600; }
   .brand .sub{ font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-top:2px; }
   .logout{ background:none; border:1px solid var(--line); color:var(--muted);
     border-radius:20px; padding:7px 14px; font-size:13px; cursor:pointer; }
@@ -93,28 +75,27 @@
     background:var(--errbg); color:var(--err); font-size:14px; cursor:pointer; }
   .foot{ text-align:center; font-size:11px; color:var(--muted); margin-top:28px; }
   .center{ text-align:center; color:var(--muted); padding:60px 20px; font-size:14px; }
-  .hidden{ display:none; }
-  .offline{ display:none; text-align:center; font-size:12px; color:var(--warn); background:var(--warnbg);
+  .offline{ text-align:center; font-size:12px; color:var(--warn); background:var(--warnbg);
     padding:6px; border-radius:8px; margin-bottom:10px; }
-  .offline.show{ display:block; }
   .fab{ position:fixed; bottom:22px; left:50%; transform:translateX(-50%); max-width:490px; width:calc(100% - 32px);
     padding:15px; border:none; border-radius:12px; background:var(--ink); color:var(--ivory); font-size:15px;
     letter-spacing:.3px; cursor:pointer; box-shadow:0 6px 24px rgba(0,0,0,.18); }
+  [hidden]{ display:none !important; }
 </style>
 </head>
 <body>
 <script>
   window.addEventListener("error", function(e){
     var l=document.getElementById("loading");
-    if(l && !l.classList.contains("hidden")){ l.style.color="#b23b3b"; l.textContent="Erreur : "+(e.message||"")+(e.filename?(" ["+e.filename.split('/').pop()+":"+e.lineno+"]"):""); }
+    if(l && !l.hidden){ l.style.color="#b23b3b"; l.textContent="Erreur : "+(e.message||"")+(e.filename?(" ["+e.filename.split('/').pop()+":"+e.lineno+"]"):""); }
   });
   window.addEventListener("unhandledrejection", function(e){
     var l=document.getElementById("loading");
-    if(l && !l.classList.contains("hidden")){ l.style.color="#b23b3b"; l.textContent="Erreur : "+(((e.reason&&e.reason.message)||e.reason)||""); }
+    if(l && !l.hidden){ l.style.color="#b23b3b"; l.textContent="Erreur : "+(((e.reason&&e.reason.message)||e.reason)||""); }
   });
   setTimeout(function(){
     var l=document.getElementById("loading");
-    if(l && !l.classList.contains("hidden") && (l.textContent+"").indexOf("Chargement")===0){
+    if(l && !l.hidden && (l.textContent+"").indexOf("Chargement")===0){
       l.innerHTML="Le premier chargement est trop long — Firebase ne répond pas.<br>Ouvre l'app une fois avec une bonne connexion, ensuite elle marchera même hors ligne.";
     }
   }, 20000);
@@ -123,7 +104,7 @@
 
   <div id="loading" class="center">Chargement…</div>
 
-  <div id="login" class="hidden">
+  <div id="login" hidden>
     <div class="top"><div class="brand"><div class="name">SANAAPRO</div><div class="sub">votre atelier, en ligne</div></div></div>
     <div class="login-card">
       <h1>Connexion à votre espace</h1>
@@ -138,8 +119,8 @@
     <div class="foot">SanaaPro — propulsé par votre atelier</div>
   </div>
 
-  <div id="dash" class="hidden">
-    <div class="offline" id="off-dash">Mode hors ligne — vos données sont enregistrées et se synchroniseront au retour du réseau.</div>
+  <div id="dash" hidden>
+    <div class="offline" id="off-dash" hidden>Mode hors ligne — vos données sont enregistrées et se synchroniseront au retour du réseau.</div>
     <div class="top">
       <div class="brand"><div class="name">SANAAPRO</div><div class="sub">votre atelier, en ligne</div></div>
       <button class="logout" id="logout-btn">Déconnexion</button>
@@ -151,7 +132,7 @@
       <div class="row"><span class="k">Statut</span><span class="v"><span id="d-badge" class="badge"></span></span></div>
       <div class="row"><span class="k">Formule</span><span class="v" id="d-plan"></span></div>
       <div class="row"><span class="k">Échéance</span><span class="v" id="d-expiry"></span></div>
-      <div id="d-subnote" class="sub-note hidden"></div>
+      <div id="d-subnote" class="sub-note" hidden></div>
     </div>
 
     <div class="nav-card" id="open-clientes">
@@ -175,172 +156,15 @@
     <div class="foot">SanaaPro — propulsé par votre atelier</div>
   </div>
 
-  <div id="clientes" class="hidden">
+  <div id="clientes" hidden>
     <div class="subtop"><button class="back" id="cli-back">‹ Retour</button><h1>Clientes</h1></div>
     <div id="cli-list"></div>
-    <div id="cli-empty" class="empty hidden">Aucune cliente pour le moment.<br>Ajoutez-en une avec le bouton ci-dessous.</div>
+    <div id="cli-empty" class="empty" hidden>Aucune cliente pour le moment.<br>Ajoutez-en une avec le bouton ci-dessous.</div>
     <div style="height:70px"></div>
     <button class="fab" id="cli-add">+ Nouvelle cliente</button>
   </div>
 
-  <div id="fiche" class="hidden">
-    <div class="subtop"><button class="back" id="fiche-back">‹ Clientes</button><h1 id="f-name">Cliente</h1></div>
-    <div class="card">
-      <h2>Coordonnées</h2>
-      <div class="row" id="f-phone-row"><span class="k">Téléphone</span><span class="v" id="f-phone"></span></div>
-      <div class="row" id="f-notes-row"><span class="k">Notes</span><span class="v" id="f-notes"></span></div>
-    </div>
-    <div class="card">
-      <h2>Mesures (cm)0px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-top:2px; }
-  .logout{ background:none; border:1px solid var(--line); color:var(--muted);
-    border-radius:20px; padding:7px 14px; font-size:13px; cursor:pointer; }
-  .login-card{ background:var(--card); border:1px solid var(--line); border-radius:16px;
-    padding:28px 24px; box-shadow:0 10px 40px rgba(0,0,0,.06); margin-top:40px; }
-  .login-card h1{ font-size:17px; text-align:center; margin:0 0 4px; }
-  .login-card .lead{ text-align:center; color:var(--muted); font-size:13px; margin:0 0 20px; }
-  label{ display:block; font-size:12px; color:var(--muted); margin:14px 0 6px; }
-  input,textarea{ width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:10px;
-    font-size:15px; background:#fafafa; font-family:inherit; }
-  input:focus,textarea:focus{ outline:none; border-color:var(--ink); background:#fff; }
-  button.primary{ width:100%; margin-top:22px; padding:14px; border:none; border-radius:10px;
-    background:var(--ink); color:var(--ivory); font-size:15px; letter-spacing:.5px; cursor:pointer; }
-  button.primary:disabled{ opacity:.5; cursor:default; }
-  button.ghost{ width:100%; margin-top:10px; padding:13px; border:1px solid var(--line);
-    border-radius:10px; background:#fff; color:var(--ink); font-size:14px; cursor:pointer; }
-  .msg{ margin-top:16px; font-size:13px; padding:12px 14px; border-radius:10px; display:none; }
-  .msg.show{ display:block; }
-  .msg.err{ background:var(--errbg); color:var(--err); }
-  .greet{ font-size:22px; font-weight:600; margin:4px 2px 2px; }
-  .greet .sub{ font-size:14px; color:var(--muted); font-weight:400; margin-top:2px; }
-  .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-top:14px; }
-  .card h2{ font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin:0 0 12px; font-weight:600; }
-  .row{ display:flex; justify-content:space-between; align-items:baseline; padding:6px 0; font-size:15px; gap:12px; }
-  .row .k{ color:var(--muted); font-size:13px; }
-  .row .v{ text-align:right; font-weight:500; word-break:break-word; }
-  .badge{ display:inline-block; padding:4px 12px; border-radius:20px; font-size:13px; font-weight:600; }
-  .badge.ok{ background:var(--okbg); color:var(--ok); }
-  .badge.warn{ background:var(--warnbg); color:var(--warn); }
-  .badge.err{ background:var(--errbg); color:var(--err); }
-  .sub-note{ margin-top:12px; font-size:13px; padding:10px 12px; border-radius:10px; }
-  .sub-note.warn{ background:var(--warnbg); color:var(--warn); }
-  .sub-note.err{ background:var(--errbg); color:var(--err); }
-  .nav-card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px;
-    margin-top:14px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
-  .nav-card:active{ background:#fafafa; }
-  .nav-card .t{ font-weight:600; font-size:15px; }
-  .nav-card .d{ font-size:13px; color:var(--muted); margin-top:3px; }
-  .nav-card .chev{ color:var(--muted); font-size:22px; }
-  .count{ background:var(--ivory); border:1px solid var(--line); border-radius:12px; padding:2px 10px; font-size:12px; color:var(--muted); }
-  .subtop{ display:flex; align-items:center; gap:10px; padding:10px 2px 16px; }
-  .back{ background:none; border:none; font-size:15px; color:var(--muted); cursor:pointer; padding:6px 4px; }
-  .subtop h1{ font-size:19px; margin:0; }
-  .cli-item{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px;
-    margin-top:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
-  .cli-item:active{ background:#fafafa; }
-  .cli-item .nm{ font-weight:600; font-size:15px; }
-  .cli-item .ph{ font-size:13px; color:var(--muted); margin-top:2px; }
-  .empty{ text-align:center; color:var(--muted); padding:40px 20px; font-size:14px; }
-  .mgrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px 12px; margin-top:4px; }
-  .mgrid label{ margin:6px 0 4px; }
-  .mline{ display:flex; justify-content:space-between; padding:7px 0; font-size:15px; border-bottom:1px solid var(--line); }
-  .mline:last-child{ border-bottom:none; }
-  .mline .k{ color:var(--muted); font-size:14px; }
-  .mline .v{ font-weight:600; }
-  .del{ width:100%; margin-top:10px; padding:12px; border:1px solid var(--errbg); border-radius:10px;
-    background:var(--errbg); color:var(--err); font-size:14px; cursor:pointer; }
-  .foot{ text-align:center; font-size:11px; color:var(--muted); margin-top:28px; }
-  .center{ text-align:center; color:var(--muted); padding:60px 20px; font-size:14px; }
-  .hidden{ display:none; }
-  .offline{ display:none; text-align:center; font-size:12px; color:var(--warn); background:var(--warnbg);
-    padding:6px; border-radius:8px; margin-bottom:10px; }
-  .offline.show{ display:block; }
-  .fab{ position:fixed; bottom:22px; left:50%; transform:translateX(-50%); max-width:490px; width:calc(100% - 32px);
-    padding:15px; border:none; border-radius:12px; background:var(--ink); color:var(--ivory); font-size:15px;
-    letter-spacing:.3px; cursor:pointer; box-shadow:0 6px 24px rgba(0,0,0,.18); }
-</style>
-</head>
-<body>
-<script>
-  window.addEventListener("error", function(e){
-    var l=document.getElementById("loading");
-    if(l && !l.classList.contains("hidden")){ l.style.color="#b23b3b"; l.textContent="Erreur : "+(e.message||"")+(e.filename?(" ["+e.filename.split('/').pop()+":"+e.lineno+"]"):""); }
-  });
-  window.addEventListener("unhandledrejection", function(e){
-    var l=document.getElementById("loading");
-    if(l && !l.classList.contains("hidden")){ l.style.color="#b23b3b"; l.textContent="Erreur : "+(((e.reason&&e.reason.message)||e.reason)||""); }
-  });
-  setTimeout(function(){
-    var l=document.getElementById("loading");
-    if(l && !l.classList.contains("hidden") && (l.textContent+"").indexOf("Chargement")===0){
-      l.innerHTML="Le premier chargement est trop long — Firebase ne répond pas.<br>Ouvre l'app une fois avec une bonne connexion, ensuite elle marchera même hors ligne.";
-    }
-  }, 15000);
-</script>
-<div class="wrap">
-
-  <div id="loading" class="center">Chargement…</div>
-
-  <div id="login" class="hidden">
-    <div class="top"><div class="brand"><div class="name">SANAAPRO</div><div class="sub">votre atelier, en ligne</div></div></div>
-    <div class="login-card">
-      <h1>Connexion à votre espace</h1>
-      <p class="lead">Entrez les identifiants créés à l'inscription.</p>
-      <label for="email">Email</label>
-      <input id="email" type="email" placeholder="vous@email.com" autocomplete="email">
-      <label for="pass">Mot de passe</label>
-      <input id="pass" type="password" placeholder="Votre mot de passe" autocomplete="current-password">
-      <button class="primary" id="login-btn">Se connecter</button>
-      <div class="msg err" id="login-msg"></div>
-    </div>
-    <div class="foot">SanaaPro — propulsé par votre atelier</div>
-  </div>
-
-  <div id="dash" class="hidden">
-    <div class="offline" id="off-dash">Mode hors ligne — vos données sont enregistrées et se synchroniseront au retour du réseau.</div>
-    <div class="top">
-      <div class="brand"><div class="name">SANAAPRO</div><div class="sub">votre atelier, en ligne</div></div>
-      <button class="logout" id="logout-btn">Déconnexion</button>
-    </div>
-    <div class="greet">Bonjour <span id="d-owner"></span><div class="sub" id="d-name"></div></div>
-
-    <div class="card">
-      <h2>Abonnement</h2>
-      <div class="row"><span class="k">Statut</span><span class="v"><span id="d-badge" class="badge"></span></span></div>
-      <div class="row"><span class="k">Formule</span><span class="v" id="d-plan"></span></div>
-      <div class="row"><span class="k">Échéance</span><span class="v" id="d-expiry"></span></div>
-      <div id="d-subnote" class="sub-note hidden"></div>
-    </div>
-
-    <div class="nav-card" id="open-clientes">
-      <div><div class="t">Clientes &amp; mesures</div><div class="d">Vos clientes et leurs mesures</div></div>
-      <div style="display:flex;align-items:center;gap:10px"><span class="count" id="cli-count">—</span><span class="chev">›</span></div>
-    </div>
-
-    <div class="card" style="opacity:.6;border-style:dashed">
-      <span style="float:right;font-size:11px;background:var(--ivory);border:1px solid var(--line);border-radius:12px;padding:2px 9px;color:var(--muted)">BIENTÔT</span>
-      <h2>Commandes</h2>
-      <p style="margin:0;font-size:13px;color:var(--muted)">Suivez vos commandes de couture, du devis à la livraison.</p>
-    </div>
-
-    <div class="card">
-      <h2>Ma boutique</h2>
-      <div class="row"><span class="k">Nom</span><span class="v" id="d-shopname"></span></div>
-      <div class="row"><span class="k">Identifiant</span><span class="v" id="d-slug"></span></div>
-      <div class="row"><span class="k">Email</span><span class="v" id="d-email"></span></div>
-      <div class="row" id="d-wa-row"><span class="k">WhatsApp</span><span class="v" id="d-wa"></span></div>
-    </div>
-    <div class="foot">SanaaPro — propulsé par votre atelier</div>
-  </div>
-
-  <div id="clientes" class="hidden">
-    <div class="subtop"><button class="back" id="cli-back">‹ Retour</button><h1>Clientes</h1></div>
-    <div id="cli-list"></div>
-    <div id="cli-empty" class="empty hidden">Aucune cliente pour le moment.<br>Ajoutez-en une avec le bouton ci-dessous.</div>
-    <div style="height:70px"></div>
-    <button class="fab" id="cli-add">+ Nouvelle cliente</button>
-  </div>
-
-  <div id="fiche" class="hidden">
+  <div id="fiche" hidden>
     <div class="subtop"><button class="back" id="fiche-back">‹ Clientes</button><h1 id="f-name">Cliente</h1></div>
     <div class="card">
       <h2>Coordonnées</h2>
@@ -356,7 +180,7 @@
     <div style="height:20px"></div>
   </div>
 
-  <div id="form" class="hidden">
+  <div id="form" hidden>
     <div class="subtop"><button class="back" id="form-back">‹ Annuler</button><h1 id="form-title">Nouvelle cliente</h1></div>
     <div class="card">
       <h2>Coordonnées</h2>
@@ -382,7 +206,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { getFirestore, enableIndexedDbPersistence,
+  import { initializeFirestore, enableIndexedDbPersistence,
            doc, getDoc, getDocFromCache, collection, setDoc, getDocs, getDocsFromCache,
            deleteDoc, query, orderBy, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -398,8 +222,8 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = getFirestore(app);
-  enableIndexedDbPersistence(db).catch(function(){ /* déjà actif ou non supporté : on continue */ });
+  const db = initializeFirestore(app, { experimentalForceLongPolling: true });
+  enableIndexedDbPersistence(db).catch(function(){});
 
   const MESURES = [
     ["poitrine","Tour de poitrine"], ["taille","Tour de taille"],
@@ -413,21 +237,21 @@
 
   const $ = id => document.getElementById(id);
   const views = ["loading","login","dash","clientes","fiche","form"];
-  const show = v => { views.forEach(x=>$(x).classList.add("hidden")); $(v).classList.remove("hidden"); window.scrollTo(0,0); };
+  const show = v => { views.forEach(x=>{ $(x).hidden = (x!==v); }); window.scrollTo(0,0); };
 
   let BID = null, editingId = null, currentCliente = null;
 
   const timeout = ms => new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")), ms));
   async function getDocSmart(ref){
-    try{ return await Promise.race([getDoc(ref), timeout(6000)]); }
+    try{ return await Promise.race([getDoc(ref), timeout(8000)]); }
     catch(e){ try{ return await getDocFromCache(ref); }catch(_){ throw e; } }
   }
   async function getDocsSmart(q){
-    try{ return await Promise.race([getDocs(q), timeout(6000)]); }
+    try{ return await Promise.race([getDocs(q), timeout(8000)]); }
     catch(e){ try{ return await getDocsFromCache(q); }catch(_){ throw e; } }
   }
 
-  function updateOffline(){ $("off-dash").classList.toggle("show", !navigator.onLine); }
+  function updateOffline(){ $("off-dash").hidden = navigator.onLine; }
   window.addEventListener("online", updateOffline);
   window.addEventListener("offline", updateOffline);
 
@@ -464,9 +288,9 @@
     $("d-shopname").textContent = b.name||"—";
     $("d-slug").textContent = b.slug||"—";
     $("d-email").textContent = b.email||"—";
-    if(b.whatsapp){ $("d-wa").textContent = b.whatsapp; } else { $("d-wa-row").style.display="none"; }
+    if(b.whatsapp){ $("d-wa").textContent = b.whatsapp; } else { $("d-wa-row").hidden = true; }
     const sub=b.subscription||{}, badge=$("d-badge"), note=$("d-subnote");
-    note.className="sub-note hidden";
+    note.hidden = true; note.className="sub-note";
     $("d-plan").textContent = sub.plan==="trial" ? "Essai gratuit" : (sub.plan||"—");
     if(sub.expiresAt && sub.expiresAt.toDate){
       const exp=sub.expiresAt.toDate();
@@ -474,9 +298,9 @@
       const days=Math.ceil((exp-new Date())/86400000);
       if(days>3){ badge.className="badge ok"; badge.textContent=days+" jours restants"; }
       else if(days>0){ badge.className="badge warn"; badge.textContent=days+(days===1?" jour restant":" jours restants");
-        note.className="sub-note warn"; note.textContent="Votre essai se termine bientôt. Pensez à le renouveler."; }
+        note.hidden=false; note.className="sub-note warn"; note.textContent="Votre essai se termine bientôt. Pensez à le renouveler."; }
       else { badge.className="badge err"; badge.textContent="Expiré";
-        note.className="sub-note err"; note.textContent="Abonnement expiré. Renouvelez-le pour continuer à enregistrer."; }
+        note.hidden=false; note.className="sub-note err"; note.textContent="Abonnement expiré. Renouvelez-le pour continuer à enregistrer."; }
     } else { $("d-expiry").textContent="—"; badge.className="badge ok"; badge.textContent=sub.status||"actif"; }
   }
 
@@ -498,9 +322,9 @@
       const q = query(collection(db,"boutiques",BID,"clientes"), orderBy("name"));
       const snap = await getDocsSmart(q);
       const list=$("cli-list"); list.innerHTML="";
-      if(snap.empty){ $("cli-empty").classList.remove("hidden"); }
+      if(snap.empty){ $("cli-empty").hidden=false; }
       else{
-        $("cli-empty").classList.add("hidden");
+        $("cli-empty").hidden=true;
         snap.forEach(d=>{
           const c=d.data(), el=document.createElement("div");
           el.className="cli-item";
@@ -518,8 +342,8 @@
   function fillFiche(c, id){
     currentCliente=id;
     $("f-name").textContent=c.name||"Cliente";
-    if(c.phone){ $("f-phone").textContent=c.phone; $("f-phone-row").style.display=""; } else $("f-phone-row").style.display="none";
-    if(c.notes){ $("f-notes").textContent=c.notes; $("f-notes-row").style.display=""; } else $("f-notes-row").style.display="none";
+    if(c.phone){ $("f-phone").textContent=c.phone; $("f-phone-row").hidden=false; } else $("f-phone-row").hidden=true;
+    if(c.notes){ $("f-notes").textContent=c.notes; $("f-notes-row").hidden=false; } else $("f-notes-row").hidden=true;
     const m=c.mesures||{}, box=$("f-mesures"); box.innerHTML=""; let any=false;
     MESURES.forEach(([k,label])=>{
       if(m[k]!==undefined && m[k]!==null && m[k]!==""){
@@ -527,4 +351,9 @@
         const row=document.createElement("div"); row.className="mline";
         row.innerHTML='<span class="k"></span><span class="v"></span>';
         row.querySelector(".k").textContent=label;
-        row.querySelector(".v").textContent
+        row.querySelector(".v").textContent=m[k]+" cm";
+        box.appendChild(row);
+      }
+    });
+    if(!any){ box.innerHTML='<div style="color:var(--muted);font-size:14px;padding:6px 0">Aucune mesure enregistrée.</div>'; }
+    
