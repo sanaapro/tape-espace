@@ -76,6 +76,9 @@
   .foot{ text-align:center; font-size:11px; color:var(--muted); margin-top:28px; }
   .center{ text-align:center; color:var(--muted); padding:60px 20px; font-size:14px; }
   .hidden{ display:none; }
+  .offline{ display:none; text-align:center; font-size:12px; color:var(--warn); background:var(--warnbg);
+    padding:6px; border-radius:8px; margin-bottom:10px; }
+  .offline.show{ display:block; }
   .fab{ position:fixed; bottom:22px; left:50%; transform:translateX(-50%); max-width:490px; width:calc(100% - 32px);
     padding:15px; border:none; border-radius:12px; background:var(--ink); color:var(--ivory); font-size:15px;
     letter-spacing:.3px; cursor:pointer; box-shadow:0 6px 24px rgba(0,0,0,.18); }
@@ -85,18 +88,18 @@
 <script>
   window.addEventListener("error", function(e){
     var l=document.getElementById("loading");
-    if(l){ l.style.color="#b23b3b"; l.textContent="Erreur : "+(e.message||"")+(e.filename?(" ["+e.filename.split('/').pop()+":"+e.lineno+"]"):""); }
+    if(l && !l.classList.contains("hidden")){ l.style.color="#b23b3b"; l.textContent="Erreur : "+(e.message||"")+(e.filename?(" ["+e.filename.split('/').pop()+":"+e.lineno+"]"):""); }
   });
   window.addEventListener("unhandledrejection", function(e){
     var l=document.getElementById("loading");
-    if(l){ l.style.color="#b23b3b"; l.textContent="Erreur : "+(((e.reason&&e.reason.message)||e.reason)||"")+(e.reason&&e.reason.code?(" ("+e.reason.code+")"):""); }
+    if(l && !l.classList.contains("hidden")){ l.style.color="#b23b3b"; l.textContent="Erreur : "+(((e.reason&&e.reason.message)||e.reason)||""); }
   });
   setTimeout(function(){
     var l=document.getElementById("loading");
-    if(l && !l.classList.contains("hidden") && l.textContent.indexOf("Chargement")===0){
-      l.innerHTML="Le chargement est trop long — Firebase ne répond pas.<br>Vérifie ta connexion, puis recharge la page.";
+    if(l && !l.classList.contains("hidden") && (l.textContent+"").indexOf("Chargement")===0){
+      l.innerHTML="Le premier chargement est trop long — Firebase ne répond pas.<br>Ouvre l'app une fois avec une bonne connexion, ensuite elle marchera même hors ligne.";
     }
-  }, 12000);
+  }, 15000);
 </script>
 <div class="wrap">
 
@@ -118,6 +121,7 @@
   </div>
 
   <div id="dash" class="hidden">
+    <div class="offline" id="off-dash">Mode hors ligne — vos données sont enregistrées et se synchroniseront au retour du réseau.</div>
     <div class="top">
       <div class="brand"><div class="name">SANAAPRO</div><div class="sub">votre atelier, en ligne</div></div>
       <button class="logout" id="logout-btn">Déconnexion</button>
@@ -203,7 +207,8 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { getFirestore, doc, getDoc, collection, addDoc, getDocs, updateDoc,
+  import { initializeFirestore, persistentLocalCache, persistentSingleTabManager,
+           doc, getDoc, getDocFromCache, collection, setDoc, getDocs, getDocsFromCache,
            deleteDoc, query, orderBy, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -218,7 +223,9 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = getFirestore(app);
+  const db = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentSingleTabManager() })
+  });
 
   const MESURES = [
     ["poitrine","Tour de poitrine"], ["taille","Tour de taille"],
@@ -236,6 +243,20 @@
 
   let BID = null, editingId = null, currentCliente = null;
 
+  const timeout = ms => new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")), ms));
+  async function getDocSmart(ref){
+    try{ return await Promise.race([getDoc(ref), timeout(6000)]); }
+    catch(e){ try{ return await getDocFromCache(ref); }catch(_){ throw e; } }
+  }
+  async function getDocsSmart(q){
+    try{ return await Promise.race([getDocs(q), timeout(6000)]); }
+    catch(e){ try{ return await getDocsFromCache(q); }catch(_){ throw e; } }
+  }
+
+  function updateOffline(){ $("off-dash").classList.toggle("show", !navigator.onLine); }
+  window.addEventListener("online", updateOffline);
+  window.addEventListener("offline", updateOffline);
+
   $("login-btn").addEventListener("click", async () => {
     const email = $("email").value.trim(), pass = $("pass").value, msg = $("login-msg");
     msg.classList.remove("show");
@@ -247,6 +268,7 @@
       if(["auth/invalid-credential","auth/wrong-password","auth/user-not-found"].includes(e.code)) m="Email ou mot de passe incorrect.";
       else if(e.code==="auth/invalid-email") m="Email invalide.";
       else if(e.code==="auth/too-many-requests") m="Trop de tentatives. Patiente un instant.";
+      else if(e.code==="auth/network-request-failed") m="Pas de connexion. La 1ère connexion a besoin d'internet.";
       msg.textContent=m; msg.classList.add("show"); $("login-btn").disabled=false;
     }
   });
@@ -254,12 +276,12 @@
 
   onAuthStateChanged(auth, async (user) => {
     if(!user){ show("login"); $("login-btn").disabled=false; return; }
-    show("loading");
+    show("loading"); $("loading").textContent="Chargement…";
     try{
-      const snap = await getDoc(doc(db,"boutiques",user.uid));
+      const snap = await getDocSmart(doc(db,"boutiques",user.uid));
       if(!snap.exists()){ $("loading").textContent="Aucune boutique liée à ce compte."; show("loading"); return; }
-      BID = user.uid; renderDashboard(snap.data()); refreshCount(); show("dash");
-    }catch(e){ $("loading").textContent="Impossible de charger votre espace. Réessaie."; show("loading"); }
+      BID = user.uid; renderDashboard(snap.data()); updateOffline(); refreshCount(); show("dash");
+    }catch(e){ $("loading").textContent="Impossible de charger votre espace. Ouvre l'app une fois avec une bonne connexion."; show("loading"); }
   });
 
   function renderDashboard(b){
@@ -292,7 +314,7 @@
   $("f-edit").addEventListener("click", ()=>openForm(currentCliente));
 
   async function refreshCount(){
-    try{ const s=await getDocs(collection(db,"boutiques",BID,"clientes")); $("cli-count").textContent=s.size; }
+    try{ const s=await getDocsSmart(collection(db,"boutiques",BID,"clientes")); $("cli-count").textContent=s.size; }
     catch(e){ $("cli-count").textContent="—"; }
   }
 
@@ -300,7 +322,7 @@
     show("loading"); $("loading").textContent="Chargement…";
     try{
       const q = query(collection(db,"boutiques",BID,"clientes"), orderBy("name"));
-      const snap = await getDocs(q);
+      const snap = await getDocsSmart(q);
       const list=$("cli-list"); list.innerHTML="";
       if(snap.empty){ $("cli-empty").classList.remove("hidden"); }
       else{
@@ -319,46 +341,16 @@
     }catch(e){ $("loading").textContent="Impossible de charger les clientes."; show("loading"); }
   }
 
-  async function openFiche(id){
-    show("loading"); $("loading").textContent="Chargement…";
-    try{
-      const snap=await getDoc(doc(db,"boutiques",BID,"clientes",id));
-      if(!snap.exists()){ loadClientes(); return; }
-      const c=snap.data(); currentCliente=id;
-      $("f-name").textContent=c.name||"Cliente";
-      if(c.phone){ $("f-phone").textContent=c.phone; $("f-phone-row").style.display=""; } else $("f-phone-row").style.display="none";
-      if(c.notes){ $("f-notes").textContent=c.notes; $("f-notes-row").style.display=""; } else $("f-notes-row").style.display="none";
-      const m=c.mesures||{}, box=$("f-mesures"); box.innerHTML=""; let any=false;
-      MESURES.forEach(([k,label])=>{
-        if(m[k]!==undefined && m[k]!==null && m[k]!==""){
-          any=true;
-          const row=document.createElement("div"); row.className="mline";
-          row.innerHTML='<span class="k"></span><span class="v"></span>';
-          row.querySelector(".k").textContent=label;
-          row.querySelector(".v").textContent=m[k]+" cm";
-          box.appendChild(row);
-        }
-      });
-      if(!any){ box.innerHTML='<div style="color:var(--muted);font-size:14px;padding:6px 0">Aucune mesure enregistrée.</div>'; }
-      show("fiche");
-    }catch(e){ $("loading").textContent="Impossible d'ouvrir la fiche."; show("loading"); }
-  }
-
-  $("f-del").addEventListener("click", async ()=>{
-    if(!currentCliente) return;
-    if(!confirm("Supprimer définitivement cette cliente et ses mesures ?")) return;
-    try{ await deleteDoc(doc(db,"boutiques",BID,"clientes",currentCliente)); refreshCount(); loadClientes(); }
-    catch(e){ alert("Suppression impossible. Réessaie."); }
-  });
-
-  async function openForm(id){
-    editingId = id;
-    $("form-title").textContent = id ? "Modifier la fiche" : "Nouvelle cliente";
-    const grid=$("in-mesures"); grid.innerHTML="";
+  function fillFiche(c, id){
+    currentCliente=id;
+    $("f-name").textContent=c.name||"Cliente";
+    if(c.phone){ $("f-phone").textContent=c.phone; $("f-phone-row").style.display=""; } else $("f-phone-row").style.display="none";
+    if(c.notes){ $("f-notes").textContent=c.notes; $("f-notes-row").style.display=""; } else $("f-notes-row").style.display="none";
+    const m=c.mesures||{}, box=$("f-mesures"); box.innerHTML=""; let any=false;
     MESURES.forEach(([k,label])=>{
-      const wrap=document.createElement("div");
-      wrap.innerHTML='<label></label><input type="number" inputmode="decimal" min="0" step="0.5" id="m-'+k+'" placeholder="—">';
-      wrap.querySelector("label").textContent=label;
-      grid.appendChild(wrap);
-    });
-    $("in-name").value=""; $("in-phone").value=""; $("in-notes").va
+      if(m[k]!==undefined && m[k]!==null && m[k]!==""){
+        any=true;
+        const row=document.createElement("div"); row.className="mline";
+        row.innerHTML='<span class="k"></span><span class="v"></span>';
+        row.querySelector(".k").textContent=label;
+        row.querySe
