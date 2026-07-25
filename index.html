@@ -4,145 +4,518 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0E0E0F">
-<title>SanaaPro — Abonnements</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>SanaaPro — Mon espace</title>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
-<!-- SanaaPro — outil prestataire v1 : suivi et renouvellement des abonnements (base sanaapro-app) -->
+<!-- SanaaPro espace boutique — v11 : onglets + recherche globale + commandes -->
 <style>
   :root{
     --bg:#0E0E0F; --panel:#17181A; --panel2:#1E1F22; --line:#2C2E32; --line2:#3A3D42;
     --gold:#E0B23C; --txt:#EDEBE6; --muted:#98948C;
     --ok:#4FD18B; --okbg:#12301F; --warn:#E0A44C; --warnbg:#33240F;
-    --err:#E96B6B; --errbg:#361A1A;
+    --err:#E96B6B; --errbg:#361A1A; --wa:#25D366; --wabg:#10281B;
     --serif:Georgia,"Times New Roman",serif;
     --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
   *{box-sizing:border-box}
   body{ margin:0; min-height:100vh; background:var(--bg); color:var(--txt); font-family:var(--sans); }
   .wrap{ max-width:520px; margin:0 auto; padding:18px 16px 48px; }
-  .head{ text-align:center; padding:12px 0 18px; border-bottom:1px solid var(--line); margin-bottom:16px; }
-  .head .name{ font-family:var(--serif); font-size:24px; color:var(--gold); font-weight:700; margin:0; }
-  .head .sub{ font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-top:6px; }
-  .card{ background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:18px; margin-top:14px; }
-  .card h2{ font-family:var(--serif); font-size:17px; color:var(--gold); margin:0 0 12px; font-weight:700;
-    padding-bottom:10px; border-bottom:1px solid var(--line); }
-  label{ display:block; font-size:11px; letter-spacing:.5px; color:var(--muted); margin:14px 0 6px; text-transform:uppercase; }
-  input{ width:100%; padding:12px 14px; border:1px solid var(--line2); border-radius:9px;
-    font-size:15px; background:#101113; color:var(--txt); font-family:inherit; }
-  input:focus{ outline:none; border-color:var(--gold); }
-  button.primary{ width:100%; margin-top:18px; padding:15px; border:none; border-radius:10px;
-    background:var(--gold); color:#141310; font-size:15px; font-weight:700; cursor:pointer; font-family:var(--sans); }
-  button.primary:disabled{ opacity:.45; cursor:default; }
+
+  .head{ text-align:center; padding:10px 0 16px; }
+  .head .name{ font-family:var(--serif); font-size:26px; letter-spacing:4px; color:var(--gold);
+    text-transform:uppercase; margin:0; font-weight:700; }
+  .head .sub{ font-size:10px; letter-spacing:2.5px; color:var(--muted); text-transform:uppercase; margin-top:6px; }
+  .pill{ display:inline-flex; align-items:center; gap:7px; margin-top:12px; padding:5px 14px;
+    border-radius:20px; font-size:12px; font-weight:600; background:var(--okbg); color:var(--ok); }
+  .pill.off{ background:var(--warnbg); color:var(--warn); }
+  .dot{ width:7px; height:7px; border-radius:50%; background:currentColor; }
+
+  .langset{ margin-top:14px; display:flex; flex-direction:column; gap:8px; align-items:center; }
+  .langrow{ display:flex; align-items:center; gap:10px; }
+  .langlab{ font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); }
+  .seg{ display:inline-flex; border:1px solid var(--line2); border-radius:20px; overflow:hidden; }
+  .seg button{ border:none; background:transparent; color:var(--muted); font-family:var(--sans);
+    font-size:12px; font-weight:700; letter-spacing:1px; padding:6px 16px; cursor:pointer; }
+  .seg button.on{ background:var(--gold); color:#141310; }
+
   .logout{ margin-top:12px; background:none; border:1px solid var(--line2); color:var(--muted);
     border-radius:20px; padding:7px 18px; font-size:13px; cursor:pointer; font-family:var(--sans); }
-  .msg{ margin-top:14px; font-size:13px; padding:12px 14px; border-radius:9px; display:none; line-height:1.5; }
+
+  .tabs{ display:flex; gap:2px; overflow-x:auto; border-bottom:1px solid var(--line);
+    margin:4px 0 16px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  .tabs::-webkit-scrollbar{ display:none; }
+  .tabs button{ flex:0 0 auto; background:none; border:none; border-bottom:2px solid transparent;
+    padding:12px 14px; color:var(--muted); font-size:14px; font-family:var(--sans); cursor:pointer; }
+  .tabs button.on{ color:var(--gold); border-bottom-color:var(--gold); font-weight:700; }
+
+  .stats{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+  .stat{ background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:18px 12px; text-align:center; }
+  .stat .n{ font-family:var(--serif); font-size:30px; color:var(--gold); font-weight:700; line-height:1; }
+  .stat .l{ font-size:10px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; margin-top:8px; }
+
+  .login-card{ background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:26px 22px; margin-top:26px; }
+  .login-card h1{ font-family:var(--serif); font-size:19px; color:var(--gold); text-align:center; margin:0 0 6px; font-weight:700; }
+  .login-card .lead{ text-align:center; color:var(--muted); font-size:13px; margin:0 0 18px; }
+
+  label{ display:block; font-size:11px; letter-spacing:.5px; color:var(--muted); margin:14px 0 6px; text-transform:uppercase; }
+  input,textarea,select{ width:100%; padding:12px 14px; border:1px solid var(--line2); border-radius:9px;
+    font-size:15px; background:#101113; color:var(--txt); font-family:inherit; }
+  input::placeholder,textarea::placeholder{ color:#6A665F; }
+  input:focus,textarea:focus,select:focus{ outline:none; border-color:var(--gold); }
+
+  button.primary{ width:100%; margin-top:14px; padding:15px; border:none; border-radius:10px;
+    background:var(--gold); color:#141310; font-size:15px; font-weight:700; cursor:pointer; font-family:var(--sans); }
+  button.primary:disabled{ opacity:.45; cursor:default; }
+  button.ghost{ width:100%; margin-top:10px; padding:13px; border:1px solid var(--line2);
+    border-radius:10px; background:transparent; color:var(--txt); font-size:14px; cursor:pointer; font-family:var(--sans); }
+  button.wa{ width:100%; margin-top:10px; padding:15px; border:1px solid var(--wa); border-radius:10px;
+    background:var(--wabg); color:var(--wa); font-size:15px; font-weight:700; cursor:pointer; font-family:var(--sans); }
+  .del{ width:100%; margin-top:10px; padding:13px; border:1px solid #4A2222; border-radius:10px;
+    background:var(--errbg); color:var(--err); font-size:14px; cursor:pointer; font-family:var(--sans); }
+
+  .msg{ margin-top:14px; font-size:13px; padding:12px 14px; border-radius:9px; display:none; }
   .msg.show{ display:block; }
   .msg.err{ background:var(--errbg); color:var(--err); }
   .msg.ok{ background:var(--okbg); color:var(--ok); }
-  .stats{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:14px; }
-  .stat{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 8px; text-align:center; }
-  .stat .n{ font-family:var(--serif); font-size:24px; font-weight:700; line-height:1; }
-  .stat .l{ font-size:9px; letter-spacing:1px; color:var(--muted); text-transform:uppercase; margin-top:7px; }
-  .shop{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:12px; }
-  .shop .top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
-  .shop .nm{ font-weight:700; font-size:16px; }
-  .shop .sl{ font-size:12px; color:var(--muted); margin-top:3px; }
-  .badge{ display:inline-block; padding:4px 11px; border-radius:20px; font-size:12px; font-weight:700; white-space:nowrap; }
+  .pwrap{ position:relative; }
+  .pwrap input{ padding-right:52px; }
+  .eye{ position:absolute; right:4px; top:50%; transform:translateY(-50%); background:none; border:none;
+    font-size:19px; line-height:1; padding:10px 12px; cursor:pointer; opacity:.45; filter:grayscale(1); }
+  .eye.on{ opacity:1; filter:none; }
+  .flink{ display:block; width:100%; margin-top:14px; background:none; border:none; color:var(--gold);
+    font-size:13px; font-family:var(--sans); text-decoration:underline; cursor:pointer; padding:6px 0; }
+  .sep{ border-top:1px solid var(--line); margin:18px 0 0; padding-top:14px; text-align:center; }
+  .sep p{ margin:0 0 10px; font-size:13px; color:var(--muted); }
+  .sep a{ display:block; padding:13px; border:1px solid var(--line2); border-radius:10px;
+    color:var(--txt); font-size:14px; text-decoration:none; }
+
+  .greet{ font-family:var(--serif); font-size:23px; margin:2px 2px 2px; }
+  .greet .sub{ font-family:var(--sans); font-size:13px; color:var(--gold); margin-top:4px; letter-spacing:1px; text-transform:uppercase; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:18px; margin-top:14px; }
+  .card h2{ font-family:var(--serif); font-size:17px; color:var(--gold); margin:0 0 12px; font-weight:700;
+    padding-bottom:10px; border-bottom:1px solid var(--line); }
+  .row{ display:flex; justify-content:space-between; align-items:baseline; padding:7px 0; font-size:15px; gap:12px; }
+  .row .k{ color:var(--muted); font-size:13px; }
+  .row .v{ text-align:right; font-weight:500; word-break:break-word; }
+
+  .badge{ display:inline-block; padding:4px 12px; border-radius:20px; font-size:13px; font-weight:700; }
   .badge.ok{ background:var(--okbg); color:var(--ok); }
   .badge.warn{ background:var(--warnbg); color:var(--warn); }
   .badge.err{ background:var(--errbg); color:var(--err); }
-  .exp{ font-size:13px; color:var(--muted); margin-top:10px; }
-  .newsbox{ background:#33280E; border:1px solid var(--gold); border-radius:12px; padding:15px 16px; margin-top:14px; }
-  .newsbox .txt{ color:var(--gold); font-size:14px; font-weight:700; }
-  .newsbox button{ width:100%; margin-top:11px; padding:11px; border:1px solid var(--gold); border-radius:9px;
-    background:transparent; color:var(--gold); font-size:13px; font-weight:700; cursor:pointer; font-family:var(--sans); }
-  .newtag{ display:inline-block; background:var(--gold); color:#141310; font-size:10px; font-weight:700;
-    letter-spacing:1px; padding:3px 9px; border-radius:20px; margin-left:8px; vertical-align:middle; }
-  .tier{ display:flex; gap:8px; margin-top:12px; }
-  .tier button{ flex:1; padding:10px 4px; border:1px solid var(--line2); border-radius:9px; background:transparent;
-    color:var(--muted); font-size:13px; font-weight:700; cursor:pointer; font-family:var(--sans); }
-  .tier button.on{ background:var(--gold); color:#141310; border-color:var(--gold); }
-  .price-note{ text-align:center; font-size:12px; color:var(--muted); margin-top:14px; }
-  .quick{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:12px; }
-  .quick button{ padding:11px 4px; border:1px solid var(--gold); border-radius:9px; background:transparent;
-    color:var(--gold); font-size:13px; font-weight:700; cursor:pointer; font-family:var(--sans); }
-  .quick button:active{ background:#33280E; }
-  .quick button:disabled{ opacity:.4; }
-  .note{ text-align:center; font-size:11px; color:#5F5B54; margin-top:24px; line-height:1.7; }
-  .center{ text-align:center; color:var(--muted); padding:60px 20px; font-size:14px; line-height:1.7; }
+  .badge.gold{ background:#33280E; color:var(--gold); }
+  .badge.soft{ background:var(--panel2); color:var(--muted); font-weight:600; }
+  .sub-note{ margin-top:12px; font-size:13px; padding:10px 12px; border-radius:9px; }
+  .sub-note.warn{ background:var(--warnbg); color:var(--warn); }
+  .sub-note.err{ background:var(--errbg); color:var(--err); }
+
+  .subtop{ display:flex; align-items:center; gap:10px; padding:6px 2px 16px; border-bottom:1px solid var(--line); margin-bottom:6px; }
+  .back{ background:none; border:none; font-size:14px; color:var(--muted); cursor:pointer; padding:6px 2px; font-family:var(--sans); }
+  .subtop h1{ font-family:var(--serif); font-size:20px; margin:0; color:var(--gold); font-weight:700; }
+
+  .cli-item{ background:var(--panel); border:1px solid var(--line); border-radius:11px; padding:14px 16px;
+    margin-top:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .cli-item:active{ background:var(--panel2); }
+  .cli-item .nm{ font-weight:600; font-size:15px; }
+  .cli-item .ph{ font-size:13px; color:var(--muted); margin-top:3px; }
+  .chev{ color:var(--gold); font-size:22px; }
+  .empty{ text-align:center; color:var(--muted); padding:32px 20px; font-size:14px; line-height:1.6; }
+
+  .steps{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .steps button{ padding:12px 8px; border:1px solid var(--line2); border-radius:9px; background:transparent;
+    color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; font-family:var(--sans); }
+  .steps button.on{ background:var(--gold); color:#141310; border-color:var(--gold); }
+  .steps button.done{ color:var(--gold); border-color:var(--gold); }
+
+  .mgrid{ display:grid; grid-template-columns:1fr 1fr; gap:8px 12px; margin-top:4px; }
+  .mgrid label{ margin:6px 0 4px; }
+  .mline{ display:flex; justify-content:space-between; padding:8px 0; font-size:15px; border-bottom:1px solid var(--line); }
+  .mline:last-child{ border-bottom:none; }
+  .mline .k{ color:var(--muted); font-size:14px; }
+  .mline .v{ font-weight:700; color:var(--gold); }
+
+  .foot{ text-align:center; font-size:11px; color:#5F5B54; margin-top:28px; letter-spacing:.5px; }
+  .center{ text-align:center; color:var(--muted); padding:70px 20px; font-size:14px; line-height:1.7; }
+  .offline-note{ text-align:center; font-size:12px; color:var(--warn); background:var(--warnbg);
+    padding:9px 12px; border-radius:9px; margin-bottom:12px; line-height:1.5; }
+  .lock{ background:var(--panel); border:1px dashed var(--line2); border-radius:13px; padding:22px 18px; margin-top:14px; text-align:center; }
+  .lock h3{ font-family:var(--serif); font-size:18px; color:var(--gold); margin:0 0 10px; }
+  .lock p{ font-size:14px; color:var(--muted); margin:0 0 6px; line-height:1.6; }
+  .lock .price{ font-size:13px; color:var(--txt); margin:12px 0 0; }
+  .typebox{ border:1px solid var(--gold); border-radius:12px; padding:14px; margin-top:6px; background:#1A1710; }
+  .typebox .lbl{ font-size:13px; color:var(--gold); font-weight:600; margin-bottom:11px; line-height:1.4; }
+  .types{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+  .types button{ padding:12px 4px; border:1px solid var(--line2); border-radius:9px; background:var(--panel2);
+    color:var(--muted); font-size:12px; font-weight:700; font-family:var(--sans); cursor:pointer; line-height:1.4; }
+  .types button.on{ background:var(--gold); color:#141310; border-color:var(--gold); }
+  .types .ic{ display:block; font-size:19px; margin-bottom:3px; }
+  .seg.big{ width:100%; }
+  .seg.big button{ flex:1; padding:14px 4px; font-size:14px; letter-spacing:0; }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+  .chips button{ padding:9px 13px; border:1px solid var(--line2); border-radius:20px; background:transparent;
+    color:var(--txt); font-size:13px; cursor:pointer; font-family:var(--sans); }
+  .chips button.on{ background:var(--gold); color:#141310; border-color:var(--gold); }
+  .rec{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:15px 16px; margin-top:11px; }
+  .rec .nm{ font-weight:700; font-size:15px; }
+  .rec .ln{ font-size:13px; color:var(--muted); margin-top:4px; }
+  .rec .amt{ color:var(--gold); font-weight:700; font-size:15px; }
+  .rec .rm{ margin-top:11px; width:100%; padding:9px; border:1px solid #4A2222; border-radius:8px;
+    background:var(--errbg); color:var(--err); font-size:13px; cursor:pointer; font-family:var(--sans); }
+  .otp{ font-family:var(--serif); font-size:34px; color:var(--gold); letter-spacing:8px;
+    text-align:center; padding:16px 0 6px; font-weight:700; }
+  .otp-note{ text-align:center; font-size:12px; color:var(--muted); padding-bottom:4px; }
+  button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  @media (prefers-reduced-motion:reduce){ *{ transition:none !important; animation:none !important; } }
   [hidden]{ display:none !important; }
-  button:focus-visible,input:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
 </style>
 </head>
 <body>
 <script>
   window.addEventListener("error", function(e){
     var l=document.getElementById("loading");
-    if(l && !l.hidden){ l.style.color="#E96B6B"; l.textContent="Erreur : "+(e.message||""); }
+    if(l && !l.hidden){ l.style.color="#E96B6B"; l.textContent="Erreur : "+(e.message||"")+(e.filename?(" ["+e.filename.split('/').pop()+":"+e.lineno+"]"):""); }
   });
-  setTimeout(function(){
+  window.addEventListener("unhandledrejection", function(e){
     var l=document.getElementById("loading");
-    if(l && !l.hidden && !window.__loaded){ l.textContent="Chargement long — connexion lente. Patiente, ne recharge pas."; }
-  }, 30000);
+    if(l && !l.hidden){ l.style.color="#E96B6B"; l.textContent="Erreur : "+(((e.reason&&e.reason.message)||e.reason)||""); }
+  });
+  var __L="fr";
+  try{ __L = localStorage.getItem("sanaapro_lang_ui") || localStorage.getItem("sanaapro_lang") || "fr"; }catch(e){}
+  var __SLOW = {
+    fr:[[30000,"Chargement\u2026 la connexion est lente, mais \u00e7a continue."],
+        [90000,"Toujours en cours \u2014 ne recharge pas la page."],
+        [180000,"Le r\u00e9seau ne suit pas pour l'instant.<br>R\u00e9essaie avec une meilleure connexion : apr\u00e8s UN chargement r\u00e9ussi, l'app s'ouvrira vite."]],
+    en:[[30000,"Loading\u2026 the connection is slow, but it is still going."],
+        [90000,"Still working \u2014 please do not reload the page."],
+        [180000,"The network is too slow right now.<br>Try again with a better connection: after ONE successful load, the app will open quickly."]]
+  };
+  (__SLOW[__L]||__SLOW.fr).forEach(function(s){
+    setTimeout(function(){
+      var l=document.getElementById("loading");
+      if(l && !l.hidden && !window.__loaded){ l.innerHTML=s[1]; }
+    }, s[0]);
+  });
 </script>
 <div class="wrap">
 
   <div id="loading" class="center">Chargement…</div>
 
   <div id="login" hidden>
-    <div class="head">
-      <div class="name">🔑 Abonnements</div>
-      <div class="sub">SanaaPro — outil prestataire</div>
+    <div class="head" style="border-bottom:1px solid var(--line)">
+      <div class="name">SanaaPro</div>
+      <div class="sub" data-i18n="tagline">votre atelier, en ligne</div>
+      <div class="langset">
+        <div class="langrow">
+          <span class="langlab" data-i18n="uiLabel">Interface</span>
+          <div class="seg" data-seg="ui"><button data-lang="fr">FR</button><button data-lang="en">EN</button></div>
+        </div>
+      </div>
     </div>
-    <div class="card">
-      <h2>Connexion prestataire</h2>
-      <label for="email">Email admin</label>
-      <input id="email" type="email" placeholder="vous@email.com" autocomplete="email">
-      <label for="pass">Mot de passe</label>
-      <input id="pass" type="password" placeholder="Votre mot de passe" autocomplete="current-password">
-      <button class="primary" id="login-btn">Se connecter</button>
+    <div class="login-card">
+      <h1 data-i18n="loginTitle">Connexion à votre espace</h1>
+      <p class="lead" data-i18n="loginLead">Entrez les identifiants créés à l'inscription.</p>
+      <label for="email" data-i18n="email">Email</label>
+      <input id="email" type="email" data-i18n-ph="emailPh" placeholder="vous@email.com" autocomplete="email">
+      <label for="pass" data-i18n="password">Mot de passe</label>
+      <div class="pwrap">
+        <input id="pass" type="password" data-i18n-ph="passwordPh" placeholder="Votre mot de passe" autocomplete="current-password">
+        <button class="eye" id="eye-btn" type="button" aria-label="Afficher le mot de passe">👁</button>
+      </div>
+      <button class="primary" id="login-btn" data-i18n="signIn">Se connecter</button>
+      <button class="flink" id="forgot-btn" data-i18n="forgot">Mot de passe oublié ?</button>
       <div class="msg err" id="login-msg"></div>
+      <div class="sep">
+        <p data-i18n="noAccount">Pas encore de compte ?</p>
+        <a href="../inscription/" data-i18n="newShop">Créer une nouvelle boutique</a>
+      </div>
     </div>
-    <div class="note">
-      Cette page n'accède qu'aux licences.<br>
-      Aucune donnée cliente (commandes, mesures, contacts) n'est chargée ni visible ici.
-    </div>
+    <div class="foot" data-i18n="foot">SanaaPro — propulsé par votre atelier</div>
   </div>
 
-  <div id="board" hidden>
+  <div id="dash" hidden>
     <div class="head">
-      <div class="name">🔑 Abonnements</div>
-      <div class="sub">SanaaPro — outil prestataire</div>
-      <button class="logout" id="logout-btn">Déconnexion</button>
+      <div class="name" id="d-brand">SanaaPro</div>
+      <div class="sub" id="d-brandsub" data-i18n="tagline">votre atelier, en ligne</div>
+      <div><span class="pill" id="syncpill"><span class="dot"></span><span id="synctext">En ligne</span></span></div>
+      <div class="langset">
+        <div class="langrow">
+          <span class="langlab" data-i18n="uiLabel">Interface</span>
+          <div class="seg" data-seg="ui"><button data-lang="fr">FR</button><button data-lang="en">EN</button></div>
+        </div>
+        <div class="langrow">
+          <span class="langlab" data-i18n="msgLabel">Messages clients</span>
+          <div class="seg" data-seg="msg"><button data-lang="fr">FR</button><button data-lang="en">EN</button></div>
+        </div>
+      </div>
+      <button class="logout" id="logout-btn" data-i18n="logout">Déconnexion</button>
     </div>
 
-    <div class="stats">
-      <div class="stat"><div class="n" id="s-tot" style="color:var(--gold)">—</div><div class="l">Boutiques</div></div>
-      <div class="stat"><div class="n" id="s-soon" style="color:var(--warn)">—</div><div class="l">Bientôt</div></div>
-      <div class="stat"><div class="n" id="s-exp" style="color:var(--err)">—</div><div class="l">Expirées</div></div>
+    <div class="tabs" id="tabs">
+      <button data-tab="apercu" data-i18n="tabApercu">Aperçu</button>
+      <button data-tab="atelier" data-i18n="tabAtelier">Atelier</button>
+      <button data-tab="boutique" data-i18n="tabBoutique">Boutique</button>
+      <button data-tab="mesures" data-i18n="tabMesures">Mesures</button>
+      <button data-tab="staff" data-i18n="tabStaff">Salariés</button>
+      <button data-tab="visits" data-i18n="tabVisitors">Visiteurs</button>
     </div>
 
-    <div class="msg ok" id="board-msg"></div>
-    <div class="newsbox" id="newsbox" hidden>
-      <div class="txt" id="news-text"></div>
-      <button id="news-ack">Tout marquer comme vu</button>
+    <div class="offline-note" id="off-dash" data-i18n="offline" hidden>Mode hors ligne — vos données sont enregistrées et se synchroniseront au retour du réseau.</div>
+
+    <div id="pane-apercu">
+      <div class="greet"><span data-i18n="hello">Bonjour</span> <span id="d-owner"></span><div class="sub" id="d-name"></div></div>
+
+      <div class="card">
+        <h2 data-i18n="search">Recherche globale</h2>
+        <input id="q" type="search" data-i18n-ph="searchPh" placeholder="Nom, téléphone ou modèle">
+        <div id="q-res"></div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="n" id="s-cmd">—</div><div class="l" data-i18n="statOrders">Commandes</div></div>
+        <div class="stat"><div class="n" id="s-cli">—</div><div class="l" data-i18n="statClients">Clientes</div></div>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="subscription">Abonnement</h2>
+        <div class="row"><span class="k" data-i18n="status">Statut</span><span class="v"><span id="d-badge" class="badge"></span></span></div>
+        <div class="row"><span class="k" data-i18n="plan">Formule</span><span class="v" id="d-plan"></span></div>
+        <div class="row"><span class="k" data-i18n="expiry">Échéance</span><span class="v" id="d-expiry"></span></div>
+        <div id="d-subnote" class="sub-note" hidden></div>
+      </div>
     </div>
-    <div id="list"></div>
-    <div class="price-note" id="price-note"></div>
-    <div class="note">
-      Cette page n'accède qu'aux licences.<br>
-      Aucune donnée cliente n'est chargée ni visible ici.
+
+    <div id="pane-atelier" hidden>
+      <button class="primary" id="cmd-add" data-i18n="newOrder">+ Nouvelle commande</button>
+      <input id="q-cmd" type="search" data-i18n-ph="searchOrdersPh" placeholder="Chercher une commande…" style="margin-top:14px">
+      <div id="cmd-list"></div>
+      <div id="cmd-empty" class="empty" data-i18n="noOrders" hidden>Aucune commande pour le moment.</div>
     </div>
+
+    <div id="pane-boutique" hidden>
+      <div class="card">
+        <h2 data-i18n="myShop">Ma boutique</h2>
+        <div class="row"><span class="k" data-i18n="shopName">Nom</span><span class="v" id="d-shopname"></span></div>
+        <div class="row"><span class="k" data-i18n="shopSlug">Identifiant</span><span class="v" id="d-slug"></span></div>
+        <div class="row"><span class="k" data-i18n="email">Email</span><span class="v" id="d-email"></span></div>
+        <div class="row" id="d-wa-row"><span class="k">WhatsApp</span><span class="v" id="d-wa"></span></div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="ownerCode">Code propriétaire</h2>
+        <p style="margin:0 0 4px;font-size:13px;color:var(--muted)" data-i18n="ownerCodeHint">Sans code, n'importe qui peut modifier un prix ou un modèle. Avec un code, vous seul.</p>
+        <input id="b-code" type="text" inputmode="numeric" maxlength="6" data-i18n-ph="ownerCodePh" placeholder="4 à 6 chiffres">
+        <button class="ghost" id="b-code-save" data-i18n="saveCode">Enregistrer le code</button>
+      </div>
+      <div class="card">
+        <h2 data-i18n="autoNotify">Notification WhatsApp automatique</h2>
+        <p style="margin:0 0 10px;font-size:13px;color:var(--muted)" data-i18n="autoNotifyHint">À chaque changement d'étape, WhatsApp s'ouvre avec le message déjà écrit.</p>
+        <div class="seg" data-seg="auto" style="width:100%">
+          <button data-v="1" data-i18n="yes" style="flex:1">Oui</button><button data-v="0" data-i18n="no" style="flex:1">Non</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="otpTitle">Code à usage unique (à distance)</h2>
+        <p style="margin:0;font-size:13px;color:var(--muted)" data-i18n="otpHint">Utile quand vous n'êtes pas sur place.</p>
+        <div id="b-otp" hidden>
+          <div class="otp" id="b-otp-code"></div>
+          <div class="otp-note" data-i18n="otpNote">Valable une seule fois, pendant 24 heures.</div>
+        </div>
+        <button class="ghost" id="b-otp-gen" data-i18n="otpGen">Générer un code à usage unique</button>
+      </div>
+    </div>
+
+    <div id="pane-mesures" hidden>
+      <button class="primary" id="cli-add" data-i18n="newClient">+ Nouvelle cliente</button>
+      <div class="seg" data-seg="mesgenre" style="margin-top:14px;width:100%">
+        <button data-g="femme" data-i18n="gFemme" style="flex:1">Femme</button><button data-g="homme" data-i18n="gHomme" style="flex:1">Homme</button>
+      </div>
+      <input id="q-cli" type="search" data-i18n-ph="searchClientsPh" placeholder="Nom ou téléphone…" style="margin-top:12px">
+      <div id="cli-list"></div>
+      <div id="cli-empty" class="empty" data-i18n="noClients" hidden>Aucune cliente pour le moment.</div>
+    </div>
+
+    <div id="pane-staff" hidden>
+      <div class="lock" id="lock-staff" hidden></div>
+      <div id="body-staff">
+      <div class="card">
+        <h2 data-i18n="addStaff">Ajouter un employé</h2>
+        <label data-i18n="staffName">Nom</label>
+        <input id="st-name" type="text" data-i18n-ph="staffNamePh" placeholder="Ex. Awa Ndiaye">
+        <label data-i18n="role">Poste — touchez pour choisir</label>
+        <div class="chips" id="st-roles"></div>
+        <input id="st-role-other" type="text" data-i18n-ph="roleOtherPh" placeholder="Ou écrivez un autre poste" style="margin-top:10px">
+        <label data-i18n="phone">Téléphone</label>
+        <input id="st-phone" type="tel" placeholder="+220 …">
+        <label data-i18n="salary">Salaire mensuel (D)</label>
+        <input id="st-salary" type="number" step="1" inputmode="decimal" placeholder="0">
+        <button class="primary" id="st-add" data-i18n="addStaffBtn">Ajouter l'employé</button>
+        <div class="msg err" id="st-msg"></div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="staffRecap">Récapitulatif mensuel</h2>
+        <div class="row"><span class="k" data-i18n="tabStaff">Salariés</span><span class="v" id="st-count">0</span></div>
+        <div class="row"><span class="k" data-i18n="staffTotal">Total mensuel</span><span class="v amt" id="st-total">0 D</span></div>
+      </div>
+      <div id="st-list"></div>
+      <div id="st-empty" class="empty" data-i18n="noStaff" hidden>Aucun employé enregistré.</div>
+      </div>
+    </div>
+
+    <div id="pane-visits" hidden>
+      <div class="lock" id="lock-visits" hidden></div>
+      <div id="body-visits">
+      <div class="card">
+        <h2 data-i18n="addVisit">Enregistrer un passage</h2>
+        <label data-i18n="staffName">Nom</label>
+        <input id="vi-name" type="text" data-i18n-ph="visitNamePh" placeholder="Ex. Amadou">
+        <label data-i18n="phone">Téléphone</label>
+        <input id="vi-phone" type="tel" placeholder="+220 …">
+        <label data-i18n="notes">Note</label>
+        <textarea id="vi-note" rows="2" data-i18n-ph="visitNotePh" placeholder="Ex. venu déposer des tissus, envoyé par Oumi"></textarea>
+        <button class="primary" id="vi-add" data-i18n="addVisitBtn">Enregistrer le passage</button>
+        <div class="msg err" id="vi-msg"></div>
+      </div>
+      <input id="q-vis" type="search" data-i18n-ph="searchVisitorPh" placeholder="Rechercher un visiteur…" style="margin-top:14px">
+      <div id="vis-list"></div>
+      <div id="vis-empty" class="empty" data-i18n="noVisits" hidden>Aucun passage enregistré.</div>
+      </div>
+    </div>
+
+    <div class="foot" data-i18n="foot">SanaaPro — propulsé par votre atelier</div>
+  </div>
+
+  <div id="cmd" hidden>
+    <div class="subtop"><button class="back" id="c-back" data-i18n="backWorkshop">‹ Atelier</button><h1 id="c-title">Commande</h1></div>
+    <div class="card">
+      <h2 data-i18n="orderInfo">La commande</h2>
+      <div class="row"><span class="k" data-i18n="receiptNo">N° de reçu</span><span class="v" id="c-num" style="color:var(--gold);font-weight:700"></span></div>
+      <div class="row"><span class="k" data-i18n="client">Cliente</span><span class="v" id="c-cliente"></span></div>
+      <div class="row" id="c-phone-row"><span class="k" data-i18n="phone">Téléphone</span><span class="v" id="c-phone"></span></div>
+      <div class="row"><span class="k" data-i18n="typeLabel">Type de commande</span><span class="v" id="c-type"></span></div>
+      <div class="row" id="c-recu-row"><span class="k" data-i18n="received">Reçu</span><span class="v" id="c-recu"></span></div>
+      <div class="row"><span class="k" data-i18n="garment">Modèle</span><span class="v" id="c-article"></span></div>
+      <div class="row" id="c-price-row"><span class="k" data-i18n="price">Prix</span><span class="v" id="c-prix"></span></div>
+      <div class="row" id="c-liv-row"><span class="k" data-i18n="delivery">Livraison prévue</span><span class="v" id="c-liv"></span></div>
+      <div class="row" id="c-notes-row"><span class="k" data-i18n="notes">Notes</span><span class="v" id="c-notes"></span></div>
+    </div>
+    <div class="card">
+      <h2 data-i18n="stage">Étape</h2>
+      <div class="steps" id="c-steps">
+        <button data-st="recu" data-i18n="stRecu">Reçu</button>
+        <button data-st="coupe" data-i18n="stCoupe">Coupe</button>
+        <button data-st="essayage" data-i18n="stEssayage">Essayage</button>
+        <button data-st="pret" data-i18n="stPret">Prêt</button>
+      </div>
+      <p style="margin:12px 0 0;font-size:13px;color:var(--muted)" data-i18n="stageHint">Touchez l'étape atteinte, puis prévenez la cliente.</p>
+    </div>
+    <button class="wa" id="c-wa-cli" data-i18n="notifyClient">Prévenir la cliente sur WhatsApp</button>
+    <button class="wa" id="c-wa-shop" data-i18n="copyShop">Copie à la boutique</button>
+    <button class="ghost" id="c-edit" data-i18n="editOrder">Modifier la commande</button>
+    <button class="del" id="c-del" data-i18n="deleteOrder">Supprimer cette commande</button>
+    <div style="height:20px"></div>
+  </div>
+
+  <div id="cform" hidden>
+    <div class="subtop"><button class="back" id="cf-back" data-i18n="cancel">‹ Annuler</button><h1 id="cf-title">Nouvelle commande</h1></div>
+    <div class="card">
+      <h2 data-i18n="orderInfo">La commande</h2>
+      <div class="typebox">
+        <div class="lbl" data-i18n="typeHint">Type de commande (à choisir avant de remplir)</div>
+        <div class="types" id="cf-types"></div>
+      </div>
+      <label data-i18n="genreLabel">Genre du client</label>
+      <div class="seg big" data-seg="cfgenre" style="margin-top:4px">
+        <button data-g="femme" data-i18n="gFemme">Femme</button><button data-g="homme" data-i18n="gHomme">Homme</button>
+      </div>
+      <label data-i18n="client">Cliente</label>
+      <select id="cf-cliente"></select>
+      <div id="cf-new" hidden>
+        <label data-i18n="newClientNameLabel">Nom du nouveau client</label>
+        <input id="cf-new-name" type="text" data-i18n-ph="newClientNamePh" placeholder="Ex. Awa Diallo">
+        <label data-i18n="phoneWa">Téléphone / WhatsApp</label>
+        <input id="cf-new-phone" type="tel" data-i18n-ph="newPhonePh" placeholder="+220 …">
+      </div>
+      <label data-i18n="receivedLabel">Reçu de la cliente</label>
+      <select id="cf-recu">
+        <option value="tissu" data-i18n="rcvFabric">tissu</option>
+        <option value="materiel" data-i18n="rcvMaterial">matériel</option>
+        <option value="vetement" data-i18n="rcvGarment">vêtement</option>
+      </select>
+      <label data-i18n="garment">Modèle</label>
+      <input id="cf-article" type="text" data-i18n-ph="garmentPh" placeholder="Ex. Boubou, robe brodée, ensemble">
+      <label data-i18n="priceOpt">Prix (optionnel)</label>
+      <input id="cf-prix" type="number" step="1" inputmode="decimal" placeholder="1500">
+      <label data-i18n="deliveryOpt">Date de livraison (optionnel)</label>
+      <input id="cf-liv" type="date">
+      <label data-i18n="notesOpt">Notes (optionnel)</label>
+      <textarea id="cf-notes" rows="2" data-i18n-ph="orderNotesPh" placeholder="Couleur, broderie, remarques…"></textarea>
+    </div>
+    <div class="card">
+      <h2 data-i18n="measures">Mesures (cm)</h2>
+      <p style="margin:0 0 8px;font-size:13px;color:var(--muted)" data-i18n="measuresHint">Elles rejoignent automatiquement la fiche de la cliente.</p>
+      <div class="mgrid" id="cf-mesures"></div>
+    </div>
+    <button class="primary" id="cf-save" data-i18n="saveOrder">Enregistrer la commande</button>
+    <div class="msg err" id="cf-msg"></div>
+    <div style="height:24px"></div>
+  </div>
+
+  <div id="fiche" hidden>
+    <div class="subtop"><button class="back" id="fiche-back" data-i18n="backMeasures">‹ Mesures</button><h1 id="f-name">Cliente</h1></div>
+    <div class="card">
+      <h2 data-i18n="contact">Coordonnées</h2>
+      <div class="row" id="f-phone-row"><span class="k" data-i18n="phone">Téléphone</span><span class="v" id="f-phone"></span></div>
+      <div class="row" id="f-notes-row"><span class="k" data-i18n="notes">Notes</span><span class="v" id="f-notes"></span></div>
+    </div>
+    <div class="card">
+      <h2 data-i18n="measures">Mesures (cm)</h2>
+      <div id="f-mesures"></div>
+    </div>
+    <button class="wa" id="f-wa-shop" data-i18n="measuresToShop">Envoyer ces mesures à la boutique</button>
+    <button class="ghost" id="f-edit" data-i18n="editClient">Modifier la fiche</button>
+    <button class="del" id="f-del" data-i18n="deleteClient">Supprimer cette cliente</button>
+    <div style="height:20px"></div>
+  </div>
+
+  <div id="form" hidden>
+    <div class="subtop"><button class="back" id="form-back" data-i18n="cancel">‹ Annuler</button><h1 id="form-title">Nouvelle cliente</h1></div>
+    <div class="card">
+      <h2 data-i18n="contact">Coordonnées</h2>
+      <label data-i18n="genreLabel">Genre du client</label>
+      <div class="seg big" data-seg="ingenre" style="margin-top:4px">
+        <button data-g="femme" data-i18n="gFemme">Femme</button><button data-g="homme" data-i18n="gHomme">Homme</button>
+      </div>
+      <label data-i18n="clientName">Nom de la cliente *</label>
+      <input id="in-name" type="text" data-i18n-ph="clientNamePh" placeholder="Ex. Awa Diallo">
+      <label data-i18n="phoneWa">Téléphone / WhatsApp</label>
+      <input id="in-phone" type="tel" placeholder="+220 …">
+      <label data-i18n="notesOpt">Notes (optionnel)</label>
+      <textarea id="in-notes" rows="2" data-i18n-ph="notesPh" placeholder="Préférences, tissu, remarques…"></textarea>
+    </div>
+    <div class="card">
+      <h2 data-i18n="measures">Mesures (cm)</h2>
+      <div class="mgrid" id="in-mesures"></div>
+    </div>
+    <button class="primary" id="form-save" data-i18n="save">Enregistrer</button>
+    <div class="msg err" id="form-msg"></div>
+    <div style="height:24px"></div>
   </div>
 
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { initializeFirestore, collection, getDocs, doc, setDoc, Timestamp }
+  import { initializeFirestore, enableIndexedDbPersistence,
+           doc, getDoc, getDocFromCache, collection, setDoc, getDocs, getDocsFromCache,
+           deleteDoc, query, orderBy, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -157,199 +530,1201 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = initializeFirestore(app, { experimentalForceLongPolling: true });
+  enableIndexedDbPersistence(db).catch(function(){});
+
+  const DEFAULT_CC = "220";
+  const CUR = "D";
+  const PRICE_STD = 500, PRICE_PREM = 750;
+  const SANAAPRO_WA = "2207628683";
+  const STEPS = ["recu","coupe","essayage","pret"];
+  const TABS = ["apercu","atelier","boutique","mesures","staff","visits"];
+  const ROLES = ["roleCouturier","roleCouturiere","roleManager","roleVendeuse","roleApprenti","roleMenagere"];
+
+  const MESURES_F = [
+    ["poitrine","Tour de poitrine","Bust"],
+    ["taille","Tour de taille","Waist"],
+    ["bassin","Tour de bassin","Hips"],
+    ["epaule","Épaule","Shoulder"],
+    ["carrure","Carrure dos","Back width"],
+    ["longCorsage","Longueur corsage","Bodice length"],
+    ["longManche","Longueur manche","Sleeve length"],
+    ["tourManche","Tour de manche","Sleeve width"],
+    ["longRobe","Longueur robe","Dress length"],
+    ["longJupe","Longueur jupe","Skirt length"],
+    ["longPantalon","Longueur pantalon","Trouser length"],
+    ["cuisse","Tour de cuisse","Thigh"],
+    ["cou","Tour de cou","Neck"],
+    ["poignet","Tour de poignet","Wrist"]
+  ];
+
+  const MESURES_H = [
+    ["cou","Tour de cou","Neck"],
+    ["epaule","Épaule","Shoulder"],
+    ["poitrine","Tour poitrine","Chest"],
+    ["longManche","Long. manche","Sleeve length"],
+    ["tourManche","Tour manche","Sleeve width"],
+    ["poignet","Poignet","Wrist"],
+    ["taille","Tour de taille","Waist"],
+    ["longTaille","Longueur de taille","Waist length"],
+    ["ceinture","Ceinture","Belt"],
+    ["bassin","Tour bassin","Hips"],
+    ["cuisse","Tour de cuisse","Thigh"],
+    ["genou","Tour de genou","Knee"],
+    ["basPantalon","Bas du pantalon","Trouser hem"],
+    ["longPantalon","Longueur pantalon","Trouser length"],
+    ["longChemise","Longueur chemise","Shirt length"],
+    ["longBoubou","Longueur boubou","Boubou length"]
+  ];
+
+  const mesuresFor = g => (g === "homme") ? MESURES_H : MESURES_F;
+
+  const T = {
+    fr:{
+      tagline:"votre atelier, en ligne", foot:"SanaaPro — propulsé par votre atelier",
+      uiLabel:"Interface", msgLabel:"Messages clients",
+      online:"En ligne — synchronisé", offlineShort:"Hors ligne",
+      tabApercu:"Aperçu", tabAtelier:"Atelier", tabBoutique:"Boutique", tabMesures:"Mesures",
+      tabStaff:"Salariés", tabVisitors:"Visiteurs",
+      standard:"Standard", premium:"Premium",
+      typeLabel:"Type de commande", typeHint:"Type de commande (à choisir avant de remplir)", tConfection:"Confection", tRetouche:"Retouche", tPap:"Prêt-à-porter",
+      genreLabel:"Genre du client", gFemme:"Femme", gHomme:"Homme",
+      newClientOpt:"+ Nouvelle cliente", newClientNameLabel:"Nom du nouveau client",
+      newClientNamePh:"Ex. Awa Diallo", newPhonePh:"+220 …",
+      rcvGarment:"vêtement",
+      autoNotify:"Notification WhatsApp automatique",
+      autoNotifyHint:"À chaque changement d'étape, WhatsApp s'ouvre avec le message déjà écrit. Mettez « Non » pour prévenir vous-même.",
+      yes:"Oui", no:"Non",
+      mRecuPap:"Bonjour {nom}, votre commande de {article} est enregistrée à l'atelier {boutique}.",
+      measuresHint:"Elles rejoignent automatiquement la fiche de la cliente.",
+      lockTitle:"Réservé à la formule Premium",
+      lockText:"Le suivi des salariés, le registre des visiteurs et le bilan financier font partie de la formule Premium.",
+      lockPrice:"Standard {a} {cur}/mois · Premium {b} {cur}/mois",
+      lockBtn:"Passer au premium sur WhatsApp",
+      lockTrial:"Pendant votre essai gratuit, tout est ouvert — vous pouvez essayer ces pages librement.",
+      upgradeMsg:"Bonjour, je souhaite passer ma boutique {shop} ({slug}) à la formule Premium.",
+      addStaff:"Ajouter un employé", staffName:"Nom", staffNamePh:"Ex. Awa Ndiaye",
+      role:"Poste — touchez pour choisir", roleOtherPh:"Ou écrivez un autre poste",
+      salary:"Salaire mensuel (D)", addStaffBtn:"Ajouter l'employé",
+      staffRecap:"Récapitulatif mensuel", staffTotal:"Total mensuel", noStaff:"Aucun employé enregistré.",
+      staffNameRequired:"Le nom de l'employé est obligatoire.", confirmDeleteStaff:"Retirer cet employé ?",
+      roleCouturier:"Couturier", roleCouturiere:"Couturière", roleManager:"Manager",
+      roleVendeuse:"Vendeuse", roleApprenti:"Apprenti(e)", roleMenagere:"Ménagère",
+      addVisit:"Enregistrer un passage", visitNamePh:"Ex. Amadou",
+      visitNotePh:"Ex. venu déposer des tissus, envoyé par Oumi",
+      addVisitBtn:"Enregistrer le passage", noVisits:"Aucun passage enregistré.",
+      searchVisitorPh:"Rechercher un visiteur…", visitNameRequired:"Le nom du visiteur est obligatoire.",
+      confirmDeleteVisit:"Supprimer ce passage ?", remove:"Supprimer",
+      search:"Recherche globale", searchPh:"Nom, téléphone ou modèle", noResult:"Aucun résultat.",
+      statOrders:"Commandes", statClients:"Clientes",
+      receiptNo:"N° de reçu", lineReceipt:"Reçu n° {v}",
+      searchOrdersPh:"Chercher une commande…", searchClientsPh:"Nom ou téléphone…",
+      ownerCode:"Code administrateur", ownerCodePh:"4 à 6 chiffres", saveCode:"Enregistrer le code",
+      ownerCodeHint:"Ce code protège les suppressions et les corrections de prix. Changez-le régulièrement.",
+      otpTitle:"Code à usage unique (à distance)",
+      otpHint:"Utile quand vous n'êtes pas sur place : un bouton génère un code, vous le dictez au manager par téléphone. Il ne fonctionne qu'une seule fois.",
+      otpGen:"Générer un code à usage unique", otpNote:"Valable une seule fois, pendant 24 heures.",
+      codeSaved:"Code enregistré.", codeAsk:"Code propriétaire :", codeWrong:"Code incorrect.",
+      loginTitle:"Connexion à votre espace", loginLead:"Entrez les identifiants créés à l'inscription.",
+      email:"Email", emailPh:"vous@email.com", password:"Mot de passe", passwordPh:"Votre mot de passe",
+      signIn:"Se connecter", logout:"Déconnexion", hello:"Bonjour",
+      showPw:"Afficher le mot de passe", hidePw:"Masquer le mot de passe",
+      forgot:"Mot de passe oublié ?",
+      resetSent:"Email de réinitialisation envoyé à {v}. Pensez à regarder vos spams.",
+      resetNeedEmail:"Entrez d'abord votre email, puis retouchez « Mot de passe oublié ».",
+      resetFail:"Envoi impossible. Vérifiez l'adresse et votre connexion.",
+      noAccount:"Pas encore de compte ?", newShop:"Créer une nouvelle boutique",
+      offline:"Mode hors ligne — vos données sont enregistrées et se synchroniseront au retour du réseau.",
+      subscription:"Abonnement", status:"Statut", plan:"Formule", expiry:"Échéance", trial:"Essai gratuit",
+      orders:"Commandes", clients:"Clientes",
+      myShop:"Ma boutique", shopName:"Nom", shopSlug:"Identifiant",
+      backWorkshop:"‹ Atelier", backMeasures:"‹ Mesures",
+      noClients:"Aucune cliente pour le moment.", noOrders:"Aucune commande pour le moment.",
+      newClient:"+ Nouvelle cliente", newOrder:"+ Nouvelle commande",
+      contact:"Coordonnées", phone:"Téléphone", notes:"Notes",
+      measures:"Mesures (cm)", noMeasures:"Aucune mesure enregistrée.",
+      editClient:"Modifier la fiche", deleteClient:"Supprimer cette cliente",
+      measuresToShop:"Envoyer ces mesures à la boutique",
+      orderInfo:"La commande", client:"Cliente", garment:"Modèle", garmentPh:"Ex. Boubou, robe brodée, ensemble",
+      price:"Prix", priceOpt:"Prix (optionnel)", orderNotesPh:"Couleur, broderie, remarques…",
+      received:"Reçu", receivedLabel:"Reçu de la cliente", rcvFabric:"tissu", rcvMaterial:"matériel",
+      delivery:"Livraison prévue", deliveryOpt:"Date de livraison (optionnel)",
+      lineModel:"Modèle : {v}", linePrice:"Prix : {v} {cur}", lineDelivery:"Livraison prévue : {v}",
+      stage:"Étape", stageHint:"Touchez l'étape atteinte, puis prévenez la cliente.",
+      stRecu:"Reçu", stCoupe:"Coupe", stEssayage:"Essayage", stPret:"Prêt",
+      notifyClient:"Prévenir la cliente sur WhatsApp", copyShop:"Copie à la boutique",
+      editOrder:"Modifier la commande", deleteOrder:"Supprimer cette commande",
+      saveOrder:"Enregistrer la commande", newOrderTitle:"Nouvelle commande", editOrderTitle:"Modifier la commande",
+      cancel:"‹ Annuler", newClientTitle:"Nouvelle cliente", editTitle:"Modifier la fiche",
+      clientName:"Nom de la cliente *", clientNamePh:"Ex. Awa Diallo", phoneWa:"Téléphone / WhatsApp",
+      notesOpt:"Notes (optionnel)", notesPh:"Préférences, tissu, remarques…", save:"Enregistrer",
+      loading:"Chargement…", noName:"(sans nom)",
+      daysLeft:"{n} jours restants", dayLeft:"1 jour restant", expired:"Expiré", active:"actif",
+      trialSoon:"Votre essai se termine bientôt. Pensez à le renouveler.",
+      expiredNote:"Abonnement expiré. Renouvelez-le pour continuer à enregistrer.",
+      needBoth:"Renseigne ton email et ton mot de passe.",
+      badLogin:"Email ou mot de passe incorrect.", badEmail:"Email invalide.",
+      tooMany:"Trop de tentatives. Patiente un instant.",
+      noNet:"Pas de connexion. La 1ère connexion a besoin d'internet.",
+      loginFail:"Connexion impossible. Réessaie.",
+      noShop:"Aucune boutique liée à ce compte.",
+      loadFail:"Impossible de charger votre espace. Ouvre l'app une fois avec une bonne connexion.",
+      ficheFail:"Impossible d'ouvrir cette fiche.", orderFail:"Impossible d'ouvrir cette commande.",
+      editFail:"Impossible d'ouvrir la fiche à modifier.", nameRequired:"Le nom de la cliente est obligatoire.",
+      clientRequired:"Choisis une cliente.", garmentRequired:"Indique le modèle.",
+      addClientFirst:"Ajoute d'abord une cliente : la commande doit être rattachée à quelqu'un.",
+      confirmDelete:"Supprimer définitivement cette cliente et ses mesures ?",
+      confirmDeleteOrder:"Supprimer définitivement cette commande ?",
+      noPhone:"Cette cliente n'a pas de numéro enregistré.",
+      noShopPhone:"Aucun numéro WhatsApp enregistré pour la boutique.",
+      waFoot:"Merci de votre confiance.",
+      mRecu:"Bonjour {nom}, nous avons bien reçu votre {recu} à l'atelier {boutique}.",
+      mCoupe:"Bonjour {nom}, la coupe de votre {article} commence à l'atelier {boutique}.",
+      mEssayage:"Bonjour {nom}, votre {article} est prêt pour l'essayage. Vous pouvez passer à l'atelier {boutique} quand cela vous arrange.",
+      mPret:"Bonjour {nom}, votre {article} est terminé et vous attend à l'atelier {boutique}.",
+      mAmount:"Montant à régler : {prix} {cur}.",
+      shopOrder:"Commande"
+    },
+    en:{
+      tagline:"your workshop, online", foot:"SanaaPro — powered by your workshop",
+      uiLabel:"Interface", msgLabel:"Client messages",
+      online:"Online — synced", offlineShort:"Offline",
+      tabApercu:"Overview", tabAtelier:"Workshop", tabBoutique:"Shop", tabMesures:"Measurements",
+      tabStaff:"Staff", tabVisitors:"Visitors",
+      standard:"Standard", premium:"Premium",
+      typeLabel:"Order type", typeHint:"Order type (choose before filling in)", tConfection:"Tailoring", tRetouche:"Alteration", tPap:"Ready-to-wear",
+      genreLabel:"Client gender", gFemme:"Woman", gHomme:"Man",
+      newClientOpt:"+ New client", newClientNameLabel:"New client name",
+      newClientNamePh:"e.g. Awa Diallo", newPhonePh:"+220 …",
+      rcvGarment:"garment",
+      autoNotify:"Automatic WhatsApp notification",
+      autoNotifyHint:"On every stage change, WhatsApp opens with the message ready. Set to No to notify yourself.",
+      yes:"Yes", no:"No",
+      mRecuPap:"Hello {nom}, your order for {article} is registered at {boutique}.",
+      measuresHint:"They are added automatically to the client's record.",
+      lockTitle:"Premium plan only",
+      lockText:"Staff records, the visitors log and the financial summary are part of the Premium plan.",
+      lockPrice:"Standard {a} {cur}/month · Premium {b} {cur}/month",
+      lockBtn:"Upgrade on WhatsApp",
+      lockTrial:"During your free trial everything is open — feel free to try these pages.",
+      upgradeMsg:"Hello, I would like to upgrade my shop {shop} ({slug}) to the Premium plan.",
+      addStaff:"Add an employee", staffName:"Name", staffNamePh:"e.g. Awa Ndiaye",
+      role:"Role — tap to choose", roleOtherPh:"Or type another role",
+      salary:"Monthly salary (D)", addStaffBtn:"Add the employee",
+      staffRecap:"Monthly summary", staffTotal:"Monthly total", noStaff:"No employee recorded.",
+      staffNameRequired:"The employee name is required.", confirmDeleteStaff:"Remove this employee?",
+      roleCouturier:"Tailor (m)", roleCouturiere:"Tailor (f)", roleManager:"Manager",
+      roleVendeuse:"Sales", roleApprenti:"Apprentice", roleMenagere:"Cleaner",
+      addVisit:"Record a visit", visitNamePh:"e.g. Amadou",
+      visitNotePh:"e.g. came to drop off fabric, sent by Oumi",
+      addVisitBtn:"Record the visit", noVisits:"No visit recorded.",
+      searchVisitorPh:"Search a visitor…", visitNameRequired:"The visitor name is required.",
+      confirmDeleteVisit:"Delete this visit?", remove:"Delete",
+      search:"Global search", searchPh:"Name, phone or model", noResult:"No result.",
+      statOrders:"Orders", statClients:"Clients",
+      receiptNo:"Receipt no.", lineReceipt:"Receipt no. {v}",
+      searchOrdersPh:"Search an order…", searchClientsPh:"Name or phone…",
+      ownerCode:"Admin code", ownerCodePh:"4 to 6 digits", saveCode:"Save the code",
+      ownerCodeHint:"This code protects deletions and price corrections. Change it regularly.",
+      otpTitle:"One-time code (remote)",
+      otpHint:"Useful when you are not on site: one button generates a code, you dictate it to your manager by phone. It works only once.",
+      otpGen:"Generate a one-time code", otpNote:"Valid once, for 24 hours.",
+      codeSaved:"Code saved.", codeAsk:"Owner code:", codeWrong:"Wrong code.",
+      loginTitle:"Sign in to your space", loginLead:"Enter the credentials created at sign-up.",
+      email:"Email", emailPh:"you@email.com", password:"Password", passwordPh:"Your password",
+      signIn:"Sign in", logout:"Sign out", hello:"Hello",
+      showPw:"Show password", hidePw:"Hide password",
+      forgot:"Forgot your password?",
+      resetSent:"Reset email sent to {v}. Remember to check your spam folder.",
+      resetNeedEmail:"Enter your email first, then tap « Forgot your password » again.",
+      resetFail:"Could not send. Check the address and your connection.",
+      noAccount:"No account yet?", newShop:"Create a new shop",
+      offline:"Offline mode — your data is saved and will sync when the network returns.",
+      subscription:"Subscription", status:"Status", plan:"Plan", expiry:"Renewal date", trial:"Free trial",
+      orders:"Orders", clients:"Clients",
+      myShop:"My shop", shopName:"Name", shopSlug:"Identifier",
+      backWorkshop:"‹ Workshop", backMeasures:"‹ Measurements",
+      noClients:"No clients yet.", noOrders:"No orders yet.",
+      newClient:"+ New client", newOrder:"+ New order",
+      contact:"Contact details", phone:"Phone", notes:"Notes",
+      measures:"Measurements (cm)", noMeasures:"No measurements saved.",
+      editClient:"Edit this client", deleteClient:"Delete this client",
+      measuresToShop:"Send these measurements to the shop",
+      orderInfo:"The order", client:"Client", garment:"Model", garmentPh:"e.g. Boubou, embroidered dress, suit",
+      price:"Price", priceOpt:"Price (optional)", orderNotesPh:"Colour, embroidery, remarks…",
+      received:"Received", receivedLabel:"Received from the client", rcvFabric:"fabric", rcvMaterial:"materials",
+      delivery:"Expected delivery", deliveryOpt:"Delivery date (optional)",
+      lineModel:"Model: {v}", linePrice:"Price: {v} {cur}", lineDelivery:"Expected delivery: {v}",
+      stage:"Stage", stageHint:"Tap the stage reached, then notify the client.",
+      stRecu:"Received", stCoupe:"Cutting", stEssayage:"Fitting", stPret:"Ready",
+      notifyClient:"Notify the client on WhatsApp", copyShop:"Copy to the shop",
+      editOrder:"Edit this order", deleteOrder:"Delete this order",
+      saveOrder:"Save the order", newOrderTitle:"New order", editOrderTitle:"Edit order",
+      cancel:"‹ Cancel", newClientTitle:"New client", editTitle:"Edit client",
+      clientName:"Client name *", clientNamePh:"e.g. Awa Diallo", phoneWa:"Phone / WhatsApp",
+      notesOpt:"Notes (optional)", notesPh:"Preferences, fabric, remarks…", save:"Save",
+      loading:"Loading…", noName:"(no name)",
+      daysLeft:"{n} days left", dayLeft:"1 day left", expired:"Expired", active:"active",
+      trialSoon:"Your trial ends soon. Remember to renew it.",
+      expiredNote:"Subscription expired. Renew it to keep saving data.",
+      needBoth:"Please enter your email and password.",
+      badLogin:"Incorrect email or password.", badEmail:"Invalid email.",
+      tooMany:"Too many attempts. Please wait a moment.",
+      noNet:"No connection. The first sign-in needs internet.",
+      loginFail:"Sign-in failed. Please try again.",
+      noShop:"No shop linked to this account.",
+      loadFail:"Could not load your space. Open the app once with a good connection.",
+      ficheFail:"Could not open this client.", orderFail:"Could not open this order.",
+      editFail:"Could not open this client for editing.", nameRequired:"The client name is required.",
+      clientRequired:"Please choose a client.", garmentRequired:"Please name the model.",
+      addClientFirst:"Add a client first: an order must belong to someone.",
+      confirmDelete:"Permanently delete this client and their measurements?",
+      confirmDeleteOrder:"Permanently delete this order?",
+      noPhone:"This client has no phone number saved.",
+      noShopPhone:"No WhatsApp number saved for the shop.",
+      waFoot:"Thank you for your trust.",
+      mRecu:"Hello {nom}, we have received your {recu} at {boutique}.",
+      mCoupe:"Hello {nom}, cutting has started on your {article} at {boutique}.",
+      mEssayage:"Hello {nom}, your {article} is ready for fitting. Please come to {boutique} whenever it suits you.",
+      mPret:"Hello {nom}, your {article} is finished and waiting for you at {boutique}.",
+      mAmount:"Amount due: {prix} {cur}.",
+      shopOrder:"Order"
+    }
+  };
+
+  function readLang(key, fallback){
+    let v=null;
+    try{ v = localStorage.getItem(key); }catch(e){}
+    if(!v){ try{ v = localStorage.getItem("sanaapro_lang"); }catch(e){} }
+    return T[v] ? v : fallback;
+  }
+  function saveLang(key, val){ try{ localStorage.setItem(key, val); }catch(e){} }
+
+  let LANG_UI  = readLang("sanaapro_lang_ui", "fr");
+  let LANG_MSG = readLang("sanaapro_lang_msg", LANG_UI);
+
+  const tt = (k, lang) => (T[lang] && T[lang][k]) || T.fr[k] || k;
+  const t  = k => tt(k, LANG_UI);
+  const tm = k => tt(k, LANG_MSG);
+  const mlabel = (m, lang) => (lang === "en" ? m[2] : m[1]);
+  const stepKey = st => "st" + st.charAt(0).toUpperCase() + st.slice(1);
+  const msgKey  = st => "m"  + st.charAt(0).toUpperCase() + st.slice(1);
 
   const $ = id => document.getElementById(id);
-  const show = v => { ["loading","login","board"].forEach(x=>{ $(x).hidden = (x!==v); }); window.scrollTo(0,0); };
-  const DAY = 86400000;
-  const SEEN_KEY = "sanaapro_admin_lastseen";
-  let LAST_SEEN = null;
-  try{ const v = localStorage.getItem(SEEN_KEY); LAST_SEEN = v ? Number(v) : null; }catch(e){}
-  /* Première visite : on prend maintenant comme repère, sinon toutes les
-     boutiques existantes s'afficheraient comme nouvelles. */
-  if(!LAST_SEEN || isNaN(LAST_SEEN)){
-    LAST_SEEN = Date.now();
-    try{ localStorage.setItem(SEEN_KEY, String(LAST_SEEN)); }catch(e){}
-  }
-  const PRICE_STD = 500, PRICE_PREM = 750, CUR = "D";
-  let SHOPS = [];
+  const views = ["loading","login","dash","cmd","cform","fiche","form"];
+  const show = v => { views.forEach(x=>{ $(x).hidden = (x!==v); }); window.scrollTo(0,0); };
 
-  function daysLeft(exp){ return exp ? Math.ceil((exp - new Date())/DAY) : null; }
-  function fmt(d){
-    return d ? d.toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"}) : "—";
+  let BID=null, BOUTIQUE=null, TAB="apercu";
+  let editingId=null, currentCliente=null, CLIDATA=null;
+  let CLIENTES=[], COMMANDES=[], ORD=null, ORDID=null, editingOrd=null;
+  let SALARIES=[], VISITEURS=[], ROLE=null;
+  let GENRE_FORM="femme", GENRE_CF="femme", GENRE_MES="femme", TYPE_CF="confection";
+  const TYPES = ["confection","retouche","pap"];
+  const typeKey = x => "t" + x.charAt(0).toUpperCase() + x.slice(1);
+
+  function setTab(name){
+    TAB = name;
+    TABS.forEach(x=>{ $("pane-"+x).hidden = (x!==name); });
+    $("tabs").querySelectorAll("button").forEach(b=>{
+      b.classList.toggle("on", b.getAttribute("data-tab")===name);
+    });
+    window.scrollTo(0,0);
   }
-  function addMonths(base, n){
-    const d = new Date(base.getTime());
-    const day = d.getDate();
-    d.setMonth(d.getMonth() + n);
-    if(d.getDate() !== day) d.setDate(0);
+  $("tabs").querySelectorAll("button").forEach(b=>{
+    b.addEventListener("click", ()=>setTab(b.getAttribute("data-tab")));
+  });
+
+  function subInfo(){
+    const sub = (BOUTIQUE && BOUTIQUE.subscription) || {};
+    let days = null;
+    if(sub.expiresAt && sub.expiresAt.toDate){
+      days = Math.ceil((sub.expiresAt.toDate() - new Date())/86400000);
+    }
+    const trial = (sub.plan === "trial") && (days === null || days > 0);
+    const premium = (sub.tier === "premium") || trial;
+    return { sub, days, trial, premium };
+  }
+  function planLabel(){
+    const i = subInfo();
+    if(i.trial) return t("trial");
+    return (i.sub.tier === "premium") ? t("premium") : t("standard");
+  }
+  function paintLocks(){
+    const i = subInfo();
+    [["staff"],["visits"]].forEach(([k])=>{
+      const lock=$("lock-"+k), body=$("body-"+k);
+      if(i.premium){ lock.hidden=true; body.hidden=false; return; }
+      body.hidden=true; lock.hidden=false;
+      lock.innerHTML="";
+      const h=document.createElement("h3"); h.textContent=t("lockTitle");
+      const p=document.createElement("p"); p.textContent=t("lockText");
+      const pr=document.createElement("p"); pr.className="price";
+      pr.textContent=t("lockPrice").replace("{a}",PRICE_STD).replace("{b}",PRICE_PREM).replace("{cur}",CUR);
+      const b=document.createElement("button"); b.className="wa"; b.textContent=t("lockBtn");
+      b.addEventListener("click", ()=>{
+        const msg=t("upgradeMsg")
+          .replace("{shop}", (BOUTIQUE && BOUTIQUE.name) || "")
+          .replace("{slug}", (BOUTIQUE && BOUTIQUE.slug) || "");
+        openWa(SANAAPRO_WA, msg);
+      });
+      lock.appendChild(h); lock.appendChild(p); lock.appendChild(pr); lock.appendChild(b);
+    });
+  }
+  function autoNotifyOn(){
+    return !(BOUTIQUE && BOUTIQUE.autoNotify === false);
+  }
+  function paintSegs(){
+    document.querySelectorAll(".seg").forEach(s=>{
+      const kind = s.getAttribute("data-seg");
+      if(kind==="ui" || kind==="msg"){
+        const cur = (kind==="ui") ? LANG_UI : LANG_MSG;
+        s.querySelectorAll("button").forEach(b=>{
+          b.classList.toggle("on", b.getAttribute("data-lang")===cur);
+        });
+        return;
+      }
+      if(kind==="auto"){
+        const on = autoNotifyOn() ? "1" : "0";
+        s.querySelectorAll("button").forEach(b=>{
+          b.classList.toggle("on", b.getAttribute("data-v")===on);
+        });
+        return;
+      }
+      const cur = (kind==="cfgenre") ? GENRE_CF : (kind==="ingenre") ? GENRE_FORM : GENRE_MES;
+      s.querySelectorAll("button").forEach(b=>{
+        b.classList.toggle("on", b.getAttribute("data-g")===cur);
+      });
+    });
+  }
+  function paintTypes(){
+    const box=$("cf-types");
+    const ICONS = { confection:"\u{1F9F5}", retouche:"\u2702\uFE0F", pap:"\u{1F6CD}\uFE0F" };
+    if(!box.children.length){
+      TYPES.forEach(x=>{
+        const b=document.createElement("button");
+        b.setAttribute("data-type", x);
+        const ic=document.createElement("span"); ic.className="ic"; ic.textContent=ICONS[x]||"";
+        const lb=document.createElement("span"); lb.className="lb";
+        b.appendChild(ic); b.appendChild(lb);
+        b.addEventListener("click", ()=>{ TYPE_CF=x; paintTypes(); });
+        box.appendChild(b);
+      });
+    }
+    box.querySelectorAll("button").forEach(b=>{
+      const x=b.getAttribute("data-type");
+      b.querySelector(".lb").textContent = t(typeKey(x));
+      b.classList.toggle("on", x===TYPE_CF);
+    });
+  }
+
+  function applyLang(){
+    document.documentElement.lang = LANG_UI;
+    document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent = t(el.getAttribute("data-i18n")); });
+    document.querySelectorAll("[data-i18n-ph]").forEach(el=>{ el.placeholder = t(el.getAttribute("data-i18n-ph")); });
+    paintSegs();
+    paintTypes();
+    paintLocks();
+    updateOffline();
+    if(BOUTIQUE) renderDashboard(BOUTIQUE);
+    renderLists();
+    if(!$("fiche").hidden && CLIDATA) fillFiche(CLIDATA, currentCliente);
+    if(!$("cmd").hidden && ORD) renderCmd(ORD, ORDID);
+    if(!$("form").hidden){
+      $("form-title").textContent = editingId ? t("editTitle") : t("newClientTitle");
+      buildInputs(currentMesuresFromForm("m-"));
+    }
+    if(!$("cform").hidden){
+      $("cf-title").textContent = editingOrd ? t("editOrderTitle") : t("newOrderTitle");
+      buildCmdGrid(currentMesuresFromForm("cm-"));
+    }
+  }
+
+  document.querySelectorAll(".seg button").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      const seg=b.parentElement.getAttribute("data-seg");
+      if(seg==="ui" || seg==="msg"){
+        const lang=b.getAttribute("data-lang");
+        if(seg==="ui"){ LANG_UI=lang; saveLang("sanaapro_lang_ui", lang); }
+        else { LANG_MSG=lang; saveLang("sanaapro_lang_msg", lang); }
+        applyLang();
+        return;
+      }
+      if(seg==="auto"){
+        const on = b.getAttribute("data-v")==="1";
+        if(BOUTIQUE) BOUTIQUE.autoNotify = on;
+        setDoc(doc(db,"boutiques",BID), { autoNotify:on, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+        paintSegs();
+        return;
+      }
+      const g=b.getAttribute("data-g");
+      if(seg==="cfgenre"){ GENRE_CF=g; paintSegs(); fillClienteSelect(); buildCmdGrid(currentMesuresFromForm("cm-")); }
+      else if(seg==="ingenre"){ GENRE_FORM=g; paintSegs(); buildInputs(currentMesuresFromForm("m-")); }
+      else { GENRE_MES=g; paintSegs(); renderLists(); }
+    });
+  });
+  function currentMesuresFromForm(prefix){
+    const cur={};
+    MESURES_F.concat(MESURES_H).forEach(mm=>{
+      const el=$(prefix+mm[0]);
+      if(el && el.value!=="") cur[mm[0]]=el.value;
+    });
+    return cur;
+  }
+
+  const timeout = ms => new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")), ms));
+  async function getDocSmart(ref){
+    try{ return await Promise.race([getDoc(ref), timeout(8000)]); }
+    catch(e){ try{ return await getDocFromCache(ref); }catch(_){ throw e; } }
+  }
+  async function getDocsSmart(q){
+    try{ return await Promise.race([getDocs(q), timeout(8000)]); }
+    catch(e){ try{ return await getDocsFromCache(q); }catch(_){ throw e; } }
+  }
+
+  function updateOffline(){
+    const on = navigator.onLine;
+    $("off-dash").hidden = on;
+    $("synctext").textContent = on ? t("online") : t("offlineShort");
+    $("syncpill").classList.toggle("off", !on);
+  }
+  window.addEventListener("online", updateOffline);
+  window.addEventListener("offline", updateOffline);
+
+  function waNumber(raw){
+    let d=(raw||"").replace(/\D/g,"");
+    if(d.indexOf("00")===0) d=d.slice(2);
+    if(!d) return "";
+    if(d.length<=8 && d.indexOf(DEFAULT_CC)!==0) d=DEFAULT_CC+d;
     return d;
   }
-  function flash(text, cls){
-    const m=$("board-msg");
-    m.textContent=text; m.className="msg show "+cls;
-    setTimeout(()=>{ m.classList.remove("show"); }, 6000);
+  const fmtNum = n => n ? String(n).padStart(3,"0") : "—";
+  function nextNumero(){
+    let mx=0;
+    COMMANDES.forEach(o=>{ const n=Number(o.numero)||0; if(n>mx) mx=n; });
+    return mx+1;
+  }
+  async function askCode(){
+    const admin = (BOUTIQUE && BOUTIQUE.codeAdmin) ? String(BOUTIQUE.codeAdmin) : "";
+    if(!admin) return true;
+    const given = prompt(t("codeAsk"));
+    if(given === null) return false;
+    const g = String(given).trim();
+    if(g === admin) return true;
+    try{
+      const snap = await getDocSmart(doc(db,"boutiques",BID));
+      if(snap.exists()){
+        BOUTIQUE = snap.data();
+        const o = BOUTIQUE.otp;
+        if(o && o.code && !o.used && String(o.code) === g){
+          let fresh = true;
+          if(o.createdAt && o.createdAt.toDate){
+            fresh = (Date.now() - o.createdAt.toDate().getTime()) < 86400000;
+          }
+          if(fresh){
+            setDoc(doc(db,"boutiques",BID), { otp:{ used:true } }, { merge:true }).catch(function(){});
+            BOUTIQUE.otp = Object.assign({}, o, { used:true });
+            return true;
+          }
+        }
+      }
+    }catch(e){}
+    alert(t("codeWrong"));
+    return false;
+  }
+  function fmtDate(v, lang){
+    if(!v) return "";
+    const p=String(v).split("-");
+    if(p.length!==3) return String(v);
+    const d=new Date(Number(p[0]), Number(p[1])-1, Number(p[2]));
+    if(isNaN(d.getTime())) return String(v);
+    return d.toLocaleDateString(lang==="en"?"en-GB":"fr-FR",{day:"numeric",month:"long",year:"numeric"});
+  }
+  function openWa(num, text){
+    const url="https://wa.me/"+num+"?text="+encodeURIComponent(text);
+    const w=window.open(url,"_blank");
+    if(!w) location.href=url;
+  }
+  function mesuresText(c){
+    const m=c.mesures||{}, lines=[];
+    mesuresFor(c.genre).forEach(mm=>{
+      const v=m[mm[0]];
+      if(v!==undefined && v!==null && v!=="") lines.push(mlabel(mm, LANG_MSG)+" : "+v+" cm");
+    });
+    return lines.length ? lines.join("\n") : tm("noMeasures");
   }
 
-  $("login-btn").addEventListener("click", async ()=>{
-    const email=$("email").value.trim(), pass=$("pass").value, msg=$("login-msg");
-    msg.classList.remove("show");
-    if(!email || !pass){ msg.textContent="Renseigne ton email et ton mot de passe."; msg.classList.add("show"); return; }
+  function loginMsg(text, kind){
+    const m=$("login-msg");
+    m.textContent=text;
+    m.className="msg "+(kind||"err")+" show";
+  }
+
+  $("eye-btn").addEventListener("click", ()=>{
+    const p=$("pass"), b=$("eye-btn");
+    const show = p.type === "password";
+    p.type = show ? "text" : "password";
+    b.classList.toggle("on", show);
+    b.setAttribute("aria-label", t(show ? "hidePw" : "showPw"));
+    p.focus();
+  });
+
+  $("forgot-btn").addEventListener("click", async ()=>{
+    const email=$("email").value.trim();
+    if(!email){ loginMsg(t("resetNeedEmail"), "err"); return; }
+    $("forgot-btn").disabled=true;
+    try{
+      await sendPasswordResetEmail(auth, email);
+      loginMsg(t("resetSent").replace("{v}", email), "ok");
+    }catch(e){
+      loginMsg(t("resetFail"), "err");
+    }
+    $("forgot-btn").disabled=false;
+  });
+
+  $("login-btn").addEventListener("click", async () => {
+    const email=$("email").value.trim(), pass=$("pass").value;
+    $("login-msg").classList.remove("show");
+    if(!email || !pass){ loginMsg(t("needBoth"), "err"); return; }
     $("login-btn").disabled=true;
     try{ await signInWithEmailAndPassword(auth, email, pass); }
     catch(e){
-      let m="Connexion impossible. Réessaie.";
-      if(["auth/invalid-credential","auth/wrong-password","auth/user-not-found"].includes(e.code)) m="Email ou mot de passe incorrect.";
-      else if(e.code==="auth/invalid-email") m="Email invalide.";
-      else if(e.code==="auth/too-many-requests") m="Trop de tentatives. Patiente un instant.";
-      else if(e.code==="auth/network-request-failed") m="Pas de connexion.";
-      msg.textContent=m; msg.classList.add("show"); $("login-btn").disabled=false;
+      let m=t("loginFail");
+      if(["auth/invalid-credential","auth/wrong-password","auth/user-not-found"].includes(e.code)) m=t("badLogin");
+      else if(e.code==="auth/invalid-email") m=t("badEmail");
+      else if(e.code==="auth/too-many-requests") m=t("tooMany");
+      else if(e.code==="auth/network-request-failed") m=t("noNet");
+      loginMsg(m, "err"); $("login-btn").disabled=false;
     }
   });
-  $("logout-btn").addEventListener("click", ()=>signOut(auth));
+  $("logout-btn").addEventListener("click", () => signOut(auth));
 
-  $("news-ack").addEventListener("click", ()=>{
-    LAST_SEEN = Date.now();
-    try{ localStorage.setItem(SEEN_KEY, String(LAST_SEEN)); }catch(e){}
-    render();
-  });
-
-  onAuthStateChanged(auth, async (user)=>{
+  onAuthStateChanged(auth, async (user) => {
     window.__loaded = true;
     if(!user){ show("login"); $("login-btn").disabled=false; return; }
-    show("loading"); $("loading").textContent="Lecture des abonnements…";
-    await loadShops();
+    show("loading"); $("loading").textContent=t("loading");
+    try{
+      const snap = await getDocSmart(doc(db,"boutiques",user.uid));
+      if(!snap.exists()){ $("loading").textContent=t("noShop"); show("loading"); return; }
+      BID=user.uid; BOUTIQUE=snap.data();
+      renderDashboard(BOUTIQUE); paintLocks(); updateOffline(); setTab("apercu"); show("dash");
+      loadAll();
+    }catch(e){ $("loading").textContent=t("loadFail"); show("loading"); }
   });
 
-  async function loadShops(){
-    try{
-      const snap = await getDocs(collection(db,"boutiques"));
-      SHOPS = [];
-      snap.forEach(d=>{
-        const b = d.data(), sub = b.subscription || {};
-        let exp = null;
-        if(sub.expiresAt && sub.expiresAt.toDate) exp = sub.expiresAt.toDate();
-        let createdMs = 0;
-        if(b.createdAt && b.createdAt.toDate) createdMs = b.createdAt.toDate().getTime();
-        else if(sub.startAt && sub.startAt.toDate) createdMs = sub.startAt.toDate().getTime();
-        SHOPS.push({ id:d.id, name:b.name||"(sans nom)", slug:b.slug||"—",
-                     plan:sub.plan||"—", tier:sub.tier||"standard", exp, createdMs });
-      });
-      SHOPS.sort((a,b)=>{
-        if(!a.exp) return 1;
-        if(!b.exp) return -1;
-        return a.exp - b.exp;
-      });
-      render(); show("board");
-    }catch(e){
-      const denied = String(e && e.code || e).indexOf("permission-denied") !== -1;
-      $("loading").textContent = denied
-        ? "Lecture refusée par les règles Firestore. Ton compte n'est pas reconnu comme admin : il manque le document /admins/<ton UID> dans la console Firebase."
-        : "Impossible de lire les abonnements. Réessaie avec une meilleure connexion.";
-      show("loading");
-    }
+  function renderDashboard(b){
+    BOUTIQUE=b;
+    $("d-brand").textContent = b.name || "SanaaPro";
+    $("d-owner").textContent = b.ownerName||"";
+    $("d-name").textContent = b.name||"";
+    $("d-shopname").textContent = b.name||"—";
+    $("d-slug").textContent = b.slug||"—";
+    $("d-email").textContent = b.email||"—";
+    if(b.whatsapp){ $("d-wa").textContent=b.whatsapp; $("d-wa-row").hidden=false; } else { $("d-wa-row").hidden=true; }
+    if(document.activeElement !== $("b-code")) $("b-code").value = b.codeAdmin || "";
+    const sub=b.subscription||{}, badge=$("d-badge"), note=$("d-subnote");
+    note.hidden=true; note.className="sub-note";
+    $("d-plan").textContent = planLabel();
+    if(sub.expiresAt && sub.expiresAt.toDate){
+      const exp=sub.expiresAt.toDate();
+      $("d-expiry").textContent = exp.toLocaleDateString(LANG_UI==="en"?"en-GB":"fr-FR",{day:"numeric",month:"long",year:"numeric"});
+      const days=Math.ceil((exp-new Date())/86400000);
+      if(days>3){ badge.className="badge ok"; badge.textContent=t("daysLeft").replace("{n}",days); }
+      else if(days>0){ badge.className="badge warn";
+        badge.textContent = days===1 ? t("dayLeft") : t("daysLeft").replace("{n}",days);
+        note.hidden=false; note.className="sub-note warn"; note.textContent=t("trialSoon"); }
+      else { badge.className="badge err"; badge.textContent=t("expired");
+        note.hidden=false; note.className="sub-note err"; note.textContent=t("expiredNote"); }
+    } else { $("d-expiry").textContent="—"; badge.className="badge ok"; badge.textContent=sub.status||t("active"); }
   }
 
-  function render(){
-    let soon=0, expired=0, news=0;
-    const box=$("list"); box.innerHTML="";
-    SHOPS.forEach(s=>{
-      const dl = daysLeft(s.exp);
-      if(dl !== null && dl <= 0) expired++;
-      else if(dl !== null && dl <= 7) soon++;
+  async function loadAll(){
+    try{
+      const s = await getDocsSmart(query(collection(db,"boutiques",BID,"clientes"), orderBy("name")));
+      CLIENTES=[]; s.forEach(d=>{ const c=d.data(); CLIENTES.push(Object.assign({ id:d.id }, c)); });
+    }catch(e){}
+    try{
+      const s = await getDocsSmart(collection(db,"boutiques",BID,"commandes"));
+      COMMANDES=[]; s.forEach(d=>{ COMMANDES.push(Object.assign({ id:d.id }, d.data())); });
+      COMMANDES.sort((a,b)=>{
+        const ai=STEPS.indexOf(a.statut||"recu"), bi=STEPS.indexOf(b.statut||"recu");
+        if(ai!==bi) return ai-bi;
+        return (a.clienteName||"").localeCompare(b.clienteName||"");
+      });
+    }catch(e){}
+    try{
+      const s = await getDocsSmart(collection(db,"boutiques",BID,"salaries"));
+      SALARIES=[]; s.forEach(d=>{ SALARIES.push(Object.assign({ id:d.id }, d.data())); });
+      SALARIES.sort((a,b)=>(a.nom||"").localeCompare(b.nom||""));
+    }catch(e){}
+    try{
+      const s = await getDocsSmart(collection(db,"boutiques",BID,"visiteurs"));
+      VISITEURS=[]; s.forEach(d=>{ VISITEURS.push(Object.assign({ id:d.id }, d.data())); });
+      VISITEURS.sort((a,b)=>(Number(b.atMs)||0)-(Number(a.atMs)||0));
+    }catch(e){}
+    renderLists();
+  }
 
+  function itemRow(title, sub, badgeText, badgeClass, onClick){
+    const el=document.createElement("div");
+    el.className="cli-item";
+    el.innerHTML='<div><div class="nm"></div><div class="ph"></div></div><span class="badge"></span>';
+    el.querySelector(".nm").textContent=title;
+    el.querySelector(".ph").textContent=sub;
+    const bd=el.querySelector(".badge");
+    bd.textContent=badgeText; bd.className="badge "+badgeClass;
+    el.addEventListener("click", onClick);
+    return el;
+  }
+
+  function renderLists(){
+    $("s-cmd").textContent = COMMANDES.length;
+    $("s-cli").textContent = CLIENTES.length;
+
+    const qc=$("q-cmd").value.trim().toLowerCase();
+    const cl=$("cmd-list"); cl.innerHTML="";
+    const cmdShown = COMMANDES.filter(o=>{
+      if(!qc) return true;
+      return (fmtNum(o.numero)+" "+(o.clienteName||"")+" "+(o.article||"")+" "+(o.clientePhone||"")).toLowerCase().indexOf(qc)!==-1;
+    });
+    $("cmd-empty").hidden = cmdShown.length>0;
+    cmdShown.forEach(o=>{
+      cl.appendChild(itemRow(
+        o.clienteName||t("noName"), fmtNum(o.numero)+" · "+(o.article||"—"),
+        t(stepKey(o.statut||"recu")), "gold", ()=>openCmd(o.id)
+      ));
+    });
+
+    const qk=$("q-cli").value.trim().toLowerCase();
+    const kl=$("cli-list"); kl.innerHTML="";
+    const cliShown = CLIENTES.filter(c=>{
+      if(((c.genre==="homme") ? "homme" : "femme") !== GENRE_MES) return false;
+      if(!qk) return true;
+      return ((c.name||"")+" "+(c.phone||"")).toLowerCase().indexOf(qk)!==-1;
+    });
+    $("cli-empty").hidden = cliShown.length>0;
+    cliShown.forEach(c=>{
       const el=document.createElement("div");
-      el.className="shop";
+      el.className="cli-item";
+      el.innerHTML='<div><div class="nm"></div><div class="ph"></div></div><span class="chev">›</span>';
+      el.querySelector(".nm").textContent=c.name||t("noName");
+      el.querySelector(".ph").textContent=c.phone||"—";
+      el.addEventListener("click", ()=>openFiche(c.id));
+      kl.appendChild(el);
+    });
 
-      const top=document.createElement("div"); top.className="top";
-      const left=document.createElement("div");
-      const nm=document.createElement("div"); nm.className="nm"; nm.textContent=s.name;
-      if(s.createdMs && s.createdMs > LAST_SEEN){
-        news++;
-        const tag=document.createElement("span"); tag.className="newtag"; tag.textContent="NOUVEAU";
-        nm.appendChild(tag);
-      }
-      const sl=document.createElement("div"); sl.className="sl";
-      sl.textContent=s.slug+" · "+(s.plan==="trial" ? "essai" : (s.tier==="premium" ? "premium" : "standard"));
-      left.appendChild(nm); left.appendChild(sl);
-      const bd=document.createElement("span");
-      if(dl === null){ bd.className="badge warn"; bd.textContent="sans échéance"; }
-      else if(dl <= 0){ bd.className="badge err"; bd.textContent="expiré"; }
-      else if(dl <= 7){ bd.className="badge warn"; bd.textContent=dl+" j"; }
-      else { bd.className="badge ok"; bd.textContent=dl+" j"; }
-      top.appendChild(left); top.appendChild(bd);
-      el.appendChild(top);
+    renderStaff();
+    renderVisits();
+    renderSearch();
+  }
 
-      const exp=document.createElement("div"); exp.className="exp";
-      exp.textContent = "Échéance : "+fmt(s.exp);
-      el.appendChild(exp);
+  function roleLabel(x){ return x.roleKey ? t(x.roleKey) : (x.poste || "—"); }
 
-      const tr=document.createElement("div"); tr.className="tier";
-      [["Standard","standard"],["Premium","premium"]].forEach(([label,val])=>{
-        const b=document.createElement("button");
-        b.textContent=label;
-        if(s.tier===val) b.classList.add("on");
-        b.addEventListener("click", async ()=>{
-          tr.querySelectorAll("button").forEach(x=>x.disabled=true);
-          try{
-            await setDoc(doc(db,"boutiques",s.id), { subscription:{ tier:val } }, { merge:true });
-            s.tier=val; render();
-            flash(s.name+" → "+label+".", "ok");
-          }catch(e){
-            tr.querySelectorAll("button").forEach(x=>x.disabled=false);
-            flash("Changement de formule refusé. Vérifie tes droits admin.", "err");
-          }
-        });
-        tr.appendChild(b);
+  function renderStaff(){
+    const box=$("st-list"); box.innerHTML="";
+    let total=0;
+    SALARIES.forEach(x=>{ total += Number(x.salaire)||0; });
+    $("st-count").textContent = SALARIES.length;
+    $("st-total").textContent = total+" "+CUR;
+    $("st-empty").hidden = SALARIES.length>0;
+    SALARIES.forEach(x=>{
+      const el=document.createElement("div"); el.className="rec";
+      const nm=document.createElement("div"); nm.className="nm"; nm.textContent=x.nom||"—";
+      const l1=document.createElement("div"); l1.className="ln";
+      l1.textContent = roleLabel(x) + (x.phone ? " · "+x.phone : "");
+      const l2=document.createElement("div"); l2.className="ln";
+      const amt=document.createElement("span"); amt.className="amt";
+      amt.textContent=(Number(x.salaire)||0)+" "+CUR;
+      l2.appendChild(amt);
+      const rm=document.createElement("button"); rm.className="rm"; rm.textContent=t("remove");
+      rm.addEventListener("click", ()=>{
+        if(!confirm(t("confirmDeleteStaff"))) return;
+        deleteDoc(doc(db,"boutiques",BID,"salaries",x.id)).catch(function(){});
+        SALARIES = SALARIES.filter(y=>y.id!==x.id);
+        renderLists();
       });
-      el.appendChild(tr);
-
-      const q=document.createElement("div"); q.className="quick";
-      [["+1 mois",1],["+3 mois",3],["+1 an",12]].forEach(([label,n])=>{
-        const b=document.createElement("button");
-        b.textContent=label;
-        b.addEventListener("click", ()=>extend(s, n, q));
-        q.appendChild(b);
-      });
-      el.appendChild(q);
+      el.appendChild(nm); el.appendChild(l1); el.appendChild(l2); el.appendChild(rm);
       box.appendChild(el);
     });
-    $("price-note").textContent = "Standard "+PRICE_STD+" "+CUR+"/mois · Premium "+PRICE_PREM+" "+CUR+"/mois";
-    if(news > 0){
-      $("news-text").textContent = news === 1
-        ? "1 nouvelle boutique depuis votre dernière visite."
-        : news + " nouvelles boutiques depuis votre dernière visite.";
-      $("newsbox").hidden = false;
-    } else {
-      $("newsbox").hidden = true;
-    }
-    $("s-tot").textContent = SHOPS.length;
-    $("s-soon").textContent = soon;
-    $("s-exp").textContent = expired;
   }
 
-  async function extend(s, months, quickBox){
-    const now = new Date();
-    const base = (s.exp && s.exp > now) ? s.exp : now;
-    const target = addMonths(base, months);
-    const label = months===12 ? "1 an" : months+" mois";
-    if(!confirm("Prolonger « "+s.name+" » de "+label+" ?\nNouvelle échéance : "+fmt(target))) return;
-    quickBox.querySelectorAll("button").forEach(b=>b.disabled=true);
-    try{
-      await setDoc(doc(db,"boutiques",s.id), {
-        subscription: { expiresAt: Timestamp.fromDate(target), plan:"payant",
-                        tier: s.tier || "standard", renewedAt: Timestamp.fromDate(now) }
-      }, { merge:true });
-      s.exp = target; s.plan = "payant";
-      SHOPS.sort((a,b)=>{ if(!a.exp) return 1; if(!b.exp) return -1; return a.exp - b.exp; });
-      render();
-      flash(s.name+" prolongé jusqu'au "+fmt(target)+".", "ok");
-    }catch(e){
-      quickBox.querySelectorAll("button").forEach(b=>b.disabled=false);
-      const denied = String(e && e.code || e).indexOf("permission-denied") !== -1;
-      flash(denied
-        ? "Écriture refusée par les règles : ton compte n'est pas admin (document /admins/<ton UID> manquant)."
-        : "Échec de l'enregistrement. Vérifie la connexion et réessaie.", "err");
+  function fmtWhen(ms){
+    if(!ms) return "—";
+    const d=new Date(Number(ms));
+    return d.toLocaleDateString(LANG_UI==="en"?"en-GB":"fr-FR",{day:"2-digit",month:"2-digit",year:"numeric"})
+      + " · " + d.toLocaleTimeString(LANG_UI==="en"?"en-GB":"fr-FR",{hour:"2-digit",minute:"2-digit"});
+  }
+
+  function renderVisits(){
+    const q=$("q-vis").value.trim().toLowerCase();
+    const box=$("vis-list"); box.innerHTML="";
+    const shown = VISITEURS.filter(v=>{
+      if(!q) return true;
+      return ((v.nom||"")+" "+(v.phone||"")+" "+(v.note||"")).toLowerCase().indexOf(q)!==-1;
+    });
+    $("vis-empty").hidden = shown.length>0;
+    shown.forEach(v=>{
+      const el=document.createElement("div"); el.className="rec";
+      const nm=document.createElement("div"); nm.className="nm"; nm.textContent=v.nom||"—";
+      el.appendChild(nm);
+      if(v.phone){ const p=document.createElement("div"); p.className="ln"; p.textContent=v.phone; el.appendChild(p); }
+      if(v.note){ const n=document.createElement("div"); n.className="ln"; n.textContent=v.note; el.appendChild(n); }
+      const w=document.createElement("div"); w.className="ln"; w.textContent=fmtWhen(v.atMs); el.appendChild(w);
+      const rm=document.createElement("button"); rm.className="rm"; rm.textContent=t("remove");
+      rm.addEventListener("click", ()=>{
+        if(!confirm(t("confirmDeleteVisit"))) return;
+        deleteDoc(doc(db,"boutiques",BID,"visiteurs",v.id)).catch(function(){});
+        VISITEURS = VISITEURS.filter(y=>y.id!==v.id);
+        renderLists();
+      });
+      el.appendChild(rm);
+      box.appendChild(el);
+    });
+  }
+
+  function renderSearch(){
+    const box=$("q-res"); box.innerHTML="";
+    const q=$("q").value.trim().toLowerCase();
+    if(q.length<2) return;
+    const hits=[];
+    COMMANDES.forEach(o=>{
+      const hay=(fmtNum(o.numero)+" "+(o.clienteName||"")+" "+(o.article||"")+" "+(o.clientePhone||"")).toLowerCase();
+      if(hay.indexOf(q)!==-1) hits.push(itemRow(
+        o.clienteName||t("noName"), o.article||"—", t("orders"), "soft", ()=>openCmd(o.id)
+      ));
+    });
+    CLIENTES.forEach(c=>{
+      const hay=((c.name||"")+" "+(c.phone||"")).toLowerCase();
+      if(hay.indexOf(q)!==-1) hits.push(itemRow(
+        c.name||t("noName"), c.phone||"—", t("clients"), "soft", ()=>openFiche(c.id)
+      ));
+    });
+    if(!hits.length){
+      const d=document.createElement("div");
+      d.className="empty"; d.style.padding="20px 0"; d.textContent=t("noResult");
+      box.appendChild(d); return;
     }
+    hits.slice(0,8).forEach(el=>box.appendChild(el));
+  }
+  (function buildRoles(){
+    const box=$("st-roles");
+    ROLES.forEach(k=>{
+      const b=document.createElement("button");
+      b.setAttribute("data-i18n", k);
+      b.setAttribute("data-role", k);
+      b.textContent=k;
+      b.addEventListener("click", ()=>{
+        ROLE = (ROLE===k) ? null : k;
+        if(ROLE) $("st-role-other").value="";
+        box.querySelectorAll("button").forEach(x=>x.classList.toggle("on", x.getAttribute("data-role")===ROLE));
+      });
+      box.appendChild(b);
+    });
+  })();
+  $("st-role-other").addEventListener("input", ()=>{
+    if($("st-role-other").value.trim()){
+      ROLE=null;
+      $("st-roles").querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+    }
+  });
+
+  $("st-add").addEventListener("click", ()=>{
+    const msg=$("st-msg"); msg.classList.remove("show");
+    const nom=$("st-name").value.trim();
+    if(!nom){ msg.textContent=t("staffNameRequired"); msg.classList.add("show"); return; }
+    const other=$("st-role-other").value.trim();
+    const sv=$("st-salary").value.trim();
+    const data={
+      nom, phone:$("st-phone").value.trim(),
+      roleKey: ROLE || null, poste: ROLE ? null : (other||null),
+      salaire: (sv!=="" && !isNaN(parseFloat(sv))) ? parseFloat(sv) : 0,
+      createdAtMs: Date.now(), updatedAt:serverTimestamp()
+    };
+    const ref=doc(collection(db,"boutiques",BID,"salaries"));
+    setDoc(ref, data, { merge:true }).catch(function(){});
+    SALARIES.push(Object.assign({ id:ref.id }, data));
+    SALARIES.sort((a,b)=>(a.nom||"").localeCompare(b.nom||""));
+    $("st-name").value=""; $("st-phone").value=""; $("st-salary").value=""; $("st-role-other").value="";
+    ROLE=null; $("st-roles").querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+    renderLists();
+  });
+
+  $("vi-add").addEventListener("click", ()=>{
+    const msg=$("vi-msg"); msg.classList.remove("show");
+    const nom=$("vi-name").value.trim();
+    if(!nom){ msg.textContent=t("visitNameRequired"); msg.classList.add("show"); return; }
+    const data={
+      nom, phone:$("vi-phone").value.trim(), note:$("vi-note").value.trim(),
+      atMs: Date.now(), createdAt:serverTimestamp()
+    };
+    const ref=doc(collection(db,"boutiques",BID,"visiteurs"));
+    setDoc(ref, data, { merge:true }).catch(function(){});
+    VISITEURS.unshift(Object.assign({ id:ref.id }, data));
+    $("vi-name").value=""; $("vi-phone").value=""; $("vi-note").value="";
+    renderLists();
+  });
+
+  $("cf-cliente").addEventListener("change", toggleNewCliente);
+  $("q-vis").addEventListener("input", renderVisits);
+  $("q").addEventListener("input", renderSearch);
+  $("q-cmd").addEventListener("input", renderLists);
+  $("q-cli").addEventListener("input", renderLists);
+
+  $("cmd-add").addEventListener("click", ()=>openCmdForm(null));
+  $("cli-add").addEventListener("click", ()=>openForm(null));
+  $("c-back").addEventListener("click", ()=>{ show("dash"); setTab("atelier"); });
+  $("fiche-back").addEventListener("click", ()=>{ show("dash"); setTab("mesures"); });
+  $("cf-back").addEventListener("click", ()=> editingOrd ? openCmd(editingOrd) : (show("dash"), setTab("atelier")));
+  $("form-back").addEventListener("click", ()=> editingId ? openFiche(editingId) : (show("dash"), setTab("mesures")));
+  $("f-edit").addEventListener("click", ()=>openForm(currentCliente));
+  $("c-edit").addEventListener("click", async ()=>{ if(await askCode()) openCmdForm(ORDID); });
+
+  function renderCmd(o, id){
+    ORD=o; ORDID=id;
+    $("c-title").textContent = o.clienteName || t("shopOrder");
+    $("c-num").textContent = fmtNum(o.numero);
+    $("c-cliente").textContent = o.clienteName || t("noName");
+    if(o.clientePhone){ $("c-phone").textContent=o.clientePhone; $("c-phone-row").hidden=false; } else $("c-phone-row").hidden=true;
+    $("c-type").textContent = t(typeKey(o.type || "confection"));
+    $("c-recu").textContent = t(o.recu==="materiel" ? "rcvMaterial" : (o.recu==="vetement" ? "rcvGarment" : "rcvFabric"));
+    $("c-article").textContent = o.article || "—";
+    if(o.prix || o.prix===0){ $("c-prix").textContent = o.prix+" "+CUR; $("c-price-row").hidden=false; } else $("c-price-row").hidden=true;
+    if(o.livraison){ $("c-liv").textContent = fmtDate(o.livraison, LANG_UI); $("c-liv-row").hidden=false; } else $("c-liv-row").hidden=true;
+    if(o.notes){ $("c-notes").textContent=o.notes; $("c-notes-row").hidden=false; } else $("c-notes-row").hidden=true;
+    const cur=o.statut||"recu", ci=STEPS.indexOf(cur);
+    $("c-steps").querySelectorAll("button").forEach(b=>{
+      const i=STEPS.indexOf(b.getAttribute("data-st"));
+      b.classList.toggle("on", i===ci);
+      b.classList.toggle("done", i<ci);
+    });
+    $("c-wa-cli").hidden = !o.clientePhone;
+    $("c-wa-shop").hidden = !(BOUTIQUE && BOUTIQUE.whatsapp);
+  }
+
+  $("c-steps").querySelectorAll("button").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      if(!ORD || !ORDID) return;
+      const st=b.getAttribute("data-st");
+      ORD.statut=st;
+      const local=COMMANDES.find(x=>x.id===ORDID);
+      if(local) local.statut=st;
+      setDoc(doc(db,"boutiques",BID,"commandes",ORDID), { statut:st, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+      renderCmd(ORD, ORDID); renderLists();
+      if(autoNotifyOn()){
+        const num=waNumber(ORD.clientePhone);
+        if(num) openWa(num, clientMessage(ORD));
+      }
+    });
+  });
+
+  function clientMessage(o){
+    const st=o.statut||"recu";
+    const base = (st==="recu" && o.type==="pap") ? "mRecuPap" : msgKey(st);
+    let msg = tm(base)
+      .replace("{nom}", o.clienteName||"")
+      .replace("{recu}", tm(o.recu==="materiel" ? "rcvMaterial" : (o.recu==="vetement" ? "rcvGarment" : "rcvFabric")))
+      .replace("{article}", o.article||"")
+      .replace("{boutique}", (BOUTIQUE && BOUTIQUE.name) || "");
+    if(st==="recu"){
+      if(o.numero) msg += "\n" + tm("lineReceipt").replace("{v}", fmtNum(o.numero));
+      if(o.article) msg += "\n" + tm("lineModel").replace("{v}", o.article);
+      if(o.prix || o.prix===0) msg += "\n" + tm("linePrice").replace("{v}", o.prix).replace("{cur}", CUR);
+      if(o.livraison) msg += "\n" + tm("lineDelivery").replace("{v}", fmtDate(o.livraison, LANG_MSG));
+    }
+    if(st==="pret" && (o.prix || o.prix===0)){
+      msg += "\n" + tm("mAmount").replace("{prix}", o.prix).replace("{cur}", CUR);
+    }
+    return msg + "\n" + tm("waFoot");
+  }
+
+  $("c-wa-cli").addEventListener("click", ()=>{
+    if(!ORD) return;
+    const num=waNumber(ORD.clientePhone);
+    if(!num){ alert(t("noPhone")); return; }
+    openWa(num, clientMessage(ORD));
+  });
+
+  $("c-wa-shop").addEventListener("click", ()=>{
+    if(!ORD) return;
+    const num=waNumber(BOUTIQUE && BOUTIQUE.whatsapp);
+    if(!num){ alert(t("noShopPhone")); return; }
+    let msg = tm("shopOrder")+" "+fmtNum(ORD.numero)+" — "+(ORD.clienteName||tm("noName"));
+    msg += "\n"+tm("garment")+" : "+(ORD.article||"—");
+    msg += "\n"+tm("stage")+" : "+tm(stepKey(ORD.statut||"recu"));
+    if(ORD.prix || ORD.prix===0) msg += "\n"+tm("price")+" : "+ORD.prix+" "+CUR;
+    if(ORD.livraison) msg += "\n"+tm("delivery")+" : "+fmtDate(ORD.livraison, LANG_MSG);
+    if(ORD.clientePhone) msg += "\n"+tm("phone")+" : "+ORD.clientePhone;
+    if(ORD.notes) msg += "\n"+tm("notes")+" : "+ORD.notes;
+    openWa(num, msg);
+  });
+
+  async function openCmd(id){
+    const local = COMMANDES.find(x=>x.id===id);
+    if(local){ renderCmd(local, id); show("cmd"); return; }
+    show("loading"); $("loading").textContent=t("loading");
+    try{
+      const snap = await getDocSmart(doc(db,"boutiques",BID,"commandes",id));
+      if(!snap.exists()){ show("dash"); setTab("atelier"); return; }
+      renderCmd(snap.data(), id); show("cmd");
+    }catch(e){ $("loading").textContent=t("orderFail"); show("loading"); }
+  }
+
+  function fillClienteSelect(){
+    const sel=$("cf-cliente"), keep=sel.value;
+    sel.innerHTML="";
+    const opNew=document.createElement("option");
+    opNew.value="__new"; opNew.textContent=t("newClientOpt");
+    sel.appendChild(opNew);
+    CLIENTES.filter(c=>((c.genre==="homme")?"homme":"femme")===GENRE_CF).forEach(c=>{
+      const op=document.createElement("option");
+      op.value=c.id; op.textContent=c.name||t("noName"); sel.appendChild(op);
+    });
+    if(keep && Array.prototype.some.call(sel.options, o=>o.value===keep)) sel.value=keep;
+    toggleNewCliente();
+  }
+  function toggleNewCliente(){
+    const v=$("cf-cliente").value;
+    $("cf-new").hidden = (v !== "__new");
+    const c = (v && v!=="__new") ? CLIENTES.find(x=>x.id===v) : null;
+    buildCmdGrid(c ? (c.mesures||{}) : {});
+  }
+
+  async function openCmdForm(id){
+    $("cf-msg").classList.remove("show");
+    editingOrd = id || null;
+    fillClienteSelect();
+    if(!editingOrd){
+      $("cf-title").textContent=t("newOrderTitle");
+      $("cf-article").value=""; $("cf-prix").value=""; $("cf-notes").value="";
+      $("cf-recu").value="tissu"; $("cf-liv").value="";
+      $("cf-new-name").value=""; $("cf-new-phone").value="";
+      TYPE_CF="confection"; paintTypes();
+      $("cf-cliente").value="__new"; toggleNewCliente();
+      buildCmdGrid({});
+      show("cform"); return;
+    }
+    const o = COMMANDES.find(x=>x.id===editingOrd) || {};
+    $("cf-title").textContent=t("editOrderTitle");
+    TYPE_CF = o.type || "confection"; paintTypes();
+    const oc = CLIENTES.find(x=>x.id===o.clienteId);
+    GENRE_CF = (oc && oc.genre==="homme") ? "homme" : "femme";
+    paintSegs(); fillClienteSelect();
+    const sel=$("cf-cliente");
+    if(o.clienteId) sel.value=o.clienteId;
+    toggleNewCliente();
+    $("cf-recu").value=o.recu||"tissu";
+    $("cf-article").value=o.article||"";
+    $("cf-prix").value=(o.prix||o.prix===0)?o.prix:"";
+    $("cf-liv").value=o.livraison||"";
+    $("cf-notes").value=o.notes||"";
+    show("cform");
+  }
+
+  $("cf-save").addEventListener("click", ()=>{
+    const msg=$("cf-msg"); msg.classList.remove("show");
+    let cid=$("cf-cliente").value;
+    const article=$("cf-article").value.trim();
+    if(!article){ msg.textContent=t("garmentRequired"); msg.classList.add("show"); return; }
+
+    let c;
+    if(cid === "__new"){
+      const nn=$("cf-new-name").value.trim();
+      if(!nn){ msg.textContent=t("nameRequired"); msg.classList.add("show"); window.scrollTo(0,0); return; }
+      const cref=doc(collection(db,"boutiques",BID,"clientes"));
+      const cdata={ name:nn, phone:$("cf-new-phone").value.trim(), notes:"",
+                    genre:GENRE_CF, mesures:readGrid("cm-", GENRE_CF),
+                    createdAt:serverTimestamp(), updatedAt:serverTimestamp() };
+      setDoc(cref, cdata, { merge:true }).catch(function(){});
+      c = Object.assign({ id:cref.id }, cdata);
+      CLIENTES.push(c);
+      CLIENTES.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+      cid = cref.id;
+    } else {
+      c = CLIENTES.find(x=>x.id===cid) || { name:"", phone:"" };
+      const mes = readGrid("cm-", GENRE_CF);
+      if(Object.keys(mes).length){
+        setDoc(doc(db,"boutiques",BID,"clientes",cid),
+               { mesures:mes, genre:GENRE_CF, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+        c.mesures = Object.assign({}, c.mesures||{}, mes);
+        c.genre = GENRE_CF;
+      }
+    }
+    const pv=$("cf-prix").value.trim();
+    const data={
+      clienteId:cid, clienteName:c.name||"", clientePhone:c.phone||"",
+      article, type:TYPE_CF, recu:$("cf-recu").value, livraison:$("cf-liv").value||null,
+      notes:$("cf-notes").value.trim(),
+      prix: (pv!=="" && !isNaN(parseFloat(pv))) ? parseFloat(pv) : null,
+      updatedAt:serverTimestamp()
+    };
+    const ref = editingOrd
+      ? doc(db,"boutiques",BID,"commandes",editingOrd)
+      : doc(collection(db,"boutiques",BID,"commandes"));
+    if(!editingOrd){ data.statut="recu"; data.numero=nextNumero(); data.createdAt=serverTimestamp(); }
+    setDoc(ref, data, { merge:true }).catch(function(){});
+    const id = editingOrd || ref.id;
+    const existing = COMMANDES.find(x=>x.id===id);
+    if(existing) Object.assign(existing, data);
+    else COMMANDES.unshift(Object.assign({ id, statut:"recu" }, data));
+    editingOrd=null;
+    renderLists();
+    renderCmd(COMMANDES.find(x=>x.id===id), id);
+    show("cmd");
+  });
+
+  $("c-del").addEventListener("click", async ()=>{
+    if(!ORDID) return;
+    if(!await askCode()) return;
+    if(!confirm(t("confirmDeleteOrder"))) return;
+    deleteDoc(doc(db,"boutiques",BID,"commandes",ORDID)).catch(function(){});
+    COMMANDES = COMMANDES.filter(x=>x.id!==ORDID);
+    ORD=null; ORDID=null;
+    renderLists(); show("dash"); setTab("atelier");
+  });
+
+  function fillFiche(c, id){
+    currentCliente=id; CLIDATA=c;
+    $("f-name").textContent=c.name||t("noName");
+    if(c.phone){ $("f-phone").textContent=c.phone; $("f-phone-row").hidden=false; } else $("f-phone-row").hidden=true;
+    if(c.notes){ $("f-notes").textContent=c.notes; $("f-notes-row").hidden=false; } else $("f-notes-row").hidden=true;
+    $("f-wa-shop").hidden = !(BOUTIQUE && BOUTIQUE.whatsapp);
+    const m=c.mesures||{}, box=$("f-mesures"); box.innerHTML=""; let any=false;
+    mesuresFor(c.genre).forEach(mm=>{
+      const k=mm[0];
+      if(m[k]!==undefined && m[k]!==null && m[k]!==""){
+        any=true;
+        const row=document.createElement("div"); row.className="mline";
+        row.innerHTML='<span class="k"></span><span class="v"></span>';
+        row.querySelector(".k").textContent=mlabel(mm, LANG_UI);
+        row.querySelector(".v").textContent=m[k]+" cm";
+        box.appendChild(row);
+      }
+    });
+    if(!any){
+      const d=document.createElement("div");
+      d.style.cssText="color:var(--muted);font-size:14px;padding:6px 0";
+      d.textContent=t("noMeasures"); box.appendChild(d);
+    }
+  }
+
+  $("f-wa-shop").addEventListener("click", ()=>{
+    if(!CLIDATA) return;
+    const num=waNumber(BOUTIQUE && BOUTIQUE.whatsapp);
+    if(!num){ alert(t("noShopPhone")); return; }
+    let msg = tm("clients")+" — "+(CLIDATA.name||tm("noName"));
+    if(CLIDATA.phone) msg += "\n"+tm("phone")+" : "+CLIDATA.phone;
+    msg += "\n\n"+mesuresText(CLIDATA);
+    if(CLIDATA.notes) msg += "\n\n"+tm("notes")+" : "+CLIDATA.notes;
+    openWa(num, msg);
+  });
+
+  async function openFiche(id){
+    const local = CLIENTES.find(x=>x.id===id);
+    if(local){ fillFiche(local, id); show("fiche"); return; }
+    show("loading"); $("loading").textContent=t("loading");
+    try{
+      const snap = await getDocSmart(doc(db,"boutiques",BID,"clientes",id));
+      if(!snap.exists()){ show("dash"); setTab("mesures"); return; }
+      fillFiche(snap.data(), id); show("fiche");
+    }catch(e){ $("loading").textContent=t("ficheFail"); show("loading"); }
+  }
+
+  function buildGrid(boxId, prefix, m, genre){
+    const box=$(boxId); box.innerHTML="";
+    mesuresFor(genre).forEach(mm=>{
+      const k=mm[0];
+      const wrap=document.createElement("div");
+      const lab=document.createElement("label"); lab.textContent=mlabel(mm, LANG_UI); lab.setAttribute("for",prefix+k);
+      const inp=document.createElement("input");
+      inp.id=prefix+k; inp.type="number"; inp.step="0.5"; inp.inputMode="decimal"; inp.placeholder="—";
+      if(m && m[k]!==undefined && m[k]!==null && m[k]!=="") inp.value=m[k];
+      wrap.appendChild(lab); wrap.appendChild(inp); box.appendChild(wrap);
+    });
+  }
+  function readGrid(prefix, genre){
+    const out={};
+    mesuresFor(genre).forEach(mm=>{
+      const el=$(prefix+mm[0]);
+      if(!el) return;
+      const v=el.value.trim();
+      if(v!=="" && !isNaN(parseFloat(v))) out[mm[0]]=parseFloat(v);
+    });
+    return out;
+  }
+  function buildInputs(m){ buildGrid("in-mesures","m-",m,GENRE_FORM); }
+  function buildCmdGrid(m){ buildGrid("cf-mesures","cm-",m,GENRE_CF); }
+
+  function openForm(id){
+    $("form-msg").classList.remove("show");
+    editingId = id || null;
+    if(!editingId){
+      $("form-title").textContent=t("newClientTitle");
+      $("in-name").value=""; $("in-phone").value=""; $("in-notes").value="";
+      GENRE_FORM = GENRE_MES; paintSegs();
+      buildInputs(null);
+      show("form"); $("in-name").focus();
+      return;
+    }
+    const c = CLIENTES.find(x=>x.id===editingId) || {};
+    $("form-title").textContent=t("editTitle");
+    GENRE_FORM = (c.genre==="homme") ? "homme" : "femme"; paintSegs();
+    $("in-name").value=c.name||""; $("in-phone").value=c.phone||""; $("in-notes").value=c.notes||"";
+    buildInputs(c.mesures||{});
+    show("form");
+  }
+
+  $("form-save").addEventListener("click", ()=>{
+    const msg=$("form-msg"); msg.classList.remove("show");
+    const name=$("in-name").value.trim();
+    if(!name){ msg.textContent=t("nameRequired"); msg.classList.add("show"); window.scrollTo(0,0); return; }
+    const mesures=readGrid("m-", GENRE_FORM);
+    const data={
+      name, phone:$("in-phone").value.trim(), notes:$("in-notes").value.trim(),
+      genre:GENRE_FORM, mesures, updatedAt:serverTimestamp()
+    };
+    const ref = editingId
+      ? doc(db,"boutiques",BID,"clientes",editingId)
+      : doc(collection(db,"boutiques",BID,"clientes"));
+    if(!editingId) data.createdAt=serverTimestamp();
+    setDoc(ref, data, { merge:true }).catch(function(){});
+    const id = editingId || ref.id;
+    const existing = CLIENTES.find(x=>x.id===id);
+    if(existing) Object.assign(existing, data);
+    else CLIENTES.push(Object.assign({ id }, data));
+    CLIENTES.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+    editingId=null;
+    renderLists(); show("dash"); setTab("mesures");
+  });
+
+  $("f-del").addEventListener("click", ()=>{
+    if(!currentCliente) return;
+    if(!confirm(t("confirmDelete"))) return;
+    deleteDoc(doc(db,"boutiques",BID,"clientes",currentCliente)).catch(function(){});
+    CLIENTES = CLIENTES.filter(x=>x.id!==currentCliente);
+    currentCliente=null; CLIDATA=null;
+    renderLists(); show("dash"); setTab("mesures");
+  });
+
+  $("b-code-save").addEventListener("click", ()=>{
+    const v=$("b-code").value.replace(/\D/g,"").slice(0,6);
+    $("b-code").value=v;
+    if(BOUTIQUE) BOUTIQUE.codeAdmin=v;
+    setDoc(doc(db,"boutiques",BID), { codeAdmin:v, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+    alert(t("codeSaved"));
+  });
+
+  $("b-otp-gen").addEventListener("click", ()=>{
+    const code = String(Math.floor(100000 + Math.random()*900000));
+    setDoc(doc(db,"boutiques",BID), { otp:{ code, createdAt:serverTimestamp(), used:false } }, { merge:true }).catch(function(){});
+    if(BOUTIQUE) BOUTIQUE.otp = { code, used:false };
+    $("b-otp-code").textContent = code;
+    $("b-otp").hidden = false;
+  });
+
+  applyLang();
+
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", function(){
+      navigator.serviceWorker.register("sw.js").catch(function(){});
+    });
   }
 </script>
 </body>
