@@ -132,6 +132,15 @@
   .lock h3{ font-family:var(--serif); font-size:18px; color:var(--gold); margin:0 0 10px; }
   .lock p{ font-size:14px; color:var(--muted); margin:0 0 6px; line-height:1.6; }
   .lock .price{ font-size:13px; color:var(--txt); margin:12px 0 0; }
+  .typebox{ border:1px solid var(--gold); border-radius:12px; padding:14px; margin-top:6px; background:#1A1710; }
+  .typebox .lbl{ font-size:13px; color:var(--gold); font-weight:600; margin-bottom:11px; line-height:1.4; }
+  .types{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+  .types button{ padding:12px 4px; border:1px solid var(--line2); border-radius:9px; background:var(--panel2);
+    color:var(--muted); font-size:12px; font-weight:700; font-family:var(--sans); cursor:pointer; line-height:1.4; }
+  .types button.on{ background:var(--gold); color:#141310; border-color:var(--gold); }
+  .types .ic{ display:block; font-size:19px; margin-bottom:3px; }
+  .seg.big{ width:100%; }
+  .seg.big button{ flex:1; padding:14px 4px; font-size:14px; letter-spacing:0; }
   .chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
   .chips button{ padding:9px 13px; border:1px solid var(--line2); border-radius:20px; background:transparent;
     color:var(--txt); font-size:13px; cursor:pointer; font-family:var(--sans); }
@@ -391,10 +400,12 @@
     <div class="subtop"><button class="back" id="cf-back" data-i18n="cancel">‹ Annuler</button><h1 id="cf-title">Nouvelle commande</h1></div>
     <div class="card">
       <h2 data-i18n="orderInfo">La commande</h2>
-      <label data-i18n="typeLabel">Type de commande</label>
-      <div class="chips" id="cf-types"></div>
+      <div class="typebox">
+        <div class="lbl" data-i18n="typeHint">Type de commande (à choisir avant de remplir)</div>
+        <div class="types" id="cf-types"></div>
+      </div>
       <label data-i18n="genreLabel">Genre du client</label>
-      <div class="seg" data-seg="cfgenre" style="margin-top:4px">
+      <div class="seg big" data-seg="cfgenre" style="margin-top:4px">
         <button data-g="femme" data-i18n="gFemme">Femme</button><button data-g="homme" data-i18n="gHomme">Homme</button>
       </div>
       <label data-i18n="client">Cliente</label>
@@ -419,6 +430,11 @@
       <input id="cf-liv" type="date">
       <label data-i18n="notesOpt">Notes (optionnel)</label>
       <textarea id="cf-notes" rows="2" data-i18n-ph="orderNotesPh" placeholder="Couleur, broderie, remarques…"></textarea>
+    </div>
+    <div class="card">
+      <h2 data-i18n="measures">Mesures (cm)</h2>
+      <p style="margin:0 0 8px;font-size:13px;color:var(--muted)" data-i18n="measuresHint">Elles rejoignent automatiquement la fiche de la cliente.</p>
+      <div class="mgrid" id="cf-mesures"></div>
     </div>
     <button class="primary" id="cf-save" data-i18n="saveOrder">Enregistrer la commande</button>
     <div class="msg err" id="cf-msg"></div>
@@ -447,7 +463,7 @@
     <div class="card">
       <h2 data-i18n="contact">Coordonnées</h2>
       <label data-i18n="genreLabel">Genre du client</label>
-      <div class="seg" data-seg="ingenre" style="margin-top:4px">
+      <div class="seg big" data-seg="ingenre" style="margin-top:4px">
         <button data-g="femme" data-i18n="gFemme">Femme</button><button data-g="homme" data-i18n="gHomme">Homme</button>
       </div>
       <label data-i18n="clientName">Nom de la cliente *</label>
@@ -519,18 +535,20 @@
   const MESURES_H = [
     ["cou","Tour de cou","Neck"],
     ["epaule","Épaule","Shoulder"],
-    ["poitrine","Tour de poitrine","Chest"],
-    ["longManche","Longueur manche","Sleeve length"],
-    ["tourManche","Tour de manche","Sleeve width"],
-    ["poignet","Tour de poignet","Wrist"],
+    ["poitrine","Tour poitrine","Chest"],
+    ["longManche","Long. manche","Sleeve length"],
+    ["tourManche","Tour manche","Sleeve width"],
+    ["poignet","Poignet","Wrist"],
     ["taille","Tour de taille","Waist"],
     ["longTaille","Longueur de taille","Waist length"],
-    ["bassin","Tour de bassin","Hips"],
-    ["longChemise","Longueur chemise","Shirt length"],
-    ["longBoubou","Longueur boubou","Boubou length"],
-    ["longPantalon","Longueur pantalon","Trouser length"],
+    ["ceinture","Ceinture","Belt"],
+    ["bassin","Tour bassin","Hips"],
     ["cuisse","Tour de cuisse","Thigh"],
-    ["genou","Tour de genou","Knee"]
+    ["genou","Tour de genou","Knee"],
+    ["basPantalon","Bas du pantalon","Trouser hem"],
+    ["longPantalon","Longueur pantalon","Trouser length"],
+    ["longChemise","Longueur chemise","Shirt length"],
+    ["longBoubou","Longueur boubou","Boubou length"]
   ];
 
   const mesuresFor = g => (g === "homme") ? MESURES_H : MESURES_F;
@@ -543,7 +561,7 @@
       tabApercu:"Aperçu", tabAtelier:"Atelier", tabBoutique:"Boutique", tabMesures:"Mesures",
       tabStaff:"Salariés", tabVisitors:"Visiteurs",
       standard:"Standard", premium:"Premium",
-      typeLabel:"Type de commande", tConfection:"Confection", tRetouche:"Retouche", tPap:"Prêt-à-porter",
+      typeLabel:"Type de commande", typeHint:"Type de commande (à choisir avant de remplir)", tConfection:"Confection", tRetouche:"Retouche", tPap:"Prêt-à-porter",
       genreLabel:"Genre du client", gFemme:"Femme", gHomme:"Homme",
       newClientOpt:"+ Nouvelle cliente", newClientNameLabel:"Nom du nouveau client",
       newClientNamePh:"Ex. Awa Diallo", newPhonePh:"+220 …",
@@ -552,6 +570,7 @@
       autoNotifyHint:"À chaque changement d'étape, WhatsApp s'ouvre avec le message déjà écrit. Mettez « Non » pour prévenir vous-même.",
       yes:"Oui", no:"Non",
       mRecuPap:"Bonjour {nom}, votre commande de {article} est enregistrée à l'atelier {boutique}.",
+      measuresHint:"Elles rejoignent automatiquement la fiche de la cliente.",
       lockTitle:"Réservé à la formule Premium",
       lockText:"Le suivi des salariés, le registre des visiteurs et le bilan financier font partie de la formule Premium.",
       lockPrice:"Standard {a} {cur}/mois · Premium {b} {cur}/mois",
@@ -641,7 +660,7 @@
       tabApercu:"Overview", tabAtelier:"Workshop", tabBoutique:"Shop", tabMesures:"Measurements",
       tabStaff:"Staff", tabVisitors:"Visitors",
       standard:"Standard", premium:"Premium",
-      typeLabel:"Order type", tConfection:"Tailoring", tRetouche:"Alteration", tPap:"Ready-to-wear",
+      typeLabel:"Order type", typeHint:"Order type (choose before filling in)", tConfection:"Tailoring", tRetouche:"Alteration", tPap:"Ready-to-wear",
       genreLabel:"Client gender", gFemme:"Woman", gHomme:"Man",
       newClientOpt:"+ New client", newClientNameLabel:"New client name",
       newClientNamePh:"e.g. Awa Diallo", newPhonePh:"+220 …",
@@ -650,6 +669,7 @@
       autoNotifyHint:"On every stage change, WhatsApp opens with the message ready. Set to No to notify yourself.",
       yes:"Yes", no:"No",
       mRecuPap:"Hello {nom}, your order for {article} is registered at {boutique}.",
+      measuresHint:"They are added automatically to the client's record.",
       lockTitle:"Premium plan only",
       lockText:"Staff records, the visitors log and the financial summary are part of the Premium plan.",
       lockPrice:"Standard {a} {cur}/month · Premium {b} {cur}/month",
@@ -840,19 +860,22 @@
   }
   function paintTypes(){
     const box=$("cf-types");
+    const ICONS = { confection:"\u{1F9F5}", retouche:"\u2702\uFE0F", pap:"\u{1F6CD}\uFE0F" };
     if(!box.children.length){
       TYPES.forEach(x=>{
         const b=document.createElement("button");
-        b.setAttribute("data-i18n", typeKey(x));
         b.setAttribute("data-type", x);
-        b.textContent=x;
+        const ic=document.createElement("span"); ic.className="ic"; ic.textContent=ICONS[x]||"";
+        const lb=document.createElement("span"); lb.className="lb";
+        b.appendChild(ic); b.appendChild(lb);
         b.addEventListener("click", ()=>{ TYPE_CF=x; paintTypes(); });
         box.appendChild(b);
       });
     }
     box.querySelectorAll("button").forEach(b=>{
-      b.textContent = t(typeKey(b.getAttribute("data-type")));
-      b.classList.toggle("on", b.getAttribute("data-type")===TYPE_CF);
+      const x=b.getAttribute("data-type");
+      b.querySelector(".lb").textContent = t(typeKey(x));
+      b.classList.toggle("on", x===TYPE_CF);
     });
   }
 
@@ -870,10 +893,12 @@
     if(!$("cmd").hidden && ORD) renderCmd(ORD, ORDID);
     if(!$("form").hidden){
       $("form-title").textContent = editingId ? t("editTitle") : t("newClientTitle");
-      const cur={}; mesuresFor(GENRE_FORM).forEach(mm=>{ const el=$("m-"+mm[0]); if(el && el.value!=="") cur[mm[0]]=el.value; });
-      buildInputs(cur);
+      buildInputs(currentMesuresFromForm("m-"));
     }
-    if(!$("cform").hidden) $("cf-title").textContent = editingOrd ? t("editOrderTitle") : t("newOrderTitle");
+    if(!$("cform").hidden){
+      $("cf-title").textContent = editingOrd ? t("editOrderTitle") : t("newOrderTitle");
+      buildCmdGrid(currentMesuresFromForm("cm-"));
+    }
   }
 
   document.querySelectorAll(".seg button").forEach(b=>{
@@ -894,15 +919,15 @@
         return;
       }
       const g=b.getAttribute("data-g");
-      if(seg==="cfgenre"){ GENRE_CF=g; paintSegs(); fillClienteSelect(); }
-      else if(seg==="ingenre"){ GENRE_FORM=g; paintSegs(); buildInputs(currentMesuresFromForm()); }
+      if(seg==="cfgenre"){ GENRE_CF=g; paintSegs(); fillClienteSelect(); buildCmdGrid(currentMesuresFromForm("cm-")); }
+      else if(seg==="ingenre"){ GENRE_FORM=g; paintSegs(); buildInputs(currentMesuresFromForm("m-")); }
       else { GENRE_MES=g; paintSegs(); renderLists(); }
     });
   });
-  function currentMesuresFromForm(){
+  function currentMesuresFromForm(prefix){
     const cur={};
     MESURES_F.concat(MESURES_H).forEach(mm=>{
-      const el=$("m-"+mm[0]);
+      const el=$(prefix+mm[0]);
       if(el && el.value!=="") cur[mm[0]]=el.value;
     });
     return cur;
@@ -1391,7 +1416,10 @@
     toggleNewCliente();
   }
   function toggleNewCliente(){
-    $("cf-new").hidden = ($("cf-cliente").value !== "__new");
+    const v=$("cf-cliente").value;
+    $("cf-new").hidden = (v !== "__new");
+    const c = (v && v!=="__new") ? CLIENTES.find(x=>x.id===v) : null;
+    buildCmdGrid(c ? (c.mesures||{}) : {});
   }
 
   async function openCmdForm(id){
@@ -1405,6 +1433,7 @@
       $("cf-new-name").value=""; $("cf-new-phone").value="";
       TYPE_CF="confection"; paintTypes();
       $("cf-cliente").value="__new"; toggleNewCliente();
+      buildCmdGrid({});
       show("cform"); return;
     }
     const o = COMMANDES.find(x=>x.id===editingOrd) || {};
@@ -1436,7 +1465,8 @@
       if(!nn){ msg.textContent=t("nameRequired"); msg.classList.add("show"); window.scrollTo(0,0); return; }
       const cref=doc(collection(db,"boutiques",BID,"clientes"));
       const cdata={ name:nn, phone:$("cf-new-phone").value.trim(), notes:"",
-                    genre:GENRE_CF, mesures:{}, createdAt:serverTimestamp(), updatedAt:serverTimestamp() };
+                    genre:GENRE_CF, mesures:readGrid("cm-", GENRE_CF),
+                    createdAt:serverTimestamp(), updatedAt:serverTimestamp() };
       setDoc(cref, cdata, { merge:true }).catch(function(){});
       c = Object.assign({ id:cref.id }, cdata);
       CLIENTES.push(c);
@@ -1444,6 +1474,13 @@
       cid = cref.id;
     } else {
       c = CLIENTES.find(x=>x.id===cid) || { name:"", phone:"" };
+      const mes = readGrid("cm-", GENRE_CF);
+      if(Object.keys(mes).length){
+        setDoc(doc(db,"boutiques",BID,"clientes",cid),
+               { mesures:mes, genre:GENRE_CF, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+        c.mesures = Object.assign({}, c.mesures||{}, mes);
+        c.genre = GENRE_CF;
+      }
     }
     const pv=$("cf-prix").value.trim();
     const data={
@@ -1525,18 +1562,30 @@
     }catch(e){ $("loading").textContent=t("ficheFail"); show("loading"); }
   }
 
-  function buildInputs(m){
-    const box=$("in-mesures"); box.innerHTML="";
-    mesuresFor(GENRE_FORM).forEach(mm=>{
+  function buildGrid(boxId, prefix, m, genre){
+    const box=$(boxId); box.innerHTML="";
+    mesuresFor(genre).forEach(mm=>{
       const k=mm[0];
       const wrap=document.createElement("div");
-      const lab=document.createElement("label"); lab.textContent=mlabel(mm, LANG_UI); lab.setAttribute("for","m-"+k);
+      const lab=document.createElement("label"); lab.textContent=mlabel(mm, LANG_UI); lab.setAttribute("for",prefix+k);
       const inp=document.createElement("input");
-      inp.id="m-"+k; inp.type="number"; inp.step="0.5"; inp.inputMode="decimal"; inp.placeholder="—";
+      inp.id=prefix+k; inp.type="number"; inp.step="0.5"; inp.inputMode="decimal"; inp.placeholder="—";
       if(m && m[k]!==undefined && m[k]!==null && m[k]!=="") inp.value=m[k];
       wrap.appendChild(lab); wrap.appendChild(inp); box.appendChild(wrap);
     });
   }
+  function readGrid(prefix, genre){
+    const out={};
+    mesuresFor(genre).forEach(mm=>{
+      const el=$(prefix+mm[0]);
+      if(!el) return;
+      const v=el.value.trim();
+      if(v!=="" && !isNaN(parseFloat(v))) out[mm[0]]=parseFloat(v);
+    });
+    return out;
+  }
+  function buildInputs(m){ buildGrid("in-mesures","m-",m,GENRE_FORM); }
+  function buildCmdGrid(m){ buildGrid("cf-mesures","cm-",m,GENRE_CF); }
 
   function openForm(id){
     $("form-msg").classList.remove("show");
@@ -1561,11 +1610,7 @@
     const msg=$("form-msg"); msg.classList.remove("show");
     const name=$("in-name").value.trim();
     if(!name){ msg.textContent=t("nameRequired"); msg.classList.add("show"); window.scrollTo(0,0); return; }
-    const mesures={};
-    mesuresFor(GENRE_FORM).forEach(mm=>{
-      const v=$("m-"+mm[0]).value.trim();
-      if(v!=="" && !isNaN(parseFloat(v))) mesures[mm[0]]=parseFloat(v);
-    });
+    const mesures=readGrid("m-", GENRE_FORM);
     const data={
       name, phone:$("in-phone").value.trim(), notes:$("in-notes").value.trim(),
       genre:GENRE_FORM, mesures, updatedAt:serverTimestamp()
