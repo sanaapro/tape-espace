@@ -3,87 +3,133 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0E0E0F">
 <title>SanaaPro — Mon espace</title>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
-<!-- SanaaPro espace boutique — v6 : fiches + ajout cliente + chargement patient -->
+<!-- SanaaPro espace boutique — v11 : onglets + recherche globale + commandes -->
 <style>
   :root{
-    --ivory:#F0EFED; --ink:#141414; --line:#d8d6d1; --card:#ffffff;
-    --ok:#1f7a4d; --okbg:#eaf5ee; --warn:#b26a1f; --warnbg:#fbf1e6;
-    --err:#b23b3b; --errbg:#fbeaea; --muted:#6b6862;
+    --bg:#0E0E0F; --panel:#17181A; --panel2:#1E1F22; --line:#2C2E32; --line2:#3A3D42;
+    --gold:#E0B23C; --txt:#EDEBE6; --muted:#98948C;
+    --ok:#4FD18B; --okbg:#12301F; --warn:#E0A44C; --warnbg:#33240F;
+    --err:#E96B6B; --errbg:#361A1A; --wa:#25D366; --wabg:#10281B;
+    --serif:Georgia,"Times New Roman",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
   *{box-sizing:border-box}
-  body{ margin:0; min-height:100vh; background:var(--ivory); color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
-  .wrap{ max-width:520px; margin:0 auto; padding:20px 16px 48px; }
-  .top{ display:flex; align-items:center; justify-content:space-between; padding:12px 2px 22px; }
-  .brand .name{ font-size:19px; letter-spacing:5px; font-weight:600; }
-  .brand .sub{ font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-top:2px; }
-  .logout{ background:none; border:1px solid var(--line); color:var(--muted);
-    border-radius:20px; padding:7px 14px; font-size:13px; cursor:pointer; }
-  .login-card{ background:var(--card); border:1px solid var(--line); border-radius:16px;
-    padding:28px 24px; box-shadow:0 10px 40px rgba(0,0,0,.06); margin-top:40px; }
-  .login-card h1{ font-size:17px; text-align:center; margin:0 0 4px; }
-  .login-card .lead{ text-align:center; color:var(--muted); font-size:13px; margin:0 0 20px; }
-  label{ display:block; font-size:12px; color:var(--muted); margin:14px 0 6px; }
-  input,textarea{ width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:10px;
-    font-size:15px; background:#fafafa; font-family:inherit; }
-  input:focus,textarea:focus{ outline:none; border-color:var(--ink); background:#fff; }
-  button.primary{ width:100%; margin-top:22px; padding:14px; border:none; border-radius:10px;
-    background:var(--ink); color:var(--ivory); font-size:15px; letter-spacing:.5px; cursor:pointer; }
-  button.primary:disabled{ opacity:.5; cursor:default; }
-  button.ghost{ width:100%; margin-top:10px; padding:13px; border:1px solid var(--line);
-    border-radius:10px; background:#fff; color:var(--ink); font-size:14px; cursor:pointer; }
-  .msg{ margin-top:16px; font-size:13px; padding:12px 14px; border-radius:10px; display:none; }
+  body{ margin:0; min-height:100vh; background:var(--bg); color:var(--txt); font-family:var(--sans); }
+  .wrap{ max-width:520px; margin:0 auto; padding:18px 16px 48px; }
+
+  .head{ text-align:center; padding:10px 0 16px; }
+  .head .name{ font-family:var(--serif); font-size:26px; letter-spacing:4px; color:var(--gold);
+    text-transform:uppercase; margin:0; font-weight:700; }
+  .head .sub{ font-size:10px; letter-spacing:2.5px; color:var(--muted); text-transform:uppercase; margin-top:6px; }
+  .pill{ display:inline-flex; align-items:center; gap:7px; margin-top:12px; padding:5px 14px;
+    border-radius:20px; font-size:12px; font-weight:600; background:var(--okbg); color:var(--ok); }
+  .pill.off{ background:var(--warnbg); color:var(--warn); }
+  .dot{ width:7px; height:7px; border-radius:50%; background:currentColor; }
+
+  .langset{ margin-top:14px; display:flex; flex-direction:column; gap:8px; align-items:center; }
+  .langrow{ display:flex; align-items:center; gap:10px; }
+  .langlab{ font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); }
+  .seg{ display:inline-flex; border:1px solid var(--line2); border-radius:20px; overflow:hidden; }
+  .seg button{ border:none; background:transparent; color:var(--muted); font-family:var(--sans);
+    font-size:12px; font-weight:700; letter-spacing:1px; padding:6px 16px; cursor:pointer; }
+  .seg button.on{ background:var(--gold); color:#141310; }
+
+  .logout{ margin-top:12px; background:none; border:1px solid var(--line2); color:var(--muted);
+    border-radius:20px; padding:7px 18px; font-size:13px; cursor:pointer; font-family:var(--sans); }
+
+  .tabs{ display:flex; gap:2px; overflow-x:auto; border-bottom:1px solid var(--line);
+    margin:4px 0 16px; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  .tabs::-webkit-scrollbar{ display:none; }
+  .tabs button{ flex:0 0 auto; background:none; border:none; border-bottom:2px solid transparent;
+    padding:12px 14px; color:var(--muted); font-size:14px; font-family:var(--sans); cursor:pointer; }
+  .tabs button.on{ color:var(--gold); border-bottom-color:var(--gold); font-weight:700; }
+
+  .stats{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+  .stat{ background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:18px 12px; text-align:center; }
+  .stat .n{ font-family:var(--serif); font-size:30px; color:var(--gold); font-weight:700; line-height:1; }
+  .stat .l{ font-size:10px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; margin-top:8px; }
+
+  .login-card{ background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:26px 22px; margin-top:26px; }
+  .login-card h1{ font-family:var(--serif); font-size:19px; color:var(--gold); text-align:center; margin:0 0 6px; font-weight:700; }
+  .login-card .lead{ text-align:center; color:var(--muted); font-size:13px; margin:0 0 18px; }
+
+  label{ display:block; font-size:11px; letter-spacing:.5px; color:var(--muted); margin:14px 0 6px; text-transform:uppercase; }
+  input,textarea,select{ width:100%; padding:12px 14px; border:1px solid var(--line2); border-radius:9px;
+    font-size:15px; background:#101113; color:var(--txt); font-family:inherit; }
+  input::placeholder,textarea::placeholder{ color:#6A665F; }
+  input:focus,textarea:focus,select:focus{ outline:none; border-color:var(--gold); }
+
+  button.primary{ width:100%; margin-top:14px; padding:15px; border:none; border-radius:10px;
+    background:var(--gold); color:#141310; font-size:15px; font-weight:700; cursor:pointer; font-family:var(--sans); }
+  button.primary:disabled{ opacity:.45; cursor:default; }
+  button.ghost{ width:100%; margin-top:10px; padding:13px; border:1px solid var(--line2);
+    border-radius:10px; background:transparent; color:var(--txt); font-size:14px; cursor:pointer; font-family:var(--sans); }
+  button.wa{ width:100%; margin-top:10px; padding:15px; border:1px solid var(--wa); border-radius:10px;
+    background:var(--wabg); color:var(--wa); font-size:15px; font-weight:700; cursor:pointer; font-family:var(--sans); }
+  .del{ width:100%; margin-top:10px; padding:13px; border:1px solid #4A2222; border-radius:10px;
+    background:var(--errbg); color:var(--err); font-size:14px; cursor:pointer; font-family:var(--sans); }
+
+  .msg{ margin-top:14px; font-size:13px; padding:12px 14px; border-radius:9px; display:none; }
   .msg.show{ display:block; }
   .msg.err{ background:var(--errbg); color:var(--err); }
-  .greet{ font-size:22px; font-weight:600; margin:4px 2px 2px; }
-  .greet .sub{ font-size:14px; color:var(--muted); font-weight:400; margin-top:2px; }
-  .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-top:14px; }
-  .card h2{ font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin:0 0 12px; font-weight:600; }
-  .row{ display:flex; justify-content:space-between; align-items:baseline; padding:6px 0; font-size:15px; gap:12px; }
+
+  .greet{ font-family:var(--serif); font-size:23px; margin:2px 2px 2px; }
+  .greet .sub{ font-family:var(--sans); font-size:13px; color:var(--gold); margin-top:4px; letter-spacing:1px; text-transform:uppercase; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:18px; margin-top:14px; }
+  .card h2{ font-family:var(--serif); font-size:17px; color:var(--gold); margin:0 0 12px; font-weight:700;
+    padding-bottom:10px; border-bottom:1px solid var(--line); }
+  .row{ display:flex; justify-content:space-between; align-items:baseline; padding:7px 0; font-size:15px; gap:12px; }
   .row .k{ color:var(--muted); font-size:13px; }
   .row .v{ text-align:right; font-weight:500; word-break:break-word; }
-  .badge{ display:inline-block; padding:4px 12px; border-radius:20px; font-size:13px; font-weight:600; }
+
+  .badge{ display:inline-block; padding:4px 12px; border-radius:20px; font-size:13px; font-weight:700; }
   .badge.ok{ background:var(--okbg); color:var(--ok); }
   .badge.warn{ background:var(--warnbg); color:var(--warn); }
   .badge.err{ background:var(--errbg); color:var(--err); }
-  .sub-note{ margin-top:12px; font-size:13px; padding:10px 12px; border-radius:10px; }
+  .badge.gold{ background:#33280E; color:var(--gold); }
+  .badge.soft{ background:var(--panel2); color:var(--muted); font-weight:600; }
+  .sub-note{ margin-top:12px; font-size:13px; padding:10px 12px; border-radius:9px; }
   .sub-note.warn{ background:var(--warnbg); color:var(--warn); }
   .sub-note.err{ background:var(--errbg); color:var(--err); }
-  .nav-card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px;
-    margin-top:14px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
-  .nav-card:active{ background:#fafafa; }
-  .nav-card .t{ font-weight:600; font-size:15px; }
-  .nav-card .d{ font-size:13px; color:var(--muted); margin-top:3px; }
-  .nav-card .chev{ color:var(--muted); font-size:22px; }
-  .count{ background:var(--ivory); border:1px solid var(--line); border-radius:12px; padding:2px 10px; font-size:12px; color:var(--muted); }
-  .subtop{ display:flex; align-items:center; gap:10px; padding:10px 2px 16px; }
-  .back{ background:none; border:none; font-size:15px; color:var(--muted); cursor:pointer; padding:6px 4px; }
-  .subtop h1{ font-size:19px; margin:0; }
-  .cli-item{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px;
-    margin-top:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
-  .cli-item:active{ background:#fafafa; }
+
+  .subtop{ display:flex; align-items:center; gap:10px; padding:6px 2px 16px; border-bottom:1px solid var(--line); margin-bottom:6px; }
+  .back{ background:none; border:none; font-size:14px; color:var(--muted); cursor:pointer; padding:6px 2px; font-family:var(--sans); }
+  .subtop h1{ font-family:var(--serif); font-size:20px; margin:0; color:var(--gold); font-weight:700; }
+
+  .cli-item{ background:var(--panel); border:1px solid var(--line); border-radius:11px; padding:14px 16px;
+    margin-top:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .cli-item:active{ background:var(--panel2); }
   .cli-item .nm{ font-weight:600; font-size:15px; }
-  .cli-item .ph{ font-size:13px; color:var(--muted); margin-top:2px; }
-  .empty{ text-align:center; color:var(--muted); padding:40px 20px; font-size:14px; }
-  .mgrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px 12px; margin-top:4px; }
+  .cli-item .ph{ font-size:13px; color:var(--muted); margin-top:3px; }
+  .chev{ color:var(--gold); font-size:22px; }
+  .empty{ text-align:center; color:var(--muted); padding:32px 20px; font-size:14px; line-height:1.6; }
+
+  .steps{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .steps button{ padding:12px 8px; border:1px solid var(--line2); border-radius:9px; background:transparent;
+    color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; font-family:var(--sans); }
+  .steps button.on{ background:var(--gold); color:#141310; border-color:var(--gold); }
+  .steps button.done{ color:var(--gold); border-color:var(--gold); }
+
+  .mgrid{ display:grid; grid-template-columns:1fr 1fr; gap:8px 12px; margin-top:4px; }
   .mgrid label{ margin:6px 0 4px; }
-  .mline{ display:flex; justify-content:space-between; padding:7px 0; font-size:15px; border-bottom:1px solid var(--line); }
+  .mline{ display:flex; justify-content:space-between; padding:8px 0; font-size:15px; border-bottom:1px solid var(--line); }
   .mline:last-child{ border-bottom:none; }
   .mline .k{ color:var(--muted); font-size:14px; }
-  .mline .v{ font-weight:600; }
-  .del{ width:100%; margin-top:10px; padding:12px; border:1px solid var(--errbg); border-radius:10px;
-    background:var(--errbg); color:var(--err); font-size:14px; cursor:pointer; }
-  .foot{ text-align:center; font-size:11px; color:var(--muted); margin-top:28px; }
-  .center{ text-align:center; color:var(--muted); padding:60px 20px; font-size:14px; }
-  .offline{ text-align:center; font-size:12px; color:var(--warn); background:var(--warnbg);
-    padding:6px; border-radius:8px; margin-bottom:10px; }
-  .fab{ position:fixed; bottom:22px; left:50%; transform:translateX(-50%); max-width:490px; width:calc(100% - 32px);
-    padding:15px; border:none; border-radius:12px; background:var(--ink); color:var(--ivory); font-size:15px;
-    letter-spacing:.3px; cursor:pointer; box-shadow:0 6px 24px rgba(0,0,0,.18); }
+  .mline .v{ font-weight:700; color:var(--gold); }
+
+  .foot{ text-align:center; font-size:11px; color:#5F5B54; margin-top:28px; letter-spacing:.5px; }
+  .center{ text-align:center; color:var(--muted); padding:70px 20px; font-size:14px; line-height:1.7; }
+  .offline-note{ text-align:center; font-size:12px; color:var(--warn); background:var(--warnbg);
+    padding:9px 12px; border-radius:9px; margin-bottom:12px; line-height:1.5; }
+  button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  @media (prefers-reduced-motion:reduce){ *{ transition:none !important; animation:none !important; } }
   [hidden]{ display:none !important; }
 </style>
 </head>
@@ -91,16 +137,23 @@
 <script>
   window.addEventListener("error", function(e){
     var l=document.getElementById("loading");
-    if(l && !l.hidden){ l.style.color="#b23b3b"; l.textContent="Erreur : "+(e.message||"")+(e.filename?(" ["+e.filename.split('/').pop()+":"+e.lineno+"]"):""); }
+    if(l && !l.hidden){ l.style.color="#E96B6B"; l.textContent="Erreur : "+(e.message||"")+(e.filename?(" ["+e.filename.split('/').pop()+":"+e.lineno+"]"):""); }
   });
   window.addEventListener("unhandledrejection", function(e){
     var l=document.getElementById("loading");
-    if(l && !l.hidden){ l.style.color="#b23b3b"; l.textContent="Erreur : "+(((e.reason&&e.reason.message)||e.reason)||""); }
+    if(l && !l.hidden){ l.style.color="#E96B6B"; l.textContent="Erreur : "+(((e.reason&&e.reason.message)||e.reason)||""); }
   });
-  [[30000,"Chargement… la connexion est lente, mais \u00e7a continue."],
-   [90000,"Toujours en cours — ne recharge pas la page."],
-   [180000,"Le r\u00e9seau ne suit pas pour l'instant.<br>R\u00e9essaie avec une meilleure connexion : apr\u00e8s UN chargement r\u00e9ussi, l'app s'ouvrira vite."]
-  ].forEach(function(s){
+  var __L="fr";
+  try{ __L = localStorage.getItem("sanaapro_lang_ui") || localStorage.getItem("sanaapro_lang") || "fr"; }catch(e){}
+  var __SLOW = {
+    fr:[[30000,"Chargement\u2026 la connexion est lente, mais \u00e7a continue."],
+        [90000,"Toujours en cours \u2014 ne recharge pas la page."],
+        [180000,"Le r\u00e9seau ne suit pas pour l'instant.<br>R\u00e9essaie avec une meilleure connexion : apr\u00e8s UN chargement r\u00e9ussi, l'app s'ouvrira vite."]],
+    en:[[30000,"Loading\u2026 the connection is slow, but it is still going."],
+        [90000,"Still working \u2014 please do not reload the page."],
+        [180000,"The network is too slow right now.<br>Try again with a better connection: after ONE successful load, the app will open quickly."]]
+  };
+  (__SLOW[__L]||__SLOW.fr).forEach(function(s){
     setTimeout(function(){
       var l=document.getElementById("loading");
       if(l && !l.hidden && !window.__loaded){ l.innerHTML=s[1]; }
@@ -112,97 +165,191 @@
   <div id="loading" class="center">Chargement…</div>
 
   <div id="login" hidden>
-    <div class="top"><div class="brand"><div class="name">SANAAPRO</div><div class="sub">votre atelier, en ligne</div></div></div>
+    <div class="head" style="border-bottom:1px solid var(--line)">
+      <div class="name">SanaaPro</div>
+      <div class="sub" data-i18n="tagline">votre atelier, en ligne</div>
+      <div class="langset">
+        <div class="langrow">
+          <span class="langlab" data-i18n="uiLabel">Interface</span>
+          <div class="seg" data-seg="ui"><button data-lang="fr">FR</button><button data-lang="en">EN</button></div>
+        </div>
+      </div>
+    </div>
     <div class="login-card">
-      <h1>Connexion à votre espace</h1>
-      <p class="lead">Entrez les identifiants créés à l'inscription.</p>
-      <label for="email">Email</label>
-      <input id="email" type="email" placeholder="vous@email.com" autocomplete="email">
-      <label for="pass">Mot de passe</label>
-      <input id="pass" type="password" placeholder="Votre mot de passe" autocomplete="current-password">
-      <button class="primary" id="login-btn">Se connecter</button>
+      <h1 data-i18n="loginTitle">Connexion à votre espace</h1>
+      <p class="lead" data-i18n="loginLead">Entrez les identifiants créés à l'inscription.</p>
+      <label for="email" data-i18n="email">Email</label>
+      <input id="email" type="email" data-i18n-ph="emailPh" placeholder="vous@email.com" autocomplete="email">
+      <label for="pass" data-i18n="password">Mot de passe</label>
+      <input id="pass" type="password" data-i18n-ph="passwordPh" placeholder="Votre mot de passe" autocomplete="current-password">
+      <button class="primary" id="login-btn" data-i18n="signIn">Se connecter</button>
       <div class="msg err" id="login-msg"></div>
     </div>
-    <div class="foot">SanaaPro — propulsé par votre atelier</div>
+    <div class="foot" data-i18n="foot">SanaaPro — propulsé par votre atelier</div>
   </div>
 
   <div id="dash" hidden>
-    <div class="offline" id="off-dash" hidden>Mode hors ligne — vos données sont enregistrées et se synchroniseront au retour du réseau.</div>
-    <div class="top">
-      <div class="brand"><div class="name">SANAAPRO</div><div class="sub">votre atelier, en ligne</div></div>
-      <button class="logout" id="logout-btn">Déconnexion</button>
-    </div>
-    <div class="greet">Bonjour <span id="d-owner"></span><div class="sub" id="d-name"></div></div>
-
-    <div class="card">
-      <h2>Abonnement</h2>
-      <div class="row"><span class="k">Statut</span><span class="v"><span id="d-badge" class="badge"></span></span></div>
-      <div class="row"><span class="k">Formule</span><span class="v" id="d-plan"></span></div>
-      <div class="row"><span class="k">Échéance</span><span class="v" id="d-expiry"></span></div>
-      <div id="d-subnote" class="sub-note" hidden></div>
-    </div>
-
-    <div class="nav-card" id="open-clientes">
-      <div><div class="t">Clientes &amp; mesures</div><div class="d">Vos clientes et leurs mesures</div></div>
-      <div style="display:flex;align-items:center;gap:10px"><span class="count" id="cli-count">—</span><span class="chev">›</span></div>
+    <div class="head">
+      <div class="name" id="d-brand">SanaaPro</div>
+      <div class="sub" id="d-brandsub" data-i18n="tagline">votre atelier, en ligne</div>
+      <div><span class="pill" id="syncpill"><span class="dot"></span><span id="synctext">En ligne</span></span></div>
+      <div class="langset">
+        <div class="langrow">
+          <span class="langlab" data-i18n="uiLabel">Interface</span>
+          <div class="seg" data-seg="ui"><button data-lang="fr">FR</button><button data-lang="en">EN</button></div>
+        </div>
+        <div class="langrow">
+          <span class="langlab" data-i18n="msgLabel">Messages clients</span>
+          <div class="seg" data-seg="msg"><button data-lang="fr">FR</button><button data-lang="en">EN</button></div>
+        </div>
+      </div>
+      <button class="logout" id="logout-btn" data-i18n="logout">Déconnexion</button>
     </div>
 
-    <div class="card" style="opacity:.6;border-style:dashed">
-      <span style="float:right;font-size:11px;background:var(--ivory);border:1px solid var(--line);border-radius:12px;padding:2px 9px;color:var(--muted)">BIENTÔT</span>
-      <h2>Commandes</h2>
-      <p style="margin:0;font-size:13px;color:var(--muted)">Suivez vos commandes de couture, du devis à la livraison.</p>
+    <div class="tabs" id="tabs">
+      <button data-tab="apercu" data-i18n="tabApercu">Aperçu</button>
+      <button data-tab="atelier" data-i18n="tabAtelier">Atelier</button>
+      <button data-tab="boutique" data-i18n="tabBoutique">Boutique</button>
+      <button data-tab="mesures" data-i18n="tabMesures">Mesures</button>
     </div>
 
-    <div class="card">
-      <h2>Ma boutique</h2>
-      <div class="row"><span class="k">Nom</span><span class="v" id="d-shopname"></span></div>
-      <div class="row"><span class="k">Identifiant</span><span class="v" id="d-slug"></span></div>
-      <div class="row"><span class="k">Email</span><span class="v" id="d-email"></span></div>
-      <div class="row" id="d-wa-row"><span class="k">WhatsApp</span><span class="v" id="d-wa"></span></div>
+    <div class="offline-note" id="off-dash" data-i18n="offline" hidden>Mode hors ligne — vos données sont enregistrées et se synchroniseront au retour du réseau.</div>
+
+    <div id="pane-apercu">
+      <div class="greet"><span data-i18n="hello">Bonjour</span> <span id="d-owner"></span><div class="sub" id="d-name"></div></div>
+
+      <div class="card">
+        <h2 data-i18n="search">Recherche globale</h2>
+        <input id="q" type="search" data-i18n-ph="searchPh" placeholder="Nom, téléphone ou modèle">
+        <div id="q-res"></div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="n" id="s-cmd">—</div><div class="l" data-i18n="statOrders">Commandes</div></div>
+        <div class="stat"><div class="n" id="s-cli">—</div><div class="l" data-i18n="statClients">Clientes</div></div>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="subscription">Abonnement</h2>
+        <div class="row"><span class="k" data-i18n="status">Statut</span><span class="v"><span id="d-badge" class="badge"></span></span></div>
+        <div class="row"><span class="k" data-i18n="plan">Formule</span><span class="v" id="d-plan"></span></div>
+        <div class="row"><span class="k" data-i18n="expiry">Échéance</span><span class="v" id="d-expiry"></span></div>
+        <div id="d-subnote" class="sub-note" hidden></div>
+      </div>
     </div>
-    <div class="foot">SanaaPro — propulsé par votre atelier</div>
+
+    <div id="pane-atelier" hidden>
+      <button class="primary" id="cmd-add" data-i18n="newOrder">+ Nouvelle commande</button>
+      <div id="cmd-list"></div>
+      <div id="cmd-empty" class="empty" data-i18n="noOrders" hidden>Aucune commande pour le moment.</div>
+    </div>
+
+    <div id="pane-boutique" hidden>
+      <div class="card">
+        <h2 data-i18n="myShop">Ma boutique</h2>
+        <div class="row"><span class="k" data-i18n="shopName">Nom</span><span class="v" id="d-shopname"></span></div>
+        <div class="row"><span class="k" data-i18n="shopSlug">Identifiant</span><span class="v" id="d-slug"></span></div>
+        <div class="row"><span class="k" data-i18n="email">Email</span><span class="v" id="d-email"></span></div>
+        <div class="row" id="d-wa-row"><span class="k">WhatsApp</span><span class="v" id="d-wa"></span></div>
+      </div>
+    </div>
+
+    <div id="pane-mesures" hidden>
+      <button class="primary" id="cli-add" data-i18n="newClient">+ Nouvelle cliente</button>
+      <div id="cli-list"></div>
+      <div id="cli-empty" class="empty" data-i18n="noClients" hidden>Aucune cliente pour le moment.</div>
+    </div>
+
+    <div class="foot" data-i18n="foot">SanaaPro — propulsé par votre atelier</div>
   </div>
 
-  <div id="clientes" hidden>
-    <div class="subtop"><button class="back" id="cli-back">‹ Retour</button><h1>Clientes</h1></div>
-    <div id="cli-list"></div>
-    <div id="cli-empty" class="empty" hidden>Aucune cliente pour le moment.<br>Ajoutez-en une avec le bouton ci-dessous.</div>
-    <div style="height:70px"></div>
-    <button class="fab" id="cli-add">+ Nouvelle cliente</button>
+  <div id="cmd" hidden>
+    <div class="subtop"><button class="back" id="c-back" data-i18n="backWorkshop">‹ Atelier</button><h1 id="c-title">Commande</h1></div>
+    <div class="card">
+      <h2 data-i18n="orderInfo">La commande</h2>
+      <div class="row"><span class="k" data-i18n="client">Cliente</span><span class="v" id="c-cliente"></span></div>
+      <div class="row" id="c-phone-row"><span class="k" data-i18n="phone">Téléphone</span><span class="v" id="c-phone"></span></div>
+      <div class="row" id="c-recu-row"><span class="k" data-i18n="received">Reçu</span><span class="v" id="c-recu"></span></div>
+      <div class="row"><span class="k" data-i18n="garment">Modèle</span><span class="v" id="c-article"></span></div>
+      <div class="row" id="c-price-row"><span class="k" data-i18n="price">Prix</span><span class="v" id="c-prix"></span></div>
+      <div class="row" id="c-liv-row"><span class="k" data-i18n="delivery">Livraison prévue</span><span class="v" id="c-liv"></span></div>
+      <div class="row" id="c-notes-row"><span class="k" data-i18n="notes">Notes</span><span class="v" id="c-notes"></span></div>
+    </div>
+    <div class="card">
+      <h2 data-i18n="stage">Étape</h2>
+      <div class="steps" id="c-steps">
+        <button data-st="recu" data-i18n="stRecu">Reçu</button>
+        <button data-st="coupe" data-i18n="stCoupe">Coupe</button>
+        <button data-st="essayage" data-i18n="stEssayage">Essayage</button>
+        <button data-st="pret" data-i18n="stPret">Prêt</button>
+      </div>
+      <p style="margin:12px 0 0;font-size:13px;color:var(--muted)" data-i18n="stageHint">Touchez l'étape atteinte, puis prévenez la cliente.</p>
+    </div>
+    <button class="wa" id="c-wa-cli" data-i18n="notifyClient">Prévenir la cliente sur WhatsApp</button>
+    <button class="wa" id="c-wa-shop" data-i18n="copyShop">Copie à la boutique</button>
+    <button class="ghost" id="c-edit" data-i18n="editOrder">Modifier la commande</button>
+    <button class="del" id="c-del" data-i18n="deleteOrder">Supprimer cette commande</button>
+    <div style="height:20px"></div>
+  </div>
+
+  <div id="cform" hidden>
+    <div class="subtop"><button class="back" id="cf-back" data-i18n="cancel">‹ Annuler</button><h1 id="cf-title">Nouvelle commande</h1></div>
+    <div class="card">
+      <h2 data-i18n="orderInfo">La commande</h2>
+      <label data-i18n="client">Cliente</label>
+      <select id="cf-cliente"></select>
+      <label data-i18n="receivedLabel">Reçu de la cliente</label>
+      <select id="cf-recu">
+        <option value="tissu" data-i18n="rcvFabric">tissu</option>
+        <option value="materiel" data-i18n="rcvMaterial">matériel</option>
+      </select>
+      <label data-i18n="garment">Modèle</label>
+      <input id="cf-article" type="text" data-i18n-ph="garmentPh" placeholder="Ex. Boubou, robe brodée, ensemble">
+      <label data-i18n="priceOpt">Prix (optionnel)</label>
+      <input id="cf-prix" type="number" step="1" inputmode="decimal" placeholder="1500">
+      <label data-i18n="deliveryOpt">Date de livraison (optionnel)</label>
+      <input id="cf-liv" type="date">
+      <label data-i18n="notesOpt">Notes (optionnel)</label>
+      <textarea id="cf-notes" rows="2" data-i18n-ph="orderNotesPh" placeholder="Couleur, broderie, remarques…"></textarea>
+    </div>
+    <button class="primary" id="cf-save" data-i18n="saveOrder">Enregistrer la commande</button>
+    <div class="msg err" id="cf-msg"></div>
+    <div style="height:24px"></div>
   </div>
 
   <div id="fiche" hidden>
-    <div class="subtop"><button class="back" id="fiche-back">‹ Clientes</button><h1 id="f-name">Cliente</h1></div>
+    <div class="subtop"><button class="back" id="fiche-back" data-i18n="backMeasures">‹ Mesures</button><h1 id="f-name">Cliente</h1></div>
     <div class="card">
-      <h2>Coordonnées</h2>
-      <div class="row" id="f-phone-row"><span class="k">Téléphone</span><span class="v" id="f-phone"></span></div>
-      <div class="row" id="f-notes-row"><span class="k">Notes</span><span class="v" id="f-notes"></span></div>
+      <h2 data-i18n="contact">Coordonnées</h2>
+      <div class="row" id="f-phone-row"><span class="k" data-i18n="phone">Téléphone</span><span class="v" id="f-phone"></span></div>
+      <div class="row" id="f-notes-row"><span class="k" data-i18n="notes">Notes</span><span class="v" id="f-notes"></span></div>
     </div>
     <div class="card">
-      <h2>Mesures (cm)</h2>
+      <h2 data-i18n="measures">Mesures (cm)</h2>
       <div id="f-mesures"></div>
     </div>
-    <button class="ghost" id="f-edit">Modifier la fiche</button>
-    <button class="del" id="f-del">Supprimer cette cliente</button>
+    <button class="wa" id="f-wa-shop" data-i18n="measuresToShop">Envoyer ces mesures à la boutique</button>
+    <button class="ghost" id="f-edit" data-i18n="editClient">Modifier la fiche</button>
+    <button class="del" id="f-del" data-i18n="deleteClient">Supprimer cette cliente</button>
     <div style="height:20px"></div>
   </div>
 
   <div id="form" hidden>
-    <div class="subtop"><button class="back" id="form-back">‹ Annuler</button><h1 id="form-title">Nouvelle cliente</h1></div>
+    <div class="subtop"><button class="back" id="form-back" data-i18n="cancel">‹ Annuler</button><h1 id="form-title">Nouvelle cliente</h1></div>
     <div class="card">
-      <h2>Coordonnées</h2>
-      <label>Nom de la cliente *</label>
-      <input id="in-name" type="text" placeholder="Ex. Awa Diallo">
-      <label>Téléphone / WhatsApp</label>
+      <h2 data-i18n="contact">Coordonnées</h2>
+      <label data-i18n="clientName">Nom de la cliente *</label>
+      <input id="in-name" type="text" data-i18n-ph="clientNamePh" placeholder="Ex. Awa Diallo">
+      <label data-i18n="phoneWa">Téléphone / WhatsApp</label>
       <input id="in-phone" type="tel" placeholder="+220 …">
-      <label>Notes (optionnel)</label>
-      <textarea id="in-notes" rows="2" placeholder="Préférences, tissu, remarques…"></textarea>
+      <label data-i18n="notesOpt">Notes (optionnel)</label>
+      <textarea id="in-notes" rows="2" data-i18n-ph="notesPh" placeholder="Préférences, tissu, remarques…"></textarea>
     </div>
     <div class="card">
-      <h2>Mesures (cm)</h2>
+      <h2 data-i18n="measures">Mesures (cm)</h2>
       <div class="mgrid" id="in-mesures"></div>
     </div>
-    <button class="primary" id="form-save">Enregistrer</button>
+    <button class="primary" id="form-save" data-i18n="save">Enregistrer</button>
     <div class="msg err" id="form-msg"></div>
     <div style="height:24px"></div>
   </div>
@@ -232,21 +379,226 @@
   const db = initializeFirestore(app, { experimentalForceLongPolling: true });
   enableIndexedDbPersistence(db).catch(function(){});
 
+  const DEFAULT_CC = "220";
+  const CUR = "D";
+  const STEPS = ["recu","coupe","essayage","pret"];
+  const TABS = ["apercu","atelier","boutique","mesures"];
+
   const MESURES = [
-    ["poitrine","Tour de poitrine"], ["taille","Tour de taille"],
-    ["bassin","Tour de bassin"], ["epaule","Épaule"],
-    ["carrure","Carrure dos"], ["longCorsage","Longueur corsage"],
-    ["longManche","Longueur manche"], ["tourManche","Tour de manche"],
-    ["longRobe","Longueur robe"], ["longJupe","Longueur jupe"],
-    ["longPantalon","Longueur pantalon"], ["cuisse","Tour de cuisse"],
-    ["cou","Tour de cou"], ["poignet","Tour de poignet"]
+    ["poitrine","Tour de poitrine","Bust"],
+    ["taille","Tour de taille","Waist"],
+    ["bassin","Tour de bassin","Hips"],
+    ["epaule","Épaule","Shoulder"],
+    ["carrure","Carrure dos","Back width"],
+    ["longCorsage","Longueur corsage","Bodice length"],
+    ["longManche","Longueur manche","Sleeve length"],
+    ["tourManche","Tour de manche","Sleeve width"],
+    ["longRobe","Longueur robe","Dress length"],
+    ["longJupe","Longueur jupe","Skirt length"],
+    ["longPantalon","Longueur pantalon","Trouser length"],
+    ["cuisse","Tour de cuisse","Thigh"],
+    ["cou","Tour de cou","Neck"],
+    ["poignet","Tour de poignet","Wrist"]
   ];
 
+  const T = {
+    fr:{
+      tagline:"votre atelier, en ligne", foot:"SanaaPro — propulsé par votre atelier",
+      uiLabel:"Interface", msgLabel:"Messages clients",
+      online:"En ligne — synchronisé", offlineShort:"Hors ligne",
+      tabApercu:"Aperçu", tabAtelier:"Atelier", tabBoutique:"Boutique", tabMesures:"Mesures",
+      search:"Recherche globale", searchPh:"Nom, téléphone ou modèle", noResult:"Aucun résultat.",
+      statOrders:"Commandes", statClients:"Clientes",
+      loginTitle:"Connexion à votre espace", loginLead:"Entrez les identifiants créés à l'inscription.",
+      email:"Email", emailPh:"vous@email.com", password:"Mot de passe", passwordPh:"Votre mot de passe",
+      signIn:"Se connecter", logout:"Déconnexion", hello:"Bonjour",
+      offline:"Mode hors ligne — vos données sont enregistrées et se synchroniseront au retour du réseau.",
+      subscription:"Abonnement", status:"Statut", plan:"Formule", expiry:"Échéance", trial:"Essai gratuit",
+      orders:"Commandes", clients:"Clientes",
+      myShop:"Ma boutique", shopName:"Nom", shopSlug:"Identifiant",
+      backWorkshop:"‹ Atelier", backMeasures:"‹ Mesures",
+      noClients:"Aucune cliente pour le moment.", noOrders:"Aucune commande pour le moment.",
+      newClient:"+ Nouvelle cliente", newOrder:"+ Nouvelle commande",
+      contact:"Coordonnées", phone:"Téléphone", notes:"Notes",
+      measures:"Mesures (cm)", noMeasures:"Aucune mesure enregistrée.",
+      editClient:"Modifier la fiche", deleteClient:"Supprimer cette cliente",
+      measuresToShop:"Envoyer ces mesures à la boutique",
+      orderInfo:"La commande", client:"Cliente", garment:"Modèle", garmentPh:"Ex. Boubou, robe brodée, ensemble",
+      price:"Prix", priceOpt:"Prix (optionnel)", orderNotesPh:"Couleur, broderie, remarques…",
+      received:"Reçu", receivedLabel:"Reçu de la cliente", rcvFabric:"tissu", rcvMaterial:"matériel",
+      delivery:"Livraison prévue", deliveryOpt:"Date de livraison (optionnel)",
+      lineModel:"Modèle : {v}", linePrice:"Prix : {v} {cur}", lineDelivery:"Livraison prévue : {v}",
+      stage:"Étape", stageHint:"Touchez l'étape atteinte, puis prévenez la cliente.",
+      stRecu:"Reçu", stCoupe:"Coupe", stEssayage:"Essayage", stPret:"Prêt",
+      notifyClient:"Prévenir la cliente sur WhatsApp", copyShop:"Copie à la boutique",
+      editOrder:"Modifier la commande", deleteOrder:"Supprimer cette commande",
+      saveOrder:"Enregistrer la commande", newOrderTitle:"Nouvelle commande", editOrderTitle:"Modifier la commande",
+      cancel:"‹ Annuler", newClientTitle:"Nouvelle cliente", editTitle:"Modifier la fiche",
+      clientName:"Nom de la cliente *", clientNamePh:"Ex. Awa Diallo", phoneWa:"Téléphone / WhatsApp",
+      notesOpt:"Notes (optionnel)", notesPh:"Préférences, tissu, remarques…", save:"Enregistrer",
+      loading:"Chargement…", noName:"(sans nom)",
+      daysLeft:"{n} jours restants", dayLeft:"1 jour restant", expired:"Expiré", active:"actif",
+      trialSoon:"Votre essai se termine bientôt. Pensez à le renouveler.",
+      expiredNote:"Abonnement expiré. Renouvelez-le pour continuer à enregistrer.",
+      needBoth:"Renseigne ton email et ton mot de passe.",
+      badLogin:"Email ou mot de passe incorrect.", badEmail:"Email invalide.",
+      tooMany:"Trop de tentatives. Patiente un instant.",
+      noNet:"Pas de connexion. La 1ère connexion a besoin d'internet.",
+      loginFail:"Connexion impossible. Réessaie.",
+      noShop:"Aucune boutique liée à ce compte.",
+      loadFail:"Impossible de charger votre espace. Ouvre l'app une fois avec une bonne connexion.",
+      ficheFail:"Impossible d'ouvrir cette fiche.", orderFail:"Impossible d'ouvrir cette commande.",
+      editFail:"Impossible d'ouvrir la fiche à modifier.", nameRequired:"Le nom de la cliente est obligatoire.",
+      clientRequired:"Choisis une cliente.", garmentRequired:"Indique le modèle.",
+      addClientFirst:"Ajoute d'abord une cliente : la commande doit être rattachée à quelqu'un.",
+      confirmDelete:"Supprimer définitivement cette cliente et ses mesures ?",
+      confirmDeleteOrder:"Supprimer définitivement cette commande ?",
+      noPhone:"Cette cliente n'a pas de numéro enregistré.",
+      noShopPhone:"Aucun numéro WhatsApp enregistré pour la boutique.",
+      waFoot:"Merci de votre confiance.",
+      mRecu:"Bonjour {nom}, nous avons bien reçu votre {recu} à l'atelier {boutique}.",
+      mCoupe:"Bonjour {nom}, la coupe de votre {article} commence à l'atelier {boutique}.",
+      mEssayage:"Bonjour {nom}, votre {article} est prêt pour l'essayage. Vous pouvez passer à l'atelier {boutique} quand cela vous arrange.",
+      mPret:"Bonjour {nom}, votre {article} est terminé et vous attend à l'atelier {boutique}.",
+      mAmount:"Montant à régler : {prix} {cur}.",
+      shopOrder:"Commande"
+    },
+    en:{
+      tagline:"your workshop, online", foot:"SanaaPro — powered by your workshop",
+      uiLabel:"Interface", msgLabel:"Client messages",
+      online:"Online — synced", offlineShort:"Offline",
+      tabApercu:"Overview", tabAtelier:"Workshop", tabBoutique:"Shop", tabMesures:"Measurements",
+      search:"Global search", searchPh:"Name, phone or model", noResult:"No result.",
+      statOrders:"Orders", statClients:"Clients",
+      loginTitle:"Sign in to your space", loginLead:"Enter the credentials created at sign-up.",
+      email:"Email", emailPh:"you@email.com", password:"Password", passwordPh:"Your password",
+      signIn:"Sign in", logout:"Sign out", hello:"Hello",
+      offline:"Offline mode — your data is saved and will sync when the network returns.",
+      subscription:"Subscription", status:"Status", plan:"Plan", expiry:"Renewal date", trial:"Free trial",
+      orders:"Orders", clients:"Clients",
+      myShop:"My shop", shopName:"Name", shopSlug:"Identifier",
+      backWorkshop:"‹ Workshop", backMeasures:"‹ Measurements",
+      noClients:"No clients yet.", noOrders:"No orders yet.",
+      newClient:"+ New client", newOrder:"+ New order",
+      contact:"Contact details", phone:"Phone", notes:"Notes",
+      measures:"Measurements (cm)", noMeasures:"No measurements saved.",
+      editClient:"Edit this client", deleteClient:"Delete this client",
+      measuresToShop:"Send these measurements to the shop",
+      orderInfo:"The order", client:"Client", garment:"Model", garmentPh:"e.g. Boubou, embroidered dress, suit",
+      price:"Price", priceOpt:"Price (optional)", orderNotesPh:"Colour, embroidery, remarks…",
+      received:"Received", receivedLabel:"Received from the client", rcvFabric:"fabric", rcvMaterial:"materials",
+      delivery:"Expected delivery", deliveryOpt:"Delivery date (optional)",
+      lineModel:"Model: {v}", linePrice:"Price: {v} {cur}", lineDelivery:"Expected delivery: {v}",
+      stage:"Stage", stageHint:"Tap the stage reached, then notify the client.",
+      stRecu:"Received", stCoupe:"Cutting", stEssayage:"Fitting", stPret:"Ready",
+      notifyClient:"Notify the client on WhatsApp", copyShop:"Copy to the shop",
+      editOrder:"Edit this order", deleteOrder:"Delete this order",
+      saveOrder:"Save the order", newOrderTitle:"New order", editOrderTitle:"Edit order",
+      cancel:"‹ Cancel", newClientTitle:"New client", editTitle:"Edit client",
+      clientName:"Client name *", clientNamePh:"e.g. Awa Diallo", phoneWa:"Phone / WhatsApp",
+      notesOpt:"Notes (optional)", notesPh:"Preferences, fabric, remarks…", save:"Save",
+      loading:"Loading…", noName:"(no name)",
+      daysLeft:"{n} days left", dayLeft:"1 day left", expired:"Expired", active:"active",
+      trialSoon:"Your trial ends soon. Remember to renew it.",
+      expiredNote:"Subscription expired. Renew it to keep saving data.",
+      needBoth:"Please enter your email and password.",
+      badLogin:"Incorrect email or password.", badEmail:"Invalid email.",
+      tooMany:"Too many attempts. Please wait a moment.",
+      noNet:"No connection. The first sign-in needs internet.",
+      loginFail:"Sign-in failed. Please try again.",
+      noShop:"No shop linked to this account.",
+      loadFail:"Could not load your space. Open the app once with a good connection.",
+      ficheFail:"Could not open this client.", orderFail:"Could not open this order.",
+      editFail:"Could not open this client for editing.", nameRequired:"The client name is required.",
+      clientRequired:"Please choose a client.", garmentRequired:"Please name the model.",
+      addClientFirst:"Add a client first: an order must belong to someone.",
+      confirmDelete:"Permanently delete this client and their measurements?",
+      confirmDeleteOrder:"Permanently delete this order?",
+      noPhone:"This client has no phone number saved.",
+      noShopPhone:"No WhatsApp number saved for the shop.",
+      waFoot:"Thank you for your trust.",
+      mRecu:"Hello {nom}, we have received your {recu} at {boutique}.",
+      mCoupe:"Hello {nom}, cutting has started on your {article} at {boutique}.",
+      mEssayage:"Hello {nom}, your {article} is ready for fitting. Please come to {boutique} whenever it suits you.",
+      mPret:"Hello {nom}, your {article} is finished and waiting for you at {boutique}.",
+      mAmount:"Amount due: {prix} {cur}.",
+      shopOrder:"Order"
+    }
+  };
+
+  function readLang(key, fallback){
+    let v=null;
+    try{ v = localStorage.getItem(key); }catch(e){}
+    if(!v){ try{ v = localStorage.getItem("sanaapro_lang"); }catch(e){} }
+    return T[v] ? v : fallback;
+  }
+  function saveLang(key, val){ try{ localStorage.setItem(key, val); }catch(e){} }
+
+  let LANG_UI  = readLang("sanaapro_lang_ui", "fr");
+  let LANG_MSG = readLang("sanaapro_lang_msg", LANG_UI);
+
+  const tt = (k, lang) => (T[lang] && T[lang][k]) || T.fr[k] || k;
+  const t  = k => tt(k, LANG_UI);
+  const tm = k => tt(k, LANG_MSG);
+  const mlabel = (m, lang) => (lang === "en" ? m[2] : m[1]);
+  const stepKey = st => "st" + st.charAt(0).toUpperCase() + st.slice(1);
+  const msgKey  = st => "m"  + st.charAt(0).toUpperCase() + st.slice(1);
+
   const $ = id => document.getElementById(id);
-  const views = ["loading","login","dash","clientes","fiche","form"];
+  const views = ["loading","login","dash","cmd","cform","fiche","form"];
   const show = v => { views.forEach(x=>{ $(x).hidden = (x!==v); }); window.scrollTo(0,0); };
 
-  let BID = null, editingId = null, currentCliente = null;
+  let BID=null, BOUTIQUE=null, TAB="apercu";
+  let editingId=null, currentCliente=null, CLIDATA=null;
+  let CLIENTES=[], COMMANDES=[], ORD=null, ORDID=null, editingOrd=null;
+
+  function setTab(name){
+    TAB = name;
+    TABS.forEach(x=>{ $("pane-"+x).hidden = (x!==name); });
+    $("tabs").querySelectorAll("button").forEach(b=>{
+      b.classList.toggle("on", b.getAttribute("data-tab")===name);
+    });
+    window.scrollTo(0,0);
+  }
+  $("tabs").querySelectorAll("button").forEach(b=>{
+    b.addEventListener("click", ()=>setTab(b.getAttribute("data-tab")));
+  });
+
+  function paintSegs(){
+    document.querySelectorAll(".seg").forEach(s=>{
+      const cur = (s.getAttribute("data-seg")==="ui") ? LANG_UI : LANG_MSG;
+      s.querySelectorAll("button").forEach(b=>{
+        b.classList.toggle("on", b.getAttribute("data-lang")===cur);
+      });
+    });
+  }
+
+  function applyLang(){
+    document.documentElement.lang = LANG_UI;
+    document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent = t(el.getAttribute("data-i18n")); });
+    document.querySelectorAll("[data-i18n-ph]").forEach(el=>{ el.placeholder = t(el.getAttribute("data-i18n-ph")); });
+    paintSegs();
+    updateOffline();
+    if(BOUTIQUE) renderDashboard(BOUTIQUE);
+    renderLists();
+    if(!$("fiche").hidden && CLIDATA) fillFiche(CLIDATA, currentCliente);
+    if(!$("cmd").hidden && ORD) renderCmd(ORD, ORDID);
+    if(!$("form").hidden){
+      $("form-title").textContent = editingId ? t("editTitle") : t("newClientTitle");
+      const cur={}; MESURES.forEach(mm=>{ const el=$("m-"+mm[0]); if(el && el.value!=="") cur[mm[0]]=el.value; });
+      buildInputs(cur);
+    }
+    if(!$("cform").hidden) $("cf-title").textContent = editingOrd ? t("editOrderTitle") : t("newOrderTitle");
+  }
+
+  document.querySelectorAll(".seg button").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      const seg=b.parentElement.getAttribute("data-seg"), lang=b.getAttribute("data-lang");
+      if(seg==="ui"){ LANG_UI=lang; saveLang("sanaapro_lang_ui", lang); }
+      else { LANG_MSG=lang; saveLang("sanaapro_lang_msg", lang); }
+      applyLang();
+    });
+  });
 
   const timeout = ms => new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")), ms));
   async function getDocSmart(ref){
@@ -258,22 +610,56 @@
     catch(e){ try{ return await getDocsFromCache(q); }catch(_){ throw e; } }
   }
 
-  function updateOffline(){ $("off-dash").hidden = navigator.onLine; }
+  function updateOffline(){
+    const on = navigator.onLine;
+    $("off-dash").hidden = on;
+    $("synctext").textContent = on ? t("online") : t("offlineShort");
+    $("syncpill").classList.toggle("off", !on);
+  }
   window.addEventListener("online", updateOffline);
   window.addEventListener("offline", updateOffline);
 
+  function waNumber(raw){
+    let d=(raw||"").replace(/\D/g,"");
+    if(d.indexOf("00")===0) d=d.slice(2);
+    if(!d) return "";
+    if(d.length<=8 && d.indexOf(DEFAULT_CC)!==0) d=DEFAULT_CC+d;
+    return d;
+  }
+  function fmtDate(v, lang){
+    if(!v) return "";
+    const p=String(v).split("-");
+    if(p.length!==3) return String(v);
+    const d=new Date(Number(p[0]), Number(p[1])-1, Number(p[2]));
+    if(isNaN(d.getTime())) return String(v);
+    return d.toLocaleDateString(lang==="en"?"en-GB":"fr-FR",{day:"numeric",month:"long",year:"numeric"});
+  }
+  function openWa(num, text){
+    const url="https://wa.me/"+num+"?text="+encodeURIComponent(text);
+    const w=window.open(url,"_blank");
+    if(!w) location.href=url;
+  }
+  function mesuresText(c){
+    const m=c.mesures||{}, lines=[];
+    MESURES.forEach(mm=>{
+      const v=m[mm[0]];
+      if(v!==undefined && v!==null && v!=="") lines.push(mlabel(mm, LANG_MSG)+" : "+v+" cm");
+    });
+    return lines.length ? lines.join("\n") : tm("noMeasures");
+  }
+
   $("login-btn").addEventListener("click", async () => {
-    const email = $("email").value.trim(), pass = $("pass").value, msg = $("login-msg");
+    const email=$("email").value.trim(), pass=$("pass").value, msg=$("login-msg");
     msg.classList.remove("show");
-    if(!email || !pass){ msg.textContent="Renseigne ton email et ton mot de passe."; msg.classList.add("show"); return; }
-    $("login-btn").disabled = true;
+    if(!email || !pass){ msg.textContent=t("needBoth"); msg.classList.add("show"); return; }
+    $("login-btn").disabled=true;
     try{ await signInWithEmailAndPassword(auth, email, pass); }
     catch(e){
-      let m="Connexion impossible. Réessaie.";
-      if(["auth/invalid-credential","auth/wrong-password","auth/user-not-found"].includes(e.code)) m="Email ou mot de passe incorrect.";
-      else if(e.code==="auth/invalid-email") m="Email invalide.";
-      else if(e.code==="auth/too-many-requests") m="Trop de tentatives. Patiente un instant.";
-      else if(e.code==="auth/network-request-failed") m="Pas de connexion. La 1ère connexion a besoin d'internet.";
+      let m=t("loginFail");
+      if(["auth/invalid-credential","auth/wrong-password","auth/user-not-found"].includes(e.code)) m=t("badLogin");
+      else if(e.code==="auth/invalid-email") m=t("badEmail");
+      else if(e.code==="auth/too-many-requests") m=t("tooMany");
+      else if(e.code==="auth/network-request-failed") m=t("noNet");
       msg.textContent=m; msg.classList.add("show"); $("login-btn").disabled=false;
     }
   });
@@ -282,105 +668,336 @@
   onAuthStateChanged(auth, async (user) => {
     window.__loaded = true;
     if(!user){ show("login"); $("login-btn").disabled=false; return; }
-    show("loading"); $("loading").textContent="Chargement…";
+    show("loading"); $("loading").textContent=t("loading");
     try{
       const snap = await getDocSmart(doc(db,"boutiques",user.uid));
-      if(!snap.exists()){ $("loading").textContent="Aucune boutique liée à ce compte."; show("loading"); return; }
-      BID = user.uid; renderDashboard(snap.data()); updateOffline(); refreshCount(); show("dash");
-    }catch(e){ $("loading").textContent="Impossible de charger votre espace. Ouvre l'app une fois avec une bonne connexion."; show("loading"); }
+      if(!snap.exists()){ $("loading").textContent=t("noShop"); show("loading"); return; }
+      BID=user.uid; BOUTIQUE=snap.data();
+      renderDashboard(BOUTIQUE); updateOffline(); setTab("apercu"); show("dash");
+      loadAll();
+    }catch(e){ $("loading").textContent=t("loadFail"); show("loading"); }
   });
 
   function renderDashboard(b){
+    BOUTIQUE=b;
+    $("d-brand").textContent = b.name || "SanaaPro";
     $("d-owner").textContent = b.ownerName||"";
     $("d-name").textContent = b.name||"";
     $("d-shopname").textContent = b.name||"—";
     $("d-slug").textContent = b.slug||"—";
     $("d-email").textContent = b.email||"—";
-    if(b.whatsapp){ $("d-wa").textContent = b.whatsapp; } else { $("d-wa-row").hidden = true; }
+    if(b.whatsapp){ $("d-wa").textContent=b.whatsapp; $("d-wa-row").hidden=false; } else { $("d-wa-row").hidden=true; }
     const sub=b.subscription||{}, badge=$("d-badge"), note=$("d-subnote");
-    note.hidden = true; note.className="sub-note";
-    $("d-plan").textContent = sub.plan==="trial" ? "Essai gratuit" : (sub.plan||"—");
+    note.hidden=true; note.className="sub-note";
+    $("d-plan").textContent = sub.plan==="trial" ? t("trial") : (sub.plan||"—");
     if(sub.expiresAt && sub.expiresAt.toDate){
       const exp=sub.expiresAt.toDate();
-      $("d-expiry").textContent = exp.toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"});
+      $("d-expiry").textContent = exp.toLocaleDateString(LANG_UI==="en"?"en-GB":"fr-FR",{day:"numeric",month:"long",year:"numeric"});
       const days=Math.ceil((exp-new Date())/86400000);
-      if(days>3){ badge.className="badge ok"; badge.textContent=days+" jours restants"; }
-      else if(days>0){ badge.className="badge warn"; badge.textContent=days+(days===1?" jour restant":" jours restants");
-        note.hidden=false; note.className="sub-note warn"; note.textContent="Votre essai se termine bientôt. Pensez à le renouveler."; }
-      else { badge.className="badge err"; badge.textContent="Expiré";
-        note.hidden=false; note.className="sub-note err"; note.textContent="Abonnement expiré. Renouvelez-le pour continuer à enregistrer."; }
-    } else { $("d-expiry").textContent="—"; badge.className="badge ok"; badge.textContent=sub.status||"actif"; }
+      if(days>3){ badge.className="badge ok"; badge.textContent=t("daysLeft").replace("{n}",days); }
+      else if(days>0){ badge.className="badge warn";
+        badge.textContent = days===1 ? t("dayLeft") : t("daysLeft").replace("{n}",days);
+        note.hidden=false; note.className="sub-note warn"; note.textContent=t("trialSoon"); }
+      else { badge.className="badge err"; badge.textContent=t("expired");
+        note.hidden=false; note.className="sub-note err"; note.textContent=t("expiredNote"); }
+    } else { $("d-expiry").textContent="—"; badge.className="badge ok"; badge.textContent=sub.status||t("active"); }
   }
 
-  $("open-clientes").addEventListener("click", loadClientes);
-  $("cli-back").addEventListener("click", ()=>show("dash"));
-  $("fiche-back").addEventListener("click", loadClientes);
-  $("cli-add").addEventListener("click", ()=>openForm(null));
-  $("form-back").addEventListener("click", ()=> editingId ? openFiche(editingId) : loadClientes());
-  $("f-edit").addEventListener("click", ()=>openForm(currentCliente));
-
-  async function refreshCount(){
-    try{ const s=await getDocsSmart(collection(db,"boutiques",BID,"clientes")); $("cli-count").textContent=s.size; }
-    catch(e){ $("cli-count").textContent="—"; }
-  }
-
-  async function loadClientes(){
-    show("loading"); $("loading").textContent="Chargement…";
+  async function loadAll(){
     try{
-      const q = query(collection(db,"boutiques",BID,"clientes"), orderBy("name"));
-      const snap = await getDocsSmart(q);
-      const list=$("cli-list"); list.innerHTML="";
-      if(snap.empty){ $("cli-empty").hidden=false; }
-      else{
-        $("cli-empty").hidden=true;
-        snap.forEach(d=>{
-          const c=d.data(), el=document.createElement("div");
-          el.className="cli-item";
-          el.innerHTML='<div><div class="nm"></div><div class="ph"></div></div><span class="chev" style="color:var(--muted);font-size:22px">›</span>';
-          el.querySelector(".nm").textContent=c.name||"(sans nom)";
-          el.querySelector(".ph").textContent=c.phone||"—";
-          el.addEventListener("click", ()=>openFiche(d.id));
-          list.appendChild(el);
-        });
-      }
-      show("clientes");
-    }catch(e){ $("loading").textContent="Impossible de charger les clientes."; show("loading"); }
+      const s = await getDocsSmart(query(collection(db,"boutiques",BID,"clientes"), orderBy("name")));
+      CLIENTES=[]; s.forEach(d=>{ const c=d.data(); CLIENTES.push(Object.assign({ id:d.id }, c)); });
+    }catch(e){}
+    try{
+      const s = await getDocsSmart(collection(db,"boutiques",BID,"commandes"));
+      COMMANDES=[]; s.forEach(d=>{ COMMANDES.push(Object.assign({ id:d.id }, d.data())); });
+      COMMANDES.sort((a,b)=>{
+        const ai=STEPS.indexOf(a.statut||"recu"), bi=STEPS.indexOf(b.statut||"recu");
+        if(ai!==bi) return ai-bi;
+        return (a.clienteName||"").localeCompare(b.clienteName||"");
+      });
+    }catch(e){}
+    renderLists();
   }
+
+  function itemRow(title, sub, badgeText, badgeClass, onClick){
+    const el=document.createElement("div");
+    el.className="cli-item";
+    el.innerHTML='<div><div class="nm"></div><div class="ph"></div></div><span class="badge"></span>';
+    el.querySelector(".nm").textContent=title;
+    el.querySelector(".ph").textContent=sub;
+    const bd=el.querySelector(".badge");
+    bd.textContent=badgeText; bd.className="badge "+badgeClass;
+    el.addEventListener("click", onClick);
+    return el;
+  }
+
+  function renderLists(){
+    $("s-cmd").textContent = COMMANDES.length;
+    $("s-cli").textContent = CLIENTES.length;
+
+    const cl=$("cmd-list"); cl.innerHTML="";
+    $("cmd-empty").hidden = COMMANDES.length>0;
+    COMMANDES.forEach(o=>{
+      cl.appendChild(itemRow(
+        o.clienteName||t("noName"), o.article||"—",
+        t(stepKey(o.statut||"recu")), "gold", ()=>openCmd(o.id)
+      ));
+    });
+
+    const kl=$("cli-list"); kl.innerHTML="";
+    $("cli-empty").hidden = CLIENTES.length>0;
+    CLIENTES.forEach(c=>{
+      const el=document.createElement("div");
+      el.className="cli-item";
+      el.innerHTML='<div><div class="nm"></div><div class="ph"></div></div><span class="chev">›</span>';
+      el.querySelector(".nm").textContent=c.name||t("noName");
+      el.querySelector(".ph").textContent=c.phone||"—";
+      el.addEventListener("click", ()=>openFiche(c.id));
+      kl.appendChild(el);
+    });
+
+    renderSearch();
+  }
+
+  function renderSearch(){
+    const box=$("q-res"); box.innerHTML="";
+    const q=$("q").value.trim().toLowerCase();
+    if(q.length<2) return;
+    const hits=[];
+    COMMANDES.forEach(o=>{
+      const hay=((o.clienteName||"")+" "+(o.article||"")+" "+(o.clientePhone||"")).toLowerCase();
+      if(hay.indexOf(q)!==-1) hits.push(itemRow(
+        o.clienteName||t("noName"), o.article||"—", t("orders"), "soft", ()=>openCmd(o.id)
+      ));
+    });
+    CLIENTES.forEach(c=>{
+      const hay=((c.name||"")+" "+(c.phone||"")).toLowerCase();
+      if(hay.indexOf(q)!==-1) hits.push(itemRow(
+        c.name||t("noName"), c.phone||"—", t("clients"), "soft", ()=>openFiche(c.id)
+      ));
+    });
+    if(!hits.length){
+      const d=document.createElement("div");
+      d.className="empty"; d.style.padding="20px 0"; d.textContent=t("noResult");
+      box.appendChild(d); return;
+    }
+    hits.slice(0,8).forEach(el=>box.appendChild(el));
+  }
+  $("q").addEventListener("input", renderSearch);
+
+  $("cmd-add").addEventListener("click", ()=>openCmdForm(null));
+  $("cli-add").addEventListener("click", ()=>openForm(null));
+  $("c-back").addEventListener("click", ()=>{ show("dash"); setTab("atelier"); });
+  $("fiche-back").addEventListener("click", ()=>{ show("dash"); setTab("mesures"); });
+  $("cf-back").addEventListener("click", ()=> editingOrd ? openCmd(editingOrd) : (show("dash"), setTab("atelier")));
+  $("form-back").addEventListener("click", ()=> editingId ? openFiche(editingId) : (show("dash"), setTab("mesures")));
+  $("f-edit").addEventListener("click", ()=>openForm(currentCliente));
+  $("c-edit").addEventListener("click", ()=>openCmdForm(ORDID));
+
+  function renderCmd(o, id){
+    ORD=o; ORDID=id;
+    $("c-title").textContent = o.clienteName || t("shopOrder");
+    $("c-cliente").textContent = o.clienteName || t("noName");
+    if(o.clientePhone){ $("c-phone").textContent=o.clientePhone; $("c-phone-row").hidden=false; } else $("c-phone-row").hidden=true;
+    $("c-recu").textContent = t(o.recu==="materiel" ? "rcvMaterial" : "rcvFabric");
+    $("c-article").textContent = o.article || "—";
+    if(o.prix || o.prix===0){ $("c-prix").textContent = o.prix+" "+CUR; $("c-price-row").hidden=false; } else $("c-price-row").hidden=true;
+    if(o.livraison){ $("c-liv").textContent = fmtDate(o.livraison, LANG_UI); $("c-liv-row").hidden=false; } else $("c-liv-row").hidden=true;
+    if(o.notes){ $("c-notes").textContent=o.notes; $("c-notes-row").hidden=false; } else $("c-notes-row").hidden=true;
+    const cur=o.statut||"recu", ci=STEPS.indexOf(cur);
+    $("c-steps").querySelectorAll("button").forEach(b=>{
+      const i=STEPS.indexOf(b.getAttribute("data-st"));
+      b.classList.toggle("on", i===ci);
+      b.classList.toggle("done", i<ci);
+    });
+    $("c-wa-cli").hidden = !o.clientePhone;
+    $("c-wa-shop").hidden = !(BOUTIQUE && BOUTIQUE.whatsapp);
+  }
+
+  $("c-steps").querySelectorAll("button").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      if(!ORD || !ORDID) return;
+      const st=b.getAttribute("data-st");
+      ORD.statut=st;
+      const local=COMMANDES.find(x=>x.id===ORDID);
+      if(local) local.statut=st;
+      setDoc(doc(db,"boutiques",BID,"commandes",ORDID), { statut:st, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+      renderCmd(ORD, ORDID); renderLists();
+    });
+  });
+
+  function clientMessage(o){
+    const st=o.statut||"recu";
+    let msg = tm(msgKey(st))
+      .replace("{nom}", o.clienteName||"")
+      .replace("{recu}", tm(o.recu==="materiel" ? "rcvMaterial" : "rcvFabric"))
+      .replace("{article}", o.article||"")
+      .replace("{boutique}", (BOUTIQUE && BOUTIQUE.name) || "");
+    if(st==="recu"){
+      if(o.article) msg += "\n" + tm("lineModel").replace("{v}", o.article);
+      if(o.prix || o.prix===0) msg += "\n" + tm("linePrice").replace("{v}", o.prix).replace("{cur}", CUR);
+      if(o.livraison) msg += "\n" + tm("lineDelivery").replace("{v}", fmtDate(o.livraison, LANG_MSG));
+    }
+    if(st==="pret" && (o.prix || o.prix===0)){
+      msg += "\n" + tm("mAmount").replace("{prix}", o.prix).replace("{cur}", CUR);
+    }
+    return msg + "\n" + tm("waFoot");
+  }
+
+  $("c-wa-cli").addEventListener("click", ()=>{
+    if(!ORD) return;
+    const num=waNumber(ORD.clientePhone);
+    if(!num){ alert(t("noPhone")); return; }
+    openWa(num, clientMessage(ORD));
+  });
+
+  $("c-wa-shop").addEventListener("click", ()=>{
+    if(!ORD) return;
+    const num=waNumber(BOUTIQUE && BOUTIQUE.whatsapp);
+    if(!num){ alert(t("noShopPhone")); return; }
+    let msg = tm("shopOrder")+" — "+(ORD.clienteName||tm("noName"));
+    msg += "\n"+tm("garment")+" : "+(ORD.article||"—");
+    msg += "\n"+tm("stage")+" : "+tm(stepKey(ORD.statut||"recu"));
+    if(ORD.prix || ORD.prix===0) msg += "\n"+tm("price")+" : "+ORD.prix+" "+CUR;
+    if(ORD.livraison) msg += "\n"+tm("delivery")+" : "+fmtDate(ORD.livraison, LANG_MSG);
+    if(ORD.clientePhone) msg += "\n"+tm("phone")+" : "+ORD.clientePhone;
+    if(ORD.notes) msg += "\n"+tm("notes")+" : "+ORD.notes;
+    openWa(num, msg);
+  });
+
+  async function openCmd(id){
+    const local = COMMANDES.find(x=>x.id===id);
+    if(local){ renderCmd(local, id); show("cmd"); return; }
+    show("loading"); $("loading").textContent=t("loading");
+    try{
+      const snap = await getDocSmart(doc(db,"boutiques",BID,"commandes",id));
+      if(!snap.exists()){ show("dash"); setTab("atelier"); return; }
+      renderCmd(snap.data(), id); show("cmd");
+    }catch(e){ $("loading").textContent=t("orderFail"); show("loading"); }
+  }
+
+  async function openCmdForm(id){
+    $("cf-msg").classList.remove("show");
+    editingOrd = id || null;
+    if(!CLIENTES.length){ await loadAll(); }
+    if(!CLIENTES.length){
+      show("loading"); $("loading").textContent=t("addClientFirst"); return;
+    }
+    const sel=$("cf-cliente"); sel.innerHTML="";
+    CLIENTES.forEach(c=>{
+      const op=document.createElement("option");
+      op.value=c.id; op.textContent=c.name||t("noName"); sel.appendChild(op);
+    });
+    if(!editingOrd){
+      $("cf-title").textContent=t("newOrderTitle");
+      $("cf-article").value=""; $("cf-prix").value=""; $("cf-notes").value="";
+      $("cf-recu").value="tissu"; $("cf-liv").value="";
+      show("cform"); return;
+    }
+    const o = COMMANDES.find(x=>x.id===editingOrd) || {};
+    $("cf-title").textContent=t("editOrderTitle");
+    if(o.clienteId) sel.value=o.clienteId;
+    $("cf-recu").value=o.recu||"tissu";
+    $("cf-article").value=o.article||"";
+    $("cf-prix").value=(o.prix||o.prix===0)?o.prix:"";
+    $("cf-liv").value=o.livraison||"";
+    $("cf-notes").value=o.notes||"";
+    show("cform");
+  }
+
+  $("cf-save").addEventListener("click", ()=>{
+    const msg=$("cf-msg"); msg.classList.remove("show");
+    const cid=$("cf-cliente").value;
+    const article=$("cf-article").value.trim();
+    if(!cid){ msg.textContent=t("clientRequired"); msg.classList.add("show"); return; }
+    if(!article){ msg.textContent=t("garmentRequired"); msg.classList.add("show"); return; }
+    const c = CLIENTES.find(x=>x.id===cid) || { name:"", phone:"" };
+    const pv=$("cf-prix").value.trim();
+    const data={
+      clienteId:cid, clienteName:c.name||"", clientePhone:c.phone||"",
+      article, recu:$("cf-recu").value, livraison:$("cf-liv").value||null,
+      notes:$("cf-notes").value.trim(),
+      prix: (pv!=="" && !isNaN(parseFloat(pv))) ? parseFloat(pv) : null,
+      updatedAt:serverTimestamp()
+    };
+    const ref = editingOrd
+      ? doc(db,"boutiques",BID,"commandes",editingOrd)
+      : doc(collection(db,"boutiques",BID,"commandes"));
+    if(!editingOrd){ data.statut="recu"; data.createdAt=serverTimestamp(); }
+    setDoc(ref, data, { merge:true }).catch(function(){});
+    const id = editingOrd || ref.id;
+    const existing = COMMANDES.find(x=>x.id===id);
+    if(existing) Object.assign(existing, data);
+    else COMMANDES.unshift(Object.assign({ id, statut:"recu" }, data));
+    editingOrd=null;
+    renderLists();
+    renderCmd(COMMANDES.find(x=>x.id===id), id);
+    show("cmd");
+  });
+
+  $("c-del").addEventListener("click", ()=>{
+    if(!ORDID) return;
+    if(!confirm(t("confirmDeleteOrder"))) return;
+    deleteDoc(doc(db,"boutiques",BID,"commandes",ORDID)).catch(function(){});
+    COMMANDES = COMMANDES.filter(x=>x.id!==ORDID);
+    ORD=null; ORDID=null;
+    renderLists(); show("dash"); setTab("atelier");
+  });
 
   function fillFiche(c, id){
-    currentCliente=id;
-    $("f-name").textContent=c.name||"Cliente";
+    currentCliente=id; CLIDATA=c;
+    $("f-name").textContent=c.name||t("noName");
     if(c.phone){ $("f-phone").textContent=c.phone; $("f-phone-row").hidden=false; } else $("f-phone-row").hidden=true;
     if(c.notes){ $("f-notes").textContent=c.notes; $("f-notes-row").hidden=false; } else $("f-notes-row").hidden=true;
+    $("f-wa-shop").hidden = !(BOUTIQUE && BOUTIQUE.whatsapp);
     const m=c.mesures||{}, box=$("f-mesures"); box.innerHTML=""; let any=false;
-    MESURES.forEach(([k,label])=>{
+    MESURES.forEach(mm=>{
+      const k=mm[0];
       if(m[k]!==undefined && m[k]!==null && m[k]!==""){
         any=true;
         const row=document.createElement("div"); row.className="mline";
         row.innerHTML='<span class="k"></span><span class="v"></span>';
-        row.querySelector(".k").textContent=label;
+        row.querySelector(".k").textContent=mlabel(mm, LANG_UI);
         row.querySelector(".v").textContent=m[k]+" cm";
         box.appendChild(row);
       }
     });
-    if(!any){ box.innerHTML='<div style="color:var(--muted);font-size:14px;padding:6px 0">Aucune mesure enregistrée.</div>'; }
+    if(!any){
+      const d=document.createElement("div");
+      d.style.cssText="color:var(--muted);font-size:14px;padding:6px 0";
+      d.textContent=t("noMeasures"); box.appendChild(d);
+    }
   }
 
+  $("f-wa-shop").addEventListener("click", ()=>{
+    if(!CLIDATA) return;
+    const num=waNumber(BOUTIQUE && BOUTIQUE.whatsapp);
+    if(!num){ alert(t("noShopPhone")); return; }
+    let msg = tm("clients")+" — "+(CLIDATA.name||tm("noName"));
+    if(CLIDATA.phone) msg += "\n"+tm("phone")+" : "+CLIDATA.phone;
+    msg += "\n\n"+mesuresText(CLIDATA);
+    if(CLIDATA.notes) msg += "\n\n"+tm("notes")+" : "+CLIDATA.notes;
+    openWa(num, msg);
+  });
+
   async function openFiche(id){
-    show("loading"); $("loading").textContent="Chargement…";
+    const local = CLIENTES.find(x=>x.id===id);
+    if(local){ fillFiche(local, id); show("fiche"); return; }
+    show("loading"); $("loading").textContent=t("loading");
     try{
       const snap = await getDocSmart(doc(db,"boutiques",BID,"clientes",id));
-      if(!snap.exists()){ loadClientes(); return; }
-      fillFiche(snap.data(), id);
-      show("fiche");
-    }catch(e){ $("loading").textContent="Impossible d'ouvrir cette fiche."; show("loading"); }
+      if(!snap.exists()){ show("dash"); setTab("mesures"); return; }
+      fillFiche(snap.data(), id); show("fiche");
+    }catch(e){ $("loading").textContent=t("ficheFail"); show("loading"); }
   }
 
   function buildInputs(m){
     const box=$("in-mesures"); box.innerHTML="";
-    MESURES.forEach(([k,label])=>{
+    MESURES.forEach(mm=>{
+      const k=mm[0];
       const wrap=document.createElement("div");
-      const lab=document.createElement("label"); lab.textContent=label; lab.setAttribute("for","m-"+k);
+      const lab=document.createElement("label"); lab.textContent=mlabel(mm, LANG_UI); lab.setAttribute("for","m-"+k);
       const inp=document.createElement("input");
       inp.id="m-"+k; inp.type="number"; inp.step="0.5"; inp.inputMode="decimal"; inp.placeholder="—";
       if(m && m[k]!==undefined && m[k]!==null && m[k]!=="") inp.value=m[k];
@@ -388,35 +1005,31 @@
     });
   }
 
-  async function openForm(id){
+  function openForm(id){
     $("form-msg").classList.remove("show");
     editingId = id || null;
     if(!editingId){
-      $("form-title").textContent="Nouvelle cliente";
+      $("form-title").textContent=t("newClientTitle");
       $("in-name").value=""; $("in-phone").value=""; $("in-notes").value="";
       buildInputs(null);
       show("form"); $("in-name").focus();
       return;
     }
-    show("loading"); $("loading").textContent="Chargement…";
-    try{
-      const snap = await getDocSmart(doc(db,"boutiques",BID,"clientes",editingId));
-      const c = snap.exists() ? snap.data() : {};
-      $("form-title").textContent="Modifier la fiche";
-      $("in-name").value=c.name||""; $("in-phone").value=c.phone||""; $("in-notes").value=c.notes||"";
-      buildInputs(c.mesures||{});
-      show("form");
-    }catch(e){ $("loading").textContent="Impossible d'ouvrir la fiche à modifier."; show("loading"); }
+    const c = CLIENTES.find(x=>x.id===editingId) || {};
+    $("form-title").textContent=t("editTitle");
+    $("in-name").value=c.name||""; $("in-phone").value=c.phone||""; $("in-notes").value=c.notes||"";
+    buildInputs(c.mesures||{});
+    show("form");
   }
 
-  $("form-save").addEventListener("click", () => {
+  $("form-save").addEventListener("click", ()=>{
     const msg=$("form-msg"); msg.classList.remove("show");
     const name=$("in-name").value.trim();
-    if(!name){ msg.textContent="Le nom de la cliente est obligatoire."; msg.classList.add("show"); window.scrollTo(0,0); return; }
+    if(!name){ msg.textContent=t("nameRequired"); msg.classList.add("show"); window.scrollTo(0,0); return; }
     const mesures={};
-    MESURES.forEach(([k])=>{
-      const v=$("m-"+k).value.trim();
-      if(v!=="" && !isNaN(parseFloat(v))) mesures[k]=parseFloat(v);
+    MESURES.forEach(mm=>{
+      const v=$("m-"+mm[0]).value.trim();
+      if(v!=="" && !isNaN(parseFloat(v))) mesures[mm[0]]=parseFloat(v);
     });
     const data={
       name, phone:$("in-phone").value.trim(), notes:$("in-notes").value.trim(),
@@ -426,18 +1039,26 @@
       ? doc(db,"boutiques",BID,"clientes",editingId)
       : doc(collection(db,"boutiques",BID,"clientes"));
     if(!editingId) data.createdAt=serverTimestamp();
-    $("form-save").disabled=true;
     setDoc(ref, data, { merge:true }).catch(function(){});
-    setTimeout(()=>{ $("form-save").disabled=false; editingId=null; refreshCount(); loadClientes(); }, 400);
+    const id = editingId || ref.id;
+    const existing = CLIENTES.find(x=>x.id===id);
+    if(existing) Object.assign(existing, data);
+    else CLIENTES.push(Object.assign({ id }, data));
+    CLIENTES.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+    editingId=null;
+    renderLists(); show("dash"); setTab("mesures");
   });
 
-  $("f-del").addEventListener("click", () => {
+  $("f-del").addEventListener("click", ()=>{
     if(!currentCliente) return;
-    if(!confirm("Supprimer définitivement cette cliente et ses mesures ?")) return;
+    if(!confirm(t("confirmDelete"))) return;
     deleteDoc(doc(db,"boutiques",BID,"clientes",currentCliente)).catch(function(){});
-    currentCliente=null;
-    setTimeout(()=>{ refreshCount(); loadClientes(); }, 400);
+    CLIENTES = CLIENTES.filter(x=>x.id!==currentCliente);
+    currentCliente=null; CLIDATA=null;
+    renderLists(); show("dash"); setTab("mesures");
   });
+
+  applyLang();
 </script>
 </body>
 </html>
