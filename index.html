@@ -279,6 +279,13 @@
         <button class="ghost" id="b-code-save" data-i18n="saveCode">Enregistrer le code</button>
       </div>
       <div class="card">
+        <h2 data-i18n="autoNotify">Notification WhatsApp automatique</h2>
+        <p style="margin:0 0 10px;font-size:13px;color:var(--muted)" data-i18n="autoNotifyHint">À chaque changement d'étape, WhatsApp s'ouvre avec le message déjà écrit.</p>
+        <div class="seg" data-seg="auto" style="width:100%">
+          <button data-v="1" data-i18n="yes" style="flex:1">Oui</button><button data-v="0" data-i18n="no" style="flex:1">Non</button>
+        </div>
+      </div>
+      <div class="card">
         <h2 data-i18n="otpTitle">Code à usage unique (à distance)</h2>
         <p style="margin:0;font-size:13px;color:var(--muted)" data-i18n="otpHint">Utile quand vous n'êtes pas sur place.</p>
         <div id="b-otp" hidden>
@@ -291,7 +298,10 @@
 
     <div id="pane-mesures" hidden>
       <button class="primary" id="cli-add" data-i18n="newClient">+ Nouvelle cliente</button>
-      <input id="q-cli" type="search" data-i18n-ph="searchClientsPh" placeholder="Nom ou téléphone…" style="margin-top:14px">
+      <div class="seg" data-seg="mesgenre" style="margin-top:14px;width:100%">
+        <button data-g="femme" data-i18n="gFemme" style="flex:1">Femme</button><button data-g="homme" data-i18n="gHomme" style="flex:1">Homme</button>
+      </div>
+      <input id="q-cli" type="search" data-i18n-ph="searchClientsPh" placeholder="Nom ou téléphone…" style="margin-top:12px">
       <div id="cli-list"></div>
       <div id="cli-empty" class="empty" data-i18n="noClients" hidden>Aucune cliente pour le moment.</div>
     </div>
@@ -353,6 +363,7 @@
       <div class="row"><span class="k" data-i18n="receiptNo">N° de reçu</span><span class="v" id="c-num" style="color:var(--gold);font-weight:700"></span></div>
       <div class="row"><span class="k" data-i18n="client">Cliente</span><span class="v" id="c-cliente"></span></div>
       <div class="row" id="c-phone-row"><span class="k" data-i18n="phone">Téléphone</span><span class="v" id="c-phone"></span></div>
+      <div class="row"><span class="k" data-i18n="typeLabel">Type de commande</span><span class="v" id="c-type"></span></div>
       <div class="row" id="c-recu-row"><span class="k" data-i18n="received">Reçu</span><span class="v" id="c-recu"></span></div>
       <div class="row"><span class="k" data-i18n="garment">Modèle</span><span class="v" id="c-article"></span></div>
       <div class="row" id="c-price-row"><span class="k" data-i18n="price">Prix</span><span class="v" id="c-prix"></span></div>
@@ -380,12 +391,25 @@
     <div class="subtop"><button class="back" id="cf-back" data-i18n="cancel">‹ Annuler</button><h1 id="cf-title">Nouvelle commande</h1></div>
     <div class="card">
       <h2 data-i18n="orderInfo">La commande</h2>
+      <label data-i18n="typeLabel">Type de commande</label>
+      <div class="chips" id="cf-types"></div>
+      <label data-i18n="genreLabel">Genre du client</label>
+      <div class="seg" data-seg="cfgenre" style="margin-top:4px">
+        <button data-g="femme" data-i18n="gFemme">Femme</button><button data-g="homme" data-i18n="gHomme">Homme</button>
+      </div>
       <label data-i18n="client">Cliente</label>
       <select id="cf-cliente"></select>
+      <div id="cf-new" hidden>
+        <label data-i18n="newClientNameLabel">Nom du nouveau client</label>
+        <input id="cf-new-name" type="text" data-i18n-ph="newClientNamePh" placeholder="Ex. Awa Diallo">
+        <label data-i18n="phoneWa">Téléphone / WhatsApp</label>
+        <input id="cf-new-phone" type="tel" data-i18n-ph="newPhonePh" placeholder="+220 …">
+      </div>
       <label data-i18n="receivedLabel">Reçu de la cliente</label>
       <select id="cf-recu">
         <option value="tissu" data-i18n="rcvFabric">tissu</option>
         <option value="materiel" data-i18n="rcvMaterial">matériel</option>
+        <option value="vetement" data-i18n="rcvGarment">vêtement</option>
       </select>
       <label data-i18n="garment">Modèle</label>
       <input id="cf-article" type="text" data-i18n-ph="garmentPh" placeholder="Ex. Boubou, robe brodée, ensemble">
@@ -422,6 +446,10 @@
     <div class="subtop"><button class="back" id="form-back" data-i18n="cancel">‹ Annuler</button><h1 id="form-title">Nouvelle cliente</h1></div>
     <div class="card">
       <h2 data-i18n="contact">Coordonnées</h2>
+      <label data-i18n="genreLabel">Genre du client</label>
+      <div class="seg" data-seg="ingenre" style="margin-top:4px">
+        <button data-g="femme" data-i18n="gFemme">Femme</button><button data-g="homme" data-i18n="gHomme">Homme</button>
+      </div>
       <label data-i18n="clientName">Nom de la cliente *</label>
       <input id="in-name" type="text" data-i18n-ph="clientNamePh" placeholder="Ex. Awa Diallo">
       <label data-i18n="phoneWa">Téléphone / WhatsApp</label>
@@ -471,7 +499,7 @@
   const TABS = ["apercu","atelier","boutique","mesures","staff","visits"];
   const ROLES = ["roleCouturier","roleCouturiere","roleManager","roleVendeuse","roleApprenti","roleMenagere"];
 
-  const MESURES = [
+  const MESURES_F = [
     ["poitrine","Tour de poitrine","Bust"],
     ["taille","Tour de taille","Waist"],
     ["bassin","Tour de bassin","Hips"],
@@ -488,6 +516,25 @@
     ["poignet","Tour de poignet","Wrist"]
   ];
 
+  const MESURES_H = [
+    ["cou","Tour de cou","Neck"],
+    ["epaule","Épaule","Shoulder"],
+    ["poitrine","Tour de poitrine","Chest"],
+    ["longManche","Longueur manche","Sleeve length"],
+    ["tourManche","Tour de manche","Sleeve width"],
+    ["poignet","Tour de poignet","Wrist"],
+    ["taille","Tour de taille","Waist"],
+    ["longTaille","Longueur de taille","Waist length"],
+    ["bassin","Tour de bassin","Hips"],
+    ["longChemise","Longueur chemise","Shirt length"],
+    ["longBoubou","Longueur boubou","Boubou length"],
+    ["longPantalon","Longueur pantalon","Trouser length"],
+    ["cuisse","Tour de cuisse","Thigh"],
+    ["genou","Tour de genou","Knee"]
+  ];
+
+  const mesuresFor = g => (g === "homme") ? MESURES_H : MESURES_F;
+
   const T = {
     fr:{
       tagline:"votre atelier, en ligne", foot:"SanaaPro — propulsé par votre atelier",
@@ -496,6 +543,15 @@
       tabApercu:"Aperçu", tabAtelier:"Atelier", tabBoutique:"Boutique", tabMesures:"Mesures",
       tabStaff:"Salariés", tabVisitors:"Visiteurs",
       standard:"Standard", premium:"Premium",
+      typeLabel:"Type de commande", tConfection:"Confection", tRetouche:"Retouche", tPap:"Prêt-à-porter",
+      genreLabel:"Genre du client", gFemme:"Femme", gHomme:"Homme",
+      newClientOpt:"+ Nouvelle cliente", newClientNameLabel:"Nom du nouveau client",
+      newClientNamePh:"Ex. Awa Diallo", newPhonePh:"+220 …",
+      rcvGarment:"vêtement",
+      autoNotify:"Notification WhatsApp automatique",
+      autoNotifyHint:"À chaque changement d'étape, WhatsApp s'ouvre avec le message déjà écrit. Mettez « Non » pour prévenir vous-même.",
+      yes:"Oui", no:"Non",
+      mRecuPap:"Bonjour {nom}, votre commande de {article} est enregistrée à l'atelier {boutique}.",
       lockTitle:"Réservé à la formule Premium",
       lockText:"Le suivi des salariés, le registre des visiteurs et le bilan financier font partie de la formule Premium.",
       lockPrice:"Standard {a} {cur}/mois · Premium {b} {cur}/mois",
@@ -585,6 +641,15 @@
       tabApercu:"Overview", tabAtelier:"Workshop", tabBoutique:"Shop", tabMesures:"Measurements",
       tabStaff:"Staff", tabVisitors:"Visitors",
       standard:"Standard", premium:"Premium",
+      typeLabel:"Order type", tConfection:"Tailoring", tRetouche:"Alteration", tPap:"Ready-to-wear",
+      genreLabel:"Client gender", gFemme:"Woman", gHomme:"Man",
+      newClientOpt:"+ New client", newClientNameLabel:"New client name",
+      newClientNamePh:"e.g. Awa Diallo", newPhonePh:"+220 …",
+      rcvGarment:"garment",
+      autoNotify:"Automatic WhatsApp notification",
+      autoNotifyHint:"On every stage change, WhatsApp opens with the message ready. Set to No to notify yourself.",
+      yes:"Yes", no:"No",
+      mRecuPap:"Hello {nom}, your order for {article} is registered at {boutique}.",
       lockTitle:"Premium plan only",
       lockText:"Staff records, the visitors log and the financial summary are part of the Premium plan.",
       lockPrice:"Standard {a} {cur}/month · Premium {b} {cur}/month",
@@ -695,6 +760,9 @@
   let editingId=null, currentCliente=null, CLIDATA=null;
   let CLIENTES=[], COMMANDES=[], ORD=null, ORDID=null, editingOrd=null;
   let SALARIES=[], VISITEURS=[], ROLE=null;
+  let GENRE_FORM="femme", GENRE_CF="femme", GENRE_MES="femme", TYPE_CF="confection";
+  const TYPES = ["confection","retouche","pap"];
+  const typeKey = x => "t" + x.charAt(0).toUpperCase() + x.slice(1);
 
   function setTab(name){
     TAB = name;
@@ -744,12 +812,47 @@
       lock.appendChild(h); lock.appendChild(p); lock.appendChild(pr); lock.appendChild(b);
     });
   }
+  function autoNotifyOn(){
+    return !(BOUTIQUE && BOUTIQUE.autoNotify === false);
+  }
   function paintSegs(){
     document.querySelectorAll(".seg").forEach(s=>{
-      const cur = (s.getAttribute("data-seg")==="ui") ? LANG_UI : LANG_MSG;
+      const kind = s.getAttribute("data-seg");
+      if(kind==="ui" || kind==="msg"){
+        const cur = (kind==="ui") ? LANG_UI : LANG_MSG;
+        s.querySelectorAll("button").forEach(b=>{
+          b.classList.toggle("on", b.getAttribute("data-lang")===cur);
+        });
+        return;
+      }
+      if(kind==="auto"){
+        const on = autoNotifyOn() ? "1" : "0";
+        s.querySelectorAll("button").forEach(b=>{
+          b.classList.toggle("on", b.getAttribute("data-v")===on);
+        });
+        return;
+      }
+      const cur = (kind==="cfgenre") ? GENRE_CF : (kind==="ingenre") ? GENRE_FORM : GENRE_MES;
       s.querySelectorAll("button").forEach(b=>{
-        b.classList.toggle("on", b.getAttribute("data-lang")===cur);
+        b.classList.toggle("on", b.getAttribute("data-g")===cur);
       });
+    });
+  }
+  function paintTypes(){
+    const box=$("cf-types");
+    if(!box.children.length){
+      TYPES.forEach(x=>{
+        const b=document.createElement("button");
+        b.setAttribute("data-i18n", typeKey(x));
+        b.setAttribute("data-type", x);
+        b.textContent=x;
+        b.addEventListener("click", ()=>{ TYPE_CF=x; paintTypes(); });
+        box.appendChild(b);
+      });
+    }
+    box.querySelectorAll("button").forEach(b=>{
+      b.textContent = t(typeKey(b.getAttribute("data-type")));
+      b.classList.toggle("on", b.getAttribute("data-type")===TYPE_CF);
     });
   }
 
@@ -758,6 +861,7 @@
     document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent = t(el.getAttribute("data-i18n")); });
     document.querySelectorAll("[data-i18n-ph]").forEach(el=>{ el.placeholder = t(el.getAttribute("data-i18n-ph")); });
     paintSegs();
+    paintTypes();
     paintLocks();
     updateOffline();
     if(BOUTIQUE) renderDashboard(BOUTIQUE);
@@ -766,7 +870,7 @@
     if(!$("cmd").hidden && ORD) renderCmd(ORD, ORDID);
     if(!$("form").hidden){
       $("form-title").textContent = editingId ? t("editTitle") : t("newClientTitle");
-      const cur={}; MESURES.forEach(mm=>{ const el=$("m-"+mm[0]); if(el && el.value!=="") cur[mm[0]]=el.value; });
+      const cur={}; mesuresFor(GENRE_FORM).forEach(mm=>{ const el=$("m-"+mm[0]); if(el && el.value!=="") cur[mm[0]]=el.value; });
       buildInputs(cur);
     }
     if(!$("cform").hidden) $("cf-title").textContent = editingOrd ? t("editOrderTitle") : t("newOrderTitle");
@@ -774,12 +878,35 @@
 
   document.querySelectorAll(".seg button").forEach(b=>{
     b.addEventListener("click", ()=>{
-      const seg=b.parentElement.getAttribute("data-seg"), lang=b.getAttribute("data-lang");
-      if(seg==="ui"){ LANG_UI=lang; saveLang("sanaapro_lang_ui", lang); }
-      else { LANG_MSG=lang; saveLang("sanaapro_lang_msg", lang); }
-      applyLang();
+      const seg=b.parentElement.getAttribute("data-seg");
+      if(seg==="ui" || seg==="msg"){
+        const lang=b.getAttribute("data-lang");
+        if(seg==="ui"){ LANG_UI=lang; saveLang("sanaapro_lang_ui", lang); }
+        else { LANG_MSG=lang; saveLang("sanaapro_lang_msg", lang); }
+        applyLang();
+        return;
+      }
+      if(seg==="auto"){
+        const on = b.getAttribute("data-v")==="1";
+        if(BOUTIQUE) BOUTIQUE.autoNotify = on;
+        setDoc(doc(db,"boutiques",BID), { autoNotify:on, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+        paintSegs();
+        return;
+      }
+      const g=b.getAttribute("data-g");
+      if(seg==="cfgenre"){ GENRE_CF=g; paintSegs(); fillClienteSelect(); }
+      else if(seg==="ingenre"){ GENRE_FORM=g; paintSegs(); buildInputs(currentMesuresFromForm()); }
+      else { GENRE_MES=g; paintSegs(); renderLists(); }
     });
   });
+  function currentMesuresFromForm(){
+    const cur={};
+    MESURES_F.concat(MESURES_H).forEach(mm=>{
+      const el=$("m-"+mm[0]);
+      if(el && el.value!=="") cur[mm[0]]=el.value;
+    });
+    return cur;
+  }
 
   const timeout = ms => new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")), ms));
   async function getDocSmart(ref){
@@ -856,7 +983,7 @@
   }
   function mesuresText(c){
     const m=c.mesures||{}, lines=[];
-    MESURES.forEach(mm=>{
+    mesuresFor(c.genre).forEach(mm=>{
       const v=m[mm[0]];
       if(v!==undefined && v!==null && v!=="") lines.push(mlabel(mm, LANG_MSG)+" : "+v+" cm");
     });
@@ -979,6 +1106,7 @@
     const qk=$("q-cli").value.trim().toLowerCase();
     const kl=$("cli-list"); kl.innerHTML="";
     const cliShown = CLIENTES.filter(c=>{
+      if(((c.genre==="homme") ? "homme" : "femme") !== GENRE_MES) return false;
       if(!qk) return true;
       return ((c.name||"")+" "+(c.phone||"")).toLowerCase().indexOf(qk)!==-1;
     });
@@ -1144,6 +1272,7 @@
     renderLists();
   });
 
+  $("cf-cliente").addEventListener("change", toggleNewCliente);
   $("q-vis").addEventListener("input", renderVisits);
   $("q").addEventListener("input", renderSearch);
   $("q-cmd").addEventListener("input", renderLists);
@@ -1164,7 +1293,8 @@
     $("c-num").textContent = fmtNum(o.numero);
     $("c-cliente").textContent = o.clienteName || t("noName");
     if(o.clientePhone){ $("c-phone").textContent=o.clientePhone; $("c-phone-row").hidden=false; } else $("c-phone-row").hidden=true;
-    $("c-recu").textContent = t(o.recu==="materiel" ? "rcvMaterial" : "rcvFabric");
+    $("c-type").textContent = t(typeKey(o.type || "confection"));
+    $("c-recu").textContent = t(o.recu==="materiel" ? "rcvMaterial" : (o.recu==="vetement" ? "rcvGarment" : "rcvFabric"));
     $("c-article").textContent = o.article || "—";
     if(o.prix || o.prix===0){ $("c-prix").textContent = o.prix+" "+CUR; $("c-price-row").hidden=false; } else $("c-price-row").hidden=true;
     if(o.livraison){ $("c-liv").textContent = fmtDate(o.livraison, LANG_UI); $("c-liv-row").hidden=false; } else $("c-liv-row").hidden=true;
@@ -1188,14 +1318,19 @@
       if(local) local.statut=st;
       setDoc(doc(db,"boutiques",BID,"commandes",ORDID), { statut:st, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
       renderCmd(ORD, ORDID); renderLists();
+      if(autoNotifyOn()){
+        const num=waNumber(ORD.clientePhone);
+        if(num) openWa(num, clientMessage(ORD));
+      }
     });
   });
 
   function clientMessage(o){
     const st=o.statut||"recu";
-    let msg = tm(msgKey(st))
+    const base = (st==="recu" && o.type==="pap") ? "mRecuPap" : msgKey(st);
+    let msg = tm(base)
       .replace("{nom}", o.clienteName||"")
-      .replace("{recu}", tm(o.recu==="materiel" ? "rcvMaterial" : "rcvFabric"))
+      .replace("{recu}", tm(o.recu==="materiel" ? "rcvMaterial" : (o.recu==="vetement" ? "rcvGarment" : "rcvFabric")))
       .replace("{article}", o.article||"")
       .replace("{boutique}", (BOUTIQUE && BOUTIQUE.name) || "");
     if(st==="recu"){
@@ -1242,27 +1377,45 @@
     }catch(e){ $("loading").textContent=t("orderFail"); show("loading"); }
   }
 
-  async function openCmdForm(id){
-    $("cf-msg").classList.remove("show");
-    editingOrd = id || null;
-    if(!CLIENTES.length){ await loadAll(); }
-    if(!CLIENTES.length){
-      show("loading"); $("loading").textContent=t("addClientFirst"); return;
-    }
-    const sel=$("cf-cliente"); sel.innerHTML="";
-    CLIENTES.forEach(c=>{
+  function fillClienteSelect(){
+    const sel=$("cf-cliente"), keep=sel.value;
+    sel.innerHTML="";
+    const opNew=document.createElement("option");
+    opNew.value="__new"; opNew.textContent=t("newClientOpt");
+    sel.appendChild(opNew);
+    CLIENTES.filter(c=>((c.genre==="homme")?"homme":"femme")===GENRE_CF).forEach(c=>{
       const op=document.createElement("option");
       op.value=c.id; op.textContent=c.name||t("noName"); sel.appendChild(op);
     });
+    if(keep && Array.prototype.some.call(sel.options, o=>o.value===keep)) sel.value=keep;
+    toggleNewCliente();
+  }
+  function toggleNewCliente(){
+    $("cf-new").hidden = ($("cf-cliente").value !== "__new");
+  }
+
+  async function openCmdForm(id){
+    $("cf-msg").classList.remove("show");
+    editingOrd = id || null;
+    fillClienteSelect();
     if(!editingOrd){
       $("cf-title").textContent=t("newOrderTitle");
       $("cf-article").value=""; $("cf-prix").value=""; $("cf-notes").value="";
       $("cf-recu").value="tissu"; $("cf-liv").value="";
+      $("cf-new-name").value=""; $("cf-new-phone").value="";
+      TYPE_CF="confection"; paintTypes();
+      $("cf-cliente").value="__new"; toggleNewCliente();
       show("cform"); return;
     }
     const o = COMMANDES.find(x=>x.id===editingOrd) || {};
     $("cf-title").textContent=t("editOrderTitle");
+    TYPE_CF = o.type || "confection"; paintTypes();
+    const oc = CLIENTES.find(x=>x.id===o.clienteId);
+    GENRE_CF = (oc && oc.genre==="homme") ? "homme" : "femme";
+    paintSegs(); fillClienteSelect();
+    const sel=$("cf-cliente");
     if(o.clienteId) sel.value=o.clienteId;
+    toggleNewCliente();
     $("cf-recu").value=o.recu||"tissu";
     $("cf-article").value=o.article||"";
     $("cf-prix").value=(o.prix||o.prix===0)?o.prix:"";
@@ -1273,15 +1426,29 @@
 
   $("cf-save").addEventListener("click", ()=>{
     const msg=$("cf-msg"); msg.classList.remove("show");
-    const cid=$("cf-cliente").value;
+    let cid=$("cf-cliente").value;
     const article=$("cf-article").value.trim();
-    if(!cid){ msg.textContent=t("clientRequired"); msg.classList.add("show"); return; }
     if(!article){ msg.textContent=t("garmentRequired"); msg.classList.add("show"); return; }
-    const c = CLIENTES.find(x=>x.id===cid) || { name:"", phone:"" };
+
+    let c;
+    if(cid === "__new"){
+      const nn=$("cf-new-name").value.trim();
+      if(!nn){ msg.textContent=t("nameRequired"); msg.classList.add("show"); window.scrollTo(0,0); return; }
+      const cref=doc(collection(db,"boutiques",BID,"clientes"));
+      const cdata={ name:nn, phone:$("cf-new-phone").value.trim(), notes:"",
+                    genre:GENRE_CF, mesures:{}, createdAt:serverTimestamp(), updatedAt:serverTimestamp() };
+      setDoc(cref, cdata, { merge:true }).catch(function(){});
+      c = Object.assign({ id:cref.id }, cdata);
+      CLIENTES.push(c);
+      CLIENTES.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+      cid = cref.id;
+    } else {
+      c = CLIENTES.find(x=>x.id===cid) || { name:"", phone:"" };
+    }
     const pv=$("cf-prix").value.trim();
     const data={
       clienteId:cid, clienteName:c.name||"", clientePhone:c.phone||"",
-      article, recu:$("cf-recu").value, livraison:$("cf-liv").value||null,
+      article, type:TYPE_CF, recu:$("cf-recu").value, livraison:$("cf-liv").value||null,
       notes:$("cf-notes").value.trim(),
       prix: (pv!=="" && !isNaN(parseFloat(pv))) ? parseFloat(pv) : null,
       updatedAt:serverTimestamp()
@@ -1318,7 +1485,7 @@
     if(c.notes){ $("f-notes").textContent=c.notes; $("f-notes-row").hidden=false; } else $("f-notes-row").hidden=true;
     $("f-wa-shop").hidden = !(BOUTIQUE && BOUTIQUE.whatsapp);
     const m=c.mesures||{}, box=$("f-mesures"); box.innerHTML=""; let any=false;
-    MESURES.forEach(mm=>{
+    mesuresFor(c.genre).forEach(mm=>{
       const k=mm[0];
       if(m[k]!==undefined && m[k]!==null && m[k]!==""){
         any=true;
@@ -1360,7 +1527,7 @@
 
   function buildInputs(m){
     const box=$("in-mesures"); box.innerHTML="";
-    MESURES.forEach(mm=>{
+    mesuresFor(GENRE_FORM).forEach(mm=>{
       const k=mm[0];
       const wrap=document.createElement("div");
       const lab=document.createElement("label"); lab.textContent=mlabel(mm, LANG_UI); lab.setAttribute("for","m-"+k);
@@ -1377,12 +1544,14 @@
     if(!editingId){
       $("form-title").textContent=t("newClientTitle");
       $("in-name").value=""; $("in-phone").value=""; $("in-notes").value="";
+      GENRE_FORM = GENRE_MES; paintSegs();
       buildInputs(null);
       show("form"); $("in-name").focus();
       return;
     }
     const c = CLIENTES.find(x=>x.id===editingId) || {};
     $("form-title").textContent=t("editTitle");
+    GENRE_FORM = (c.genre==="homme") ? "homme" : "femme"; paintSegs();
     $("in-name").value=c.name||""; $("in-phone").value=c.phone||""; $("in-notes").value=c.notes||"";
     buildInputs(c.mesures||{});
     show("form");
@@ -1393,13 +1562,13 @@
     const name=$("in-name").value.trim();
     if(!name){ msg.textContent=t("nameRequired"); msg.classList.add("show"); window.scrollTo(0,0); return; }
     const mesures={};
-    MESURES.forEach(mm=>{
+    mesuresFor(GENRE_FORM).forEach(mm=>{
       const v=$("m-"+mm[0]).value.trim();
       if(v!=="" && !isNaN(parseFloat(v))) mesures[mm[0]]=parseFloat(v);
     });
     const data={
       name, phone:$("in-phone").value.trim(), notes:$("in-notes").value.trim(),
-      mesures, updatedAt:serverTimestamp()
+      genre:GENRE_FORM, mesures, updatedAt:serverTimestamp()
     };
     const ref = editingId
       ? doc(db,"boutiques",BID,"clientes",editingId)
