@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SanaaPro — Mon espace</title>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+<!-- SanaaPro espace boutique — v6 : fiches + ajout cliente + chargement patient -->
 <style>
   :root{
     --ivory:#F0EFED; --ink:#141414; --line:#d8d6d1; --card:#ffffff;
@@ -93,12 +97,15 @@
     var l=document.getElementById("loading");
     if(l && !l.hidden){ l.style.color="#b23b3b"; l.textContent="Erreur : "+(((e.reason&&e.reason.message)||e.reason)||""); }
   });
-  setTimeout(function(){
-    var l=document.getElementById("loading");
-    if(l && !l.hidden && (l.textContent+"").indexOf("Chargement")===0){
-      l.innerHTML="Le premier chargement est trop long — Firebase ne répond pas.<br>Ouvre l'app une fois avec une bonne connexion, ensuite elle marchera même hors ligne.";
-    }
-  }, 20000);
+  [[30000,"Chargement… la connexion est lente, mais \u00e7a continue."],
+   [90000,"Toujours en cours — ne recharge pas la page."],
+   [180000,"Le r\u00e9seau ne suit pas pour l'instant.<br>R\u00e9essaie avec une meilleure connexion : apr\u00e8s UN chargement r\u00e9ussi, l'app s'ouvrira vite."]
+  ].forEach(function(s){
+    setTimeout(function(){
+      var l=document.getElementById("loading");
+      if(l && !l.hidden && !window.__loaded){ l.innerHTML=s[1]; }
+    }, s[0]);
+  });
 </script>
 <div class="wrap">
 
@@ -273,6 +280,7 @@
   $("logout-btn").addEventListener("click", () => signOut(auth));
 
   onAuthStateChanged(auth, async (user) => {
+    window.__loaded = true;
     if(!user){ show("login"); $("login-btn").disabled=false; return; }
     show("loading"); $("loading").textContent="Chargement…";
     try{
@@ -356,7 +364,80 @@
       }
     });
     if(!any){ box.innerHTML='<div style="color:var(--muted);font-size:14px;padding:6px 0">Aucune mesure enregistrée.</div>'; }
+  }
+
+  async function openFiche(id){
+    show("loading"); $("loading").textContent="Chargement…";
+    try{
+      const snap = await getDocSmart(doc(db,"boutiques",BID,"clientes",id));
+      if(!snap.exists()){ loadClientes(); return; }
+      fillFiche(snap.data(), id);
+      show("fiche");
+    }catch(e){ $("loading").textContent="Impossible d'ouvrir cette fiche."; show("loading"); }
+  }
+
+  function buildInputs(m){
+    const box=$("in-mesures"); box.innerHTML="";
+    MESURES.forEach(([k,label])=>{
+      const wrap=document.createElement("div");
+      const lab=document.createElement("label"); lab.textContent=label; lab.setAttribute("for","m-"+k);
+      const inp=document.createElement("input");
+      inp.id="m-"+k; inp.type="number"; inp.step="0.5"; inp.inputMode="decimal"; inp.placeholder="—";
+      if(m && m[k]!==undefined && m[k]!==null && m[k]!=="") inp.value=m[k];
+      wrap.appendChild(lab); wrap.appendChild(inp); box.appendChild(wrap);
+    });
+  }
+
+  async function openForm(id){
+    $("form-msg").classList.remove("show");
+    editingId = id || null;
+    if(!editingId){
+      $("form-title").textContent="Nouvelle cliente";
+      $("in-name").value=""; $("in-phone").value=""; $("in-notes").value="";
+      buildInputs(null);
+      show("form"); $("in-name").focus();
+      return;
     }
+    show("loading"); $("loading").textContent="Chargement…";
+    try{
+      const snap = await getDocSmart(doc(db,"boutiques",BID,"clientes",editingId));
+      const c = snap.exists() ? snap.data() : {};
+      $("form-title").textContent="Modifier la fiche";
+      $("in-name").value=c.name||""; $("in-phone").value=c.phone||""; $("in-notes").value=c.notes||"";
+      buildInputs(c.mesures||{});
+      show("form");
+    }catch(e){ $("loading").textContent="Impossible d'ouvrir la fiche à modifier."; show("loading"); }
+  }
+
+  $("form-save").addEventListener("click", () => {
+    const msg=$("form-msg"); msg.classList.remove("show");
+    const name=$("in-name").value.trim();
+    if(!name){ msg.textContent="Le nom de la cliente est obligatoire."; msg.classList.add("show"); window.scrollTo(0,0); return; }
+    const mesures={};
+    MESURES.forEach(([k])=>{
+      const v=$("m-"+k).value.trim();
+      if(v!=="" && !isNaN(parseFloat(v))) mesures[k]=parseFloat(v);
+    });
+    const data={
+      name, phone:$("in-phone").value.trim(), notes:$("in-notes").value.trim(),
+      mesures, updatedAt:serverTimestamp()
+    };
+    const ref = editingId
+      ? doc(db,"boutiques",BID,"clientes",editingId)
+      : doc(collection(db,"boutiques",BID,"clientes"));
+    if(!editingId) data.createdAt=serverTimestamp();
+    $("form-save").disabled=true;
+    setDoc(ref, data, { merge:true }).catch(function(){});
+    setTimeout(()=>{ $("form-save").disabled=false; editingId=null; refreshCount(); loadClientes(); }, 400);
+  });
+
+  $("f-del").addEventListener("click", () => {
+    if(!currentCliente) return;
+    if(!confirm("Supprimer définitivement cette cliente et ses mesures ?")) return;
+    deleteDoc(doc(db,"boutiques",BID,"clientes",currentCliente)).catch(function(){});
+    currentCliente=null;
+    setTimeout(()=>{ refreshCount(); loadClientes(); }, 400);
+  });
 </script>
 </body>
 </html>
