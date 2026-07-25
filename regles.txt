@@ -1,0 +1,70 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    function owns(bid) {
+      return signedIn() && request.auth.uid == bid;
+    }
+    function sub(bid) {
+      return get(/databases/$(database)/documents/boutiques/$(bid)).data.subscription;
+    }
+    function active(bid) {
+      return sub(bid).expiresAt > request.time;
+    }
+    function premium(bid) {
+      return sub(bid).plan == 'trial' || sub(bid).tier == 'premium';
+    }
+
+    match /admins/{uid} {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    match /slugs/{slug} {
+      allow read: if true;
+      allow create: if signedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /users/{uid} {
+      allow read: if owns(uid) || isAdmin();
+      allow create: if owns(uid);
+      allow update: if owns(uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /boutiques/{bid} {
+      allow read: if isAdmin() || owns(bid);
+      allow create: if owns(bid);
+      allow update: if isAdmin() || (owns(bid) && active(bid));
+      allow delete: if isAdmin();
+
+      match /clientes/{id} {
+        allow read: if owns(bid);
+        allow write: if owns(bid) && active(bid);
+      }
+
+      match /commandes/{id} {
+        allow read: if owns(bid);
+        allow write: if owns(bid) && active(bid);
+      }
+
+      match /salaries/{id} {
+        allow read: if owns(bid);
+        allow write: if owns(bid) && active(bid) && premium(bid);
+      }
+
+      match /visiteurs/{id} {
+        allow read: if owns(bid);
+        allow write: if owns(bid) && active(bid) && premium(bid);
+      }
+    }
+  }
+}

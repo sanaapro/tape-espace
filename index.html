@@ -128,6 +128,23 @@
   .center{ text-align:center; color:var(--muted); padding:70px 20px; font-size:14px; line-height:1.7; }
   .offline-note{ text-align:center; font-size:12px; color:var(--warn); background:var(--warnbg);
     padding:9px 12px; border-radius:9px; margin-bottom:12px; line-height:1.5; }
+  .lock{ background:var(--panel); border:1px dashed var(--line2); border-radius:13px; padding:22px 18px; margin-top:14px; text-align:center; }
+  .lock h3{ font-family:var(--serif); font-size:18px; color:var(--gold); margin:0 0 10px; }
+  .lock p{ font-size:14px; color:var(--muted); margin:0 0 6px; line-height:1.6; }
+  .lock .price{ font-size:13px; color:var(--txt); margin:12px 0 0; }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+  .chips button{ padding:9px 13px; border:1px solid var(--line2); border-radius:20px; background:transparent;
+    color:var(--txt); font-size:13px; cursor:pointer; font-family:var(--sans); }
+  .chips button.on{ background:var(--gold); color:#141310; border-color:var(--gold); }
+  .rec{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:15px 16px; margin-top:11px; }
+  .rec .nm{ font-weight:700; font-size:15px; }
+  .rec .ln{ font-size:13px; color:var(--muted); margin-top:4px; }
+  .rec .amt{ color:var(--gold); font-weight:700; font-size:15px; }
+  .rec .rm{ margin-top:11px; width:100%; padding:9px; border:1px solid #4A2222; border-radius:8px;
+    background:var(--errbg); color:var(--err); font-size:13px; cursor:pointer; font-family:var(--sans); }
+  .otp{ font-family:var(--serif); font-size:34px; color:var(--gold); letter-spacing:8px;
+    text-align:center; padding:16px 0 6px; font-weight:700; }
+  .otp-note{ text-align:center; font-size:12px; color:var(--muted); padding-bottom:4px; }
   button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
   @media (prefers-reduced-motion:reduce){ *{ transition:none !important; animation:none !important; } }
   [hidden]{ display:none !important; }
@@ -211,6 +228,8 @@
       <button data-tab="atelier" data-i18n="tabAtelier">Atelier</button>
       <button data-tab="boutique" data-i18n="tabBoutique">Boutique</button>
       <button data-tab="mesures" data-i18n="tabMesures">Mesures</button>
+      <button data-tab="staff" data-i18n="tabStaff">Salariés</button>
+      <button data-tab="visits" data-i18n="tabVisitors">Visiteurs</button>
     </div>
 
     <div class="offline-note" id="off-dash" data-i18n="offline" hidden>Mode hors ligne — vos données sont enregistrées et se synchroniseront au retour du réseau.</div>
@@ -259,6 +278,15 @@
         <input id="b-code" type="text" inputmode="numeric" maxlength="6" data-i18n-ph="ownerCodePh" placeholder="4 à 6 chiffres">
         <button class="ghost" id="b-code-save" data-i18n="saveCode">Enregistrer le code</button>
       </div>
+      <div class="card">
+        <h2 data-i18n="otpTitle">Code à usage unique (à distance)</h2>
+        <p style="margin:0;font-size:13px;color:var(--muted)" data-i18n="otpHint">Utile quand vous n'êtes pas sur place.</p>
+        <div id="b-otp" hidden>
+          <div class="otp" id="b-otp-code"></div>
+          <div class="otp-note" data-i18n="otpNote">Valable une seule fois, pendant 24 heures.</div>
+        </div>
+        <button class="ghost" id="b-otp-gen" data-i18n="otpGen">Générer un code à usage unique</button>
+      </div>
     </div>
 
     <div id="pane-mesures" hidden>
@@ -266,6 +294,53 @@
       <input id="q-cli" type="search" data-i18n-ph="searchClientsPh" placeholder="Nom ou téléphone…" style="margin-top:14px">
       <div id="cli-list"></div>
       <div id="cli-empty" class="empty" data-i18n="noClients" hidden>Aucune cliente pour le moment.</div>
+    </div>
+
+    <div id="pane-staff" hidden>
+      <div class="lock" id="lock-staff" hidden></div>
+      <div id="body-staff">
+      <div class="card">
+        <h2 data-i18n="addStaff">Ajouter un employé</h2>
+        <label data-i18n="staffName">Nom</label>
+        <input id="st-name" type="text" data-i18n-ph="staffNamePh" placeholder="Ex. Awa Ndiaye">
+        <label data-i18n="role">Poste — touchez pour choisir</label>
+        <div class="chips" id="st-roles"></div>
+        <input id="st-role-other" type="text" data-i18n-ph="roleOtherPh" placeholder="Ou écrivez un autre poste" style="margin-top:10px">
+        <label data-i18n="phone">Téléphone</label>
+        <input id="st-phone" type="tel" placeholder="+220 …">
+        <label data-i18n="salary">Salaire mensuel (D)</label>
+        <input id="st-salary" type="number" step="1" inputmode="decimal" placeholder="0">
+        <button class="primary" id="st-add" data-i18n="addStaffBtn">Ajouter l'employé</button>
+        <div class="msg err" id="st-msg"></div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="staffRecap">Récapitulatif mensuel</h2>
+        <div class="row"><span class="k" data-i18n="tabStaff">Salariés</span><span class="v" id="st-count">0</span></div>
+        <div class="row"><span class="k" data-i18n="staffTotal">Total mensuel</span><span class="v amt" id="st-total">0 D</span></div>
+      </div>
+      <div id="st-list"></div>
+      <div id="st-empty" class="empty" data-i18n="noStaff" hidden>Aucun employé enregistré.</div>
+      </div>
+    </div>
+
+    <div id="pane-visits" hidden>
+      <div class="lock" id="lock-visits" hidden></div>
+      <div id="body-visits">
+      <div class="card">
+        <h2 data-i18n="addVisit">Enregistrer un passage</h2>
+        <label data-i18n="staffName">Nom</label>
+        <input id="vi-name" type="text" data-i18n-ph="visitNamePh" placeholder="Ex. Amadou">
+        <label data-i18n="phone">Téléphone</label>
+        <input id="vi-phone" type="tel" placeholder="+220 …">
+        <label data-i18n="notes">Note</label>
+        <textarea id="vi-note" rows="2" data-i18n-ph="visitNotePh" placeholder="Ex. venu déposer des tissus, envoyé par Oumi"></textarea>
+        <button class="primary" id="vi-add" data-i18n="addVisitBtn">Enregistrer le passage</button>
+        <div class="msg err" id="vi-msg"></div>
+      </div>
+      <input id="q-vis" type="search" data-i18n-ph="searchVisitorPh" placeholder="Rechercher un visiteur…" style="margin-top:14px">
+      <div id="vis-list"></div>
+      <div id="vis-empty" class="empty" data-i18n="noVisits" hidden>Aucun passage enregistré.</div>
+      </div>
     </div>
 
     <div class="foot" data-i18n="foot">SanaaPro — propulsé par votre atelier</div>
@@ -390,8 +465,11 @@
 
   const DEFAULT_CC = "220";
   const CUR = "D";
+  const PRICE_STD = 500, PRICE_PREM = 750;
+  const SANAAPRO_WA = "2207628683";
   const STEPS = ["recu","coupe","essayage","pret"];
-  const TABS = ["apercu","atelier","boutique","mesures"];
+  const TABS = ["apercu","atelier","boutique","mesures","staff","visits"];
+  const ROLES = ["roleCouturier","roleCouturiere","roleManager","roleVendeuse","roleApprenti","roleMenagere"];
 
   const MESURES = [
     ["poitrine","Tour de poitrine","Bust"],
@@ -416,12 +494,35 @@
       uiLabel:"Interface", msgLabel:"Messages clients",
       online:"En ligne — synchronisé", offlineShort:"Hors ligne",
       tabApercu:"Aperçu", tabAtelier:"Atelier", tabBoutique:"Boutique", tabMesures:"Mesures",
+      tabStaff:"Salariés", tabVisitors:"Visiteurs",
+      standard:"Standard", premium:"Premium",
+      lockTitle:"Réservé à la formule Premium",
+      lockText:"Le suivi des salariés, le registre des visiteurs et le bilan financier font partie de la formule Premium.",
+      lockPrice:"Standard {a} {cur}/mois · Premium {b} {cur}/mois",
+      lockBtn:"Passer au premium sur WhatsApp",
+      lockTrial:"Pendant votre essai gratuit, tout est ouvert — vous pouvez essayer ces pages librement.",
+      upgradeMsg:"Bonjour, je souhaite passer ma boutique {shop} ({slug}) à la formule Premium.",
+      addStaff:"Ajouter un employé", staffName:"Nom", staffNamePh:"Ex. Awa Ndiaye",
+      role:"Poste — touchez pour choisir", roleOtherPh:"Ou écrivez un autre poste",
+      salary:"Salaire mensuel (D)", addStaffBtn:"Ajouter l'employé",
+      staffRecap:"Récapitulatif mensuel", staffTotal:"Total mensuel", noStaff:"Aucun employé enregistré.",
+      staffNameRequired:"Le nom de l'employé est obligatoire.", confirmDeleteStaff:"Retirer cet employé ?",
+      roleCouturier:"Couturier", roleCouturiere:"Couturière", roleManager:"Manager",
+      roleVendeuse:"Vendeuse", roleApprenti:"Apprenti(e)", roleMenagere:"Ménagère",
+      addVisit:"Enregistrer un passage", visitNamePh:"Ex. Amadou",
+      visitNotePh:"Ex. venu déposer des tissus, envoyé par Oumi",
+      addVisitBtn:"Enregistrer le passage", noVisits:"Aucun passage enregistré.",
+      searchVisitorPh:"Rechercher un visiteur…", visitNameRequired:"Le nom du visiteur est obligatoire.",
+      confirmDeleteVisit:"Supprimer ce passage ?", remove:"Supprimer",
       search:"Recherche globale", searchPh:"Nom, téléphone ou modèle", noResult:"Aucun résultat.",
       statOrders:"Commandes", statClients:"Clientes",
       receiptNo:"N° de reçu", lineReceipt:"Reçu n° {v}",
       searchOrdersPh:"Chercher une commande…", searchClientsPh:"Nom ou téléphone…",
-      ownerCode:"Code propriétaire", ownerCodePh:"4 à 6 chiffres", saveCode:"Enregistrer le code",
-      ownerCodeHint:"Sans code, n'importe qui peut modifier un prix ou un modèle. Avec un code, vous seul.",
+      ownerCode:"Code administrateur", ownerCodePh:"4 à 6 chiffres", saveCode:"Enregistrer le code",
+      ownerCodeHint:"Ce code protège les suppressions et les corrections de prix. Changez-le régulièrement.",
+      otpTitle:"Code à usage unique (à distance)",
+      otpHint:"Utile quand vous n'êtes pas sur place : un bouton génère un code, vous le dictez au manager par téléphone. Il ne fonctionne qu'une seule fois.",
+      otpGen:"Générer un code à usage unique", otpNote:"Valable une seule fois, pendant 24 heures.",
       codeSaved:"Code enregistré.", codeAsk:"Code propriétaire :", codeWrong:"Code incorrect.",
       loginTitle:"Connexion à votre espace", loginLead:"Entrez les identifiants créés à l'inscription.",
       email:"Email", emailPh:"vous@email.com", password:"Mot de passe", passwordPh:"Votre mot de passe",
@@ -482,12 +583,35 @@
       uiLabel:"Interface", msgLabel:"Client messages",
       online:"Online — synced", offlineShort:"Offline",
       tabApercu:"Overview", tabAtelier:"Workshop", tabBoutique:"Shop", tabMesures:"Measurements",
+      tabStaff:"Staff", tabVisitors:"Visitors",
+      standard:"Standard", premium:"Premium",
+      lockTitle:"Premium plan only",
+      lockText:"Staff records, the visitors log and the financial summary are part of the Premium plan.",
+      lockPrice:"Standard {a} {cur}/month · Premium {b} {cur}/month",
+      lockBtn:"Upgrade on WhatsApp",
+      lockTrial:"During your free trial everything is open — feel free to try these pages.",
+      upgradeMsg:"Hello, I would like to upgrade my shop {shop} ({slug}) to the Premium plan.",
+      addStaff:"Add an employee", staffName:"Name", staffNamePh:"e.g. Awa Ndiaye",
+      role:"Role — tap to choose", roleOtherPh:"Or type another role",
+      salary:"Monthly salary (D)", addStaffBtn:"Add the employee",
+      staffRecap:"Monthly summary", staffTotal:"Monthly total", noStaff:"No employee recorded.",
+      staffNameRequired:"The employee name is required.", confirmDeleteStaff:"Remove this employee?",
+      roleCouturier:"Tailor (m)", roleCouturiere:"Tailor (f)", roleManager:"Manager",
+      roleVendeuse:"Sales", roleApprenti:"Apprentice", roleMenagere:"Cleaner",
+      addVisit:"Record a visit", visitNamePh:"e.g. Amadou",
+      visitNotePh:"e.g. came to drop off fabric, sent by Oumi",
+      addVisitBtn:"Record the visit", noVisits:"No visit recorded.",
+      searchVisitorPh:"Search a visitor…", visitNameRequired:"The visitor name is required.",
+      confirmDeleteVisit:"Delete this visit?", remove:"Delete",
       search:"Global search", searchPh:"Name, phone or model", noResult:"No result.",
       statOrders:"Orders", statClients:"Clients",
       receiptNo:"Receipt no.", lineReceipt:"Receipt no. {v}",
       searchOrdersPh:"Search an order…", searchClientsPh:"Name or phone…",
-      ownerCode:"Owner code", ownerCodePh:"4 to 6 digits", saveCode:"Save the code",
-      ownerCodeHint:"Without a code, anyone can change a price or a model. With a code, only you.",
+      ownerCode:"Admin code", ownerCodePh:"4 to 6 digits", saveCode:"Save the code",
+      ownerCodeHint:"This code protects deletions and price corrections. Change it regularly.",
+      otpTitle:"One-time code (remote)",
+      otpHint:"Useful when you are not on site: one button generates a code, you dictate it to your manager by phone. It works only once.",
+      otpGen:"Generate a one-time code", otpNote:"Valid once, for 24 hours.",
       codeSaved:"Code saved.", codeAsk:"Owner code:", codeWrong:"Wrong code.",
       loginTitle:"Sign in to your space", loginLead:"Enter the credentials created at sign-up.",
       email:"Email", emailPh:"you@email.com", password:"Password", passwordPh:"Your password",
@@ -570,6 +694,7 @@
   let BID=null, BOUTIQUE=null, TAB="apercu";
   let editingId=null, currentCliente=null, CLIDATA=null;
   let CLIENTES=[], COMMANDES=[], ORD=null, ORDID=null, editingOrd=null;
+  let SALARIES=[], VISITEURS=[], ROLE=null;
 
   function setTab(name){
     TAB = name;
@@ -583,6 +708,42 @@
     b.addEventListener("click", ()=>setTab(b.getAttribute("data-tab")));
   });
 
+  function subInfo(){
+    const sub = (BOUTIQUE && BOUTIQUE.subscription) || {};
+    let days = null;
+    if(sub.expiresAt && sub.expiresAt.toDate){
+      days = Math.ceil((sub.expiresAt.toDate() - new Date())/86400000);
+    }
+    const trial = (sub.plan === "trial") && (days === null || days > 0);
+    const premium = (sub.tier === "premium") || trial;
+    return { sub, days, trial, premium };
+  }
+  function planLabel(){
+    const i = subInfo();
+    if(i.trial) return t("trial");
+    return (i.sub.tier === "premium") ? t("premium") : t("standard");
+  }
+  function paintLocks(){
+    const i = subInfo();
+    [["staff"],["visits"]].forEach(([k])=>{
+      const lock=$("lock-"+k), body=$("body-"+k);
+      if(i.premium){ lock.hidden=true; body.hidden=false; return; }
+      body.hidden=true; lock.hidden=false;
+      lock.innerHTML="";
+      const h=document.createElement("h3"); h.textContent=t("lockTitle");
+      const p=document.createElement("p"); p.textContent=t("lockText");
+      const pr=document.createElement("p"); pr.className="price";
+      pr.textContent=t("lockPrice").replace("{a}",PRICE_STD).replace("{b}",PRICE_PREM).replace("{cur}",CUR);
+      const b=document.createElement("button"); b.className="wa"; b.textContent=t("lockBtn");
+      b.addEventListener("click", ()=>{
+        const msg=t("upgradeMsg")
+          .replace("{shop}", (BOUTIQUE && BOUTIQUE.name) || "")
+          .replace("{slug}", (BOUTIQUE && BOUTIQUE.slug) || "");
+        openWa(SANAAPRO_WA, msg);
+      });
+      lock.appendChild(h); lock.appendChild(p); lock.appendChild(pr); lock.appendChild(b);
+    });
+  }
   function paintSegs(){
     document.querySelectorAll(".seg").forEach(s=>{
       const cur = (s.getAttribute("data-seg")==="ui") ? LANG_UI : LANG_MSG;
@@ -597,6 +758,7 @@
     document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent = t(el.getAttribute("data-i18n")); });
     document.querySelectorAll("[data-i18n-ph]").forEach(el=>{ el.placeholder = t(el.getAttribute("data-i18n-ph")); });
     paintSegs();
+    paintLocks();
     updateOffline();
     if(BOUTIQUE) renderDashboard(BOUTIQUE);
     renderLists();
@@ -651,13 +813,33 @@
     COMMANDES.forEach(o=>{ const n=Number(o.numero)||0; if(n>mx) mx=n; });
     return mx+1;
   }
-  function askCode(){
-    const code = (BOUTIQUE && BOUTIQUE.codeAdmin) ? String(BOUTIQUE.codeAdmin) : "";
-    if(!code) return true;
+  async function askCode(){
+    const admin = (BOUTIQUE && BOUTIQUE.codeAdmin) ? String(BOUTIQUE.codeAdmin) : "";
+    if(!admin) return true;
     const given = prompt(t("codeAsk"));
     if(given === null) return false;
-    if(String(given).trim() !== code){ alert(t("codeWrong")); return false; }
-    return true;
+    const g = String(given).trim();
+    if(g === admin) return true;
+    try{
+      const snap = await getDocSmart(doc(db,"boutiques",BID));
+      if(snap.exists()){
+        BOUTIQUE = snap.data();
+        const o = BOUTIQUE.otp;
+        if(o && o.code && !o.used && String(o.code) === g){
+          let fresh = true;
+          if(o.createdAt && o.createdAt.toDate){
+            fresh = (Date.now() - o.createdAt.toDate().getTime()) < 86400000;
+          }
+          if(fresh){
+            setDoc(doc(db,"boutiques",BID), { otp:{ used:true } }, { merge:true }).catch(function(){});
+            BOUTIQUE.otp = Object.assign({}, o, { used:true });
+            return true;
+          }
+        }
+      }
+    }catch(e){}
+    alert(t("codeWrong"));
+    return false;
   }
   function fmtDate(v, lang){
     if(!v) return "";
@@ -706,7 +888,7 @@
       const snap = await getDocSmart(doc(db,"boutiques",user.uid));
       if(!snap.exists()){ $("loading").textContent=t("noShop"); show("loading"); return; }
       BID=user.uid; BOUTIQUE=snap.data();
-      renderDashboard(BOUTIQUE); updateOffline(); setTab("apercu"); show("dash");
+      renderDashboard(BOUTIQUE); paintLocks(); updateOffline(); setTab("apercu"); show("dash");
       loadAll();
     }catch(e){ $("loading").textContent=t("loadFail"); show("loading"); }
   });
@@ -723,7 +905,7 @@
     if(document.activeElement !== $("b-code")) $("b-code").value = b.codeAdmin || "";
     const sub=b.subscription||{}, badge=$("d-badge"), note=$("d-subnote");
     note.hidden=true; note.className="sub-note";
-    $("d-plan").textContent = sub.plan==="trial" ? t("trial") : (sub.plan||"—");
+    $("d-plan").textContent = planLabel();
     if(sub.expiresAt && sub.expiresAt.toDate){
       const exp=sub.expiresAt.toDate();
       $("d-expiry").textContent = exp.toLocaleDateString(LANG_UI==="en"?"en-GB":"fr-FR",{day:"numeric",month:"long",year:"numeric"});
@@ -750,6 +932,16 @@
         if(ai!==bi) return ai-bi;
         return (a.clienteName||"").localeCompare(b.clienteName||"");
       });
+    }catch(e){}
+    try{
+      const s = await getDocsSmart(collection(db,"boutiques",BID,"salaries"));
+      SALARIES=[]; s.forEach(d=>{ SALARIES.push(Object.assign({ id:d.id }, d.data())); });
+      SALARIES.sort((a,b)=>(a.nom||"").localeCompare(b.nom||""));
+    }catch(e){}
+    try{
+      const s = await getDocsSmart(collection(db,"boutiques",BID,"visiteurs"));
+      VISITEURS=[]; s.forEach(d=>{ VISITEURS.push(Object.assign({ id:d.id }, d.data())); });
+      VISITEURS.sort((a,b)=>(Number(b.atMs)||0)-(Number(a.atMs)||0));
     }catch(e){}
     renderLists();
   }
@@ -801,7 +993,73 @@
       kl.appendChild(el);
     });
 
+    renderStaff();
+    renderVisits();
     renderSearch();
+  }
+
+  function roleLabel(x){ return x.roleKey ? t(x.roleKey) : (x.poste || "—"); }
+
+  function renderStaff(){
+    const box=$("st-list"); box.innerHTML="";
+    let total=0;
+    SALARIES.forEach(x=>{ total += Number(x.salaire)||0; });
+    $("st-count").textContent = SALARIES.length;
+    $("st-total").textContent = total+" "+CUR;
+    $("st-empty").hidden = SALARIES.length>0;
+    SALARIES.forEach(x=>{
+      const el=document.createElement("div"); el.className="rec";
+      const nm=document.createElement("div"); nm.className="nm"; nm.textContent=x.nom||"—";
+      const l1=document.createElement("div"); l1.className="ln";
+      l1.textContent = roleLabel(x) + (x.phone ? " · "+x.phone : "");
+      const l2=document.createElement("div"); l2.className="ln";
+      const amt=document.createElement("span"); amt.className="amt";
+      amt.textContent=(Number(x.salaire)||0)+" "+CUR;
+      l2.appendChild(amt);
+      const rm=document.createElement("button"); rm.className="rm"; rm.textContent=t("remove");
+      rm.addEventListener("click", ()=>{
+        if(!confirm(t("confirmDeleteStaff"))) return;
+        deleteDoc(doc(db,"boutiques",BID,"salaries",x.id)).catch(function(){});
+        SALARIES = SALARIES.filter(y=>y.id!==x.id);
+        renderLists();
+      });
+      el.appendChild(nm); el.appendChild(l1); el.appendChild(l2); el.appendChild(rm);
+      box.appendChild(el);
+    });
+  }
+
+  function fmtWhen(ms){
+    if(!ms) return "—";
+    const d=new Date(Number(ms));
+    return d.toLocaleDateString(LANG_UI==="en"?"en-GB":"fr-FR",{day:"2-digit",month:"2-digit",year:"numeric"})
+      + " · " + d.toLocaleTimeString(LANG_UI==="en"?"en-GB":"fr-FR",{hour:"2-digit",minute:"2-digit"});
+  }
+
+  function renderVisits(){
+    const q=$("q-vis").value.trim().toLowerCase();
+    const box=$("vis-list"); box.innerHTML="";
+    const shown = VISITEURS.filter(v=>{
+      if(!q) return true;
+      return ((v.nom||"")+" "+(v.phone||"")+" "+(v.note||"")).toLowerCase().indexOf(q)!==-1;
+    });
+    $("vis-empty").hidden = shown.length>0;
+    shown.forEach(v=>{
+      const el=document.createElement("div"); el.className="rec";
+      const nm=document.createElement("div"); nm.className="nm"; nm.textContent=v.nom||"—";
+      el.appendChild(nm);
+      if(v.phone){ const p=document.createElement("div"); p.className="ln"; p.textContent=v.phone; el.appendChild(p); }
+      if(v.note){ const n=document.createElement("div"); n.className="ln"; n.textContent=v.note; el.appendChild(n); }
+      const w=document.createElement("div"); w.className="ln"; w.textContent=fmtWhen(v.atMs); el.appendChild(w);
+      const rm=document.createElement("button"); rm.className="rm"; rm.textContent=t("remove");
+      rm.addEventListener("click", ()=>{
+        if(!confirm(t("confirmDeleteVisit"))) return;
+        deleteDoc(doc(db,"boutiques",BID,"visiteurs",v.id)).catch(function(){});
+        VISITEURS = VISITEURS.filter(y=>y.id!==v.id);
+        renderLists();
+      });
+      el.appendChild(rm);
+      box.appendChild(el);
+    });
   }
 
   function renderSearch(){
@@ -828,6 +1086,65 @@
     }
     hits.slice(0,8).forEach(el=>box.appendChild(el));
   }
+  (function buildRoles(){
+    const box=$("st-roles");
+    ROLES.forEach(k=>{
+      const b=document.createElement("button");
+      b.setAttribute("data-i18n", k);
+      b.setAttribute("data-role", k);
+      b.textContent=k;
+      b.addEventListener("click", ()=>{
+        ROLE = (ROLE===k) ? null : k;
+        if(ROLE) $("st-role-other").value="";
+        box.querySelectorAll("button").forEach(x=>x.classList.toggle("on", x.getAttribute("data-role")===ROLE));
+      });
+      box.appendChild(b);
+    });
+  })();
+  $("st-role-other").addEventListener("input", ()=>{
+    if($("st-role-other").value.trim()){
+      ROLE=null;
+      $("st-roles").querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+    }
+  });
+
+  $("st-add").addEventListener("click", ()=>{
+    const msg=$("st-msg"); msg.classList.remove("show");
+    const nom=$("st-name").value.trim();
+    if(!nom){ msg.textContent=t("staffNameRequired"); msg.classList.add("show"); return; }
+    const other=$("st-role-other").value.trim();
+    const sv=$("st-salary").value.trim();
+    const data={
+      nom, phone:$("st-phone").value.trim(),
+      roleKey: ROLE || null, poste: ROLE ? null : (other||null),
+      salaire: (sv!=="" && !isNaN(parseFloat(sv))) ? parseFloat(sv) : 0,
+      createdAtMs: Date.now(), updatedAt:serverTimestamp()
+    };
+    const ref=doc(collection(db,"boutiques",BID,"salaries"));
+    setDoc(ref, data, { merge:true }).catch(function(){});
+    SALARIES.push(Object.assign({ id:ref.id }, data));
+    SALARIES.sort((a,b)=>(a.nom||"").localeCompare(b.nom||""));
+    $("st-name").value=""; $("st-phone").value=""; $("st-salary").value=""; $("st-role-other").value="";
+    ROLE=null; $("st-roles").querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+    renderLists();
+  });
+
+  $("vi-add").addEventListener("click", ()=>{
+    const msg=$("vi-msg"); msg.classList.remove("show");
+    const nom=$("vi-name").value.trim();
+    if(!nom){ msg.textContent=t("visitNameRequired"); msg.classList.add("show"); return; }
+    const data={
+      nom, phone:$("vi-phone").value.trim(), note:$("vi-note").value.trim(),
+      atMs: Date.now(), createdAt:serverTimestamp()
+    };
+    const ref=doc(collection(db,"boutiques",BID,"visiteurs"));
+    setDoc(ref, data, { merge:true }).catch(function(){});
+    VISITEURS.unshift(Object.assign({ id:ref.id }, data));
+    $("vi-name").value=""; $("vi-phone").value=""; $("vi-note").value="";
+    renderLists();
+  });
+
+  $("q-vis").addEventListener("input", renderVisits);
   $("q").addEventListener("input", renderSearch);
   $("q-cmd").addEventListener("input", renderLists);
   $("q-cli").addEventListener("input", renderLists);
@@ -839,7 +1156,7 @@
   $("cf-back").addEventListener("click", ()=> editingOrd ? openCmd(editingOrd) : (show("dash"), setTab("atelier")));
   $("form-back").addEventListener("click", ()=> editingId ? openFiche(editingId) : (show("dash"), setTab("mesures")));
   $("f-edit").addEventListener("click", ()=>openForm(currentCliente));
-  $("c-edit").addEventListener("click", ()=>{ if(askCode()) openCmdForm(ORDID); });
+  $("c-edit").addEventListener("click", async ()=>{ if(await askCode()) openCmdForm(ORDID); });
 
   function renderCmd(o, id){
     ORD=o; ORDID=id;
@@ -984,9 +1301,9 @@
     show("cmd");
   });
 
-  $("c-del").addEventListener("click", ()=>{
+  $("c-del").addEventListener("click", async ()=>{
     if(!ORDID) return;
-    if(!askCode()) return;
+    if(!await askCode()) return;
     if(!confirm(t("confirmDeleteOrder"))) return;
     deleteDoc(doc(db,"boutiques",BID,"commandes",ORDID)).catch(function(){});
     COMMANDES = COMMANDES.filter(x=>x.id!==ORDID);
@@ -1113,6 +1430,14 @@
     if(BOUTIQUE) BOUTIQUE.codeAdmin=v;
     setDoc(doc(db,"boutiques",BID), { codeAdmin:v, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
     alert(t("codeSaved"));
+  });
+
+  $("b-otp-gen").addEventListener("click", ()=>{
+    const code = String(Math.floor(100000 + Math.random()*900000));
+    setDoc(doc(db,"boutiques",BID), { otp:{ code, createdAt:serverTimestamp(), used:false } }, { merge:true }).catch(function(){});
+    if(BOUTIQUE) BOUTIQUE.otp = { code, used:false };
+    $("b-otp-code").textContent = code;
+    $("b-otp").hidden = false;
   });
 
   applyLang();
