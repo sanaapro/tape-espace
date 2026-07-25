@@ -240,6 +240,7 @@
 
     <div id="pane-atelier" hidden>
       <button class="primary" id="cmd-add" data-i18n="newOrder">+ Nouvelle commande</button>
+      <input id="q-cmd" type="search" data-i18n-ph="searchOrdersPh" placeholder="Chercher une commande…" style="margin-top:14px">
       <div id="cmd-list"></div>
       <div id="cmd-empty" class="empty" data-i18n="noOrders" hidden>Aucune commande pour le moment.</div>
     </div>
@@ -252,10 +253,17 @@
         <div class="row"><span class="k" data-i18n="email">Email</span><span class="v" id="d-email"></span></div>
         <div class="row" id="d-wa-row"><span class="k">WhatsApp</span><span class="v" id="d-wa"></span></div>
       </div>
+      <div class="card">
+        <h2 data-i18n="ownerCode">Code propriétaire</h2>
+        <p style="margin:0 0 4px;font-size:13px;color:var(--muted)" data-i18n="ownerCodeHint">Sans code, n'importe qui peut modifier un prix ou un modèle. Avec un code, vous seul.</p>
+        <input id="b-code" type="text" inputmode="numeric" maxlength="6" data-i18n-ph="ownerCodePh" placeholder="4 à 6 chiffres">
+        <button class="ghost" id="b-code-save" data-i18n="saveCode">Enregistrer le code</button>
+      </div>
     </div>
 
     <div id="pane-mesures" hidden>
       <button class="primary" id="cli-add" data-i18n="newClient">+ Nouvelle cliente</button>
+      <input id="q-cli" type="search" data-i18n-ph="searchClientsPh" placeholder="Nom ou téléphone…" style="margin-top:14px">
       <div id="cli-list"></div>
       <div id="cli-empty" class="empty" data-i18n="noClients" hidden>Aucune cliente pour le moment.</div>
     </div>
@@ -267,6 +275,7 @@
     <div class="subtop"><button class="back" id="c-back" data-i18n="backWorkshop">‹ Atelier</button><h1 id="c-title">Commande</h1></div>
     <div class="card">
       <h2 data-i18n="orderInfo">La commande</h2>
+      <div class="row"><span class="k" data-i18n="receiptNo">N° de reçu</span><span class="v" id="c-num" style="color:var(--gold);font-weight:700"></span></div>
       <div class="row"><span class="k" data-i18n="client">Cliente</span><span class="v" id="c-cliente"></span></div>
       <div class="row" id="c-phone-row"><span class="k" data-i18n="phone">Téléphone</span><span class="v" id="c-phone"></span></div>
       <div class="row" id="c-recu-row"><span class="k" data-i18n="received">Reçu</span><span class="v" id="c-recu"></span></div>
@@ -409,6 +418,11 @@
       tabApercu:"Aperçu", tabAtelier:"Atelier", tabBoutique:"Boutique", tabMesures:"Mesures",
       search:"Recherche globale", searchPh:"Nom, téléphone ou modèle", noResult:"Aucun résultat.",
       statOrders:"Commandes", statClients:"Clientes",
+      receiptNo:"N° de reçu", lineReceipt:"Reçu n° {v}",
+      searchOrdersPh:"Chercher une commande…", searchClientsPh:"Nom ou téléphone…",
+      ownerCode:"Code propriétaire", ownerCodePh:"4 à 6 chiffres", saveCode:"Enregistrer le code",
+      ownerCodeHint:"Sans code, n'importe qui peut modifier un prix ou un modèle. Avec un code, vous seul.",
+      codeSaved:"Code enregistré.", codeAsk:"Code propriétaire :", codeWrong:"Code incorrect.",
       loginTitle:"Connexion à votre espace", loginLead:"Entrez les identifiants créés à l'inscription.",
       email:"Email", emailPh:"vous@email.com", password:"Mot de passe", passwordPh:"Votre mot de passe",
       signIn:"Se connecter", logout:"Déconnexion", hello:"Bonjour",
@@ -470,6 +484,11 @@
       tabApercu:"Overview", tabAtelier:"Workshop", tabBoutique:"Shop", tabMesures:"Measurements",
       search:"Global search", searchPh:"Name, phone or model", noResult:"No result.",
       statOrders:"Orders", statClients:"Clients",
+      receiptNo:"Receipt no.", lineReceipt:"Receipt no. {v}",
+      searchOrdersPh:"Search an order…", searchClientsPh:"Name or phone…",
+      ownerCode:"Owner code", ownerCodePh:"4 to 6 digits", saveCode:"Save the code",
+      ownerCodeHint:"Without a code, anyone can change a price or a model. With a code, only you.",
+      codeSaved:"Code saved.", codeAsk:"Owner code:", codeWrong:"Wrong code.",
       loginTitle:"Sign in to your space", loginLead:"Enter the credentials created at sign-up.",
       email:"Email", emailPh:"you@email.com", password:"Password", passwordPh:"Your password",
       signIn:"Sign in", logout:"Sign out", hello:"Hello",
@@ -626,6 +645,20 @@
     if(d.length<=8 && d.indexOf(DEFAULT_CC)!==0) d=DEFAULT_CC+d;
     return d;
   }
+  const fmtNum = n => n ? String(n).padStart(3,"0") : "—";
+  function nextNumero(){
+    let mx=0;
+    COMMANDES.forEach(o=>{ const n=Number(o.numero)||0; if(n>mx) mx=n; });
+    return mx+1;
+  }
+  function askCode(){
+    const code = (BOUTIQUE && BOUTIQUE.codeAdmin) ? String(BOUTIQUE.codeAdmin) : "";
+    if(!code) return true;
+    const given = prompt(t("codeAsk"));
+    if(given === null) return false;
+    if(String(given).trim() !== code){ alert(t("codeWrong")); return false; }
+    return true;
+  }
   function fmtDate(v, lang){
     if(!v) return "";
     const p=String(v).split("-");
@@ -687,6 +720,7 @@
     $("d-slug").textContent = b.slug||"—";
     $("d-email").textContent = b.email||"—";
     if(b.whatsapp){ $("d-wa").textContent=b.whatsapp; $("d-wa-row").hidden=false; } else { $("d-wa-row").hidden=true; }
+    if(document.activeElement !== $("b-code")) $("b-code").value = b.codeAdmin || "";
     const sub=b.subscription||{}, badge=$("d-badge"), note=$("d-subnote");
     note.hidden=true; note.className="sub-note";
     $("d-plan").textContent = sub.plan==="trial" ? t("trial") : (sub.plan||"—");
@@ -736,18 +770,28 @@
     $("s-cmd").textContent = COMMANDES.length;
     $("s-cli").textContent = CLIENTES.length;
 
+    const qc=$("q-cmd").value.trim().toLowerCase();
     const cl=$("cmd-list"); cl.innerHTML="";
-    $("cmd-empty").hidden = COMMANDES.length>0;
-    COMMANDES.forEach(o=>{
+    const cmdShown = COMMANDES.filter(o=>{
+      if(!qc) return true;
+      return (fmtNum(o.numero)+" "+(o.clienteName||"")+" "+(o.article||"")+" "+(o.clientePhone||"")).toLowerCase().indexOf(qc)!==-1;
+    });
+    $("cmd-empty").hidden = cmdShown.length>0;
+    cmdShown.forEach(o=>{
       cl.appendChild(itemRow(
-        o.clienteName||t("noName"), o.article||"—",
+        o.clienteName||t("noName"), fmtNum(o.numero)+" · "+(o.article||"—"),
         t(stepKey(o.statut||"recu")), "gold", ()=>openCmd(o.id)
       ));
     });
 
+    const qk=$("q-cli").value.trim().toLowerCase();
     const kl=$("cli-list"); kl.innerHTML="";
-    $("cli-empty").hidden = CLIENTES.length>0;
-    CLIENTES.forEach(c=>{
+    const cliShown = CLIENTES.filter(c=>{
+      if(!qk) return true;
+      return ((c.name||"")+" "+(c.phone||"")).toLowerCase().indexOf(qk)!==-1;
+    });
+    $("cli-empty").hidden = cliShown.length>0;
+    cliShown.forEach(c=>{
       const el=document.createElement("div");
       el.className="cli-item";
       el.innerHTML='<div><div class="nm"></div><div class="ph"></div></div><span class="chev">›</span>';
@@ -766,7 +810,7 @@
     if(q.length<2) return;
     const hits=[];
     COMMANDES.forEach(o=>{
-      const hay=((o.clienteName||"")+" "+(o.article||"")+" "+(o.clientePhone||"")).toLowerCase();
+      const hay=(fmtNum(o.numero)+" "+(o.clienteName||"")+" "+(o.article||"")+" "+(o.clientePhone||"")).toLowerCase();
       if(hay.indexOf(q)!==-1) hits.push(itemRow(
         o.clienteName||t("noName"), o.article||"—", t("orders"), "soft", ()=>openCmd(o.id)
       ));
@@ -785,6 +829,8 @@
     hits.slice(0,8).forEach(el=>box.appendChild(el));
   }
   $("q").addEventListener("input", renderSearch);
+  $("q-cmd").addEventListener("input", renderLists);
+  $("q-cli").addEventListener("input", renderLists);
 
   $("cmd-add").addEventListener("click", ()=>openCmdForm(null));
   $("cli-add").addEventListener("click", ()=>openForm(null));
@@ -793,11 +839,12 @@
   $("cf-back").addEventListener("click", ()=> editingOrd ? openCmd(editingOrd) : (show("dash"), setTab("atelier")));
   $("form-back").addEventListener("click", ()=> editingId ? openFiche(editingId) : (show("dash"), setTab("mesures")));
   $("f-edit").addEventListener("click", ()=>openForm(currentCliente));
-  $("c-edit").addEventListener("click", ()=>openCmdForm(ORDID));
+  $("c-edit").addEventListener("click", ()=>{ if(askCode()) openCmdForm(ORDID); });
 
   function renderCmd(o, id){
     ORD=o; ORDID=id;
     $("c-title").textContent = o.clienteName || t("shopOrder");
+    $("c-num").textContent = fmtNum(o.numero);
     $("c-cliente").textContent = o.clienteName || t("noName");
     if(o.clientePhone){ $("c-phone").textContent=o.clientePhone; $("c-phone-row").hidden=false; } else $("c-phone-row").hidden=true;
     $("c-recu").textContent = t(o.recu==="materiel" ? "rcvMaterial" : "rcvFabric");
@@ -835,6 +882,7 @@
       .replace("{article}", o.article||"")
       .replace("{boutique}", (BOUTIQUE && BOUTIQUE.name) || "");
     if(st==="recu"){
+      if(o.numero) msg += "\n" + tm("lineReceipt").replace("{v}", fmtNum(o.numero));
       if(o.article) msg += "\n" + tm("lineModel").replace("{v}", o.article);
       if(o.prix || o.prix===0) msg += "\n" + tm("linePrice").replace("{v}", o.prix).replace("{cur}", CUR);
       if(o.livraison) msg += "\n" + tm("lineDelivery").replace("{v}", fmtDate(o.livraison, LANG_MSG));
@@ -856,7 +904,7 @@
     if(!ORD) return;
     const num=waNumber(BOUTIQUE && BOUTIQUE.whatsapp);
     if(!num){ alert(t("noShopPhone")); return; }
-    let msg = tm("shopOrder")+" — "+(ORD.clienteName||tm("noName"));
+    let msg = tm("shopOrder")+" "+fmtNum(ORD.numero)+" — "+(ORD.clienteName||tm("noName"));
     msg += "\n"+tm("garment")+" : "+(ORD.article||"—");
     msg += "\n"+tm("stage")+" : "+tm(stepKey(ORD.statut||"recu"));
     if(ORD.prix || ORD.prix===0) msg += "\n"+tm("price")+" : "+ORD.prix+" "+CUR;
@@ -924,7 +972,7 @@
     const ref = editingOrd
       ? doc(db,"boutiques",BID,"commandes",editingOrd)
       : doc(collection(db,"boutiques",BID,"commandes"));
-    if(!editingOrd){ data.statut="recu"; data.createdAt=serverTimestamp(); }
+    if(!editingOrd){ data.statut="recu"; data.numero=nextNumero(); data.createdAt=serverTimestamp(); }
     setDoc(ref, data, { merge:true }).catch(function(){});
     const id = editingOrd || ref.id;
     const existing = COMMANDES.find(x=>x.id===id);
@@ -938,6 +986,7 @@
 
   $("c-del").addEventListener("click", ()=>{
     if(!ORDID) return;
+    if(!askCode()) return;
     if(!confirm(t("confirmDeleteOrder"))) return;
     deleteDoc(doc(db,"boutiques",BID,"commandes",ORDID)).catch(function(){});
     COMMANDES = COMMANDES.filter(x=>x.id!==ORDID);
@@ -1056,6 +1105,14 @@
     CLIENTES = CLIENTES.filter(x=>x.id!==currentCliente);
     currentCliente=null; CLIDATA=null;
     renderLists(); show("dash"); setTab("mesures");
+  });
+
+  $("b-code-save").addEventListener("click", ()=>{
+    const v=$("b-code").value.replace(/\D/g,"").slice(0,6);
+    $("b-code").value=v;
+    if(BOUTIQUE) BOUTIQUE.codeAdmin=v;
+    setDoc(doc(db,"boutiques",BID), { codeAdmin:v, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+    alert(t("codeSaved"));
   });
 
   applyLang();
