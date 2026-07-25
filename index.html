@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0E0E0F">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>SanaaPro — Mon espace</title>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
@@ -78,6 +83,18 @@
   .msg{ margin-top:14px; font-size:13px; padding:12px 14px; border-radius:9px; display:none; }
   .msg.show{ display:block; }
   .msg.err{ background:var(--errbg); color:var(--err); }
+  .msg.ok{ background:var(--okbg); color:var(--ok); }
+  .pwrap{ position:relative; }
+  .pwrap input{ padding-right:52px; }
+  .eye{ position:absolute; right:4px; top:50%; transform:translateY(-50%); background:none; border:none;
+    font-size:19px; line-height:1; padding:10px 12px; cursor:pointer; opacity:.45; filter:grayscale(1); }
+  .eye.on{ opacity:1; filter:none; }
+  .flink{ display:block; width:100%; margin-top:14px; background:none; border:none; color:var(--gold);
+    font-size:13px; font-family:var(--sans); text-decoration:underline; cursor:pointer; padding:6px 0; }
+  .sep{ border-top:1px solid var(--line); margin:18px 0 0; padding-top:14px; text-align:center; }
+  .sep p{ margin:0 0 10px; font-size:13px; color:var(--muted); }
+  .sep a{ display:block; padding:13px; border:1px solid var(--line2); border-radius:10px;
+    color:var(--txt); font-size:14px; text-decoration:none; }
 
   .greet{ font-family:var(--serif); font-size:23px; margin:2px 2px 2px; }
   .greet .sub{ font-family:var(--sans); font-size:13px; color:var(--gold); margin-top:4px; letter-spacing:1px; text-transform:uppercase; }
@@ -207,9 +224,17 @@
       <label for="email" data-i18n="email">Email</label>
       <input id="email" type="email" data-i18n-ph="emailPh" placeholder="vous@email.com" autocomplete="email">
       <label for="pass" data-i18n="password">Mot de passe</label>
-      <input id="pass" type="password" data-i18n-ph="passwordPh" placeholder="Votre mot de passe" autocomplete="current-password">
+      <div class="pwrap">
+        <input id="pass" type="password" data-i18n-ph="passwordPh" placeholder="Votre mot de passe" autocomplete="current-password">
+        <button class="eye" id="eye-btn" type="button" aria-label="Afficher le mot de passe">👁</button>
+      </div>
       <button class="primary" id="login-btn" data-i18n="signIn">Se connecter</button>
+      <button class="flink" id="forgot-btn" data-i18n="forgot">Mot de passe oublié ?</button>
       <div class="msg err" id="login-msg"></div>
+      <div class="sep">
+        <p data-i18n="noAccount">Pas encore de compte ?</p>
+        <a href="../inscription/" data-i18n="newShop">Créer une nouvelle boutique</a>
+      </div>
     </div>
     <div class="foot" data-i18n="foot">SanaaPro — propulsé par votre atelier</div>
   </div>
@@ -486,7 +511,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { initializeFirestore, enableIndexedDbPersistence,
            doc, getDoc, getDocFromCache, collection, setDoc, getDocs, getDocsFromCache,
@@ -602,6 +627,12 @@
       loginTitle:"Connexion à votre espace", loginLead:"Entrez les identifiants créés à l'inscription.",
       email:"Email", emailPh:"vous@email.com", password:"Mot de passe", passwordPh:"Votre mot de passe",
       signIn:"Se connecter", logout:"Déconnexion", hello:"Bonjour",
+      showPw:"Afficher le mot de passe", hidePw:"Masquer le mot de passe",
+      forgot:"Mot de passe oublié ?",
+      resetSent:"Email de réinitialisation envoyé à {v}. Pensez à regarder vos spams.",
+      resetNeedEmail:"Entrez d'abord votre email, puis retouchez « Mot de passe oublié ».",
+      resetFail:"Envoi impossible. Vérifiez l'adresse et votre connexion.",
+      noAccount:"Pas encore de compte ?", newShop:"Créer une nouvelle boutique",
       offline:"Mode hors ligne — vos données sont enregistrées et se synchroniseront au retour du réseau.",
       subscription:"Abonnement", status:"Statut", plan:"Formule", expiry:"Échéance", trial:"Essai gratuit",
       orders:"Commandes", clients:"Clientes",
@@ -701,6 +732,12 @@
       loginTitle:"Sign in to your space", loginLead:"Enter the credentials created at sign-up.",
       email:"Email", emailPh:"you@email.com", password:"Password", passwordPh:"Your password",
       signIn:"Sign in", logout:"Sign out", hello:"Hello",
+      showPw:"Show password", hidePw:"Hide password",
+      forgot:"Forgot your password?",
+      resetSent:"Reset email sent to {v}. Remember to check your spam folder.",
+      resetNeedEmail:"Enter your email first, then tap « Forgot your password » again.",
+      resetFail:"Could not send. Check the address and your connection.",
+      noAccount:"No account yet?", newShop:"Create a new shop",
       offline:"Offline mode — your data is saved and will sync when the network returns.",
       subscription:"Subscription", status:"Status", plan:"Plan", expiry:"Renewal date", trial:"Free trial",
       orders:"Orders", clients:"Clients",
@@ -1015,10 +1052,38 @@
     return lines.length ? lines.join("\n") : tm("noMeasures");
   }
 
+  function loginMsg(text, kind){
+    const m=$("login-msg");
+    m.textContent=text;
+    m.className="msg "+(kind||"err")+" show";
+  }
+
+  $("eye-btn").addEventListener("click", ()=>{
+    const p=$("pass"), b=$("eye-btn");
+    const show = p.type === "password";
+    p.type = show ? "text" : "password";
+    b.classList.toggle("on", show);
+    b.setAttribute("aria-label", t(show ? "hidePw" : "showPw"));
+    p.focus();
+  });
+
+  $("forgot-btn").addEventListener("click", async ()=>{
+    const email=$("email").value.trim();
+    if(!email){ loginMsg(t("resetNeedEmail"), "err"); return; }
+    $("forgot-btn").disabled=true;
+    try{
+      await sendPasswordResetEmail(auth, email);
+      loginMsg(t("resetSent").replace("{v}", email), "ok");
+    }catch(e){
+      loginMsg(t("resetFail"), "err");
+    }
+    $("forgot-btn").disabled=false;
+  });
+
   $("login-btn").addEventListener("click", async () => {
-    const email=$("email").value.trim(), pass=$("pass").value, msg=$("login-msg");
-    msg.classList.remove("show");
-    if(!email || !pass){ msg.textContent=t("needBoth"); msg.classList.add("show"); return; }
+    const email=$("email").value.trim(), pass=$("pass").value;
+    $("login-msg").classList.remove("show");
+    if(!email || !pass){ loginMsg(t("needBoth"), "err"); return; }
     $("login-btn").disabled=true;
     try{ await signInWithEmailAndPassword(auth, email, pass); }
     catch(e){
@@ -1027,7 +1092,7 @@
       else if(e.code==="auth/invalid-email") m=t("badEmail");
       else if(e.code==="auth/too-many-requests") m=t("tooMany");
       else if(e.code==="auth/network-request-failed") m=t("noNet");
-      msg.textContent=m; msg.classList.add("show"); $("login-btn").disabled=false;
+      loginMsg(m, "err"); $("login-btn").disabled=false;
     }
   });
   $("logout-btn").addEventListener("click", () => signOut(auth));
@@ -1655,6 +1720,12 @@
   });
 
   applyLang();
+
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", function(){
+      navigator.serviceWorker.register("sw.js").catch(function(){});
+    });
+  }
 </script>
 </body>
 </html>
