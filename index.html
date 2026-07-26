@@ -301,10 +301,17 @@
     <div id="pane-boutique" hidden>
       <div class="card">
         <h2 data-i18n="myShop">Ma boutique</h2>
-        <div class="row"><span class="k" data-i18n="shopName">Nom</span><span class="v" id="d-shopname"></span></div>
+        <label data-i18n="shopNameLabel">Nom de l'atelier</label>
+        <input id="b-name" type="text" data-i18n-ph="shopNamePh" placeholder="Ex. Destin Couture">
+        <label data-i18n="ownerLabel">Votre nom</label>
+        <input id="b-owner" type="text" data-i18n-ph="ownerPh" placeholder="Votre nom complet">
+        <label data-i18n="phoneWa">Téléphone / WhatsApp</label>
+        <input id="b-wa" type="tel" placeholder="+220 …">
+        <button class="ghost" id="b-save" data-i18n="saveShop">Enregistrer les modifications</button>
+        <div class="msg" id="b-msg"></div>
+        <div class="row" style="margin-top:16px"><span class="k" data-i18n="email">Email</span><span class="v" id="d-email"></span></div>
         <div class="row"><span class="k" data-i18n="shopSlug">Identifiant</span><span class="v" id="d-slug"></span></div>
-        <div class="row"><span class="k" data-i18n="email">Email</span><span class="v" id="d-email"></span></div>
-        <div class="row" id="d-wa-row"><span class="k">WhatsApp</span><span class="v" id="d-wa"></span></div>
+        <p style="margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.5" data-i18n="idNote">L'email de connexion et l'identifiant ne se modifient pas ici.</p>
       </div>
       <div class="card">
         <h2 data-i18n="ownerCode">Code propriétaire</h2>
@@ -637,6 +644,11 @@
       subscription:"Abonnement", status:"Statut", plan:"Formule", expiry:"Échéance", trial:"Essai gratuit",
       orders:"Commandes", clients:"Clientes",
       myShop:"Ma boutique", shopName:"Nom", shopSlug:"Identifiant",
+      shopNameLabel:"Nom de l'atelier", shopNamePh:"Ex. Destin Couture",
+      ownerLabel:"Votre nom", ownerPh:"Votre nom complet",
+      saveShop:"Enregistrer les modifications", shopSaved:"Modifications enregistrées.",
+      shopNameRequired:"Le nom de l'atelier est obligatoire.",
+      idNote:"L'email de connexion et l'identifiant ne se modifient pas ici. Écrivez-nous si vous devez les changer.",
       backWorkshop:"‹ Atelier", backMeasures:"‹ Mesures",
       noClients:"Aucune cliente pour le moment.", noOrders:"Aucune commande pour le moment.",
       newClient:"+ Nouvelle cliente", newOrder:"+ Nouvelle commande",
@@ -742,6 +754,11 @@
       subscription:"Subscription", status:"Status", plan:"Plan", expiry:"Renewal date", trial:"Free trial",
       orders:"Orders", clients:"Clients",
       myShop:"My shop", shopName:"Name", shopSlug:"Identifier",
+      shopNameLabel:"Workshop name", shopNamePh:"e.g. Destin Couture",
+      ownerLabel:"Your name", ownerPh:"Your full name",
+      saveShop:"Save changes", shopSaved:"Changes saved.",
+      shopNameRequired:"The workshop name is required.",
+      idNote:"The sign-in email and the identifier cannot be changed here. Write to us if you need to change them.",
       backWorkshop:"‹ Workshop", backMeasures:"‹ Measurements",
       noClients:"No clients yet.", noOrders:"No orders yet.",
       newClient:"+ New client", newOrder:"+ New order",
@@ -1115,10 +1132,12 @@
     $("d-brand").textContent = b.name || "SanaaPro";
     $("d-owner").textContent = b.ownerName||"";
     $("d-name").textContent = b.name||"";
-    $("d-shopname").textContent = b.name||"—";
     $("d-slug").textContent = b.slug||"—";
     $("d-email").textContent = b.email||"—";
-    if(b.whatsapp){ $("d-wa").textContent=b.whatsapp; $("d-wa-row").hidden=false; } else { $("d-wa-row").hidden=true; }
+    const act = document.activeElement;
+    if(act !== $("b-name"))  $("b-name").value  = b.name||"";
+    if(act !== $("b-owner")) $("b-owner").value = b.ownerName||"";
+    if(act !== $("b-wa"))    $("b-wa").value    = b.whatsapp||"";
     if(document.activeElement !== $("b-code")) $("b-code").value = b.codeAdmin || "";
     const sub=b.subscription||{}, badge=$("d-badge"), note=$("d-subnote");
     note.hidden=true; note.className="sub-note";
@@ -1701,6 +1720,29 @@
     CLIENTES = CLIENTES.filter(x=>x.id!==currentCliente);
     currentCliente=null; CLIDATA=null;
     renderLists(); show("dash"); setTab("mesures");
+  });
+
+  $("b-save").addEventListener("click", async ()=>{
+    const msg=$("b-msg");
+    const name=$("b-name").value.trim();
+    if(!name){ msg.textContent=t("shopNameRequired"); msg.className="msg err show"; return; }
+    if(!await askCode()) return;
+    const data={
+      name,
+      ownerName:$("b-owner").value.trim(),
+      whatsapp:$("b-wa").value.trim(),
+      updatedAt:serverTimestamp()
+    };
+    if(BOUTIQUE){
+      BOUTIQUE.name=data.name;
+      BOUTIQUE.ownerName=data.ownerName;
+      BOUTIQUE.whatsapp=data.whatsapp;
+    }
+    setDoc(doc(db,"boutiques",BID), data, { merge:true }).catch(function(){});
+    renderDashboard(BOUTIQUE);
+    renderLists();
+    msg.textContent=t("shopSaved"); msg.className="msg ok show";
+    setTimeout(()=>{ msg.classList.remove("show"); }, 5000);
   });
 
   $("b-code-save").addEventListener("click", ()=>{
