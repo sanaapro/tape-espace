@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0E0E0F">
+<title>SanaaPro — Abonnements</title>
+<link rel="manifest" href="manifest-abonnes.json">
+<link rel="icon" href="icon-abo-192.png">
+<link rel="apple-touch-icon" href="icon-abo-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+<!-- SanaaPro — outil prestataire v1 : suivi et renouvellement des abonnements (base sanaapro-app) -->
+<style>
+  :root{
+    --bg:#0E0E0F; --panel:#17181A; --panel2:#1E1F22; --line:#2C2E32; --line2:#3A3D42;
+    --gold:#E0B23C; --txt:#EDEBE6; --muted:#98948C;
+    --ok:#4FD18B; --okbg:#12301F; --warn:#E0A44C; --warnbg:#33240F;
+    --err:#E96B6B; --errbg:#361A1A;
+    --serif:Georgia,"Times New Roman",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{ margin:0; min-height:100vh; background:var(--bg); color:var(--txt); font-family:var(--sans); }
+  .wrap{ max-width:520px; margin:0 auto; padding:18px 16px 48px; }
+  .head{ text-align:center; padding:12px 0 18px; border-bottom:1px solid var(--line); margin-bottom:16px; }
+  .head .name{ font-family:var(--serif); font-size:24px; color:var(--gold); font-weight:700; margin:0; }
+  .head .sub{ font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-top:6px; }
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:18px; margin-top:14px; }
+  .card h2{ font-family:var(--serif); font-size:17px; color:var(--gold); margin:0 0 12px; font-weight:700;
+    padding-bottom:10px; border-bottom:1px solid var(--line); }
+  label{ display:block; font-size:11px; letter-spacing:.5px; color:var(--muted); margin:14px 0 6px; text-transform:uppercase; }
+  input{ width:100%; padding:12px 14px; border:1px solid var(--line2); border-radius:9px;
+    font-size:15px; background:#101113; color:var(--txt); font-family:inherit; }
+  input:focus{ outline:none; border-color:var(--gold); }
+  button.primary{ width:100%; margin-top:18px; padding:15px; border:none; border-radius:10px;
+    background:var(--gold); color:#141310; font-size:15px; font-weight:700; cursor:pointer; font-family:var(--sans); }
+  button.primary:disabled{ opacity:.45; cursor:default; }
+  .logout{ margin-top:12px; background:none; border:1px solid var(--line2); color:var(--muted);
+    border-radius:20px; padding:7px 18px; font-size:13px; cursor:pointer; font-family:var(--sans); }
+  .msg{ margin-top:14px; font-size:13px; padding:12px 14px; border-radius:9px; display:none; line-height:1.5; }
+  .msg.show{ display:block; }
+  .msg.err{ background:var(--errbg); color:var(--err); }
+  .msg.ok{ background:var(--okbg); color:var(--ok); }
+  .stats{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:14px; }
+  .stat{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 8px; text-align:center; }
+  .stat .n{ font-family:var(--serif); font-size:24px; font-weight:700; line-height:1; }
+  .stat .l{ font-size:9px; letter-spacing:1px; color:var(--muted); text-transform:uppercase; margin-top:7px; }
+  .shop{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:12px; }
+  .shop .top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .shop .nm{ font-weight:700; font-size:16px; }
+  .shop .sl{ font-size:12px; color:var(--muted); margin-top:3px; }
+  .badge{ display:inline-block; padding:4px 11px; border-radius:20px; font-size:12px; font-weight:700; white-space:nowrap; }
+  .badge.ok{ background:var(--okbg); color:var(--ok); }
+  .badge.warn{ background:var(--warnbg); color:var(--warn); }
+  .badge.err{ background:var(--errbg); color:var(--err); }
+  .exp{ font-size:13px; color:var(--muted); margin-top:10px; }
+  .newsbox{ background:#33280E; border:1px solid var(--gold); border-radius:12px; padding:15px 16px; margin-top:14px; }
+  .newsbox .txt{ color:var(--gold); font-size:14px; font-weight:700; }
+  .newsbox button{ width:100%; margin-top:11px; padding:11px; border:1px solid var(--gold); border-radius:9px;
+    background:transparent; color:var(--gold); font-size:13px; font-weight:700; cursor:pointer; font-family:var(--sans); }
+  .newtag{ display:inline-block; background:var(--gold); color:#141310; font-size:10px; font-weight:700;
+    letter-spacing:1px; padding:3px 9px; border-radius:20px; margin-left:8px; vertical-align:middle; }
+  .tier{ display:flex; gap:8px; margin-top:12px; }
+  .tier button{ flex:1; padding:10px 4px; border:1px solid var(--line2); border-radius:9px; background:transparent;
+    color:var(--muted); font-size:13px; font-weight:700; cursor:pointer; font-family:var(--sans); }
+  .tier button.on{ background:var(--gold); color:#141310; border-color:var(--gold); }
+  .price-note{ text-align:center; font-size:12px; color:var(--muted); margin-top:14px; }
+  .quick{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:12px; }
+  .quick button{ padding:11px 4px; border:1px solid var(--gold); border-radius:9px; background:transparent;
+    color:var(--gold); font-size:13px; font-weight:700; cursor:pointer; font-family:var(--sans); }
+  .quick button:active{ background:#33280E; }
+  .quick button:disabled{ opacity:.4; }
+  .note{ text-align:center; font-size:11px; color:#5F5B54; margin-top:24px; line-height:1.7; }
+  .center{ text-align:center; color:var(--muted); padding:60px 20px; font-size:14px; line-height:1.7; }
+  [hidden]{ display:none !important; }
+  button:focus-visible,input:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+</style>
+</head>
+<body>
+<script>
+  window.addEventListener("error", function(e){
+    var l=document.getElementById("loading");
+    if(l && !l.hidden){ l.style.color="#E96B6B"; l.textContent="Erreur : "+(e.message||""); }
+  });
+  setTimeout(function(){
+    var l=document.getElementById("loading");
+    if(l && !l.hidden && !window.__loaded){ l.textContent="Chargement long — connexion lente. Patiente, ne recharge pas."; }
+  }, 30000);
+</script>
+<div class="wrap">
+
+  <div id="loading" class="center">Chargement…</div>
+  <div id="escape" class="center" style="padding:0 20px 40px" hidden>
+    <button class="logout" id="escape-btn">Changer de compte</button>
+  </div>
+
+  <div id="login" hidden>
+    <div class="head">
+      <div class="name">🔑 Abonnements</div>
+      <div class="sub">SanaaPro — outil prestataire</div>
+    </div>
+    <div class="card">
+      <h2>Connexion prestataire</h2>
+      <label for="email">Email admin</label>
+      <input id="email" type="email" placeholder="vous@email.com" autocomplete="email">
+      <label for="pass">Mot de passe</label>
+      <input id="pass" type="password" placeholder="Votre mot de passe" autocomplete="current-password">
+      <button class="primary" id="login-btn">Se connecter</button>
+      <div class="msg err" id="login-msg"></div>
+    </div>
+    <div class="note">
+      Cette page n'accède qu'aux licences.<br>
+      Aucune donnée cliente (commandes, mesures, contacts) n'est chargée ni visible ici.
+    </div>
+  </div>
+
+  <div id="board" hidden>
+    <div class="head">
+      <div class="name">🔑 Abonnements</div>
+      <div class="sub">SanaaPro — outil prestataire</div>
+      <button class="logout" id="logout-btn">Déconnexion</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="n" id="s-tot" style="color:var(--gold)">—</div><div class="l">Boutiques</div></div>
+      <div class="stat"><div class="n" id="s-soon" style="color:var(--warn)">—</div><div class="l">Bientôt</div></div>
+      <div class="stat"><div class="n" id="s-exp" style="color:var(--err)">—</div><div class="l">Expirées</div></div>
+    </div>
+
+    <div class="msg ok" id="board-msg"></div>
+    <div class="newsbox" id="newsbox" hidden>
+      <div class="txt" id="news-text"></div>
+      <button id="news-ack">Tout marquer comme vu</button>
+    </div>
+    <div id="list"></div>
+    <div class="price-note" id="price-note"></div>
+    <div class="note">
+      Cette page n'accède qu'aux licences.<br>
+      Aucune donnée cliente n'est chargée ni visible ici.
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { initializeFirestore, collection, getDocs, doc, setDoc, Timestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCqfAGGU7yFs_QYg70u3e5cNYPXQjRHzsI",
+    authDomain: "sanaapro-app.firebaseapp.com",
+    projectId: "sanaapro-app",
+    storageBucket: "sanaapro-app.firebasestorage.app",
+    messagingSenderId: "451762519937",
+    appId: "1:451762519937:web:0507928bc9f6ef0c937280"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = initializeFirestore(app, { experimentalForceLongPolling: true });
+
+  const $ = id => document.getElementById(id);
+  const show = v => {
+    ["loading","login","board"].forEach(x=>{ $(x).hidden = (x!==v); });
+    $("escape").hidden = (v !== "loading");
+    window.scrollTo(0,0);
+  };
+  document.getElementById("escape-btn").addEventListener("click", ()=>{
+    try{ signOut(auth); }catch(e){}
+  });
+  const DAY = 86400000;
+  const SEEN_KEY = "sanaapro_admin_lastseen";
+  let LAST_SEEN = null;
+  try{ const v = localStorage.getItem(SEEN_KEY); LAST_SEEN = v ? Number(v) : null; }catch(e){}
+  /* Première visite : on prend maintenant comme repère, sinon toutes les
+     boutiques existantes s'afficheraient comme nouvelles. */
+  if(!LAST_SEEN || isNaN(LAST_SEEN)){
+    LAST_SEEN = Date.now();
+    try{ localStorage.setItem(SEEN_KEY, String(LAST_SEEN)); }catch(e){}
+  }
+  const PRICE_STD = 500, PRICE_PREM = 750, CUR = "D";
+  let SHOPS = [];
+
+  function daysLeft(exp){ return exp ? Math.ceil((exp - new Date())/DAY) : null; }
+  function fmt(d){
+    return d ? d.toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"}) : "—";
+  }
+  function addMonths(base, n){
+    const d = new Date(base.getTime());
+    const day = d.getDate();
+    d.setMonth(d.getMonth() + n);
+    if(d.getDate() !== day) d.setDate(0);
+    return d;
+  }
+  function flash(text, cls){
+    const m=$("board-msg");
+    m.textContent=text; m.className="msg show "+cls;
+    setTimeout(()=>{ m.classList.remove("show"); }, 6000);
+  }
+
+  $("login-btn").addEventListener("click", async ()=>{
+    const email=$("email").value.trim(), pass=$("pass").value, msg=$("login-msg");
+    msg.classList.remove("show");
+    if(!email || !pass){ msg.textContent="Renseigne ton email et ton mot de passe."; msg.classList.add("show"); return; }
+    $("login-btn").disabled=true;
+    try{ await signInWithEmailAndPassword(auth, email, pass); }
+    catch(e){
+      let m="Connexion impossible. Réessaie.";
+      if(["auth/invalid-credential","auth/wrong-password","auth/user-not-found"].includes(e.code)) m="Email ou mot de passe incorrect.";
+      else if(e.code==="auth/invalid-email") m="Email invalide.";
+      else if(e.code==="auth/too-many-requests") m="Trop de tentatives. Patiente un instant.";
+      else if(e.code==="auth/network-request-failed") m="Pas de connexion.";
+      msg.textContent=m; msg.classList.add("show"); $("login-btn").disabled=false;
+    }
+  });
+  $("logout-btn").addEventListener("click", ()=>signOut(auth));
+
+  $("news-ack").addEventListener("click", ()=>{
+    LAST_SEEN = Date.now();
+    try{ localStorage.setItem(SEEN_KEY, String(LAST_SEEN)); }catch(e){}
+    render();
+  });
+
+  onAuthStateChanged(auth, async (user)=>{
+    window.__loaded = true;
+    if(!user){ show("login"); $("login-btn").disabled=false; return; }
+    show("loading"); $("loading").textContent="Lecture des abonnements…";
+    await loadShops();
+  });
+
+  async function loadShops(){
+    try{
+      const snap = await getDocs(collection(db,"boutiques"));
+      SHOPS = [];
+      snap.forEach(d=>{
+        const b = d.data(), sub = b.subscription || {};
+        let exp = null;
+        if(sub.expiresAt && sub.expiresAt.toDate) exp = sub.expiresAt.toDate();
+        let createdMs = 0;
+        if(b.createdAt && b.createdAt.toDate) createdMs = b.createdAt.toDate().getTime();
+        else if(sub.startAt && sub.startAt.toDate) createdMs = sub.startAt.toDate().getTime();
+        SHOPS.push({ id:d.id, name:b.name||"(sans nom)", slug:b.slug||"—",
+                     plan:sub.plan||"—", tier:sub.tier||"standard", exp, createdMs });
+      });
+      SHOPS.sort((a,b)=>{
+        if(!a.exp) return 1;
+        if(!b.exp) return -1;
+        return a.exp - b.exp;
+      });
+      render(); show("board");
+    }catch(e){
+      const denied = String(e && e.code || e).indexOf("permission-denied") !== -1;
+      if(denied){
+        const uid = (auth.currentUser && auth.currentUser.uid) || "?";
+        const mail = (auth.currentUser && auth.currentUser.email) || "?";
+        $("loading").innerHTML =
+          "Accès refusé par les règles Firestore.<br><br>" +
+          "Compte connecté :<br><b style=\"color:var(--gold)\">" + mail + "</b><br><br>" +
+          "Son identifiant :<br><b style=\"color:var(--gold);word-break:break-all;font-size:13px\">" + uid + "</b><br><br>" +
+          "Le document <b>/admins/" + uid + "</b> doit exister dans Firestore. " +
+          "Si l'identifiant affiché ici est différent de celui que tu as créé, c'est la cause du refus.";
+        const b=document.createElement("button");
+        b.className="primary";
+        b.style.maxWidth="320px";
+        b.style.margin="26px auto 0";
+        b.textContent="Changer de compte";
+        b.addEventListener("click", ()=>signOut(auth));
+        $("loading").appendChild(b);
+      } else {
+        $("loading").textContent = "Impossible de lire les abonnements. Réessaie avec une meilleure connexion.";
+      }
+      show("loading");
+    }
+  }
+
+  function render(){
+    let soon=0, expired=0, news=0;
+    const box=$("list"); box.innerHTML="";
+    SHOPS.forEach(s=>{
+      const dl = daysLeft(s.exp);
+      if(dl !== null && dl <= 0) expired++;
+      else if(dl !== null && dl <= 7) soon++;
+
+      const el=document.createElement("div");
+      el.className="shop";
+
+      const top=document.createElement("div"); top.className="top";
+      const left=document.createElement("div");
+      const nm=document.createElement("div"); nm.className="nm"; nm.textContent=s.name;
+      if(s.createdMs && s.createdMs > LAST_SEEN){
+        news++;
+        const tag=document.createElement("span"); tag.className="newtag"; tag.textContent="NOUVEAU";
+        nm.appendChild(tag);
+      }
+      const sl=document.createElement("div"); sl.className="sl";
+      sl.textContent=s.slug+" · "+(s.plan==="trial" ? "essai" : (s.tier==="premium" ? "premium" : "standard"));
+      left.appendChild(nm); left.appendChild(sl);
+      const bd=document.createElement("span");
+      if(dl === null){ bd.className="badge warn"; bd.textContent="sans échéance"; }
+      else if(dl <= 0){ bd.className="badge err"; bd.textContent="expiré"; }
+      else if(dl <= 7){ bd.className="badge warn"; bd.textContent=dl+" j"; }
+      else { bd.className="badge ok"; bd.textContent=dl+" j"; }
+      top.appendChild(left); top.appendChild(bd);
+      el.appendChild(top);
+
+      const exp=document.createElement("div"); exp.className="exp";
+      exp.textContent = "Échéance : "+fmt(s.exp);
+      el.appendChild(exp);
+
+      const tr=document.createElement("div"); tr.className="tier";
+      [["Standard","standard"],["Premium","premium"]].forEach(([label,val])=>{
+        const b=document.createElement("button");
+        b.textContent=label;
+        if(s.tier===val) b.classList.add("on");
+        b.addEventListener("click", async ()=>{
+          tr.querySelectorAll("button").forEach(x=>x.disabled=true);
+          try{
+            await setDoc(doc(db,"boutiques",s.id), { subscription:{ tier:val } }, { merge:true });
+            s.tier=val; render();
+            flash(s.name+" → "+label+".", "ok");
+          }catch(e){
+            tr.querySelectorAll("button").forEach(x=>x.disabled=false);
+            flash("Changement de formule refusé. Vérifie tes droits admin.", "err");
+          }
+        });
+        tr.appendChild(b);
+      });
+      el.appendChild(tr);
+
+      const q=document.createElement("div"); q.className="quick";
+      [["+1 mois",1],["+3 mois",3],["+1 an",12]].forEach(([label,n])=>{
+        const b=document.createElement("button");
+        b.textContent=label;
+        b.addEventListener("click", ()=>extend(s, n, q));
+        q.appendChild(b);
+      });
+      el.appendChild(q);
+      box.appendChild(el);
+    });
+    $("price-note").textContent = "Standard "+PRICE_STD+" "+CUR+"/mois · Premium "+PRICE_PREM+" "+CUR+"/mois";
+    if(news > 0){
+      $("news-text").textContent = news === 1
+        ? "1 nouvelle boutique depuis votre dernière visite."
+        : news + " nouvelles boutiques depuis votre dernière visite.";
+      $("newsbox").hidden = false;
+    } else {
+      $("newsbox").hidden = true;
+    }
+    $("s-tot").textContent = SHOPS.length;
+    $("s-soon").textContent = soon;
+    $("s-exp").textContent = expired;
+  }
+
+  async function extend(s, months, quickBox){
+    const now = new Date();
+    const base = (s.exp && s.exp > now) ? s.exp : now;
+    const target = addMonths(base, months);
+    const label = months===12 ? "1 an" : months+" mois";
+    if(!confirm("Prolonger « "+s.name+" » de "+label+" ?\nNouvelle échéance : "+fmt(target))) return;
+    quickBox.querySelectorAll("button").forEach(b=>b.disabled=true);
+    try{
+      await setDoc(doc(db,"boutiques",s.id), {
+        subscription: { expiresAt: Timestamp.fromDate(target), plan:"payant",
+                        tier: s.tier || "standard", renewedAt: Timestamp.fromDate(now) }
+      }, { merge:true });
+      s.exp = target; s.plan = "payant";
+      SHOPS.sort((a,b)=>{ if(!a.exp) return 1; if(!b.exp) return -1; return a.exp - b.exp; });
+      render();
+      flash(s.name+" prolongé jusqu'au "+fmt(target)+".", "ok");
+    }catch(e){
+      quickBox.querySelectorAll("button").forEach(b=>b.disabled=false);
+      const denied = String(e && e.code || e).indexOf("permission-denied") !== -1;
+      flash(denied
+        ? "Écriture refusée par les règles : ton compte n'est pas admin (document /admins/<ton UID> manquant)."
+        : "Échec de l'enregistrement. Vérifie la connexion et réessaie.", "err");
+    }
+  }
+</script>
+</body>
+</html>
