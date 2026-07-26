@@ -242,9 +242,18 @@
       render(); show("board");
     }catch(e){
       const denied = String(e && e.code || e).indexOf("permission-denied") !== -1;
-      $("loading").textContent = denied
-        ? "Lecture refusée par les règles Firestore. Ton compte n'est pas reconnu comme admin : il manque le document /admins/<ton UID> dans la console Firebase."
-        : "Impossible de lire les abonnements. Réessaie avec une meilleure connexion.";
+      if(denied){
+        const uid = (auth.currentUser && auth.currentUser.uid) || "?";
+        const mail = (auth.currentUser && auth.currentUser.email) || "?";
+        $("loading").innerHTML =
+          "Accès refusé par les règles Firestore.<br><br>" +
+          "Compte connecté :<br><b style=\"color:var(--gold)\">" + mail + "</b><br><br>" +
+          "Son identifiant :<br><b style=\"color:var(--gold);word-break:break-all;font-size:13px\">" + uid + "</b><br><br>" +
+          "Le document <b>/admins/" + uid + "</b> doit exister dans Firestore. " +
+          "Si l'identifiant affiché ici est différent de celui que tu as créé, c'est la cause du refus.";
+      } else {
+        $("loading").textContent = "Impossible de lire les abonnements. Réessaie avec une meilleure connexion.";
+      }
       show("loading");
     }
   }
