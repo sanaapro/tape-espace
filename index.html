@@ -55,6 +55,16 @@
   .tabs button.on{ color:var(--gold); border-bottom-color:var(--gold); font-weight:700; }
 
   .stats{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+  .stats3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px; margin-top:14px; }
+  .stats3 .stat{ padding:15px 6px; }
+  .stats3 .n{ font-size:22px; }
+  .secttl{ font-family:var(--serif); font-size:16px; color:var(--gold); font-weight:700;
+    margin:22px 0 2px; padding-bottom:9px; border-bottom:1px solid var(--line); }
+  .selljs{ display:flex; gap:8px; margin-top:11px; }
+  .selljs input{ flex:1; }
+  .selljs button{ flex:0 0 auto; width:auto; margin:0; padding:11px 16px; border:1px solid var(--gold);
+    border-radius:9px; background:transparent; color:var(--gold); font-size:13px; font-weight:700;
+    cursor:pointer; font-family:var(--sans); }
   .stat{ background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:18px 12px; text-align:center; }
   .stat .n{ font-family:var(--serif); font-size:30px; color:var(--gold); font-weight:700; line-height:1; }
   .stat .l{ font-size:10px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; margin-top:8px; }
@@ -262,8 +272,10 @@
       <button data-tab="atelier" data-i18n="tabAtelier">Atelier</button>
       <button data-tab="boutique" data-i18n="tabBoutique">Boutique</button>
       <button data-tab="mesures" data-i18n="tabMesures">Mesures</button>
+      <button data-tab="finances" data-i18n="tabFinances">Finances</button>
       <button data-tab="staff" data-i18n="tabStaff">Salariés</button>
       <button data-tab="visits" data-i18n="tabVisitors">Visiteurs</button>
+      <button data-tab="reglages" data-i18n="tabSettings">Réglages</button>
     </div>
 
     <div class="offline-note" id="off-dash" data-i18n="offline" hidden>Mode hors ligne — vos données sont enregistrées et se synchroniseront au retour du réseau.</div>
@@ -292,13 +304,26 @@
     </div>
 
     <div id="pane-atelier" hidden>
+      <div class="stats3">
+        <div class="stat"><div class="n" id="a-tot">0</div><div class="l" data-i18n="statOrders">Commandes</div></div>
+        <div class="stat"><div class="n" id="a-pret">0</div><div class="l" data-i18n="statReady">Prêtes</div></div>
+        <div class="stat"><div class="n" id="a-du">0</div><div class="l" data-i18n="statDue">À encaisser</div></div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="quickExpense">Dépense rapide — Atelier</h2>
+        <input id="da-cat" type="text" data-i18n-ph="expCatPh" placeholder="Catégorie (ex. fil, boutons)">
+        <input id="da-amt" type="number" step="1" inputmode="decimal" placeholder="0" style="margin-top:10px">
+        <input id="da-desc" type="text" data-i18n-ph="expDescPh" placeholder="Description (optionnel)" style="margin-top:10px">
+        <button class="ghost" id="da-save" data-i18n="saveExpense">Enregistrer la dépense</button>
+        <div class="msg" id="da-msg"></div>
+      </div>
       <button class="primary" id="cmd-add" data-i18n="newOrder">+ Nouvelle commande</button>
       <input id="q-cmd" type="search" data-i18n-ph="searchOrdersPh" placeholder="Chercher une commande…" style="margin-top:14px">
       <div id="cmd-list"></div>
       <div id="cmd-empty" class="empty" data-i18n="noOrders" hidden>Aucune commande pour le moment.</div>
     </div>
 
-    <div id="pane-boutique" hidden>
+    <div id="pane-reglages" hidden>
       <div class="card">
         <h2 data-i18n="myShop">Ma boutique</h2>
         <label data-i18n="shopNameLabel">Nom de l'atelier</label>
@@ -307,6 +332,8 @@
         <input id="b-owner" type="text" data-i18n-ph="ownerPh" placeholder="Votre nom complet">
         <label data-i18n="phoneWa">Téléphone / WhatsApp</label>
         <input id="b-wa" type="tel" placeholder="+220 …">
+        <label data-i18n="currency">Monnaie affichée</label>
+        <input id="b-devise" type="text" maxlength="6" data-i18n-ph="currencyPh" placeholder="D, CFA, ₦…">
         <button class="ghost" id="b-save" data-i18n="saveShop">Enregistrer les modifications</button>
         <div class="msg" id="b-msg"></div>
         <div class="row" style="margin-top:16px"><span class="k" data-i18n="email">Email</span><span class="v" id="d-email"></span></div>
@@ -335,6 +362,57 @@
         </div>
         <button class="ghost" id="b-otp-gen" data-i18n="otpGen">Générer un code à usage unique</button>
       </div>
+    </div>
+
+    <div id="pane-boutique" hidden>
+      <div class="stats3">
+        <div class="stat"><div class="n" id="b-arts">0</div><div class="l" data-i18n="statArticles">Articles</div></div>
+        <div class="stat"><div class="n" id="b-qte">0</div><div class="l" data-i18n="statInStock">En stock</div></div>
+        <div class="stat"><div class="n" id="b-rec">0</div><div class="l" data-i18n="statTodaySales">Recette du jour</div></div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="quickExpenseShop">Dépense rapide — Boutique</h2>
+        <input id="db-cat" type="text" data-i18n-ph="expCatShopPh" placeholder="Catégorie (ex. réapprovisionnement)">
+        <input id="db-amt" type="number" step="1" inputmode="decimal" placeholder="0" style="margin-top:10px">
+        <input id="db-desc" type="text" data-i18n-ph="expDescPh" placeholder="Description (optionnel)" style="margin-top:10px">
+        <button class="ghost" id="db-save" data-i18n="saveExpense">Enregistrer la dépense</button>
+        <div class="msg" id="db-msg"></div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="newArticle">Nouvel article</h2>
+        <label data-i18n="artName">Nom de l'article</label>
+        <input id="ar-name" type="text" data-i18n-ph="artNamePh" placeholder="Ex. Bazin riche 6 yards">
+        <label data-i18n="artType">Type</label>
+        <input id="ar-type" type="text" data-i18n-ph="artTypePh" placeholder="Ex. Tissu, prêt-à-porter">
+        <div class="mgrid">
+          <div><label data-i18n="artQte">Quantité</label><input id="ar-qte" type="number" step="1" inputmode="numeric" placeholder="0"></div>
+          <div><label data-i18n="artPrix">Prix de vente</label><input id="ar-prix" type="number" step="1" inputmode="decimal" placeholder="0"></div>
+        </div>
+        <button class="primary" id="ar-add" data-i18n="addStock">Ajouter au stock</button>
+        <div class="msg" id="ar-msg"></div>
+      </div>
+      <div id="st-title" class="secttl" data-i18n="shopStock">Stock de la boutique</div>
+      <div id="stock-list"></div>
+      <div id="stock-empty" class="empty" data-i18n="noStock" hidden>Aucun article en stock.</div>
+    </div>
+
+    <div id="pane-finances" hidden>
+      <div class="seg big" data-seg="periode" style="margin-bottom:6px">
+        <button data-p="jour" data-i18n="pJour" style="flex:1">Jour</button><button data-p="semaine" data-i18n="pSemaine" style="flex:1">Semaine</button><button data-p="mois" data-i18n="pMois" style="flex:1">Mois</button><button data-p="annee" data-i18n="pAnnee" style="flex:1">Année</button>
+      </div>
+      <div class="card">
+        <h2 id="fi-title" data-i18n="balance">Bilan</h2>
+        <div class="row"><span class="k" data-i18n="tabAtelier">Atelier</span><span class="v" id="fi-atelier">—</span></div>
+        <div class="row"><span class="k" data-i18n="tabBoutique">Boutique</span><span class="v" id="fi-boutique">—</span></div>
+        <div class="mline" style="margin-top:8px;border-top:1px solid var(--line);padding-top:12px">
+          <span class="k" data-i18n="income">Recettes</span><span class="v" id="fi-rec" style="color:var(--ok)">0</span>
+        </div>
+        <div class="mline"><span class="k" data-i18n="expenses">Dépenses</span><span class="v" id="fi-dep" style="color:var(--err)">0</span></div>
+        <div class="mline"><span class="k" data-i18n="netBalance">Solde</span><span class="v" id="fi-sol">0</span></div>
+      </div>
+      <div class="secttl" data-i18n="lastMoves">Derniers mouvements</div>
+      <div id="mv-list"></div>
+      <div id="mv-empty" class="empty" data-i18n="noMoves" hidden>Aucun mouvement sur cette période.</div>
     </div>
 
     <div id="pane-mesures" hidden>
@@ -410,6 +488,17 @@
       <div class="row" id="c-price-row"><span class="k" data-i18n="price">Prix</span><span class="v" id="c-prix"></span></div>
       <div class="row" id="c-liv-row"><span class="k" data-i18n="delivery">Livraison prévue</span><span class="v" id="c-liv"></span></div>
       <div class="row" id="c-notes-row"><span class="k" data-i18n="notes">Notes</span><span class="v" id="c-notes"></span></div>
+    </div>
+    <div class="card">
+      <h2 data-i18n="payment">Paiement</h2>
+      <div class="mline"><span class="k" data-i18n="price">Prix</span><span class="v" id="p-prix">—</span></div>
+      <div class="mline"><span class="k" data-i18n="paid">Payé</span><span class="v" id="p-paye" style="color:var(--ok)">—</span></div>
+      <div class="mline"><span class="k" data-i18n="due">Reste à payer</span><span class="v" id="p-reste">—</span></div>
+      <div class="selljs">
+        <input id="p-amt" type="number" step="1" inputmode="decimal" placeholder="0">
+        <button id="p-add" data-i18n="cashIn">Encaisser</button>
+      </div>
+      <div class="msg" id="p-msg"></div>
     </div>
     <div class="card">
       <h2 data-i18n="stage">Étape</h2>
@@ -544,7 +633,8 @@
   const PRICE_STD = 500, PRICE_PREM = 750;
   const SANAAPRO_WA = "2207628683";
   const STEPS = ["recu","coupe","essayage","pret"];
-  const TABS = ["apercu","atelier","boutique","mesures","staff","visits"];
+  const TABS = ["apercu","atelier","boutique","mesures","finances","staff","visits","reglages"];
+  const PERIODES = ["jour","semaine","mois","annee"];
   const ROLES = ["roleCouturier","roleCouturiere","roleManager","roleVendeuse","roleApprenti","roleMenagere"];
 
   const MESURES_F = [
@@ -591,7 +681,27 @@
       uiLabel:"Interface", msgLabel:"Messages clients",
       online:"En ligne — synchronisé", offlineShort:"Hors ligne",
       tabApercu:"Aperçu", tabAtelier:"Atelier", tabBoutique:"Boutique", tabMesures:"Mesures",
-      tabStaff:"Salariés", tabVisitors:"Visiteurs",
+      tabStaff:"Salariés", tabVisitors:"Visiteurs", tabFinances:"Finances", tabSettings:"Réglages",
+      statReady:"Prêtes", statDue:"À encaisser",
+      statArticles:"Articles", statInStock:"En stock", statTodaySales:"Recette du jour",
+      quickExpense:"Dépense rapide — Atelier", quickExpenseShop:"Dépense rapide — Boutique",
+      expCatPh:"Catégorie (ex. fil, boutons)", expCatShopPh:"Catégorie (ex. réapprovisionnement)",
+      expDescPh:"Description (optionnel)", saveExpense:"Enregistrer la dépense",
+      expenseRequired:"Indiquez une catégorie et un montant.", expenseSaved:"Dépense enregistrée :",
+      newArticle:"Nouvel article", artName:"Nom de l'article", artNamePh:"Ex. Bazin riche 6 yards",
+      artType:"Type", artTypePh:"Ex. Tissu, prêt-à-porter", artQte:"Quantité", artPrix:"Prix de vente",
+      addStock:"Ajouter au stock", artAdded:"Article ajouté.", stockAdded:"Stock augmenté.",
+      artNameRequired:"Le nom de l'article est obligatoire.",
+      shopStock:"Stock de la boutique", noStock:"Aucun article en stock.",
+      sell:"Vendre", notEnoughStock:"Quantité supérieure au stock disponible.",
+      confirmDeleteArt:"Retirer cet article du stock ?",
+      payment:"Paiement", paid:"Payé", due:"Reste à payer", cashIn:"Encaisser",
+      cashedIn:"Encaissé :", amountRequired:"Indiquez un montant.",
+      balance:"Bilan", income:"Recettes", expenses:"Dépenses", netBalance:"Solde",
+      lastMoves:"Derniers mouvements", noMoves:"Aucun mouvement sur cette période.",
+      pJour:"Jour", pSemaine:"Semaine", pMois:"Mois", pAnnee:"Année",
+      currency:"Monnaie affichée", currencyPh:"D, CFA, ₦…",
+      mPaid:"Votre commande est entièrement réglée. Merci.",
       standard:"Standard", premium:"Premium",
       typeLabel:"Type de commande", typeHint:"Type de commande (à choisir avant de remplir)", tConfection:"Confection", tRetouche:"Retouche", tPap:"Prêt-à-porter",
       genreLabel:"Genre du client", gFemme:"Femme", gHomme:"Homme",
@@ -701,7 +811,27 @@
       uiLabel:"Interface", msgLabel:"Client messages",
       online:"Online — synced", offlineShort:"Offline",
       tabApercu:"Overview", tabAtelier:"Workshop", tabBoutique:"Shop", tabMesures:"Measurements",
-      tabStaff:"Staff", tabVisitors:"Visitors",
+      tabStaff:"Staff", tabVisitors:"Visitors", tabFinances:"Finances", tabSettings:"Settings",
+      statReady:"Ready", statDue:"To collect",
+      statArticles:"Items", statInStock:"In stock", statTodaySales:"Today's sales",
+      quickExpense:"Quick expense — Workshop", quickExpenseShop:"Quick expense — Shop",
+      expCatPh:"Category (e.g. thread, buttons)", expCatShopPh:"Category (e.g. restocking)",
+      expDescPh:"Description (optional)", saveExpense:"Save the expense",
+      expenseRequired:"Enter a category and an amount.", expenseSaved:"Expense saved:",
+      newArticle:"New item", artName:"Item name", artNamePh:"e.g. Bazin riche 6 yards",
+      artType:"Type", artTypePh:"e.g. Fabric, ready-to-wear", artQte:"Quantity", artPrix:"Selling price",
+      addStock:"Add to stock", artAdded:"Item added.", stockAdded:"Stock increased.",
+      artNameRequired:"The item name is required.",
+      shopStock:"Shop stock", noStock:"No item in stock.",
+      sell:"Sell", notEnoughStock:"Quantity higher than available stock.",
+      confirmDeleteArt:"Remove this item from stock?",
+      payment:"Payment", paid:"Paid", due:"Left to pay", cashIn:"Collect",
+      cashedIn:"Collected:", amountRequired:"Enter an amount.",
+      balance:"Balance", income:"Income", expenses:"Expenses", netBalance:"Net",
+      lastMoves:"Latest movements", noMoves:"No movement in this period.",
+      pJour:"Day", pSemaine:"Week", pMois:"Month", pAnnee:"Year",
+      currency:"Displayed currency", currencyPh:"D, CFA, ₦…",
+      mPaid:"Your order is fully paid. Thank you.",
       standard:"Standard", premium:"Premium",
       typeLabel:"Order type", typeHint:"Order type (choose before filling in)", tConfection:"Tailoring", tRetouche:"Alteration", tPap:"Ready-to-wear",
       genreLabel:"Client gender", gFemme:"Woman", gHomme:"Man",
@@ -834,6 +964,9 @@
   let editingId=null, currentCliente=null, CLIDATA=null;
   let CLIENTES=[], COMMANDES=[], ORD=null, ORDID=null, editingOrd=null;
   let SALARIES=[], VISITEURS=[], ROLE=null;
+  let STOCK=[], MOUV=[], PERIODE="jour";
+  const cur = () => (BOUTIQUE && BOUTIQUE.devise) ? BOUTIQUE.devise : CUR;
+  const money = n => (Math.round(Number(n)||0)) + " " + cur();
   let GENRE_FORM="femme", GENRE_CF="femme", GENRE_MES="femme", TYPE_CF="confection";
   const TYPES = ["confection","retouche","pap"];
   const typeKey = x => "t" + x.charAt(0).toUpperCase() + x.slice(1);
@@ -906,9 +1039,15 @@
         });
         return;
       }
-      const cur = (kind==="cfgenre") ? GENRE_CF : (kind==="ingenre") ? GENRE_FORM : GENRE_MES;
+      if(kind==="periode"){
+        s.querySelectorAll("button").forEach(b=>{
+          b.classList.toggle("on", b.getAttribute("data-p")===PERIODE);
+        });
+        return;
+      }
+      const g = (kind==="cfgenre") ? GENRE_CF : (kind==="ingenre") ? GENRE_FORM : GENRE_MES;
       s.querySelectorAll("button").forEach(b=>{
-        b.classList.toggle("on", b.getAttribute("data-g")===cur);
+        b.classList.toggle("on", b.getAttribute("data-g")===g);
       });
     });
   }
@@ -972,6 +1111,9 @@
         paintSegs();
         return;
       }
+      if(seg==="periode"){
+        PERIODE=b.getAttribute("data-p"); paintSegs(); renderFinances(); return;
+      }
       const g=b.getAttribute("data-g");
       if(seg==="cfgenre"){ GENRE_CF=g; paintSegs(); fillClienteSelect(); buildCmdGrid(currentMesuresFromForm("cm-")); }
       else if(seg==="ingenre"){ GENRE_FORM=g; paintSegs(); buildInputs(currentMesuresFromForm("m-")); }
@@ -1006,6 +1148,23 @@
   window.addEventListener("online", updateOffline);
   window.addEventListener("offline", updateOffline);
 
+  function addMouv(type, source, montant, label, extra){
+    const m = Object.assign({
+      type, source, montant: Number(montant)||0, label: label||"",
+      ms: Date.now(), createdAt: serverTimestamp()
+    }, extra||{});
+    const ref = doc(collection(db,"boutiques",BID,"mouvements"));
+    setDoc(ref, m, { merge:true }).catch(function(){});
+    MOUV.unshift(Object.assign({ id:ref.id }, m));
+    return ref.id;
+  }
+  function periodStart(p){
+    const d=new Date();
+    if(p==="jour"){ d.setHours(0,0,0,0); return d.getTime(); }
+    if(p==="semaine"){ const j=(d.getDay()+6)%7; d.setDate(d.getDate()-j); d.setHours(0,0,0,0); return d.getTime(); }
+    if(p==="mois"){ return new Date(d.getFullYear(), d.getMonth(), 1).getTime(); }
+    return new Date(d.getFullYear(), 0, 1).getTime();
+  }
   function waNumber(raw){
     let d=(raw||"").replace(/\D/g,"");
     if(d.indexOf("00")===0) d=d.slice(2);
@@ -1137,7 +1296,8 @@
     const act = document.activeElement;
     if(act !== $("b-name"))  $("b-name").value  = b.name||"";
     if(act !== $("b-owner")) $("b-owner").value = b.ownerName||"";
-    if(act !== $("b-wa"))    $("b-wa").value    = b.whatsapp||"";
+    if(act !== $("b-wa"))     $("b-wa").value     = b.whatsapp||"";
+    if(act !== $("b-devise")) $("b-devise").value = b.devise||CUR;
     if(document.activeElement !== $("b-code")) $("b-code").value = b.codeAdmin || "";
     const sub=b.subscription||{}, badge=$("d-badge"), note=$("d-subnote");
     note.hidden=true; note.className="sub-note";
@@ -1168,6 +1328,16 @@
         if(ai!==bi) return ai-bi;
         return (a.clienteName||"").localeCompare(b.clienteName||"");
       });
+    }catch(e){}
+    try{
+      const s = await getDocsSmart(collection(db,"boutiques",BID,"stock"));
+      STOCK=[]; s.forEach(d=>{ STOCK.push(Object.assign({ id:d.id }, d.data())); });
+      STOCK.sort((a,b)=>(a.nom||"").localeCompare(b.nom||""));
+    }catch(e){}
+    try{
+      const s = await getDocsSmart(collection(db,"boutiques",BID,"mouvements"));
+      MOUV=[]; s.forEach(d=>{ MOUV.push(Object.assign({ id:d.id }, d.data())); });
+      MOUV.sort((a,b)=>(Number(b.ms)||0)-(Number(a.ms)||0));
     }catch(e){}
     try{
       const s = await getDocsSmart(collection(db,"boutiques",BID,"salaries"));
@@ -1232,7 +1402,106 @@
 
     renderStaff();
     renderVisits();
+    renderStock();
+    renderAtelierStats();
+    renderFinances();
     renderSearch();
+  }
+
+  function resteDe(o){
+    const p = Number(o.prix)||0, pa = Number(o.paye)||0;
+    return Math.max(0, p - pa);
+  }
+
+  function renderAtelierStats(){
+    $("a-tot").textContent = COMMANDES.length;
+    $("a-pret").textContent = COMMANDES.filter(o=>(o.statut||"recu")==="pret").length;
+    let du=0; COMMANDES.forEach(o=>{ du += resteDe(o); });
+    $("a-du").textContent = du;
+  }
+
+  function renderStock(){
+    const box=$("stock-list"); box.innerHTML="";
+    let totQ=0;
+    STOCK.forEach(a=>{ totQ += Number(a.qte)||0; });
+    $("b-arts").textContent = STOCK.length;
+    $("b-qte").textContent = totQ;
+    const d0=periodStart("jour");
+    let rec=0;
+    MOUV.forEach(m=>{ if(m.type==="recette" && m.source==="boutique" && Number(m.ms)>=d0) rec += Number(m.montant)||0; });
+    $("b-rec").textContent = rec;
+    $("stock-empty").hidden = STOCK.length>0;
+
+    STOCK.forEach(a=>{
+      const el=document.createElement("div"); el.className="rec";
+      const nm=document.createElement("div"); nm.className="nm"; nm.textContent=a.nom||"—";
+      const l1=document.createElement("div"); l1.className="ln";
+      l1.textContent = (a.type ? a.type+" · " : "") + t("artQte")+" : "+(Number(a.qte)||0) + " · " + money(a.prix);
+      el.appendChild(nm); el.appendChild(l1);
+
+      const row=document.createElement("div"); row.className="selljs";
+      const inp=document.createElement("input");
+      inp.type="number"; inp.step="1"; inp.inputMode="numeric"; inp.placeholder="1"; inp.value="1";
+      const b=document.createElement("button"); b.textContent=t("sell");
+      b.addEventListener("click", ()=>{
+        const q=parseFloat(inp.value)||0;
+        const dispo=Number(a.qte)||0;
+        if(q<=0) return;
+        if(q>dispo){ alert(t("notEnoughStock")); return; }
+        a.qte = dispo - q;
+        setDoc(doc(db,"boutiques",BID,"stock",a.id), { qte:a.qte, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+        addMouv("recette","boutique",(Number(a.prix)||0)*q, (a.nom||"")+" ×"+q, { articleId:a.id });
+        renderLists();
+      });
+      row.appendChild(inp); row.appendChild(b);
+      el.appendChild(row);
+
+      const rm=document.createElement("button"); rm.className="rm"; rm.textContent=t("remove");
+      rm.addEventListener("click", async ()=>{
+        if(!await askCode()) return;
+        if(!confirm(t("confirmDeleteArt"))) return;
+        deleteDoc(doc(db,"boutiques",BID,"stock",a.id)).catch(function(){});
+        STOCK = STOCK.filter(x=>x.id!==a.id);
+        renderLists();
+      });
+      el.appendChild(rm);
+      box.appendChild(el);
+    });
+  }
+
+  function renderFinances(){
+    const from = periodStart(PERIODE);
+    let recA=0, depA=0, recB=0, depB=0;
+    const rows=[];
+    MOUV.forEach(m=>{
+      if((Number(m.ms)||0) < from) return;
+      const v=Number(m.montant)||0;
+      if(m.source==="boutique"){ if(m.type==="recette") recB+=v; else depB+=v; }
+      else { if(m.type==="recette") recA+=v; else depA+=v; }
+      rows.push(m);
+    });
+    const rec=recA+recB, dep=depA+depB;
+    $("fi-title").textContent = t("balance")+" — "+t("p"+PERIODE.charAt(0).toUpperCase()+PERIODE.slice(1));
+    $("fi-atelier").textContent  = money(recA)+" / −"+money(depA);
+    $("fi-boutique").textContent = money(recB)+" / −"+money(depB);
+    $("fi-rec").textContent = money(rec);
+    $("fi-dep").textContent = money(dep);
+    $("fi-sol").textContent = money(rec-dep);
+    $("fi-sol").style.color = (rec-dep) < 0 ? "var(--err)" : "var(--ok)";
+
+    const box=$("mv-list"); box.innerHTML="";
+    $("mv-empty").hidden = rows.length>0;
+    rows.slice(0,12).forEach(m=>{
+      const el=document.createElement("div"); el.className="rec";
+      const nm=document.createElement("div"); nm.className="nm";
+      nm.textContent = (m.type==="recette" ? "+ " : "− ") + money(m.montant);
+      nm.style.color = m.type==="recette" ? "var(--ok)" : "var(--err)";
+      const l1=document.createElement("div"); l1.className="ln";
+      l1.textContent = (m.label||"—") + " · " + t(m.source==="boutique" ? "tabBoutique" : "tabAtelier");
+      const l2=document.createElement("div"); l2.className="ln"; l2.textContent = fmtWhen(m.ms);
+      el.appendChild(nm); el.appendChild(l1); el.appendChild(l2);
+      box.appendChild(el);
+    });
   }
 
   function roleLabel(x){ return x.roleKey ? t(x.roleKey) : (x.poste || "—"); }
@@ -1242,7 +1511,7 @@
     let total=0;
     SALARIES.forEach(x=>{ total += Number(x.salaire)||0; });
     $("st-count").textContent = SALARIES.length;
-    $("st-total").textContent = total+" "+CUR;
+    $("st-total").textContent = money(total);
     $("st-empty").hidden = SALARIES.length>0;
     SALARIES.forEach(x=>{
       const el=document.createElement("div"); el.className="rec";
@@ -1251,7 +1520,7 @@
       l1.textContent = roleLabel(x) + (x.phone ? " · "+x.phone : "");
       const l2=document.createElement("div"); l2.className="ln";
       const amt=document.createElement("span"); amt.className="amt";
-      amt.textContent=(Number(x.salaire)||0)+" "+CUR;
+      amt.textContent=money(x.salaire);
       l2.appendChild(amt);
       const rm=document.createElement("button"); rm.className="rm"; rm.textContent=t("remove");
       rm.addEventListener("click", ()=>{
@@ -1387,6 +1656,55 @@
   $("q-cmd").addEventListener("input", renderLists);
   $("q-cli").addEventListener("input", renderLists);
 
+  function bindExpense(prefix, source){
+    $(prefix+"-save").addEventListener("click", ()=>{
+      const msg=$(prefix+"-msg");
+      const cat=$(prefix+"-cat").value.trim();
+      const v=$(prefix+"-amt").value.trim();
+      const amt=parseFloat(v);
+      if(!cat || v==="" || isNaN(amt) || amt<=0){
+        msg.textContent=t("expenseRequired"); msg.className="msg err show"; return;
+      }
+      const desc=$(prefix+"-desc").value.trim();
+      addMouv("depense", source, amt, desc ? (cat+" — "+desc) : cat);
+      $(prefix+"-cat").value=""; $(prefix+"-amt").value=""; $(prefix+"-desc").value="";
+      msg.textContent=t("expenseSaved")+" "+money(amt); msg.className="msg ok show";
+      setTimeout(()=>{ msg.classList.remove("show"); }, 4000);
+      renderLists();
+    });
+  }
+  bindExpense("da","atelier");
+  bindExpense("db","boutique");
+
+  $("ar-add").addEventListener("click", ()=>{
+    const msg=$("ar-msg");
+    const nom=$("ar-name").value.trim();
+    if(!nom){ msg.textContent=t("artNameRequired"); msg.className="msg err show"; return; }
+    const q=parseFloat($("ar-qte").value)||0;
+    const p=parseFloat($("ar-prix").value)||0;
+    const type=$("ar-type").value.trim();
+    const exist = STOCK.find(x => (x.nom||"").toLowerCase() === nom.toLowerCase());
+    if(exist){
+      exist.qte = (Number(exist.qte)||0) + q;
+      if(p>0) exist.prix = p;
+      if(type) exist.type = type;
+      setDoc(doc(db,"boutiques",BID,"stock",exist.id),
+             { qte:exist.qte, prix:exist.prix, type:exist.type||"", updatedAt:serverTimestamp() },
+             { merge:true }).catch(function(){});
+      msg.textContent=t("stockAdded"); msg.className="msg ok show";
+    } else {
+      const data={ nom, type, qte:q, prix:p, createdAtMs:Date.now(), updatedAt:serverTimestamp() };
+      const ref=doc(collection(db,"boutiques",BID,"stock"));
+      setDoc(ref, data, { merge:true }).catch(function(){});
+      STOCK.push(Object.assign({ id:ref.id }, data));
+      STOCK.sort((a,b)=>(a.nom||"").localeCompare(b.nom||""));
+      msg.textContent=t("artAdded"); msg.className="msg ok show";
+    }
+    $("ar-name").value=""; $("ar-type").value=""; $("ar-qte").value=""; $("ar-prix").value="";
+    setTimeout(()=>{ msg.classList.remove("show"); }, 4000);
+    renderLists();
+  });
+
   $("cmd-add").addEventListener("click", ()=>openCmdForm(null));
   $("cli-add").addEventListener("click", ()=>openForm(null));
   $("c-back").addEventListener("click", ()=>{ show("dash"); setTab("atelier"); });
@@ -1405,7 +1723,7 @@
     $("c-type").textContent = t(typeKey(o.type || "confection"));
     $("c-recu").textContent = t(o.recu==="materiel" ? "rcvMaterial" : (o.recu==="vetement" ? "rcvGarment" : "rcvFabric"));
     $("c-article").textContent = o.article || "—";
-    if(o.prix || o.prix===0){ $("c-prix").textContent = o.prix+" "+CUR; $("c-price-row").hidden=false; } else $("c-price-row").hidden=true;
+    if(o.prix || o.prix===0){ $("c-prix").textContent = money(o.prix); $("c-price-row").hidden=false; } else $("c-price-row").hidden=true;
     if(o.livraison){ $("c-liv").textContent = fmtDate(o.livraison, LANG_UI); $("c-liv-row").hidden=false; } else $("c-liv-row").hidden=true;
     if(o.notes){ $("c-notes").textContent=o.notes; $("c-notes-row").hidden=false; } else $("c-notes-row").hidden=true;
     const cur=o.statut||"recu", ci=STEPS.indexOf(cur);
@@ -1414,6 +1732,11 @@
       b.classList.toggle("on", i===ci);
       b.classList.toggle("done", i<ci);
     });
+    const pr=Number(o.prix)||0, pa=Number(o.paye)||0, re=resteDe(o);
+    $("p-prix").textContent  = (o.prix||o.prix===0) ? money(pr) : "—";
+    $("p-paye").textContent  = money(pa);
+    $("p-reste").textContent = money(re);
+    $("p-reste").style.color = re>0 ? "var(--warn)" : "var(--ok)";
     $("c-wa-cli").hidden = !o.clientePhone;
     $("c-wa-shop").hidden = !(BOUTIQUE && BOUTIQUE.whatsapp);
   }
@@ -1445,14 +1768,34 @@
     if(st==="recu"){
       if(o.numero) msg += "\n" + tm("lineReceipt").replace("{v}", fmtNum(o.numero));
       if(o.article) msg += "\n" + tm("lineModel").replace("{v}", o.article);
-      if(o.prix || o.prix===0) msg += "\n" + tm("linePrice").replace("{v}", o.prix).replace("{cur}", CUR);
+      if(o.prix || o.prix===0) msg += "\n" + tm("linePrice").replace("{v}", Math.round(Number(o.prix)||0)).replace("{cur}", cur());
       if(o.livraison) msg += "\n" + tm("lineDelivery").replace("{v}", fmtDate(o.livraison, LANG_MSG));
     }
-    if(st==="pret" && (o.prix || o.prix===0)){
-      msg += "\n" + tm("mAmount").replace("{prix}", o.prix).replace("{cur}", CUR);
+    if(st==="pret"){
+      const re=resteDe(o);
+      if(re>0) msg += "\n" + tm("mAmount").replace("{prix}", Math.round(re)).replace("{cur}", cur());
+      else if(o.prix) msg += "\n" + tm("mPaid");
     }
     return msg + "\n" + tm("waFoot");
   }
+
+  $("p-add").addEventListener("click", ()=>{
+    if(!ORD || !ORDID) return;
+    const msg=$("p-msg");
+    const v=$("p-amt").value.trim();
+    const amt=parseFloat(v);
+    if(v==="" || isNaN(amt) || amt<=0){ msg.textContent=t("amountRequired"); msg.className="msg err show"; return; }
+    const paye=(Number(ORD.paye)||0)+amt;
+    ORD.paye=paye;
+    const local=COMMANDES.find(x=>x.id===ORDID);
+    if(local) local.paye=paye;
+    setDoc(doc(db,"boutiques",BID,"commandes",ORDID), { paye, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+    addMouv("recette","atelier",amt, t("shopOrder")+" "+fmtNum(ORD.numero)+" — "+(ORD.clienteName||""), { commandeId:ORDID });
+    $("p-amt").value="";
+    msg.textContent=t("cashedIn")+" "+money(amt); msg.className="msg ok show";
+    setTimeout(()=>{ msg.classList.remove("show"); }, 4000);
+    renderCmd(ORD, ORDID); renderLists();
+  });
 
   $("c-wa-cli").addEventListener("click", ()=>{
     if(!ORD) return;
@@ -1468,7 +1811,7 @@
     let msg = tm("shopOrder")+" "+fmtNum(ORD.numero)+" — "+(ORD.clienteName||tm("noName"));
     msg += "\n"+tm("garment")+" : "+(ORD.article||"—");
     msg += "\n"+tm("stage")+" : "+tm(stepKey(ORD.statut||"recu"));
-    if(ORD.prix || ORD.prix===0) msg += "\n"+tm("price")+" : "+ORD.prix+" "+CUR;
+    if(ORD.prix || ORD.prix===0) msg += "\n"+tm("price")+" : "+money(ORD.prix);
     if(ORD.livraison) msg += "\n"+tm("delivery")+" : "+fmtDate(ORD.livraison, LANG_MSG);
     if(ORD.clientePhone) msg += "\n"+tm("phone")+" : "+ORD.clientePhone;
     if(ORD.notes) msg += "\n"+tm("notes")+" : "+ORD.notes;
@@ -1731,12 +2074,14 @@
       name,
       ownerName:$("b-owner").value.trim(),
       whatsapp:$("b-wa").value.trim(),
+      devise:($("b-devise").value.trim() || CUR),
       updatedAt:serverTimestamp()
     };
     if(BOUTIQUE){
       BOUTIQUE.name=data.name;
       BOUTIQUE.ownerName=data.ownerName;
       BOUTIQUE.whatsapp=data.whatsapp;
+      BOUTIQUE.devise=data.devise;
     }
     setDoc(doc(db,"boutiques",BID), data, { merge:true }).catch(function(){});
     renderDashboard(BOUTIQUE);
