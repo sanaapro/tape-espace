@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0E0E0F">
+<title>SanaaPro — Sauvegarde</title>
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+<!-- SanaaPro — page de sauvegarde v1 — LECTURE SEULE : cette page n'ecrit jamais dans Firestore -->
+<style>
+  :root{
+    --bg:#0E0E0F; --panel:#17181A; --panel2:#1E1F22; --line:#2C2E32; --line2:#3A3D42;
+    --gold:#E0B23C; --txt:#EDEBE6; --muted:#98948C;
+    --ok:#4FD18B; --okbg:#12301F; --err:#E96B6B; --errbg:#361A1A;
+    --serif:Georgia,"Times New Roman",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);
+       -webkit-text-size-adjust:100%}
+  .wrap{max-width:560px;margin:0 auto;padding:18px 16px 48px}
+  .lang{display:flex;justify-content:flex-end;margin-bottom:10px}
+  .seg{display:inline-flex;border:1px solid var(--line2);border-radius:999px;overflow:hidden}
+  .seg button{background:transparent;color:var(--muted);border:0;padding:6px 14px;
+              font-size:13px;font-family:var(--sans)}
+  .seg button.on{background:var(--gold);color:#17140A;font-weight:700}
+  header{text-align:center;margin:6px 0 22px}
+  .name{font-family:var(--serif);font-size:30px;letter-spacing:.5px;color:var(--gold)}
+  .tag{font-size:14px;color:var(--muted);margin-top:4px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+        padding:18px 16px;margin-bottom:14px}
+  h2{font-family:var(--serif);font-size:19px;margin:0 0 12px;font-weight:normal}
+  label{display:block;font-size:13px;color:var(--muted);margin:12px 0 6px}
+  input{width:100%;background:var(--panel2);border:1px solid var(--line2);color:var(--txt);
+        border-radius:10px;padding:13px 12px;font-size:16px;font-family:var(--sans)}
+  input:focus{outline:2px solid var(--gold);outline-offset:1px}
+  .pwrap{position:relative}
+  .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:transparent;
+       border:0;font-size:18px;padding:8px 10px;color:var(--muted)}
+  .eye.on{color:var(--gold)}
+  button.act{width:100%;background:var(--gold);color:#17140A;border:0;border-radius:12px;
+             padding:15px;font-size:16px;font-weight:700;margin-top:16px;font-family:var(--sans)}
+  button.act:disabled{opacity:.45}
+  button.ghost{width:100%;background:transparent;color:var(--muted);border:1px solid var(--line2);
+               border-radius:12px;padding:12px;font-size:14px;margin-top:10px;font-family:var(--sans)}
+  .msg{border-radius:10px;padding:11px 12px;font-size:14px;margin-top:14px;line-height:1.45}
+  .msg.err{background:var(--errbg);color:var(--err)}
+  .msg.ok{background:var(--okbg);color:var(--ok)}
+  .rows{margin-top:6px}
+  .row{display:flex;justify-content:space-between;align-items:center;
+       padding:11px 2px;border-bottom:1px solid var(--line)}
+  .row:last-child{border-bottom:0}
+  .row .k{font-size:15px}
+  .row .v{font-family:var(--serif);font-size:17px;color:var(--gold);min-width:52px;text-align:right}
+  .row .v.wait{color:var(--muted);font-family:var(--sans);font-size:14px}
+  .shop{font-family:var(--serif);font-size:21px;color:var(--gold)}
+  .who{font-size:13px;color:var(--muted);margin-top:3px;word-break:break-all}
+  .note{font-size:13px;color:var(--muted);line-height:1.5;margin-top:14px}
+  .safe{display:inline-block;font-size:12px;color:var(--ok);border:1px solid #244a34;
+        background:var(--okbg);border-radius:999px;padding:4px 11px;margin-top:10px}
+  .hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="lang">
+    <div class="seg" id="seg">
+      <button data-l="en">EN</button><button data-l="fr">FR</button>
+    </div>
+  </div>
+
+  <header>
+    <div class="name">SanaaPro</div>
+    <div class="tag" data-i="tag">Save a copy of your workshop</div>
+  </header>
+
+  <!-- CONNEXION -->
+  <div class="card" id="cLogin">
+    <h2 data-i="signin">Sign in</h2>
+    <label data-i="email">Email</label>
+    <input id="email" type="email" autocomplete="username" inputmode="email">
+    <label data-i="pass">Password</label>
+    <div class="pwrap">
+      <input id="pass" type="password" autocomplete="current-password">
+      <button class="eye" id="eye" type="button">&#128065;</button>
+    </div>
+    <button class="act" id="bLogin" data-i="signin">Sign in</button>
+    <div id="loginMsg"></div>
+    <div class="note" data-i="loginNote">Use the same email and password as your SanaaPro app.</div>
+  </div>
+
+  <!-- SAUVEGARDE -->
+  <div class="card hide" id="cMain">
+    <div class="shop" id="shopName">&nbsp;</div>
+    <div class="who" id="who">&nbsp;</div>
+    <div class="safe" data-i="readonly">Read-only — nothing is changed</div>
+
+    <div class="rows" id="rows">
+      <div class="row"><div class="k" data-i="clients">Clients</div><div class="v wait" id="n_clientes">—</div></div>
+      <div class="row"><div class="k" data-i="orders">Orders</div><div class="v wait" id="n_commandes">—</div></div>
+      <div class="row"><div class="k" data-i="money">Money entries</div><div class="v wait" id="n_mouvements">—</div></div>
+      <div class="row"><div class="k" data-i="stock">Stock items</div><div class="v wait" id="n_stock">—</div></div>
+      <div class="row"><div class="k" data-i="staff">Staff</div><div class="v wait" id="n_salaries">—</div></div>
+      <div class="row"><div class="k" data-i="visitors">Visitors</div><div class="v wait" id="n_visiteurs">—</div></div>
+    </div>
+
+    <button class="act" id="bSave" data-i="save">Save my data</button>
+    <div id="saveMsg"></div>
+    <div class="note" data-i="mailNote">Send the file to your own email or WhatsApp. A copy left on this phone is lost with the phone.</div>
+    <button class="ghost" id="bOut" data-i="signout">Sign out</button>
+  </div>
+
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { initializeFirestore, doc, getDoc, collection, getDocs }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCqfAGGU7yFs_QYg70u3e5cNYPXQjRHzsI",
+    authDomain: "sanaapro-app.firebaseapp.com",
+    projectId: "sanaapro-app",
+    storageBucket: "sanaapro-app.firebasestorage.app",
+    messagingSenderId: "451762519937",
+    appId: "1:451762519937:web:0507928bc9f6ef0c937280"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = initializeFirestore(app, { experimentalForceLongPolling: true });
+
+  /* ---------- langues ---------- */
+  const T = {
+    en:{
+      tag:"Save a copy of your workshop", signin:"Sign in", email:"Email", pass:"Password",
+      loginNote:"Use the same email and password as your SanaaPro app.",
+      readonly:"Read-only — nothing is changed",
+      clients:"Clients", orders:"Orders", money:"Money entries", stock:"Stock items",
+      staff:"Staff", visitors:"Visitors",
+      save:"Save my data", signout:"Sign out",
+      mailNote:"Send the file to your own email or WhatsApp. A copy left on this phone is lost with the phone.",
+      reading:"Reading your data…", ready:"Ready. Tap Save my data.",
+      done:"Saved. Choose your email or WhatsApp to keep it safe.",
+      downloaded:"File downloaded. Attach it to an email to yourself.",
+      empty:"Nothing to save yet.",
+      offline:"No connection. Try again when you have network.",
+      failAuth:"Wrong email or password.", failRead:"Could not read your data. Check your connection."
+    },
+    fr:{
+      tag:"Gardez une copie de votre atelier", signin:"Se connecter", email:"Email", pass:"Mot de passe",
+      loginNote:"Le même email et le même mot de passe que votre application SanaaPro.",
+      readonly:"Lecture seule — rien n'est modifié",
+      clients:"Clientes", orders:"Commandes", money:"Écritures d'argent", stock:"Articles en stock",
+      staff:"Salariés", visitors:"Visiteurs",
+      save:"Sauvegarder mes données", signout:"Se déconnecter",
+      mailNote:"Envoyez le fichier sur votre email ou votre WhatsApp. Une copie restée sur ce téléphone disparaît avec lui.",
+      reading:"Lecture de vos données…", ready:"Prêt. Touchez Sauvegarder mes données.",
+      done:"Sauvegardé. Choisissez votre email ou WhatsApp pour le mettre à l'abri.",
+      downloaded:"Fichier téléchargé. Joignez-le à un email que vous vous envoyez.",
+      empty:"Rien à sauvegarder pour le moment.",
+      offline:"Pas de connexion. Réessayez quand vous aurez du réseau.",
+      failAuth:"Email ou mot de passe incorrect.", failRead:"Lecture impossible. Vérifiez votre connexion."
+    }
+  };
+  let L = localStorage.getItem("sanaapro_lang_ui") === "fr" ? "fr" : "en";
+  function paint(){
+    document.documentElement.lang = L;
+    document.querySelectorAll("[data-i]").forEach(function(el){
+      const v = T[L][el.getAttribute("data-i")];
+      if (v) el.textContent = v;
+    });
+    document.querySelectorAll("#seg button").forEach(function(b){
+      b.classList.toggle("on", b.dataset.l === L);
+    });
+  }
+  document.getElementById("seg").addEventListener("click", function(e){
+    const b = e.target.closest("button"); if(!b) return;
+    L = b.dataset.l; localStorage.setItem("sanaapro_lang_ui", L); paint();
+  });
+  paint();
+
+  /* ---------- helpers ---------- */
+  const $ = function(id){ return document.getElementById(id); };
+  function say(box, text, kind){
+    box.innerHTML = "";
+    if(!text) return;
+    const d = document.createElement("div");
+    d.className = "msg " + (kind || "ok");
+    d.textContent = text;
+    box.appendChild(d);
+  }
+
+  /* ---------- oeil ---------- */
+  $("eye").addEventListener("click", function(){
+    const p = $("pass");
+    const show = p.type === "password";
+    p.type = show ? "text" : "password";
+    this.classList.toggle("on", show);
+  });
+
+  /* ---------- connexion ---------- */
+  $("bLogin").addEventListener("click", async function(){
+    const email = $("email").value.trim();
+    const pass  = $("pass").value;
+    if(!email || !pass) return;
+    this.disabled = true;
+    say($("loginMsg"), "", "ok");
+    try{
+      await signInWithEmailAndPassword(auth, email, pass);
+    }catch(err){
+      say($("loginMsg"), T[L].failAuth, "err");
+      this.disabled = false;
+    }
+  });
+  $("pass").addEventListener("keydown", function(e){ if(e.key === "Enter") $("bLogin").click(); });
+
+  $("bOut").addEventListener("click", function(){ signOut(auth); });
+
+  /* ---------- lecture ---------- */
+  const SUBS = ["clientes","commandes","mouvements","stock","salaries","visiteurs"];
+  let BID = null, SHOP = null, DATA = null;
+
+  onAuthStateChanged(auth, async function(user){
+    if(!user){
+      $("cMain").classList.add("hide");
+      $("cLogin").classList.remove("hide");
+      $("bLogin").disabled = false;
+      DATA = null;
+      return;
+    }
+    BID = user.uid;
+    $("cLogin").classList.add("hide");
+    $("cMain").classList.remove("hide");
+    $("who").textContent = user.email || "";
+    $("bSave").disabled = true;
+    say($("saveMsg"), T[L].reading, "ok");
+    try{
+      await readAll();
+      $("bSave").disabled = false;
+      say($("saveMsg"), T[L].ready, "ok");
+    }catch(err){
+      say($("saveMsg"), T[L].failRead, "err");
+    }
+  });
+
+  async function readAll(){
+    const bSnap = await getDoc(doc(db, "boutiques", BID));
+    SHOP = bSnap.exists() ? bSnap.data() : {};
+    $("shopName").textContent = SHOP.nom || SHOP.name || "—";
+
+    DATA = { boutique: SHOP };
+    for(const s of SUBS){
+      const snap = await getDocs(collection(db, "boutiques", BID, s));
+      const list = [];
+      snap.forEach(function(d){ list.push(Object.assign({ id:d.id }, d.data())); });
+      DATA[s] = list;
+      const cell = $("n_" + s);
+      cell.textContent = String(list.length);
+      cell.classList.remove("wait");
+    }
+  }
+
+  /* ---------- sauvegarde ---------- */
+  function stamp(){
+    const d = new Date(), p = function(n){ return String(n).padStart(2, "0"); };
+    return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate())
+         + "-" + p(d.getHours()) + p(d.getMinutes());
+  }
+  function slug(){
+    const s = (SHOP && (SHOP.slug || SHOP.nom || SHOP.name)) || "atelier";
+    return String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30);
+  }
+
+  $("bSave").addEventListener("click", async function(){
+    if(!DATA) return;
+    this.disabled = true;
+    const total = SUBS.reduce(function(a, s){ return a + (DATA[s] ? DATA[s].length : 0); }, 0);
+    if(total === 0){ say($("saveMsg"), T[L].empty, "err"); this.disabled = false; return; }
+
+    const payload = {
+      sanaapro_sauvegarde: 1,
+      boutiqueId: BID,
+      faiteLe: new Date().toISOString(),
+      contenu: DATA
+    };
+    const name = "sanaapro-" + slug() + "-" + stamp() + ".json";
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type:"application/json" });
+
+    try{
+      const file = new File([blob], name, { type:"application/json" });
+      if(navigator.canShare && navigator.canShare({ files:[file] })){
+        await navigator.share({ files:[file], title:name });
+        say($("saveMsg"), T[L].done, "ok");
+        this.disabled = false;
+        return;
+      }
+    }catch(err){
+      /* partage annule ou indisponible : on retombe sur le telechargement */
+    }
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+    say($("saveMsg"), T[L].downloaded, "ok");
+    this.disabled = false;
+  });
+</script>
+</body>
+</html>
