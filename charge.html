@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0E0E0F">
+<title>SanaaPro — Plan de charge</title>
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+<!-- SanaaPro — plan de charge v1 — LECTURE SEULE : cette page n'ecrit jamais dans Firestore -->
+<style>
+  :root{
+    --bg:#0E0E0F; --panel:#17181A; --panel2:#1E1F22; --line:#2C2E32; --line2:#3A3D42;
+    --gold:#E0B23C; --txt:#EDEBE6; --muted:#98948C;
+    --ok:#4FD18B; --okbg:#12301F; --err:#E96B6B; --errbg:#361A1A;
+    --serif:Georgia,"Times New Roman",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);-webkit-text-size-adjust:100%}
+  .wrap{max-width:560px;margin:0 auto;padding:18px 16px 48px}
+  .lang{display:flex;justify-content:flex-end;margin-bottom:10px}
+  .seg{display:inline-flex;border:1px solid var(--line2);border-radius:999px;overflow:hidden}
+  .seg button{background:transparent;color:var(--muted);border:0;padding:6px 14px;font-size:13px;font-family:var(--sans)}
+  .seg button.on{background:var(--gold);color:#17140A;font-weight:700}
+  header{text-align:center;margin:6px 0 20px}
+  .name{font-family:var(--serif);font-size:28px;color:var(--gold)}
+  .tag{font-size:14px;color:var(--muted);margin-top:4px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+  h2{font-family:var(--serif);font-size:18px;margin:0 0 12px;font-weight:normal}
+  label{display:block;font-size:13px;color:var(--muted);margin:12px 0 6px}
+  input{width:100%;background:var(--panel2);border:1px solid var(--line2);color:var(--txt);
+        border-radius:10px;padding:13px 12px;font-size:16px;font-family:var(--sans)}
+  input:focus{outline:2px solid var(--gold);outline-offset:1px}
+  .pwrap{position:relative}
+  .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:transparent;border:0;
+       font-size:18px;padding:8px 10px;color:var(--muted)}
+  .eye.on{color:var(--gold)}
+  button.act{width:100%;background:var(--gold);color:#17140A;border:0;border-radius:12px;padding:15px;
+             font-size:16px;font-weight:700;margin-top:16px;font-family:var(--sans)}
+  button.ghost{width:100%;background:transparent;color:var(--muted);border:1px solid var(--line2);
+               border-radius:12px;padding:12px;font-size:14px;margin-top:10px;font-family:var(--sans)}
+  .msg{border-radius:10px;padding:11px 12px;font-size:14px;margin-top:14px;line-height:1.45}
+  .msg.err{background:var(--errbg);color:var(--err)}
+  .msg.ok{background:var(--okbg);color:var(--ok)}
+  .shop{font-family:var(--serif);font-size:20px;color:var(--gold)}
+  .safe{display:inline-block;font-size:12px;color:var(--ok);border:1px solid #244a34;background:var(--okbg);
+        border-radius:999px;padding:4px 11px;margin-top:8px}
+
+  .capline{display:flex;align-items:center;gap:12px;margin-top:14px}
+  .capline input{width:78px;text-align:center;font-family:var(--serif);font-size:19px;color:var(--gold)}
+  .capline span{font-size:14px;color:var(--muted);line-height:1.4}
+
+  .alert{border-radius:12px;padding:13px 14px;margin-bottom:14px;font-size:15px;line-height:1.5}
+  .alert.late{background:var(--errbg);border:1px solid #5b2626;color:#F0A0A0}
+  .alert.nodate{background:#2A2410;border:1px solid #4A3F19;color:#E5C878}
+  .alert b{font-family:var(--serif);font-size:18px}
+
+  .week{display:flex;gap:5px;margin-top:6px}
+  .day{flex:1;border-radius:10px;border:1px solid var(--line2);background:var(--panel2);
+       padding:8px 2px 9px;text-align:center}
+  .day .d{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .day .n{font-family:var(--serif);font-size:20px;margin-top:3px}
+  .day .dn{font-size:10px;color:var(--muted);margin-top:1px}
+  .day.z .n{color:var(--line2)}
+  .day.g{border-color:#2C5A3E} .day.g .n{color:var(--ok)}
+  .day.y{border-color:#5A4A19} .day.y .n{color:var(--gold)}
+  .day.r{border-color:#5b2626;background:#221616} .day.r .n{color:var(--err)}
+  .day.today{box-shadow:0 0 0 2px var(--gold) inset}
+
+  .legend{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
+  .dgroup{border-top:1px solid var(--line);padding:12px 0 4px}
+  .dgroup:first-child{border-top:0}
+  .dhead{display:flex;justify-content:space-between;align-items:baseline}
+  .dhead .dt{font-family:var(--serif);font-size:16px}
+  .dhead .dc{font-size:13px}
+  .dc.g{color:var(--ok)} .dc.y{color:var(--gold)} .dc.r{color:var(--err)}
+  .item{font-size:14px;color:var(--muted);padding:5px 0 0 2px;line-height:1.4}
+  .item b{color:var(--txt);font-weight:600}
+  .empty{font-size:14px;color:var(--muted);line-height:1.5;padding:6px 0}
+  .hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="lang">
+    <div class="seg" id="seg"><button data-l="en">EN</button><button data-l="fr">FR</button></div>
+  </div>
+
+  <header>
+    <div class="name">SanaaPro</div>
+    <div class="tag" data-i="tag">Know what you have promised, before you say yes</div>
+  </header>
+
+  <div class="card" id="cLogin">
+    <h2 data-i="signin">Sign in</h2>
+    <label data-i="email">Email</label>
+    <input id="email" type="email" autocomplete="username" inputmode="email">
+    <label data-i="pass">Password</label>
+    <div class="pwrap">
+      <input id="pass" type="password" autocomplete="current-password">
+      <button class="eye" id="eye" type="button">&#128065;</button>
+    </div>
+    <button class="act" id="bLogin" data-i="signin">Sign in</button>
+    <div id="loginMsg"></div>
+  </div>
+
+  <div id="cMain" class="hide">
+
+    <div class="card">
+      <div class="shop" id="shopName">&nbsp;</div>
+      <div class="safe" data-i="readonly">Read-only — nothing is changed</div>
+      <div class="capline">
+        <input id="cap" type="number" min="1" max="99" inputmode="numeric">
+        <span data-i="capLabel">pieces you can deliver in one day</span>
+      </div>
+    </div>
+
+    <div id="alerts"></div>
+
+    <div class="card">
+      <h2 data-i="thisWeek">This week</h2>
+      <div class="week" id="week"></div>
+      <div class="legend" data-i="legend">Green: comfortable. Gold: filling up. Red: more than you can deliver.</div>
+    </div>
+
+    <div class="card">
+      <h2 data-i="next">Next two weeks</h2>
+      <div id="list"></div>
+    </div>
+
+    <button class="ghost" id="bOut" data-i="signout">Sign out</button>
+  </div>
+
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { initializeFirestore, doc, getDoc, collection, getDocs }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCqfAGGU7yFs_QYg70u3e5cNYPXQjRHzsI",
+    authDomain: "sanaapro-app.firebaseapp.com",
+    projectId: "sanaapro-app",
+    storageBucket: "sanaapro-app.firebasestorage.app",
+    messagingSenderId: "451762519937",
+    appId: "1:451762519937:web:0507928bc9f6ef0c937280"
+  };
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = initializeFirestore(app, { experimentalForceLongPolling: true });
+
+  const T = {
+    en:{ tag:"Know what you have promised, before you say yes",
+      signin:"Sign in", email:"Email", pass:"Password", signout:"Sign out",
+      readonly:"Read-only — nothing is changed",
+      capLabel:"pieces you can deliver in one day",
+      thisWeek:"This week", next:"Next two weeks",
+      legend:"Green: comfortable. Gold: filling up. Red: more than you can deliver.",
+      late:"late", lateTxt:"past their delivery date and not delivered yet",
+      nodate:"without a delivery date", nodateTxt:"these do not appear anywhere in the plan",
+      nothing:"Nothing to deliver in the next two weeks.",
+      failAuth:"Wrong email or password.", failRead:"Could not read your orders. Check your connection.",
+      loading:"Reading your orders…", pieces:"pieces", piece:"piece", today:"today", tomorrow:"tomorrow",
+      days:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],
+      months:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] },
+    fr:{ tag:"Savoir ce qui est promis, avant de dire oui",
+      signin:"Se connecter", email:"Email", pass:"Mot de passe", signout:"Se déconnecter",
+      readonly:"Lecture seule — rien n'est modifié",
+      capLabel:"pièces livrables en une journée",
+      thisWeek:"Cette semaine", next:"Les deux prochaines semaines",
+      legend:"Vert : tenable. Doré : ça se remplit. Rouge : plus que vous ne pouvez livrer.",
+      late:"en retard", lateTxt:"dont la date est passée et qui ne sont pas livrées",
+      nodate:"sans date de livraison", nodateTxt:"celles-ci n'apparaissent nulle part dans le plan",
+      nothing:"Rien à livrer dans les deux prochaines semaines.",
+      failAuth:"Email ou mot de passe incorrect.", failRead:"Lecture impossible. Vérifiez votre connexion.",
+      loading:"Lecture de vos commandes…", pieces:"pièces", piece:"pièce", today:"aujourd'hui", tomorrow:"demain",
+      days:["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"],
+      months:["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."] }
+  };
+  let L = localStorage.getItem("sanaapro_lang_ui") === "fr" ? "fr" : "en";
+  const $ = function(id){ return document.getElementById(id); };
+
+  function paint(){
+    document.documentElement.lang = L;
+    document.querySelectorAll("[data-i]").forEach(function(el){
+      const v = T[L][el.getAttribute("data-i")];
+      if(typeof v === "string") el.textContent = v;
+    });
+    document.querySelectorAll("#seg button").forEach(function(b){
+      b.classList.toggle("on", b.dataset.l === L);
+    });
+    if(ORDERS) render();
+  }
+  $("seg").addEventListener("click", function(e){
+    const b = e.target.closest("button"); if(!b) return;
+    L = b.dataset.l; localStorage.setItem("sanaapro_lang_ui", L); paint();
+  });
+
+  $("eye").addEventListener("click", function(){
+    const p = $("pass"), show = p.type === "password";
+    p.type = show ? "text" : "password";
+    this.classList.toggle("on", show);
+  });
+  $("bLogin").addEventListener("click", async function(){
+    const e = $("email").value.trim(), p = $("pass").value;
+    if(!e || !p) return;
+    this.disabled = true; $("loginMsg").innerHTML = "";
+    try{ await signInWithEmailAndPassword(auth, e, p); }
+    catch(err){
+      $("loginMsg").innerHTML = "<div class='msg err'>" + T[L].failAuth + "</div>";
+      this.disabled = false;
+    }
+  });
+  $("pass").addEventListener("keydown", function(e){ if(e.key === "Enter") $("bLogin").click(); });
+  $("bOut").addEventListener("click", function(){ signOut(auth); });
+
+  /* capacite : gardee sur le telephone, jamais ecrite dans la base */
+  let CAP = parseInt(localStorage.getItem("sanaapro_capacite") || "3", 10);
+  if(!(CAP > 0)) CAP = 3;
+  $("cap").value = CAP;
+  $("cap").addEventListener("change", function(){
+    let v = parseInt(this.value, 10);
+    if(!(v > 0)) v = 1;
+    if(v > 99) v = 99;
+    CAP = v; this.value = v;
+    localStorage.setItem("sanaapro_capacite", String(v));
+    render();
+  });
+
+  let BID = null, ORDERS = null;
+
+  onAuthStateChanged(auth, async function(user){
+    if(!user){
+      $("cMain").classList.add("hide"); $("cLogin").classList.remove("hide");
+      $("bLogin").disabled = false; ORDERS = null; return;
+    }
+    BID = user.uid;
+    $("cLogin").classList.add("hide"); $("cMain").classList.remove("hide");
+    $("alerts").innerHTML = "<div class='msg ok'>" + T[L].loading + "</div>";
+    try{
+      const b = await getDoc(doc(db, "boutiques", BID));
+      const d = b.exists() ? b.data() : {};
+      $("shopName").textContent = d.nom || d.name || "—";
+      const snap = await getDocs(collection(db, "boutiques", BID, "commandes"));
+      const arr = [];
+      snap.forEach(function(s){ arr.push(Object.assign({ id:s.id }, s.data())); });
+      ORDERS = arr;
+      render();
+    }catch(err){
+      $("alerts").innerHTML = "<div class='msg err'>" + T[L].failRead + "</div>";
+    }
+  });
+
+  /* ---------- dates ---------- */
+  function key(d){
+    const p = function(n){ return String(n).padStart(2, "0"); };
+    return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate());
+  }
+  function fromKey(k){
+    const a = k.split("-");
+    return new Date(parseInt(a[0],10), parseInt(a[1],10)-1, parseInt(a[2],10));
+  }
+  function label(k, todayKey){
+    const t = T[L], d = fromKey(k);
+    if(k === todayKey) return t.today;
+    const tm = new Date(fromKey(todayKey).getTime() + 86400000);
+    if(k === key(tm)) return t.tomorrow;
+    return t.days[d.getDay()] + " " + d.getDate() + " " + t.months[d.getMonth()];
+  }
+  function tone(n){ if(n === 0) return "z"; if(n <= CAP) return "g"; if(n <= CAP*1.5) return "y"; return "r"; }
+
+  function render(){
+    const t = T[L];
+    const today = new Date(); today.setHours(0,0,0,0);
+    const tKey = key(today);
+
+    const live = ORDERS.filter(function(o){ return o.statut !== "livre"; });
+    const byDay = {};
+    let late = 0, noDate = 0;
+    live.forEach(function(o){
+      if(!o.livraison){ noDate++; return; }
+      const k = String(o.livraison).slice(0,10);
+      if(k < tKey){ late++; return; }
+      (byDay[k] = byDay[k] || []).push(o);
+    });
+
+    /* alertes */
+    let a = "";
+    if(late) a += "<div class='alert late'><b>" + late + "</b> " + t.late + " — " + t.lateTxt + "</div>";
+    if(noDate) a += "<div class='alert nodate'><b>" + noDate + "</b> " + t.nodate + " — " + t.nodateTxt + "</div>";
+    $("alerts").innerHTML = a;
+
+    /* semaine en cours, lundi -> dimanche */
+    const dow = (today.getDay() + 6) % 7;
+    const mon = new Date(today.getTime() - dow*86400000);
+    let w = "";
+    for(let i = 0; i < 7; i++){
+      const d = new Date(mon.getTime() + i*86400000), k = key(d);
+      const n = (byDay[k] || []).length;
+      const cls = "day " + tone(n) + (k === tKey ? " today" : "");
+      w += "<div class='" + cls + "'><div class='d'>" + t.days[d.getDay()].slice(0,3) + "</div>"
+         + "<div class='n'>" + n + "</div><div class='dn'>" + d.getDate() + "</div></div>";
+    }
+    $("week").innerHTML = w;
+
+    /* deux semaines a venir */
+    const keys = Object.keys(byDay).filter(function(k){
+      return k >= tKey && k <= key(new Date(today.getTime() + 14*86400000));
+    }).sort();
+
+    if(!keys.length){ $("list").innerHTML = "<div class='empty'>" + t.nothing + "</div>"; return; }
+
+    let h = "";
+    keys.forEach(function(k){
+      const list = byDay[k], n = list.length;
+      h += "<div class='dgroup'><div class='dhead'><div class='dt'>" + label(k, tKey) + "</div>"
+         + "<div class='dc " + tone(n) + "'>" + n + " " + (n > 1 ? t.pieces : t.piece) + "</div></div>";
+      list.slice(0, 6).forEach(function(o){
+        const who = o.clienteName || "—";
+        const what = o.article ? " — " + o.article : "";
+        h += "<div class='item'><b>" + who + "</b>" + what + "</div>";
+      });
+      if(list.length > 6) h += "<div class='item'>+ " + (list.length - 6) + "</div>";
+      h += "</div>";
+    });
+    $("list").innerHTML = h;
+  }
+
+  paint();
+</script>
+</body>
+</html>
