@@ -744,6 +744,7 @@
       yes:"Oui", no:"Non",
       mRecuPap:"Bonjour {nom}, votre commande de {article} est enregistrée à l'atelier {boutique}.",
       measuresHint:"Elles rejoignent automatiquement la fiche de la cliente.",
+      cardNoDate:"sans date de livraison", cardPaid:"payé", cardLeft:"reste {n}",
       tabCharge:"Charge", capLabel:"Pièces livrables par jour",
       chWeek:"Cette semaine", chNext:"Les deux prochaines semaines",
       chLegend:"Vert : tenable. Doré : ça se remplit. Rouge : plus que vous ne pouvez livrer.",
@@ -884,6 +885,7 @@
       yes:"Yes", no:"No",
       mRecuPap:"Hello {nom}, your order for {article} is registered at {boutique}.",
       measuresHint:"They are added automatically to the client's record.",
+      cardNoDate:"no delivery date", cardPaid:"paid", cardLeft:"{n} left",
       tabCharge:"Load", capLabel:"Pieces you can deliver in one day",
       chWeek:"This week", chNext:"Next two weeks",
       chLegend:"Green: comfortable. Gold: filling up. Red: more than you can deliver.",
@@ -1411,6 +1413,52 @@
     renderLists();
   }
 
+
+  /* ---------- carte de commande : tout visible d'un coup d'oeil ---------- */
+  function carteCommande(o){
+    const el = document.createElement("div");
+    el.className = "cli-item";
+    const left = document.createElement("div");
+    left.style.cssText = "flex:1;min-width:0";
+
+    const nm = document.createElement("div"); nm.className = "nm";
+    nm.textContent = o.clienteName || t("noName");
+    const ph = document.createElement("div"); ph.className = "ph";
+    ph.textContent = fmtNum(o.numero) + " \u00b7 " + (o.article || "\u2014");
+    left.appendChild(nm); left.appendChild(ph);
+
+    const st = o.statut || "recu";
+    const livre = (st === "livre");
+    const n = joursAvant(o.livraison);
+
+    const dl = document.createElement("div"); dl.className = "ph";
+    if(!o.livraison){
+      dl.textContent = t("cardNoDate");
+      dl.style.color = "#E0B23C";
+    } else {
+      dl.textContent = fmtDate(o.livraison, LANG_UI) + " \u00b7 " + libelleEcheance(n);
+      if(!livre && n !== null && n < 0) dl.style.color = "#E96B6B";
+      else if(!livre && n !== null && n <= 1) dl.style.color = "#E0B23C";
+    }
+    left.appendChild(dl);
+
+    if((Number(o.prix)||0) > 0){
+      const reste = resteDe(o);
+      const pl = document.createElement("div"); pl.className = "ph";
+      if(reste === 0){ pl.textContent = t("cardPaid"); pl.style.color = "#4FD18B"; }
+      else { pl.textContent = t("cardLeft").replace("{n}", reste) + " " + CUR; pl.style.color = "#E0B23C"; }
+      left.appendChild(pl);
+    }
+
+    const bd = document.createElement("span");
+    bd.className = "badge " + (livre ? "ok" : (n !== null && n < 0) ? "err" : (st === "pret") ? "gold" : "soft");
+    bd.textContent = t(stepKey(st));
+
+    el.appendChild(left); el.appendChild(bd);
+    el.addEventListener("click", () => openCmd(o.id));
+    return el;
+  }
+
   function itemRow(title, sub, badgeText, badgeClass, onClick){
     const el=document.createElement("div");
     el.className="cli-item";
@@ -1523,10 +1571,7 @@
     });
     $("cmd-empty").hidden = cmdShown.length>0;
     cmdShown.forEach(o=>{
-      cl.appendChild(itemRow(
-        o.clienteName||t("noName"), fmtNum(o.numero)+" · "+(o.article||"—"),
-        t(stepKey(o.statut||"recu")), "gold", ()=>openCmd(o.id)
-      ));
+      cl.appendChild(carteCommande(o));
     });
 
     const qk=$("q-cli").value.trim().toLowerCase();
