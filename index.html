@@ -219,6 +219,7 @@
 
   <div id="login" hidden>
     <div class="head" style="border-bottom:1px solid var(--line)">
+      <img src="icon-192.png" alt="SanaaPro" width="56" height="56" style="display:block;margin:0 auto 8px;border-radius:12px">
       <div class="name">SanaaPro</div>
       <div class="sub" data-i18n="tagline">votre atelier, en ligne</div>
       <div class="langset">
@@ -251,6 +252,7 @@
 
   <div id="dash" hidden>
     <div class="head">
+      <img src="icon-192.png" alt="SanaaPro" width="56" height="56" style="display:block;margin:0 auto 8px;border-radius:12px">
       <div class="name" id="d-brand">SanaaPro</div>
       <div class="sub" id="d-brandsub" data-i18n="tagline">votre atelier, en ligne</div>
       <div><span class="pill" id="syncpill"><span class="dot"></span><span id="synctext">En ligne</span></span></div>
@@ -1291,7 +1293,15 @@
     show("loading"); $("loading").textContent=t("loading");
     try{
       const snap = await getDocSmart(doc(db,"boutiques",user.uid));
-      if(!snap.exists()){ $("loading").textContent=t("noShop"); show("loading"); return; }
+      if(!snap.exists()){
+        const zone=$("loading"); zone.textContent="";
+        const p=document.createElement("div"); p.textContent=t("noShop"); zone.appendChild(p);
+        const b=document.createElement("button");
+        b.textContent = (LANG_UI==="en" ? "Sign out" : "Se déconnecter");
+        b.style.cssText="margin-top:18px;padding:12px 22px;border:0;border-radius:10px;background:var(--gold);color:#17140A;font-weight:700;font-size:15px";
+        b.addEventListener("click", () => signOut(auth));
+        zone.appendChild(b); show("loading"); return;
+      }
       BID=user.uid; BOUTIQUE=snap.data();
       renderDashboard(BOUTIQUE); paintLocks(); updateOffline(); setTab("apercu"); show("dash");
       loadAll();
