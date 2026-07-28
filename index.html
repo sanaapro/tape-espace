@@ -184,6 +184,19 @@
   button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
   @media (prefers-reduced-motion:reduce){ *{ transition:none !important; animation:none !important; } }
   [hidden]{ display:none !important; }
+
+  /* ---------- grand ecran : ordinateur ---------- */
+  @media (min-width:900px){
+    .wrap{ max-width:920px; padding:28px 26px 60px; }
+    .head .name{ font-size:32px; }
+    .card{ padding:20px 22px; }
+    .stats3{ gap:14px; }
+    .cli-item{ margin-top:0; }
+    #cmd-list, #cli-list, #st-list, #vis-list, #stock-list{
+      display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; align-items:start;
+    }
+    #ch-week{ gap:10px; }
+  }
 </style>
 </head>
 <body>
