@@ -272,6 +272,7 @@
     <div class="tabs" id="tabs">
       <button data-tab="apercu" data-i18n="tabApercu">Aperçu</button>
       <button data-tab="atelier" data-i18n="tabAtelier">Atelier</button>
+      <button data-tab="charge" data-i18n="tabCharge">Charge</button>
       <button data-tab="boutique" data-i18n="tabBoutique">Boutique</button>
       <button data-tab="mesures" data-i18n="tabMesures">Mesures</button>
       <button data-tab="finances" data-i18n="tabFinances">Finances</button>
@@ -328,6 +329,25 @@
       <input id="q-cmd" type="search" data-i18n-ph="searchOrdersPh" placeholder="Chercher une commande…" style="margin-top:14px">
       <div id="cmd-list"></div>
       <div id="cmd-empty" class="empty" data-i18n="noOrders" hidden>Aucune commande pour le moment.</div>
+    </div>
+
+    <div id="pane-charge" hidden>
+      <div class="lock" id="lock-charge" hidden></div>
+      <div id="body-charge">
+      <div class="card">
+        <div class="row"><span class="k" data-i18n="capLabel">Pièces livrables par jour</span><span class="v"><input id="cap-in" type="number" min="1" max="99" style="width:70px;text-align:center"></span></div>
+      </div>
+      <div id="ch-alerts"></div>
+      <div class="card">
+        <h2 data-i18n="chWeek">Cette semaine</h2>
+        <div id="ch-week" style="display:flex;gap:5px"></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5" data-i18n="chLegend">Vert : tenable.</div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="chNext">Les deux prochaines semaines</h2>
+        <div id="ch-list"></div>
+      </div>
+      </div>
     </div>
 
     <div id="pane-reglages" hidden>
@@ -644,7 +664,7 @@
   const PRICE_STD = 500, PRICE_PREM = 750;
   const SANAAPRO_WA = "2207628683";
   const STEPS = ["recu","coupe","essayage","pret","livre"];
-  const TABS = ["apercu","atelier","boutique","mesures","finances","staff","visits","reglages"];
+  const TABS = ["apercu","atelier","charge","boutique","mesures","finances","staff","visits","reglages"];
   const PERIODES = ["jour","semaine","mois","annee"];
   const ROLES = ["roleCouturier","roleCouturiere","roleManager","roleVendeuse","roleApprenti","roleMenagere"];
 
@@ -724,8 +744,15 @@
       yes:"Oui", no:"Non",
       mRecuPap:"Bonjour {nom}, votre commande de {article} est enregistrée à l'atelier {boutique}.",
       measuresHint:"Elles rejoignent automatiquement la fiche de la cliente.",
+      tabCharge:"Charge", capLabel:"Pièces livrables par jour",
+      chWeek:"Cette semaine", chNext:"Les deux prochaines semaines",
+      chLegend:"Vert : tenable. Doré : ça se remplit. Rouge : plus que vous ne pouvez livrer.",
+      chLate:"en retard — date passée, non livrées",
+      chNoDate:"sans date de livraison — invisibles dans le plan",
+      chNothing:"Rien à livrer dans les deux prochaines semaines.",
+      chDays:"Dim,Lun,Mar,Mer,Jeu,Ven,Sam",
       lockTitle:"Réservé à la formule Premium",
-      lockText:"La boutique avec son stock et le suivi des salariés font partie de la formule Premium.",
+      lockText:"La boutique avec son stock, le plan de charge et le suivi des salariés font partie de la formule Premium.",
       lockPrice:"Standard {a} {cur}/mois · Premium {b} {cur}/mois",
       lockBtn:"Passer au premium sur WhatsApp",
       lockTrial:"Pendant votre essai gratuit, tout est ouvert — vous pouvez essayer ces pages librement.",
@@ -857,8 +884,15 @@
       yes:"Yes", no:"No",
       mRecuPap:"Hello {nom}, your order for {article} is registered at {boutique}.",
       measuresHint:"They are added automatically to the client's record.",
+      tabCharge:"Load", capLabel:"Pieces you can deliver in one day",
+      chWeek:"This week", chNext:"Next two weeks",
+      chLegend:"Green: comfortable. Gold: filling up. Red: more than you can deliver.",
+      chLate:"late — past due, not delivered",
+      chNoDate:"with no delivery date — invisible in the plan",
+      chNothing:"Nothing to deliver in the next two weeks.",
+      chDays:"Sun,Mon,Tue,Wed,Thu,Fri,Sat",
       lockTitle:"Premium plan only",
-      lockText:"The shop with its stock and staff records are part of the Premium plan.",
+      lockText:"The shop with its stock, the delivery load plan and staff records are part of the Premium plan.",
       lockPrice:"Standard {a} {cur}/month · Premium {b} {cur}/month",
       lockBtn:"Upgrade on WhatsApp",
       lockTrial:"During your free trial everything is open — feel free to try these pages.",
@@ -1017,7 +1051,7 @@
   }
   function paintLocks(){
     const i = subInfo();
-    [["staff"],["boutique"]].forEach(([k])=>{
+    [["staff"],["boutique"],["charge"]].forEach(([k])=>{
       const lock=$("lock-"+k), body=$("body-"+k);
       if(i.premium){ lock.hidden=true; body.hidden=false; return; }
       body.hidden=true; lock.hidden=false;
@@ -1389,9 +1423,97 @@
     return el;
   }
 
+
+  /* ---------- plan de charge (Premium) ---------- */
+  function capacite(){
+    let v = parseInt(localStorage.getItem("sanaapro_capacite")||"3", 10);
+    return (v>0) ? v : 3;
+  }
+  function renderCharge(){
+    const zone = $("ch-week"); if(!zone) return;
+    const cap = capacite();
+    if($("cap-in")) $("cap-in").value = cap;
+    const pad = n => String(n).padStart(2,"0");
+    const key = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+    const today = new Date(); today.setHours(0,0,0,0);
+    const tK = key(today);
+    const byDay = {}; let late=0, noDate=0;
+    COMMANDES.filter(o => o.statut !== "livre").forEach(o => {
+      if(!o.livraison){ noDate++; return; }
+      const k = String(o.livraison).slice(0,10);
+      if(k < tK){ late++; return; }
+      (byDay[k] = byDay[k] || []).push(o);
+    });
+    const tone = n => n===0 ? "#3A3D42" : n<=cap ? "#4FD18B" : n<=cap*1.5 ? "#E0B23C" : "#E96B6B";
+
+    const al = $("ch-alerts"); al.innerHTML = "";
+    function alerte(n, cle, couleur){
+      const d = document.createElement("div");
+      d.className = "card";
+      d.style.borderColor = couleur;
+      d.textContent = n + " " + t(cle);
+      al.appendChild(d);
+    }
+    if(late) alerte(late, "chLate", "#5b2626");
+    if(noDate) alerte(noDate, "chNoDate", "#4A3F19");
+
+    const noms = t("chDays").split(",");
+    const dow = (today.getDay()+6) % 7;
+    const lundi = new Date(today.getTime() - dow*86400000);
+    zone.innerHTML = "";
+    for(let i=0; i<7; i++){
+      const d = new Date(lundi.getTime() + i*86400000), k = key(d);
+      const n = (byDay[k]||[]).length;
+      const cell = document.createElement("div");
+      cell.style.cssText = "flex:1;text-align:center;padding:8px 2px;border-radius:10px;background:#1E1F22;border:1px solid "+(k===tK ? "#E0B23C" : "#3A3D42");
+      const a = document.createElement("div");
+      a.style.cssText = "font-size:11px;color:#98948C"; a.textContent = noms[d.getDay()]||"";
+      const b = document.createElement("div");
+      b.style.cssText = "font-family:Georgia,serif;font-size:20px;margin-top:3px;color:"+tone(n);
+      b.textContent = String(n);
+      const c = document.createElement("div");
+      c.style.cssText = "font-size:10px;color:#98948C"; c.textContent = String(d.getDate());
+      cell.appendChild(a); cell.appendChild(b); cell.appendChild(c);
+      zone.appendChild(cell);
+    }
+
+    const list = $("ch-list"); list.innerHTML = "";
+    const limite = key(new Date(today.getTime() + 14*86400000));
+    const jours = Object.keys(byDay).filter(k => k>=tK && k<=limite).sort();
+    if(!jours.length){
+      const e = document.createElement("div");
+      e.className = "empty"; e.textContent = t("chNothing");
+      list.appendChild(e); return;
+    }
+    jours.forEach(k => {
+      const arr = byDay[k];
+      const h = document.createElement("div");
+      h.className = "secttl";
+      h.style.color = tone(arr.length);
+      h.textContent = fmtDate(k, LANG_UI) + " — " + arr.length;
+      list.appendChild(h);
+      arr.slice(0,8).forEach(o => {
+        const r = document.createElement("div"); r.className = "row";
+        const kk = document.createElement("span"); kk.className = "k";
+        kk.textContent = o.clienteName || "—";
+        const vv = document.createElement("span"); vv.className = "v";
+        vv.textContent = o.article || "";
+        r.appendChild(kk); r.appendChild(vv); list.appendChild(r);
+      });
+    });
+  }
+  if($("cap-in")) $("cap-in").addEventListener("change", () => {
+    let v = parseInt($("cap-in").value, 10);
+    if(!(v>0)) v = 1; if(v>99) v = 99;
+    $("cap-in").value = v;
+    localStorage.setItem("sanaapro_capacite", String(v));
+    renderCharge();
+  });
+
   function renderLists(){
     $("s-cmd").textContent = COMMANDES.length;
     $("s-cli").textContent = CLIENTES.length;
+    renderCharge();
 
     const qc=$("q-cmd").value.trim().toLowerCase();
     const cl=$("cmd-list"); cl.innerHTML="";
