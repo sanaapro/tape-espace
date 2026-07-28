@@ -372,6 +372,8 @@
     </div>
 
     <div id="pane-boutique" hidden>
+      <div class="lock" id="lock-boutique" hidden></div>
+      <div id="body-boutique">
       <div class="stats3">
         <div class="stat"><div class="n" id="b-arts">0</div><div class="l" data-i18n="statArticles">Articles</div></div>
         <div class="stat"><div class="n" id="b-qte">0</div><div class="l" data-i18n="statInStock">En stock</div></div>
@@ -401,6 +403,7 @@
       <div id="st-title" class="secttl" data-i18n="shopStock">Stock de la boutique</div>
       <div id="stock-list"></div>
       <div id="stock-empty" class="empty" data-i18n="noStock" hidden>Aucun article en stock.</div>
+      </div>
     </div>
 
     <div id="pane-finances" hidden>
@@ -722,7 +725,7 @@
       mRecuPap:"Bonjour {nom}, votre commande de {article} est enregistrée à l'atelier {boutique}.",
       measuresHint:"Elles rejoignent automatiquement la fiche de la cliente.",
       lockTitle:"Réservé à la formule Premium",
-      lockText:"Le suivi des salariés, le registre des visiteurs et le bilan financier font partie de la formule Premium.",
+      lockText:"La boutique avec son stock et le suivi des salariés font partie de la formule Premium.",
       lockPrice:"Standard {a} {cur}/mois · Premium {b} {cur}/mois",
       lockBtn:"Passer au premium sur WhatsApp",
       lockTrial:"Pendant votre essai gratuit, tout est ouvert — vous pouvez essayer ces pages librement.",
@@ -855,7 +858,7 @@
       mRecuPap:"Hello {nom}, your order for {article} is registered at {boutique}.",
       measuresHint:"They are added automatically to the client's record.",
       lockTitle:"Premium plan only",
-      lockText:"Staff records, the visitors log and the financial summary are part of the Premium plan.",
+      lockText:"The shop with its stock and staff records are part of the Premium plan.",
       lockPrice:"Standard {a} {cur}/month · Premium {b} {cur}/month",
       lockBtn:"Upgrade on WhatsApp",
       lockTrial:"During your free trial everything is open — feel free to try these pages.",
@@ -1014,7 +1017,7 @@
   }
   function paintLocks(){
     const i = subInfo();
-    [["staff"],["visits"]].forEach(([k])=>{
+    [["staff"],["boutique"]].forEach(([k])=>{
       const lock=$("lock-"+k), body=$("body-"+k);
       if(i.premium){ lock.hidden=true; body.hidden=false; return; }
       body.hidden=true; lock.hidden=false;
