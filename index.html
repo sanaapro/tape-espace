@@ -654,8 +654,8 @@
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { initializeFirestore, enableIndexedDbPersistence,
-           doc, getDoc, getDocFromCache, collection, setDoc, getDocs, getDocsFromCache,
-           deleteDoc, query, orderBy, serverTimestamp }
+           doc, getDoc, getDocFromCache, collection, setDoc as _setDoc, getDocs, getDocsFromCache,
+           deleteDoc as _deleteDoc, query, orderBy, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -765,6 +765,9 @@
       chNoDate:"sans date de livraison — invisibles dans le plan",
       chNothing:"Rien à livrer dans les deux prochaines semaines.",
       chDays:"Dim,Lun,Mar,Mer,Jeu,Ven,Sam",
+      expBlock:"Votre abonnement est arrivé à échéance. Vos données restent visibles, mais vous ne pouvez plus rien enregistrer tant qu'il n'est pas renouvelé.\n\nVoulez-vous renouveler maintenant sur WhatsApp ?",
+      renewMsg:"Bonjour, je souhaite renouveler l'abonnement de ma boutique {shop} ({slug}).",
+      renewBtn:"Renouveler mon abonnement",
       lockTitle:"Réservé à la formule Premium",
       lockText:"La boutique avec son stock, le plan de charge et le suivi des salariés font partie de la formule Premium.",
       lockPrice:"Standard {a} {cur}/mois · Premium {b} {cur}/mois",
@@ -906,6 +909,9 @@
       chNoDate:"with no delivery date — invisible in the plan",
       chNothing:"Nothing to deliver in the next two weeks.",
       chDays:"Sun,Mon,Tue,Wed,Thu,Fri,Sat",
+      expBlock:"Your subscription has expired. Your data is still visible, but nothing can be saved until it is renewed.\n\nWould you like to renew now on WhatsApp?",
+      renewMsg:"Hello, I would like to renew the subscription for my shop {shop} ({slug}).",
+      renewBtn:"Renew my subscription",
       lockTitle:"Premium plan only",
       lockText:"The shop with its stock, the delivery load plan and staff records are part of the Premium plan.",
       lockPrice:"Standard {a} {cur}/month · Premium {b} {cur}/month",
@@ -1058,6 +1064,40 @@
     const trial = (sub.plan === "trial") && (days === null || days > 0);
     const premium = (sub.tier === "premium") || trial;
     return { sub, days, trial, premium };
+  }
+  // ---- Garde d'abonnement : aucune ecriture operationnelle apres l'echeance ----
+  function isExpired(){
+    const i = subInfo();
+    return i.days !== null && i.days <= 0;
+  }
+  var __warnedAt = 0;
+  function warnExpired(){
+    const now = Date.now();
+    if(now - __warnedAt < 1500) return;   // une seule alerte par action
+    __warnedAt = now;
+    if(confirm(t("expBlock"))){
+      const msg = t("renewMsg")
+        .replace("{shop}", (BOUTIQUE && BOUTIQUE.name) || "")
+        .replace("{slug}", (BOUTIQUE && BOUTIQUE.slug) || "");
+      openWa(SANAAPRO_WA, msg);
+    }
+  }
+  function blocked(ref){
+    if(!isExpired()) return false;
+    // les reglages de la boutique restent modifiables ; tout le reste est gele
+    try{ if(String(ref.path).split("/").length <= 2) return false; }catch(e){}
+    warnExpired();
+    return true;
+  }
+  function setDoc(){
+    const a = Array.prototype.slice.call(arguments);
+    if(blocked(a[0])) return Promise.resolve(false);
+    return _setDoc.apply(null, a);
+  }
+  function deleteDoc(){
+    const a = Array.prototype.slice.call(arguments);
+    if(blocked(a[0])) return Promise.resolve(false);
+    return _deleteDoc.apply(null, a);
   }
   function planLabel(){
     const i = subInfo();
@@ -1385,7 +1425,13 @@
         badge.textContent = days===1 ? t("dayLeft") : t("daysLeft").replace("{n}",days);
         note.hidden=false; note.className="sub-note warn"; note.textContent=t("trialSoon"); }
       else { badge.className="badge err"; badge.textContent=t("expired");
-        note.hidden=false; note.className="sub-note err"; note.textContent=t("expiredNote"); }
+        note.hidden=false; note.className="sub-note err"; note.textContent=t("expiredNote");
+        const rb=document.createElement("button"); rb.className="wa"; rb.textContent=t("renewBtn");
+        rb.addEventListener("click", ()=>{
+          const m=t("renewMsg").replace("{shop}", b.name||"").replace("{slug}", b.slug||"");
+          openWa(SANAAPRO_WA, m);
+        });
+        note.appendChild(document.createElement("br")); note.appendChild(rb); }
     } else { $("d-expiry").textContent="—"; badge.className="badge ok"; badge.textContent=sub.status||t("active"); }
   }
 
