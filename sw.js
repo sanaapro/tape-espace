@@ -2,7 +2,7 @@
    Nom de cache PRÉFIXÉ PAR L'APP : toutes les boutiques SanaaPro partagent
    le domaine sanaapro.github.io, donc un nom générique effacerait le cache
    des autres applications du même domaine. Ne jamais retirer ce préfixe. */
-const CACHE = "sanaapro-tape-espace-v1";
+const CACHE = "sanaapro-tape-espace-v2";
 const PREFIX = "sanaapro-tape-espace-";
 
 const CORE = [

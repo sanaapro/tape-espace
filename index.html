@@ -17,9 +17,9 @@
 <style>
   :root{
     --bg:#0E0E0F; --panel:#17181A; --panel2:#1E1F22; --line:#2C2E32; --line2:#3A3D42;
-    --gold:#E0B23C; --txt:#EDEBE6; --muted:#98948C;
-    --ok:#4FD18B; --okbg:#12301F; --warn:#E0A44C; --warnbg:#33240F;
-    --err:#E96B6B; --errbg:#361A1A; --wa:#25D366; --wabg:#10281B;
+    --gold:#C9A227; --txt:#EDEBE6; --muted:#98948C;
+    --ok:#4FD18B; --okbg:#12301F; --warn:#B8863A; --warnbg:#2E2312;
+    --err:#A6434B; --errbg:#301A1C; --wa:#25D366; --wabg:#10281B;
     --serif:Georgia,"Times New Roman",serif;
     --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
@@ -36,13 +36,15 @@
   .pill.off{ background:var(--warnbg); color:var(--warn); }
   .dot{ width:7px; height:7px; border-radius:50%; background:currentColor; }
 
-  .langset{ margin-top:14px; display:flex; flex-direction:column; gap:8px; align-items:center; }
+  .langset{ margin-top:12px; display:flex; flex-direction:column; gap:8px; align-items:center; }
   .langrow{ display:flex; align-items:center; gap:10px; }
   .langlab{ font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); }
-  .seg{ display:inline-flex; border:1px solid var(--line2); border-radius:14px; overflow:hidden; }
+  .seg{ display:inline-flex; border:1px solid var(--line2); border-radius:999px; overflow:hidden;
+    background:var(--panel); }
   .seg button{ border:none; background:transparent; color:var(--muted); font-family:var(--sans);
-    font-size:10px; font-weight:700; letter-spacing:0.6px; padding:3px 10px; cursor:pointer; }
-  .seg button.on{ background:var(--gold); color:#141310; }
+    font-size:9px; font-weight:700; letter-spacing:0.4px; padding:3px 9px; cursor:pointer;
+    transition:background .15s,color .15s; }
+  .seg button.on{ background:var(--gold); color:#141310; box-shadow:0 0 0 1px rgba(201,162,39,.35); }
 
   .logout{ margin-top:12px; background:none; border:1px solid var(--line2); color:var(--muted);
     border-radius:20px; padding:7px 18px; font-size:13px; cursor:pointer; font-family:var(--sans); }
@@ -203,11 +205,11 @@
 <script>
   window.addEventListener("error", function(e){
     var l=document.getElementById("loading");
-    if(l && !l.hidden){ l.style.color="#E96B6B"; l.textContent="Erreur : "+(e.message||"")+(e.filename?(" ["+e.filename.split('/').pop()+":"+e.lineno+"]"):""); }
+    if(l && !l.hidden){ l.style.color="#A6434B"; l.textContent="Erreur : "+(e.message||"")+(e.filename?(" ["+e.filename.split('/').pop()+":"+e.lineno+"]"):""); }
   });
   window.addEventListener("unhandledrejection", function(e){
     var l=document.getElementById("loading");
-    if(l && !l.hidden){ l.style.color="#E96B6B"; l.textContent="Erreur : "+(((e.reason&&e.reason.message)||e.reason)||""); }
+    if(l && !l.hidden){ l.style.color="#A6434B"; l.textContent="Erreur : "+(((e.reason&&e.reason.message)||e.reason)||""); }
   });
   var __L="fr";
   try{ __L = localStorage.getItem("sanaapro_lang_ui") || localStorage.getItem("sanaapro_lang") || "fr"; }catch(e){}
@@ -304,9 +306,19 @@
         <div id="q-res"></div>
       </div>
 
-      <div class="stats">
+      <div class="stats3">
         <div class="stat"><div class="n" id="s-cmd">—</div><div class="l" data-i18n="statOrders">Commandes</div></div>
         <div class="stat"><div class="n" id="s-cli">—</div><div class="l" data-i18n="statClients">Clientes</div></div>
+        <div class="stat"><div class="n" id="s-du">—</div><div class="l" data-i18n="statDue">À encaisser</div></div>
+      </div>
+
+      <div class="card" id="charge-teaser" hidden>
+        <h2 data-i18n="chargeTeaserTitle" style="color:var(--gold)">Plan de charge</h2>
+        <div style="display:flex;gap:5px;opacity:0.55;filter:grayscale(0.4);pointer-events:none;">
+          <div id="teaser-week" style="display:flex;gap:5px;flex:1;"></div>
+        </div>
+        <p class="lead" data-i18n="chargeTeaserText" style="margin-top:10px;">Voyez d'un coup d'œil vos livraisons de la semaine, avec alertes de retard.</p>
+        <button class="wa" id="teaser-btn" data-i18n="lockBtn">Passer au premium sur WhatsApp</button>
       </div>
 
       <div class="card">
@@ -783,7 +795,8 @@
       search:"Recherche globale", searchPh:"Nom, téléphone ou modèle", noResult:"Aucun résultat.",
       soonDue:"Rendez-vous proches", dueToday:"à livrer aujourd'hui", dueTomorrow:"à livrer demain",
       dueIn:"à livrer dans {n} jours", overdue1:"en retard d'un jour", overdue:"en retard de {n} jours",
-      statOrders:"Commandes", statClients:"Clientes",
+      statOrders:"Commandes", statClients:"Clientes", statDue:"À encaisser",
+      chargeTeaserTitle:"Plan de charge", chargeTeaserText:"Voyez d'un coup d'œil vos livraisons de la semaine, avec alertes de retard.",
       receiptNo:"N° de reçu", lineReceipt:"Reçu n° {v}",
       searchOrdersPh:"Chercher une commande…", searchClientsPh:"Nom ou téléphone…",
       ownerCode:"Code administrateur", ownerCodePh:"4 à 6 chiffres", saveCode:"Enregistrer le code",
@@ -927,7 +940,8 @@
       search:"Global search", searchPh:"Name, phone or model", noResult:"No result.",
       soonDue:"Upcoming due dates", dueToday:"due today", dueTomorrow:"due tomorrow",
       dueIn:"due in {n} days", overdue1:"1 day late", overdue:"{n} days late",
-      statOrders:"Orders", statClients:"Clients",
+      statOrders:"Orders", statClients:"Clients", statDue:"Due",
+      chargeTeaserTitle:"Delivery load", chargeTeaserText:"See your week's deliveries at a glance, with late-order alerts.",
       receiptNo:"Receipt no.", lineReceipt:"Receipt no. {v}",
       searchOrdersPh:"Search an order…", searchClientsPh:"Name or phone…",
       ownerCode:"Admin code", ownerCodePh:"4 to 6 digits", saveCode:"Save the code",
@@ -1488,11 +1502,11 @@
     const dl = document.createElement("div"); dl.className = "ph";
     if(!o.livraison){
       dl.textContent = t("cardNoDate");
-      dl.style.color = "#E0B23C";
+      dl.style.color = "#C9A227";
     } else {
       dl.textContent = fmtDate(o.livraison, LANG_UI) + " \u00b7 " + libelleEcheance(n);
-      if(!livre && n !== null && n < 0) dl.style.color = "#E96B6B";
-      else if(!livre && n !== null && n <= 1) dl.style.color = "#E0B23C";
+      if(!livre && n !== null && n < 0) dl.style.color = "#A6434B";
+      else if(!livre && n !== null && n <= 1) dl.style.color = "#C9A227";
     }
     left.appendChild(dl);
 
@@ -1500,7 +1514,7 @@
       const reste = resteDe(o);
       const pl = document.createElement("div"); pl.className = "ph";
       if(reste === 0){ pl.textContent = t("cardPaid"); pl.style.color = "#4FD18B"; }
-      else { pl.textContent = t("cardLeft").replace("{n}", reste) + " " + CUR; pl.style.color = "#E0B23C"; }
+      else { pl.textContent = t("cardLeft").replace("{n}", reste) + " " + CUR; pl.style.color = "#C9A227"; }
       left.appendChild(pl);
     }
 
@@ -1546,7 +1560,7 @@
       if(k < tK){ late++; return; }
       (byDay[k] = byDay[k] || []).push(o);
     });
-    const tone = n => n===0 ? "#3A3D42" : n<=cap ? "#4FD18B" : n<=cap*1.5 ? "#E0B23C" : "#E96B6B";
+    const tone = n => n===0 ? "#3A3D42" : n<=cap ? "#4FD18B" : n<=cap*1.5 ? "#C9A227" : "#A6434B";
 
     const al = $("ch-alerts"); al.innerHTML = "";
     function alerte(n, cle, couleur){
@@ -1567,7 +1581,7 @@
       const d = new Date(lundi.getTime() + i*86400000), k = key(d);
       const n = (byDay[k]||[]).length;
       const cell = document.createElement("div");
-      cell.style.cssText = "flex:1;text-align:center;padding:8px 2px;border-radius:10px;background:#1E1F22;border:1px solid "+(k===tK ? "#E0B23C" : "#3A3D42");
+      cell.style.cssText = "flex:1;text-align:center;padding:8px 2px;border-radius:10px;background:#1E1F22;border:1px solid "+(k===tK ? "#C9A227" : "#3A3D42");
       const a = document.createElement("div");
       a.style.cssText = "font-size:11px;color:#98948C"; a.textContent = noms[d.getDay()]||"";
       const b = document.createElement("div");
@@ -1604,6 +1618,46 @@
       });
     });
   }
+  /* ---------- aperçu verrouillé du plan de charge, sur l'Aperçu (Standard) ---------- */
+  let teaserWired = false;
+  function renderChargeTeaser(){
+    const card = $("charge-teaser"); if(!card) return;
+    if(subInfo().premium){ card.hidden = true; return; }
+    card.hidden = false;
+    const cap = capacite();
+    const pad = n => String(n).padStart(2,"0");
+    const key = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+    const today = new Date(); today.setHours(0,0,0,0);
+    const byDay = {};
+    COMMANDES.filter(o => o.statut !== "livre" && o.livraison).forEach(o=>{
+      const k = String(o.livraison).slice(0,10);
+      (byDay[k] = byDay[k] || []).push(o);
+    });
+    const tone = n => n===0 ? "#3A3D42" : n<=cap ? "#4FD18B" : n<=cap*1.5 ? "#C9A227" : "#A6434B";
+    const dow = (today.getDay()+6) % 7;
+    const lundi = new Date(today.getTime() - dow*86400000);
+    const zone = $("teaser-week"); zone.innerHTML = "";
+    for(let i=0;i<7;i++){
+      const d = new Date(lundi.getTime()+i*86400000), k = key(d);
+      const n = (byDay[k]||[]).length;
+      const cell = document.createElement("div");
+      cell.style.cssText = "flex:1;text-align:center;padding:6px 2px;border-radius:8px;background:#1E1F22;border:1px solid "+(k===key(today)?"#C9A227":"#3A3D42");
+      const b = document.createElement("div");
+      b.style.cssText = "font-family:Georgia,serif;font-size:15px;color:"+tone(n);
+      b.textContent = String(n);
+      cell.appendChild(b);
+      zone.appendChild(cell);
+    }
+    if(!teaserWired){
+      teaserWired = true;
+      $("teaser-btn").addEventListener("click", ()=>{
+        const msg=t("upgradeMsg")
+          .replace("{shop}", (BOUTIQUE && BOUTIQUE.name) || "")
+          .replace("{slug}", (BOUTIQUE && BOUTIQUE.slug) || "");
+        openWa(SANAAPRO_WA, msg);
+      });
+    }
+  }
   if($("cap-in")) $("cap-in").addEventListener("change", () => {
     let v = parseInt($("cap-in").value, 10);
     if(!(v>0)) v = 1; if(v>99) v = 99;
@@ -1615,7 +1669,10 @@
   function renderLists(){
     $("s-cmd").textContent = COMMANDES.length;
     $("s-cli").textContent = CLIENTES.length;
+    let sdu=0; COMMANDES.forEach(o=>{ sdu += resteDe(o); });
+    $("s-du").textContent = money(sdu);
     renderCharge();
+    renderChargeTeaser();
 
     const qc=$("q-cmd").value.trim().toLowerCase();
     const cl=$("cmd-list"); cl.innerHTML="";
