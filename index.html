@@ -237,7 +237,6 @@
       <div class="sub" data-i18n="tagline">votre atelier, en ligne</div>
       <div class="langset">
         <div class="langrow">
-          <span class="langlab" data-i18n="uiLabel">Interface</span>
           <div class="seg" data-seg="ui"><button data-lang="fr">FR</button><button data-lang="en">EN</button></div>
         </div>
       </div>
@@ -271,12 +270,7 @@
       <div><span class="pill" id="syncpill"><span class="dot"></span><span id="synctext">En ligne</span></span></div>
       <div class="langset">
         <div class="langrow">
-          <span class="langlab" data-i18n="uiLabel">Interface</span>
           <div class="seg" data-seg="ui"><button data-lang="fr">FR</button><button data-lang="en">EN</button></div>
-        </div>
-        <div class="langrow">
-          <span class="langlab" data-i18n="msgLabel">Messages clients</span>
-          <div class="seg" data-seg="msg"><button data-lang="fr">FR</button><button data-lang="en">EN</button></div>
         </div>
       </div>
       <button class="logout" id="logout-btn" data-i18n="logout">Déconnexion</button>
@@ -1019,7 +1013,10 @@
   function saveLang(key, val){ try{ localStorage.setItem(key, val); }catch(e){} }
 
   let LANG_UI  = readLang("sanaapro_lang_ui", "fr");
-  let LANG_MSG = readLang("sanaapro_lang_msg", LANG_UI);
+  // Un seul bouton commande tout : la langue des messages suit toujours la langue
+  // de l'interface (l'ancien reglage separe "sanaapro_lang_msg" n'est plus utilise
+  // pour eviter que les deux se desaccordent).
+  let LANG_MSG = LANG_UI;
 
   const tt = (k, lang) => (T[lang] && T[lang][k]) || T.fr[k] || k;
   const t  = k => tt(k, LANG_UI);
@@ -1131,10 +1128,9 @@
   function paintSegs(){
     document.querySelectorAll(".seg").forEach(s=>{
       const kind = s.getAttribute("data-seg");
-      if(kind==="ui" || kind==="msg"){
-        const cur = (kind==="ui") ? LANG_UI : LANG_MSG;
+      if(kind==="ui"){
         s.querySelectorAll("button").forEach(b=>{
-          b.classList.toggle("on", b.getAttribute("data-lang")===cur);
+          b.classList.toggle("on", b.getAttribute("data-lang")===LANG_UI);
         });
         return;
       }
@@ -1203,10 +1199,9 @@
   document.querySelectorAll(".seg button").forEach(b=>{
     b.addEventListener("click", ()=>{
       const seg=b.parentElement.getAttribute("data-seg");
-      if(seg==="ui" || seg==="msg"){
+      if(seg==="ui"){
         const lang=b.getAttribute("data-lang");
-        if(seg==="ui"){ LANG_UI=lang; saveLang("sanaapro_lang_ui", lang); }
-        else { LANG_MSG=lang; saveLang("sanaapro_lang_msg", lang); }
+        LANG_UI=lang; LANG_MSG=lang; saveLang("sanaapro_lang_ui", lang);
         applyLang();
         return;
       }
