@@ -520,6 +520,13 @@
            style="display:block;margin-top:12px;color:var(--gold);font-size:14px;text-decoration:none" data-i18n="vtOpen">Voir le catalogue public ›</a>
       </div>
       <div class="card">
+        <h2 data-i18n="vtShareT">Envoyer ma vitrine aux clientes</h2>
+        <p style="margin:0 0 4px;font-size:13px;color:var(--muted)" data-i18n="vtShareH">Le lien ouvre le catalogue directement sur vos modèles. Envoyez-le à une cliente, à une liste de diffusion ou mettez-le en statut.</p>
+        <button class="primary" id="vt-share" data-i18n="vtShareBtn">Partager sur WhatsApp</button>
+        <button class="ghost" id="vt-copy" data-i18n="vtCopy">Copier le lien</button>
+        <div class="msg ok" id="vt-share-msg"></div>
+      </div>
+      <div class="card">
         <h2 data-i18n="vtAdd">Ajouter un modèle</h2>
         <label data-i18n="vtPhoto">Photo du modèle</label>
         <input id="vt-file" type="file" accept="image/*">
@@ -780,6 +787,10 @@
       vtNeedPhoto:"Choisissez une photo.", vtNeedName:"Donnez un nom au modèle.", vtWorking:"Préparation de la photo…",
       vtDone:"Modèle publié dans le catalogue.", vtFail:"Échec de la publication. Vérifiez la connexion.",
       vtConfirmDel:"Retirer ce modèle du catalogue ?", vtFrom:"dès",
+      vtShareT:"Envoyer ma vitrine aux clientes", vtShareBtn:"Partager sur WhatsApp", vtCopy:"Copier le lien",
+      vtShareH:"Le lien ouvre le catalogue directement sur vos modèles. Envoyez-le à une cliente, à une liste de diffusion ou mettez-le en statut.",
+      vtCopied:"Lien copié. Collez-le dans votre statut ou un message.",
+      vtShareMsg:"Bonjour ! Découvrez les modèles de {shop} en photo 👗\nChoisissez celui qui vous plaît et commandez directement sur WhatsApp :\n{url}",
       tabStaff:"Salariés", tabVisitors:"Visiteurs", tabFinances:"Finances", tabSettings:"Réglages",
       statReady:"Prêtes", statDue:"À encaisser",
       statArticles:"Articles", statInStock:"En stock", statTodaySales:"Recette du jour",
@@ -935,6 +946,10 @@
       vtNeedPhoto:"Choose a photo.", vtNeedName:"Give the design a name.", vtWorking:"Preparing the photo…",
       vtDone:"Design published to the catalogue.", vtFail:"Publishing failed. Check your connection.",
       vtConfirmDel:"Remove this design from the catalogue?", vtFrom:"from",
+      vtShareT:"Send my showcase to clients", vtShareBtn:"Share on WhatsApp", vtCopy:"Copy the link",
+      vtShareH:"The link opens the catalogue straight on your designs. Send it to a client, a broadcast list, or post it as your status.",
+      vtCopied:"Link copied. Paste it in your status or a message.",
+      vtShareMsg:"Hello! See {shop}'s designs in photos 👗\nPick the one you like and order directly on WhatsApp:\n{url}",
       tabStaff:"Staff", tabVisitors:"Visitors", tabFinances:"Finances", tabSettings:"Settings",
       statReady:"Ready", statDue:"To collect",
       statArticles:"Items", statInStock:"In stock", statTodaySales:"Today's sales",
@@ -2032,6 +2047,28 @@
       img.src = url;
     });
   }
+  function vitrineUrl(){ return "https://sanaapro.github.io/tape-espace/catalogue.html?a=" + encodeURIComponent(BID||""); }
+  function vitrineMsg(){
+    return t("vtShareMsg").replace("{shop}", (BOUTIQUE && BOUTIQUE.name) || "SanaaPro").replace("{url}", vitrineUrl());
+  }
+  function vtShareNote(k){
+    const m=$("vt-share-msg"); m.textContent=t(k); m.className="msg ok show";
+    setTimeout(()=>{ m.classList.remove("show"); }, 4000);
+  }
+  $("vt-share").addEventListener("click", ()=>{
+    const text = vitrineMsg();
+    if(navigator.share){ navigator.share({ text }).catch(function(){}); return; }
+    const url="https://wa.me/?text="+encodeURIComponent(text);
+    const w=window.open(url,"_blank"); if(!w) location.href=url;
+  });
+  $("vt-copy").addEventListener("click", ()=>{
+    const u = vitrineUrl();
+    const done = ()=>vtShareNote("vtCopied");
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(u).then(done).catch(()=>{ prompt("", u); });
+    } else prompt("", u);
+  });
+
   async function loadVitrine(){
     if(!BID) return;
     $("vt-quartier").value = (BOUTIQUE && BOUTIQUE.quartier) || "";
@@ -2109,7 +2146,7 @@
       $("vt-titre").value=""; $("vt-prix").value="";
       msg.textContent=t("vtDone"); msg.className="msg ok show";
       setTimeout(()=>{ msg.classList.remove("show"); }, 4000);
-    }catch(e){ fail("vtFail"); }
+    }catch(e){ fail("vtFail"); msg.textContent += " [" + ((e && (e.code || e.message)) || "?") + "]"; }
     btn.disabled=false;
   });
 
