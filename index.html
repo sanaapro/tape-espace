@@ -863,6 +863,7 @@
       noPhone:"Cette cliente n'a pas de numéro enregistré.",
       noShopPhone:"Aucun numéro WhatsApp enregistré pour la boutique.",
       waFoot:"Merci de votre confiance.",
+      lineTrack:"Suivez votre commande ici : {v}",
       mRecu:"Bonjour {nom}, nous avons bien reçu votre {recu} à l'atelier {boutique}.",
       mCoupe:"Bonjour {nom}, la coupe de votre {article} commence à l'atelier {boutique}.",
       mEssayage:"Bonjour {nom}, votre {article} est prêt pour l'essayage. Vous pouvez passer à l'atelier {boutique} quand cela vous arrange.",
@@ -1008,6 +1009,7 @@
       noPhone:"This client has no phone number saved.",
       noShopPhone:"No WhatsApp number saved for the shop.",
       waFoot:"Thank you for your trust.",
+      lineTrack:"Track your order here: {v}",
       mRecu:"Hello {nom}, we have received your {recu} at {boutique}.",
       mCoupe:"Hello {nom}, cutting has started on your {article} at {boutique}.",
       mEssayage:"Hello {nom}, your {article} is ready for fitting. Please come to {boutique} whenever it suits you.",
@@ -1717,6 +1719,40 @@
     return Math.max(0, p - pa);
   }
 
+  // ---- Suivi client : une copie minimale de la commande dans /suivi/{jeton}, lisible par lien ----
+  const SUIVI_BASE = "https://sanaapro.github.io/tape-espace/suivi.html?t=";
+  function syncSuivi(o, id){
+    try{
+      if(!o || !id || !BID || isExpired()) return;
+      if(!o.suiviToken){
+        const a = new Uint8Array(16); crypto.getRandomValues(a);
+        const abc = "abcdefghijkmnpqrstuvwxyz23456789";
+        o.suiviToken = Array.from(a, b => abc[b % 32]).join("");
+        setDoc(doc(db,"boutiques",BID,"commandes",id), { suiviToken:o.suiviToken }, { merge:true }).catch(function(){});
+      }
+      const local = COMMANDES.find(x=>x.id===id);
+      if(local && local!==o) local.suiviToken = o.suiviToken;
+      _setDoc(doc(db,"suivi",o.suiviToken), {
+        bid: BID,
+        boutique: (BOUTIQUE && BOUTIQUE.name) || "",
+        wa: waNumber(BOUTIQUE && BOUTIQUE.whatsapp) || "",
+        prenom: String(o.clienteName||"").trim().split(/\s+/)[0] || "",
+        article: o.article || "",
+        type: o.type || "confection",
+        statut: o.statut || "recu",
+        livraison: o.livraison || null,
+        numero: o.numero || null,
+        prix: (o.prix || o.prix===0) ? Number(o.prix) : null,
+        paye: Number(o.paye) || 0,
+        reste: resteDe(o),
+        devise: cur(),
+        lang: LANG_MSG,
+        updatedMs: Date.now()
+      }, { merge:true }).catch(function(){});
+    }catch(e){}
+  }
+  function suiviUrl(o){ return (o && o.suiviToken) ? SUIVI_BASE + o.suiviToken : ""; }
+
   function joursAvant(v){
     if(!v) return null;
     const p=String(v).split("-");
@@ -2100,6 +2136,7 @@
       const local=COMMANDES.find(x=>x.id===ORDID);
       if(local) local.statut=st;
       setDoc(doc(db,"boutiques",BID,"commandes",ORDID), { statut:st, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+      syncSuivi(ORD, ORDID);
       renderCmd(ORD, ORDID); renderLists();
       if(autoNotifyOn()){
         const num=waNumber(ORD.clientePhone);
@@ -2133,6 +2170,8 @@
       if(re>0) msg += "\n" + tm("mAmount").replace("{prix}", Math.round(re)).replace("{cur}", cur());
       else if(o.prix) msg += "\n" + tm("mPaid");
     }
+    const su = suiviUrl(o);
+    if(su) msg += "\n\n" + tm("lineTrack").replace("{v}", su);
     return msg + "\n" + tm("waFoot");
   }
 
@@ -2147,6 +2186,7 @@
     const local=COMMANDES.find(x=>x.id===ORDID);
     if(local) local.paye=paye;
     setDoc(doc(db,"boutiques",BID,"commandes",ORDID), { paye, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+    syncSuivi(ORD, ORDID);
     addMouv("recette","atelier",amt, t("shopOrder")+" "+fmtNum(ORD.numero)+" — "+(ORD.clienteName||""), { commandeId:ORDID });
     $("p-amt").value="";
     msg.textContent=t("cashedIn")+" "+money(amt); msg.className="msg ok show";
@@ -2158,6 +2198,7 @@
     if(!ORD) return;
     const num=waNumber(ORD.clientePhone);
     if(!num){ alert(t("noPhone")); return; }
+    syncSuivi(ORD, ORDID);
     openWa(num, clientMessage(ORD));
   });
 
@@ -2284,6 +2325,7 @@
     if(existing) Object.assign(existing, data);
     else COMMANDES.unshift(Object.assign({ id, statut:"recu" }, data));
     editingOrd=null;
+    syncSuivi(COMMANDES.find(x=>x.id===id), id);
     renderLists();
     renderCmd(COMMANDES.find(x=>x.id===id), id);
     show("cmd");
@@ -2294,6 +2336,7 @@
     if(!await askCode()) return;
     if(!confirm(t("confirmDeleteOrder"))) return;
     deleteDoc(doc(db,"boutiques",BID,"commandes",ORDID)).catch(function(){});
+    if(ORD && ORD.suiviToken) _deleteDoc(doc(db,"suivi",ORD.suiviToken)).catch(function(){});
     COMMANDES = COMMANDES.filter(x=>x.id!==ORDID);
     ORD=null; ORDID=null;
     renderLists(); show("dash"); setTab("atelier");
