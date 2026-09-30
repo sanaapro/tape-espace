@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E0E0F">
+<title>Suivi de commande — SanaaPro</title>
+<meta name="description" content="Suivez l'avancement de votre vêtement à l'atelier, sans appeler.">
+<meta property="og:title" content="Suivi de votre commande">
+<meta property="og:description" content="Voyez où en est votre vêtement à l'atelier.">
+<meta property="og:image" content="https://sanaapro.github.io/tape-espace/icon-512.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://firestore.googleapis.com">
+<style>
+  :root{
+    --bg:#0E0E0F; --card:#17171A; --line:#2A2A2F; --ink:#F3EEE3; --muted:#9C978C;
+    --gold:#C9A24B; --gold-soft:#3A3121; --ok:#6FBF73; --warn:#E0A43A; --err:#E0645A;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *,*::before,*::after{ box-sizing:inherit }
+  html,body{ margin:0; background:var(--bg); color:var(--ink) }
+  body{ font:16px/1.55 -apple-system, "Segoe UI", Roboto, Arial, sans-serif; -webkit-text-size-adjust:100% }
+  .wrap{ max-width:480px; margin:0 auto; padding:18px 20px 40px }
+  header{ display:flex; align-items:center; gap:10px; margin-bottom:26px }
+  header img{ width:34px; height:34px; border-radius:8px }
+  .shop{ font-family:Georgia, "Times New Roman", serif; font-size:17px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+  .lang{ background:none; border:1px solid var(--line); color:var(--muted); border-radius:20px; padding:5px 12px; font:inherit; font-size:13px; cursor:pointer }
+  .lang:focus-visible,.wa:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+
+  .hello{ color:var(--muted); margin:0 0 4px; font-size:15px }
+  h1{ font-family:Georgia, "Times New Roman", serif; font-weight:normal; font-size:29px; line-height:1.22; margin:0 0 30px; letter-spacing:-.01em }
+
+  /* Le fil : une couture qui avance d'étape en étape */
+  .thread{ list-style:none; margin:0 0 30px; padding:0; position:relative }
+  .thread li{ position:relative; padding:0 0 26px 44px; min-height:28px }
+  .thread li:last-child{ padding-bottom:0 }
+  .thread li::before{ /* point de couture */
+    content:""; position:absolute; left:6px; top:3px; width:16px; height:16px; border-radius:50%;
+    border:2px solid var(--line); background:var(--bg); z-index:1 }
+  .thread li::after{ /* le fil entre deux points */
+    content:""; position:absolute; left:13px; top:22px; bottom:-2px; width:0;
+    border-left:2px dashed var(--line) }
+  .thread li:last-child::after{ display:none }
+  .thread li.done::before{ background:var(--gold); border-color:var(--gold) }
+  .thread li.done::after{ border-left-style:solid; border-left-color:var(--gold) }
+  .thread li.now::before{ background:var(--gold); border-color:var(--gold); box-shadow:0 0 0 6px var(--gold-soft) }
+  .thread li.now::before{ animation:pulse 2.4s ease-in-out infinite }
+  @keyframes pulse{ 50%{ box-shadow:0 0 0 10px rgba(201,162,75,.10) } }
+  @media (prefers-reduced-motion:reduce){ .thread li.now::before{ animation:none } }
+  .step{ font-size:17px; color:var(--muted) }
+  .done .step,.now .step{ color:var(--ink) }
+  .now .step{ font-weight:600 }
+  .when{ font-size:13px; color:var(--gold); margin-top:1px }
+
+  .facts{ border-top:1px solid var(--line); padding-top:6px; margin-bottom:26px }
+  .row{ display:flex; justify-content:space-between; gap:16px; padding:11px 0; border-bottom:1px solid var(--line); font-size:15px }
+  .row span:first-child{ color:var(--muted) }
+  .row span:last-child{ text-align:right }
+  .late{ color:var(--err) } .soon{ color:var(--warn) } .paid{ color:var(--ok) } .due{ color:var(--warn) }
+
+  .wa{ display:flex; align-items:center; justify-content:center; gap:9px; width:100%; min-height:52px;
+       background:var(--gold); color:#16130B; border:0; border-radius:12px; font:inherit; font-weight:600; font-size:16px; text-decoration:none }
+  .wa svg{ width:20px; height:20px }
+  .stamp{ text-align:center; color:var(--muted); font-size:12.5px; margin-top:18px }
+  .foot{ text-align:center; color:var(--muted); font-size:12px; margin-top:34px }
+  .foot a{ color:var(--gold); text-decoration:none }
+
+  .state{ text-align:center; padding:60px 10px }
+  .state h1{ margin-bottom:12px; font-size:24px }
+  .state p{ color:var(--muted); margin:0 }
+  .spin{ width:28px; height:28px; margin:0 auto 18px; border:2px solid var(--line); border-top-color:var(--gold); border-radius:50%; animation:sp 1s linear infinite }
+  @keyframes sp{ to{ transform:rotate(360deg) } }
+  [hidden]{ display:none !important }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="icon-192.png" alt="" width="34" height="34">
+    <div class="shop" id="shop">SanaaPro</div>
+    <button class="lang" id="lang" type="button">EN</button>
+  </header>
+
+  <div class="state" id="loading"><div class="spin"></div><p id="l-txt">Chargement…</p></div>
+  <div class="state" id="error" hidden><h1 id="e-title"></h1><p id="e-txt"></p></div>
+
+  <main id="main" hidden>
+    <p class="hello" id="hello"></p>
+    <h1 id="headline"></h1>
+
+    <ol class="thread" id="thread"></ol>
+
+    <div class="facts" id="facts"></div>
+
+    <a class="wa" id="wa" hidden target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.4.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3Z"/></svg>
+      <span id="wa-txt"></span>
+    </a>
+    <p class="stamp" id="stamp"></p>
+  </main>
+
+  <p class="foot"><span id="f-txt"></span> <a href="https://sanaapro.github.io/">SanaaPro</a></p>
+</div>
+
+<script>
+(function(){
+  var PROJECT = "sanaapro-app";
+  var API_KEY = "AIzaSyCqfAGGU7yFs_QYg70u3e5cNYPXQjRHzsI";
+  var STEPS = ["recu","coupe","essayage","pret"];
+
+  var T = {
+    fr:{
+      loading:"Chargement…", hello:"Bonjour {p},", helloNo:"Bonjour,",
+      recu:"Reçu", coupe:"En cours", essayage:"Essayage", pret:"Prêt",
+      h_recu:"Votre commande est bien arrivée à l'atelier.",
+      h_coupe:"Votre {a} est en cours de confection.",
+      h_coupe_ret:"La retouche de votre {a} est en cours.",
+      h_essayage:"Votre {a} est prêt pour l'essayage.",
+      h_pret:"Votre {a} est prêt. Vous pouvez venir le retirer.",
+      h_livre:"Vous avez retiré votre {a}. Merci !",
+      art:"vêtement", now:"Étape actuelle",
+      receipt:"Reçu n°", model:"Modèle", delivery:"Livraison prévue",
+      price:"Prix", paid:"Déjà payé", left:"Reste à payer", allPaid:"Tout est réglé",
+      late:"en retard de {n} j", today:"aujourd'hui", tomorrow:"demain", inDays:"dans {n} jours",
+      wa:"Écrire à l'atelier", waMsg:"Bonjour, je vous écris au sujet de ma commande n° {n}.",
+      waMsgNo:"Bonjour, je vous écris au sujet de ma commande.",
+      stamp:"Mis à jour le {d}", foot:"Suivi fourni par",
+      eNoT:"Lien incomplet", eNoTx:"Ce lien de suivi n'est pas complet. Demandez à l'atelier de vous le renvoyer.",
+      eNF:"Commande introuvable", eNFx:"Ce suivi n'existe plus ou le lien a été mal copié. Contactez l'atelier.",
+      eNet:"Pas de connexion", eNetx:"Impossible de joindre le serveur. Vérifiez votre réseau puis rouvrez le lien.",
+      lang:"EN"
+    },
+    en:{
+      loading:"Loading…", hello:"Hello {p},", helloNo:"Hello,",
+      recu:"Received", coupe:"In progress", essayage:"Fitting", pret:"Ready",
+      h_recu:"Your order has arrived at the workshop.",
+      h_coupe:"Your {a} is being made.",
+      h_coupe_ret:"Your {a} is being altered.",
+      h_essayage:"Your {a} is ready for a fitting.",
+      h_pret:"Your {a} is ready. You can come and collect it.",
+      h_livre:"You have collected your {a}. Thank you!",
+      art:"garment", now:"Current stage",
+      receipt:"Receipt no.", model:"Model", delivery:"Expected delivery",
+      price:"Price", paid:"Already paid", left:"Left to pay", allPaid:"Fully paid",
+      late:"{n} days late", today:"today", tomorrow:"tomorrow", inDays:"in {n} days",
+      wa:"Message the workshop", waMsg:"Hello, I'm writing about my order no. {n}.",
+      waMsgNo:"Hello, I'm writing about my order.",
+      stamp:"Updated {d}", foot:"Tracking by",
+      eNoT:"Incomplete link", eNoTx:"This tracking link is incomplete. Ask the workshop to send it again.",
+      eNF:"Order not found", eNFx:"This tracking no longer exists or the link was copied wrongly. Contact the workshop.",
+      eNet:"No connection", eNetx:"Can't reach the server. Check your network and open the link again.",
+      lang:"FR"
+    }
+  };
+
+  var $ = function(id){ return document.getElementById(id); };
+  var token = new URLSearchParams(location.search).get("t") || "";
+  var DATA = null, LANG = null, ERR = null;
+  try{ LANG = localStorage.getItem("sanaapro_suivi_lang"); }catch(e){}
+
+  function L(){ return T[LANG] || T.fr; }
+  function num3(n){ n = String(n||""); return n.length < 3 ? ("000"+n).slice(-3) : n; }
+  function money(v){ return Math.round(Number(v)||0).toLocaleString(LANG==="en"?"en-GB":"fr-FR") + " " + (DATA.devise||"D"); }
+  function fmtDate(v){
+    var p = String(v||"").split("-"); if(p.length!==3) return String(v||"");
+    var d = new Date(+p[0], +p[1]-1, +p[2]);
+    return d.toLocaleDateString(LANG==="en"?"en-GB":"fr-FR",{ weekday:"long", day:"numeric", month:"long" });
+  }
+  function daysTo(v){
+    var p = String(v||"").split("-"); if(p.length!==3) return null;
+    var d = new Date(+p[0], +p[1]-1, +p[2]); var n = new Date(); n.setHours(0,0,0,0);
+    return Math.round((d - n) / 86400000);
+  }
+  function val(f){
+    if(!f) return null;
+    if("stringValue" in f) return f.stringValue;
+    if("integerValue" in f) return Number(f.integerValue);
+    if("doubleValue" in f) return f.doubleValue;
+    if("booleanValue" in f) return f.booleanValue;
+    return null;
+  }
+
+  function showError(kind){
+    ERR = kind;
+    $("loading").hidden = true; $("main").hidden = true; $("error").hidden = false;
+    $("e-title").textContent = L()["e"+kind]; $("e-txt").textContent = L()["e"+kind+"x"];
+  }
+
+  function row(label, value, cls){
+    var r = document.createElement("div"); r.className = "row";
+    var a = document.createElement("span"); a.textContent = label;
+    var b = document.createElement("span"); b.textContent = value; if(cls) b.className = cls;
+    r.appendChild(a); r.appendChild(b); return r;
+  }
+
+  function paint(){
+    var t = L();
+    document.documentElement.lang = LANG;
+    $("lang").textContent = t.lang;
+    $("l-txt").textContent = t.loading;
+    $("f-txt").textContent = t.foot;
+    if(ERR){ showError(ERR); return; }
+    if(!DATA) return;
+
+    var st = DATA.statut || "recu";
+    var livre = st === "livre";
+    var ci = livre ? STEPS.length : Math.max(0, STEPS.indexOf(st));
+    var art = DATA.article || t.art;
+
+    $("shop").textContent = DATA.boutique || "SanaaPro";
+    document.title = (DATA.boutique ? DATA.boutique + " — " : "") + (LANG==="en" ? "Order tracking" : "Suivi de commande");
+    $("hello").textContent = DATA.prenom ? t.hello.replace("{p}", DATA.prenom) : t.helloNo;
+    var hk = livre ? "h_livre" : (st==="coupe" && DATA.type==="retouche" ? "h_coupe_ret" : "h_"+st);
+    $("headline").textContent = (t[hk] || t.h_recu).replace("{a}", art);
+
+    var ol = $("thread"); ol.innerHTML = "";
+    STEPS.forEach(function(s, i){
+      var li = document.createElement("li");
+      if(i < ci) li.className = "done"; else if(i === ci) li.className = "now";
+      var d = document.createElement("div"); d.className = "step"; d.textContent = t[s]; li.appendChild(d);
+      if(i === ci){ var w = document.createElement("div"); w.className = "when"; w.textContent = t.now; li.appendChild(w); li.setAttribute("aria-current","step"); }
+      ol.appendChild(li);
+    });
+
+    var f = $("facts"); f.innerHTML = "";
+    if(DATA.numero) f.appendChild(row(t.receipt, num3(DATA.numero)));
+    if(DATA.article) f.appendChild(row(t.model, DATA.article));
+    if(DATA.livraison && !livre){
+      var n = daysTo(DATA.livraison), note = "", cls = "";
+      if(n !== null && st !== "pret"){
+        if(n < 0){ note = t.late.replace("{n}", -n); cls = "late"; }
+        else if(n === 0){ note = t.today; cls = "soon"; }
+        else if(n === 1){ note = t.tomorrow; cls = "soon"; }
+        else note = t.inDays.replace("{n}", n);
+      }
+      f.appendChild(row(t.delivery, fmtDate(DATA.livraison) + (note ? " · " + note : ""), cls));
+    }
+    if(DATA.prix !== null && DATA.prix !== undefined){
+      f.appendChild(row(t.price, money(DATA.prix)));
+      if(DATA.reste > 0){
+        if(DATA.paye > 0) f.appendChild(row(t.paid, money(DATA.paye)));
+        f.appendChild(row(t.left, money(DATA.reste), "due"));
+      } else {
+        f.appendChild(row(t.allPaid, "✓", "paid"));
+      }
+    }
+
+    if(DATA.wa){
+      var msg = DATA.numero ? t.waMsg.replace("{n}", num3(DATA.numero)) : t.waMsgNo;
+      $("wa").href = "https://wa.me/" + DATA.wa + "?text=" + encodeURIComponent(msg);
+      $("wa-txt").textContent = t.wa; $("wa").hidden = false;
+    }
+    if(DATA.updatedMs){
+      var d = new Date(DATA.updatedMs);
+      $("stamp").textContent = t.stamp.replace("{d}",
+        d.toLocaleDateString(LANG==="en"?"en-GB":"fr-FR",{ day:"numeric", month:"long" }) + " · " +
+        d.toLocaleTimeString(LANG==="en"?"en-GB":"fr-FR",{ hour:"2-digit", minute:"2-digit" }));
+    }
+    $("loading").hidden = true; $("error").hidden = true; $("main").hidden = false;
+  }
+
+  function load(){
+    if(!/^[a-z0-9]{12,40}$/.test(token)){ if(!LANG) LANG = "fr"; showError("NoT"); paint(); return; }
+    var url = "https://firestore.googleapis.com/v1/projects/" + PROJECT +
+              "/databases/(default)/documents/suivi/" + token + "?key=" + API_KEY;
+    fetch(url, { cache:"no-store" }).then(function(r){
+      if(r.status === 404 || r.status === 403) throw "NF";
+      if(!r.ok) throw "Net";
+      return r.json();
+    }).then(function(j){
+      var f = j.fields || {}, d = {};
+      Object.keys(f).forEach(function(k){ d[k] = val(f[k]); });
+      DATA = d; ERR = null;
+      if(!LANG) LANG = (d.lang === "en") ? "en" : "fr";
+      paint();
+    }).catch(function(e){
+      if(DATA) return; // on garde l'affichage précédent si un rafraîchissement échoue
+      if(!LANG) LANG = "fr";
+      showError(e === "NF" ? "NF" : "Net"); paint();
+    });
+  }
+
+  $("lang").addEventListener("click", function(){
+    LANG = (LANG === "en") ? "fr" : "en";
+    try{ localStorage.setItem("sanaapro_suivi_lang", LANG); }catch(e){}
+    paint();
+  });
+  document.addEventListener("visibilitychange", function(){ if(!document.hidden) load(); });
+
+  load();
+})();
+</script>
+</body>
+</html>
