@@ -400,7 +400,7 @@
       <div class="card">
         <h2 data-i18n="ownerCode">Code propriétaire</h2>
         <p style="margin:0 0 4px;font-size:13px;color:var(--muted)" data-i18n="ownerCodeHint">Sans code, n'importe qui peut modifier un prix ou un modèle. Avec un code, vous seul.</p>
-        <input id="b-code" type="text" inputmode="numeric" maxlength="6" data-i18n-ph="ownerCodePh" placeholder="4 à 6 chiffres">
+        <input id="b-code" type="password" inputmode="numeric" autocomplete="new-password" maxlength="6" data-i18n-ph="ownerCodePh" placeholder="4 à 6 chiffres">
         <button class="ghost" id="b-code-save" data-i18n="saveCode">Enregistrer le code</button>
       </div>
       <div class="card">
@@ -790,6 +790,8 @@
       vtDone:"Modèle publié dans le catalogue.", vtFail:"Échec de la publication. Vérifiez la connexion.",
       vtConfirmDel:"Retirer ce modèle du catalogue ?", vtFrom:"dès",
       waveLabel:"Numéro Wave (paiement des clientes)",
+      vtLimit:"La formule Standard permet {n} modèles dans le catalogue. Passez au Premium pour en publier sans limite, ou supprimez un modèle.",
+      vtLimitAsk:"Passer au Premium sur WhatsApp ?",
       vtShareT:"Envoyer ma vitrine aux clientes", vtShareBtn:"Partager sur WhatsApp", vtCopy:"Copier le lien",
       vtShareH:"Le lien ouvre le catalogue directement sur vos modèles. Envoyez-le à une cliente, à une liste de diffusion ou mettez-le en statut.",
       vtCopied:"Lien copié. Collez-le dans votre statut ou un message.",
@@ -950,6 +952,8 @@
       vtDone:"Design published to the catalogue.", vtFail:"Publishing failed. Check your connection.",
       vtConfirmDel:"Remove this design from the catalogue?", vtFrom:"from",
       waveLabel:"Wave number (client payments)",
+      vtLimit:"The Standard plan allows {n} designs in the catalogue. Upgrade to Premium to publish without limit, or remove a design.",
+      vtLimitAsk:"Upgrade to Premium on WhatsApp?",
       vtShareT:"Send my showcase to clients", vtShareBtn:"Share on WhatsApp", vtCopy:"Copy the link",
       vtShareH:"The link opens the catalogue straight on your designs. Send it to a client, a broadcast list, or post it as your status.",
       vtCopied:"Link copied. Paste it in your status or a message.",
@@ -1502,7 +1506,10 @@
     if(act !== $("b-wa"))     $("b-wa").value     = b.whatsapp||"";
     if(act !== $("b-wave"))   $("b-wave").value   = b.wave||"";
     if(act !== $("b-devise")) $("b-devise").value = b.devise||CUR;
-    if(document.activeElement !== $("b-code")) $("b-code").value = b.codeAdmin || "";
+    if(document.activeElement !== $("b-code")){
+      $("b-code").value = "";
+      $("b-code").placeholder = b.codeAdmin ? "••••••" : t("ownerCodePh");
+    }
     const sub=b.subscription||{}, badge=$("d-badge"), note=$("d-subnote");
     note.hidden=true; note.className="sub-note";
     $("d-plan").textContent = planLabel();
@@ -1990,7 +1997,8 @@
       amt.textContent=money(x.salaire);
       l2.appendChild(amt);
       const rm=document.createElement("button"); rm.className="rm"; rm.textContent=t("remove");
-      rm.addEventListener("click", ()=>{
+      rm.addEventListener("click", async ()=>{
+        if(!await askCode()) return;
         if(!confirm(t("confirmDeleteStaff"))) return;
         deleteDoc(doc(db,"boutiques",BID,"salaries",x.id)).catch(function(){});
         SALARIES = SALARIES.filter(y=>y.id!==x.id);
@@ -2024,7 +2032,8 @@
       if(v.note){ const n=document.createElement("div"); n.className="ln"; n.textContent=v.note; el.appendChild(n); }
       const w=document.createElement("div"); w.className="ln"; w.textContent=fmtWhen(v.atMs); el.appendChild(w);
       const rm=document.createElement("button"); rm.className="rm"; rm.textContent=t("remove");
-      rm.addEventListener("click", ()=>{
+      rm.addEventListener("click", async ()=>{
+        if(!await askCode()) return;
         if(!confirm(t("confirmDeleteVisit"))) return;
         deleteDoc(doc(db,"boutiques",BID,"visiteurs",v.id)).catch(function(){});
         VISITEURS = VISITEURS.filter(y=>y.id!==v.id);
@@ -2075,6 +2084,7 @@
     } else prompt("", u);
   });
 
+  const VT_MAX_STD = 5;
   async function loadVitrine(){
     if(!BID) return;
     $("vt-quartier").value = (BOUTIQUE && BOUTIQUE.quartier) || "";
@@ -2101,7 +2111,8 @@
         ((m.prix||m.prix===0) ? " · "+t("vtFrom")+" "+money(m.prix) : "");
       el.appendChild(t2);
       const rm=document.createElement("button"); rm.className="rm"; rm.textContent=t("remove");
-      rm.addEventListener("click", ()=>{
+      rm.addEventListener("click", async ()=>{
+        if(!await askCode()) return;
         if(!confirm(t("vtConfirmDel"))) return;
         _deleteDoc(doc(db,"catalogue",m.id)).catch(function(){});
         _deleteDoc(doc(db,"catalogue_photos",m.id)).catch(function(){});
@@ -2127,6 +2138,13 @@
     const msg=$("vt-msg"), btn=$("vt-add");
     const fail = k => { msg.textContent=t(k); msg.className="msg err show"; };
     if(isExpired()){ warnExpired(); return; }
+    if(!subInfo().premium && VITRINE.length >= VT_MAX_STD){
+      msg.textContent = t("vtLimit").replace("{n}", VT_MAX_STD); msg.className="msg err show";
+      if(confirm(t("vtLimitAsk"))){
+        openWa(SANAAPRO_WA, t("upgradeMsg").replace("{shop}", (BOUTIQUE && BOUTIQUE.name) || "").replace("{slug}", (BOUTIQUE && BOUTIQUE.slug) || ""));
+      }
+      return;
+    }
     if(!VT_FILE) return fail("vtNeedPhoto");
     const titre=$("vt-titre").value.trim();
     if(!titre) return fail("vtNeedName");
@@ -2302,7 +2320,7 @@
   $("fiche-back").addEventListener("click", ()=>{ show("dash"); setTab("mesures"); });
   $("cf-back").addEventListener("click", ()=> editingOrd ? openCmd(editingOrd) : (show("dash"), setTab("atelier")));
   $("form-back").addEventListener("click", ()=> editingId ? openFiche(editingId) : (show("dash"), setTab("mesures")));
-  $("f-edit").addEventListener("click", ()=>openForm(currentCliente));
+  $("f-edit").addEventListener("click", async ()=>{ if(await askCode()) openForm(currentCliente); });
   $("c-edit").addEventListener("click", async ()=>{ if(await askCode()) openCmdForm(ORDID); });
 
   function renderCmd(o, id){
@@ -2660,8 +2678,9 @@
     renderLists(); show("dash"); setTab("mesures");
   });
 
-  $("f-del").addEventListener("click", ()=>{
+  $("f-del").addEventListener("click", async ()=>{
     if(!currentCliente) return;
+    if(!await askCode()) return;
     if(!confirm(t("confirmDelete"))) return;
     deleteDoc(doc(db,"boutiques",BID,"clientes",currentCliente)).catch(function(){});
     CLIENTES = CLIENTES.filter(x=>x.id!==currentCliente);
@@ -2702,15 +2721,18 @@
     setTimeout(()=>{ msg.classList.remove("show"); }, 5000);
   });
 
-  $("b-code-save").addEventListener("click", ()=>{
+  $("b-code-save").addEventListener("click", async ()=>{
+    if(!await askCode()) return;
     const v=$("b-code").value.replace(/\D/g,"").slice(0,6);
     $("b-code").value=v;
     if(BOUTIQUE) BOUTIQUE.codeAdmin=v;
     setDoc(doc(db,"boutiques",BID), { codeAdmin:v, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+    $("b-code").value=""; $("b-code").placeholder = v ? "••••••" : t("ownerCodePh");
     alert(t("codeSaved"));
   });
 
-  $("b-otp-gen").addEventListener("click", ()=>{
+  $("b-otp-gen").addEventListener("click", async ()=>{
+    if(!await askCode()) return;
     const code = String(Math.floor(100000 + Math.random()*900000));
     setDoc(doc(db,"boutiques",BID), { otp:{ code, createdAt:serverTimestamp(), used:false } }, { merge:true }).catch(function(){});
     if(BOUTIQUE) BOUTIQUE.otp = { code, used:false };
