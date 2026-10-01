@@ -387,6 +387,8 @@
         <input id="b-owner" type="text" data-i18n-ph="ownerPh" placeholder="Votre nom complet">
         <label data-i18n="phoneWa">Téléphone / WhatsApp</label>
         <input id="b-wa" type="tel" placeholder="+220 …">
+        <label data-i18n="waveLabel">Numéro Wave (paiement des clientes)</label>
+        <input id="b-wave" type="tel" placeholder="+220 …">
         <label data-i18n="currency">Monnaie affichée</label>
         <input id="b-devise" type="text" maxlength="6" data-i18n-ph="currencyPh" placeholder="D, CFA, ₦…">
         <button class="ghost" id="b-save" data-i18n="saveShop">Enregistrer les modifications</button>
@@ -787,6 +789,7 @@
       vtNeedPhoto:"Choisissez une photo.", vtNeedName:"Donnez un nom au modèle.", vtWorking:"Préparation de la photo…",
       vtDone:"Modèle publié dans le catalogue.", vtFail:"Échec de la publication. Vérifiez la connexion.",
       vtConfirmDel:"Retirer ce modèle du catalogue ?", vtFrom:"dès",
+      waveLabel:"Numéro Wave (paiement des clientes)",
       vtShareT:"Envoyer ma vitrine aux clientes", vtShareBtn:"Partager sur WhatsApp", vtCopy:"Copier le lien",
       vtShareH:"Le lien ouvre le catalogue directement sur vos modèles. Envoyez-le à une cliente, à une liste de diffusion ou mettez-le en statut.",
       vtCopied:"Lien copié. Collez-le dans votre statut ou un message.",
@@ -946,6 +949,7 @@
       vtNeedPhoto:"Choose a photo.", vtNeedName:"Give the design a name.", vtWorking:"Preparing the photo…",
       vtDone:"Design published to the catalogue.", vtFail:"Publishing failed. Check your connection.",
       vtConfirmDel:"Remove this design from the catalogue?", vtFrom:"from",
+      waveLabel:"Wave number (client payments)",
       vtShareT:"Send my showcase to clients", vtShareBtn:"Share on WhatsApp", vtCopy:"Copy the link",
       vtShareH:"The link opens the catalogue straight on your designs. Send it to a client, a broadcast list, or post it as your status.",
       vtCopied:"Link copied. Paste it in your status or a message.",
@@ -1496,6 +1500,7 @@
     if(act !== $("b-name"))  $("b-name").value  = b.name||"";
     if(act !== $("b-owner")) $("b-owner").value = b.ownerName||"";
     if(act !== $("b-wa"))     $("b-wa").value     = b.whatsapp||"";
+    if(act !== $("b-wave"))   $("b-wave").value   = b.wave||"";
     if(act !== $("b-devise")) $("b-devise").value = b.devise||CUR;
     if(document.activeElement !== $("b-code")) $("b-code").value = b.codeAdmin || "";
     const sub=b.subscription||{}, badge=$("d-badge"), note=$("d-subnote");
@@ -1810,6 +1815,7 @@
         bid: BID,
         boutique: (BOUTIQUE && BOUTIQUE.name) || "",
         wa: waNumber(BOUTIQUE && BOUTIQUE.whatsapp) || "",
+        wave: (BOUTIQUE && BOUTIQUE.wave) || "",
         prenom: String(o.clienteName||"").trim().split(/\s+/)[0] || "",
         article: o.article || "",
         type: o.type || "confection",
@@ -2136,7 +2142,8 @@
         quartier: $("vt-quartier").value.trim() || (BOUTIQUE && BOUTIQUE.quartier) || "",
         titre, genre:$("vt-genre").value,
         prix: (pv!=="" && !isNaN(parseFloat(pv))) ? parseFloat(pv) : null,
-        devise: cur(), thumb, createdMs: Date.now(), slug: (BOUTIQUE && BOUTIQUE.slug) || ""
+        devise: cur(), thumb, createdMs: Date.now(), slug: (BOUTIQUE && BOUTIQUE.slug) || "",
+        wave: (BOUTIQUE && BOUTIQUE.wave) || ""
       };
       await Promise.all([
         _setDoc(ref, data),
@@ -2671,6 +2678,7 @@
       name,
       ownerName:$("b-owner").value.trim(),
       whatsapp:$("b-wa").value.trim(),
+      wave:$("b-wave").value.trim(),
       devise:($("b-devise").value.trim() || CUR),
       updatedAt:serverTimestamp()
     };
@@ -2679,8 +2687,15 @@
       BOUTIQUE.ownerName=data.ownerName;
       BOUTIQUE.whatsapp=data.whatsapp;
       BOUTIQUE.devise=data.devise;
+      BOUTIQUE.wave=data.wave;
     }
     setDoc(doc(db,"boutiques",BID), data, { merge:true }).catch(function(){});
+    // les modèles déjà publiés reprennent le nom, le WhatsApp, le numéro Wave et la monnaie
+    const pub = { boutique:data.name, wa:waNumber(data.whatsapp)||"", wave:data.wave, devise:data.devise };
+    getDocsSmart(query(collection(db,"catalogue"), where("bid","==",BID))).then(s=>{
+      s.forEach(d=>{ _setDoc(doc(db,"catalogue",d.id), pub, { merge:true }).catch(function(){}); });
+    }).catch(function(){});
+    VITRINE.forEach(m=>Object.assign(m, pub));
     renderDashboard(BOUTIQUE);
     renderLists();
     msg.textContent=t("shopSaved"); msg.className="msg ok show";
