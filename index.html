@@ -2047,7 +2047,7 @@
       img.src = url;
     });
   }
-  function vitrineUrl(){ return "https://sanaapro.github.io/tape-espace/catalogue.html?a=" + encodeURIComponent(BID||""); }
+  function vitrineUrl(){ return "https://sanaapro.github.io/tape-espace/catalogue.html?a=" + encodeURIComponent((BOUTIQUE && BOUTIQUE.slug) || BID || ""); }
   function vitrineMsg(){
     return t("vtShareMsg").replace("{shop}", (BOUTIQUE && BOUTIQUE.name) || "SanaaPro").replace("{url}", vitrineUrl());
   }
@@ -2078,6 +2078,8 @@
       VITRINE=[]; s.forEach(d=>{ VITRINE.push(Object.assign({ id:d.id }, d.data())); });
       VITRINE.sort((a,b)=>(Number(b.createdMs)||0)-(Number(a.createdMs)||0));
       VT_LOADED = true;
+      const sl = (BOUTIQUE && BOUTIQUE.slug) || "";
+      if(sl) VITRINE.forEach(m=>{ if(m.slug!==sl){ m.slug=sl; _setDoc(doc(db,"catalogue",m.id), { slug:sl }, { merge:true }).catch(function(){}); } });
     }catch(e){}
     renderVitrine();
   }
@@ -2134,7 +2136,7 @@
         quartier: $("vt-quartier").value.trim() || (BOUTIQUE && BOUTIQUE.quartier) || "",
         titre, genre:$("vt-genre").value,
         prix: (pv!=="" && !isNaN(parseFloat(pv))) ? parseFloat(pv) : null,
-        devise: cur(), thumb, createdMs: Date.now()
+        devise: cur(), thumb, createdMs: Date.now(), slug: (BOUTIQUE && BOUTIQUE.slug) || ""
       };
       await Promise.all([
         _setDoc(ref, data),
