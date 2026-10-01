@@ -107,19 +107,20 @@
          all:"All", femme:"Women", homme:"Men", enfant:"Children", allShops:"All workshops",
          loading:"Loading designs…", empty:"No designs here yet.", net:"Can't reach the catalogue. Check your connection and try again.",
          more:"Show more", from:"from", back:"‹ Back", order:"Order on WhatsApp",
-         msg:"Hello, I saw your design \u201c{t}\u201d on the SanaaPro catalogue. I would like to order it.",
+         msg:"Hello, I saw your design \u201c{t}\u201d (Ref. {r}) on the SanaaPro catalogue. I would like to order it.\n{u}", ref:"Ref.",
          foot:"Catalogue by", other:"FR", seeAll:"‹ See all workshops", shopLead:"Pick a design and order directly on WhatsApp." },
     fr:{ h1:"Les couturiers de Gambie, dans un seul catalogue.", lead:"Parcourez les modèles des ateliers près de chez vous, puis commandez directement au couturier sur WhatsApp.",
          all:"Tous", femme:"Femme", homme:"Homme", enfant:"Enfant", allShops:"Tous les ateliers",
          loading:"Chargement des modèles…", empty:"Aucun modèle ici pour l'instant.", net:"Impossible de joindre le catalogue. Vérifiez votre connexion puis réessayez.",
          more:"Voir plus", from:"dès", back:"‹ Retour", order:"Commander sur WhatsApp",
-         msg:"Bonjour, j'ai vu votre modèle \u00ab {t} \u00bb sur le catalogue SanaaPro. Je voudrais le commander.",
+         msg:"Bonjour, j'ai vu votre modèle \u00ab {t} \u00bb (Réf. {r}) sur le catalogue SanaaPro. Je voudrais le commander.\n{u}", ref:"Réf.",
          foot:"Catalogue par", other:"EN", seeAll:"‹ Voir tous les ateliers", shopLead:"Choisissez un modèle et commandez directement sur WhatsApp." }
   };
   var LANG = "en";
   try{ LANG = localStorage.getItem("sanaapro_site_lang") === "fr" ? "fr" : "en"; }catch(e){}
   var ITEMS = [], NEXT = null, GENRE = "all", SHOP = "", LOADING = false, FAILED = false, CURRENT = null;
-  var ONLY = "";
+  var ONLY = "", PICK = "";
+  try{ PICK = new URLSearchParams(location.search).get("m") || ""; }catch(e){}
   try{ ONLY = new URLSearchParams(location.search).get("a") || ""; }catch(e){}
   if(ONLY) SHOP = ONLY;
   var $ = function(id){ return document.getElementById(id); };
@@ -137,22 +138,18 @@
     Object.keys(f).forEach(function(k){ o[k] = val(f[k]); });
     return o;
   }
+  function ref(o){ return o.ref || ("M-" + String(o.id).slice(0,5).toUpperCase()); }
+  function link(o){ return location.origin + location.pathname + "?m=" + encodeURIComponent(o.id); }
   function money(o){ return Math.round(o.prix).toLocaleString(LANG==="fr"?"fr-FR":"en-GB") + " " + (o.devise || "D"); }
 
-  function shopQuery(field){
-    var body = { structuredQuery: { from:[{ collectionId:"catalogue" }],
-      where:{ fieldFilter:{ field:{ fieldPath:field }, op:"EQUAL", value:{ stringValue: ONLY } } }, limit: 300 } };
-    return fetch(BASE.replace(/\/$/, "") + ":runQuery?key=" + KEY, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(body) })
-      .then(function(r){ if(!r.ok) throw 0; return r.json(); })
-      .then(function(rows){ return rows.filter(function(x){ return x.document; }); });
-  }
   function loadShop(){
     LOADING = true; paintState();
-    shopQuery("slug")
-    .then(function(rows){ return rows.length ? rows : shopQuery("bid"); })
+    var body = { structuredQuery: { from:[{ collectionId:"catalogue" }],
+      where:{ fieldFilter:{ field:{ fieldPath:"bid" }, op:"EQUAL", value:{ stringValue: ONLY } } }, limit: 300 } };
+    fetch(BASE.replace(/\/$/, "") + ":runQuery?key=" + KEY, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(body) })
+    .then(function(r){ if(!r.ok) throw 0; return r.json(); })
     .then(function(rows){
-      rows.forEach(function(x){ ITEMS.push(parse(x.document)); });
-      if(ITEMS.length) SHOP = ITEMS[0].bid || SHOP;
+      rows.forEach(function(x){ if(x.document) ITEMS.push(parse(x.document)); });
       ITEMS.sort(function(a,b){ return (Number(b.createdMs)||0) - (Number(a.createdMs)||0); });
       NEXT = null; FAILED = false;
     }).catch(function(){ FAILED = true; })
@@ -209,7 +206,7 @@
       var b = document.createElement("button"); b.type = "button"; b.className = "item";
       var im = document.createElement("img"); im.src = o.thumb || ""; im.alt = o.titre || ""; im.loading = "lazy"; b.appendChild(im);
       var a = document.createElement("div"); a.className = "t"; a.textContent = o.titre || ""; b.appendChild(a);
-      var s = document.createElement("div"); s.className = "s"; s.textContent = (o.boutique||"") + (o.quartier ? " · " + o.quartier : ""); b.appendChild(s);
+      var s = document.createElement("div"); s.className = "s"; s.textContent = ref(o) + " · " + (o.boutique||"") + (o.quartier ? " · " + o.quartier : ""); b.appendChild(s);
       if(o.prix !== null && o.prix !== undefined){ var p = document.createElement("div"); p.className = "p"; p.textContent = t.from + " " + money(o); b.appendChild(p); }
       b.addEventListener("click", function(){ openSheet(o); });
       grid.appendChild(b);
@@ -227,10 +224,10 @@
   function fillSheet(o){
     var t = L();
     $("s-title").textContent = o.titre || "";
-    $("s-who").textContent = (o.boutique||"") + (o.quartier ? " · " + o.quartier : "");
+    $("s-who").textContent = t.ref + " " + ref(o) + " · " + (o.boutique||"") + (o.quartier ? " · " + o.quartier : "");
     $("s-price").textContent = (o.prix !== null && o.prix !== undefined) ? t.from + " " + money(o) : "";
     if(o.wa){
-      $("s-cta").href = "https://wa.me/" + o.wa + "?text=" + encodeURIComponent(t.msg.replace("{t}", o.titre || ""));
+      $("s-cta").href = "https://wa.me/" + o.wa + "?text=" + encodeURIComponent(t.msg.replace("{t}", o.titre || "").replace("{r}", ref(o)).replace("{u}", link(o)));
       $("s-cta").hidden = false;
     } else $("s-cta").hidden = true;
   }
@@ -255,6 +252,10 @@
   });
 
   paint(); load();
+  if(PICK){
+    fetch(BASE + "catalogue/" + encodeURIComponent(PICK) + "?key=" + KEY).then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){ if(d && d.name) openSheet(parse(d)); }).catch(function(){});
+  }
 })();
 </script>
 </body>
