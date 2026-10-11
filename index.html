@@ -2359,6 +2359,7 @@
       const t1=document.createElement("div"); t1.className="vt-t"; t1.textContent=m.titre||"—"; el.appendChild(t1);
       const t2=document.createElement("div"); t2.className="vt-s";
       t2.textContent = t("vt"+(m.genre==="homme"?"Homme":(m.genre==="enfant"?"Enfant":"Femme"))) +
+        (m.style ? " · "+t("st_"+m.style) : "") +
         ((m.prix||m.prix===0) ? " · "+t("vtFrom")+" "+money(m.prix) : "");
       el.appendChild(t2);
       const rm=document.createElement("button"); rm.className="rm"; rm.textContent=t("remove");
