@@ -307,6 +307,27 @@
       try{ localStorage.setItem("sanaapro_inst_x", String(Date.now())); }catch(e){}
       hide();
     });
+    // Navigateur interne (WhatsApp, Facebook, Instagram) : l'installation y est impossible.
+    var ua = navigator.userAgent || "";
+    var inApp = /WhatsApp|FBAN|FBAV|Instagram|; wv\)/i.test(ua);
+    if(inApp && !standalone()){
+      var E = en();
+      el("inst-t").textContent = E ? "Open in your browser" : "Ouvrez dans votre navigateur";
+      if(/android/i.test(ua)){
+        el("inst-s").textContent = E ? "To install SanaaPro on your phone." : "Pour installer SanaaPro sur votre t\u00e9l\u00e9phone.";
+        el("inst-go").textContent = E ? "Open in Chrome" : "Ouvrir dans Chrome";
+        el("inst-go").hidden = false;
+        el("inst-go").onclick = function(){
+          location.href = "intent://" + location.host + location.pathname + location.search + "#Intent;scheme=https;package=com.android.chrome;end";
+        };
+      } else {
+        el("inst-s").textContent = E ? "Tap \u2026 then \u201cOpen in Safari\u201d." : "Touchez \u2026 puis \u00ab Ouvrir dans Safari \u00bb.";
+        el("inst-go").hidden = true;
+      }
+      el("inst").hidden = false;
+      document.body.style.paddingBottom = "84px";
+      return;
+    }
     if(ios) window.addEventListener("load", function(){ setTimeout(function(){ show("ios"); }, 1500); });
   })();
   </script>
