@@ -2,7 +2,7 @@
    Nom de cache PRÉFIXÉ PAR L'APP : toutes les boutiques SanaaPro partagent
    le domaine sanaapro.github.io, donc un nom générique effacerait le cache
    des autres applications du même domaine. Ne jamais retirer ce préfixe. */
-const CACHE = "sanaapro-tape-espace-v2";
+const CACHE = "sanaapro-tape-espace-v3";
 const PREFIX = "sanaapro-tape-espace-";
 
 const CORE = [
@@ -65,9 +65,34 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  /* Fichiers de l'app : on répond depuis le cache tout de suite, et on
-     rafraîchit en arrière-plan. Une nouvelle version téléversée apparaît
-     donc à l'ouverture suivante, sans jamais bloquer sur le réseau. */
+  /* Pages HTML : réseau d'abord, pour toujours servir la dernière version
+     mise en ligne. La copie en cache ne sert qu'en cas de coupure ou si le
+     réseau ne répond pas en 6 secondes (débit très faible). */
+  const isPage = req.mode === "navigate" || /\.html$/.test(url.pathname) || url.pathname.endsWith("/");
+  if (url.origin === self.location.origin && isPage) {
+    e.respondWith(new Promise((resolve) => {
+      let done = false;
+      const fromCache = () => caches.match(req, { ignoreSearch: true });
+      const timer = setTimeout(() => {
+        fromCache().then((hit) => { if (hit && !done) { done = true; resolve(hit); } });
+      }, 6000);
+      fetch(req, { cache: "no-cache" }).then((res) => {
+        if (res && res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+        }
+        if (!done) { done = true; clearTimeout(timer); resolve(res); }
+      }).catch(() => {
+        fromCache().then((hit) => {
+          if (!done) { done = true; clearTimeout(timer); resolve(hit || Response.error()); }
+        });
+      });
+    }));
+    return;
+  }
+
+  /* Autres fichiers de l'app (icônes, scripts) : cache d'abord, rafraîchi
+     en arrière-plan. */
   if (url.origin === self.location.origin) {
     e.respondWith(
       caches.match(req).then((hit) => {
