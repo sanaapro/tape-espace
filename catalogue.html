@@ -65,6 +65,22 @@
   .wave .wh{ display:block; color:var(--muted); font-size:12.5px; margin-top:6px; line-height:1.4 }
   .wave button{ margin-top:10px; background:none; border:1px solid var(--line); color:var(--ink); border-radius:20px; padding:7px 16px; font:inherit; font-size:13.5px; cursor:pointer }
   .wave button:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+  /* ateliers */
+  .shops-t{ font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:6px 0 8px }
+  .shops{ display:flex; gap:10px; overflow-x:auto; padding-bottom:6px; margin-bottom:18px; scrollbar-width:none }
+  .shops::-webkit-scrollbar{ display:none }
+  .shop{ flex:none; display:flex; flex-direction:column; gap:2px; min-width:150px; max-width:220px; padding:12px 14px;
+         border:1px solid var(--line); border-radius:12px; background:var(--panel); color:var(--ink); text-decoration:none }
+  .shop b{ font-family:Georgia,"Times New Roman",serif; font-weight:normal; font-size:16px; line-height:1.25 }
+  .shop span{ font-size:12.5px; color:var(--muted) }
+  .shop .n{ color:var(--gold) }
+  .shop:focus-visible,.shopbar a:focus-visible,.shopbar button:focus-visible,.seeshop:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+  .shopbar{ display:flex; flex-wrap:wrap; gap:10px; margin:0 0 22px }
+  .shopbar a,.shopbar button{ flex:1 1 150px; display:flex; align-items:center; justify-content:center; min-height:46px; border-radius:11px;
+         font:inherit; font-weight:600; font-size:14.5px; text-decoration:none; cursor:pointer }
+  .shopbar a{ background:var(--gold); color:#16130B; border:0 }
+  .shopbar button{ background:none; color:var(--ink); border:1px solid var(--line) }
+  .seeshop{ display:block; margin-top:18px; padding:13px 14px; border:1px solid var(--line); border-radius:12px; color:var(--gold); text-decoration:none; text-align:center }
   [hidden]{ display:none !important }
 </style>
 </head>
@@ -83,7 +99,15 @@
   <div class="chips" id="chips"></div>
   <div class="chips" id="styles"></div>
   <select id="quartier" aria-label="Neighbourhood"></select>
-  <select id="shop" aria-label="Workshop"></select>
+  <select id="shop" aria-label="Workshop" hidden></select>
+  <div id="shopsbox" hidden>
+    <div class="shops-t" id="shops-t"></div>
+    <div class="shops" id="shops"></div>
+  </div>
+  <div class="shopbar" id="shopbar" hidden>
+    <a id="shop-wa" target="_blank" rel="noopener"></a>
+    <button type="button" id="shop-share"></button>
+  </div>
 
   <div class="grid" id="grid"></div>
   <div class="state" id="state"></div>
@@ -109,6 +133,7 @@
       <button type="button" id="wave-copy"></button>
       <span class="wh" id="wave-h"></span>
     </div>
+    <a class="seeshop" id="s-shop" hidden></a>
   </div>
 </div>
 
@@ -125,7 +150,9 @@
          waveT:"Pay a deposit with Wave", waveCopy:"Copy the number", waveCopied:"Number copied ✓",
          waveH:"After paying, send the screenshot to the workshop on WhatsApp.",
          msg:"Hello, I saw your design \u201c{t}\u201d (Ref. {r}) on the SanaaPro catalogue. I would like to order it.\n{u}", ref:"Ref.",
-         foot:"Catalogue by", other:"FR", seeAll:"‹ See all workshops", shopLead:"Pick a design and order directly on WhatsApp." },
+         foot:"Catalogue by", other:"FR", seeAll:"‹ See all workshops", shopLead:"Pick a design and order directly on WhatsApp.",
+         shopsT:"Workshops", designs:"{n} designs", design1:"1 design", shopWa:"Message the workshop", shopShare:"Share this page",
+         shopCopied:"Link copied ✓", shopHello:"Hello, I found your workshop on the SanaaPro catalogue.\n{u}", seeShop:"See all designs from {b} ›" },
     fr:{ h1:"Les couturiers de Gambie, dans un seul catalogue.", lead:"Parcourez les modèles des ateliers près de chez vous, puis commandez directement au couturier sur WhatsApp.",
          all:"Tous", femme:"Femme", homme:"Homme", enfant:"Enfant", allShops:"Tous les ateliers",
          allStyles:"Tous les styles", allAreas:"Tous les quartiers", S:{robe:"Robe", boubou:"Boubou", ensemble:"Ensemble / complet", chemise:"Chemise", pantalon:"Pantalon", jupe:"Jupe", kaftan:"Kaftan", ceremonie:"Mariage / cérémonie", uniforme:"Uniforme", autre:"Autre"},
@@ -134,7 +161,9 @@
          waveT:"Payer l'acompte par Wave", waveCopy:"Copier le numéro", waveCopied:"Numéro copié ✓",
          waveH:"Après le paiement, envoyez la capture à l'atelier sur WhatsApp.",
          msg:"Bonjour, j'ai vu votre modèle \u00ab {t} \u00bb (Réf. {r}) sur le catalogue SanaaPro. Je voudrais le commander.\n{u}", ref:"Réf.",
-         foot:"Catalogue par", other:"EN", seeAll:"‹ Voir tous les ateliers", shopLead:"Choisissez un modèle et commandez directement sur WhatsApp." }
+         foot:"Catalogue par", other:"EN", seeAll:"‹ Voir tous les ateliers", shopLead:"Choisissez un modèle et commandez directement sur WhatsApp.",
+         shopsT:"Les ateliers", designs:"{n} modèles", design1:"1 modèle", shopWa:"Écrire à l'atelier", shopShare:"Partager cette page",
+         shopCopied:"Lien copié ✓", shopHello:"Bonjour, j'ai trouvé votre atelier sur le catalogue SanaaPro.\n{u}", seeShop:"Voir tous les modèles de {b} ›" }
   };
   var LANG = "en";
   try{ LANG = localStorage.getItem("sanaapro_site_lang") === "fr" ? "fr" : "en"; }catch(e){}
@@ -160,6 +189,9 @@
   }
   function ref(o){ return o.ref || ("M-" + String(o.id).slice(0,5).toUpperCase()); }
   function link(o){ return location.origin + location.pathname + "?m=" + encodeURIComponent(o.id); }
+  function shopKey(o){ return o.slug || o.bid || ""; }
+  function shopUrl(o){ return location.origin + location.pathname + "?a=" + encodeURIComponent(shopKey(o)); }
+  function live(o){ return !(o.subExpMs && Number(o.subExpMs) < Date.now()); }
   function money(o){ return Math.round(o.prix).toLocaleString(LANG==="fr"?"fr-FR":"en-GB") + " " + (o.devise || "D"); }
 
   function shopQuery(field){
@@ -237,6 +269,39 @@
     qs.value = AREA;
     qs.hidden = ONLY || Object.keys(areas).length < 2;
 
+    var liveItems = ITEMS.filter(live);
+    var cnt = function(n){ return n === 1 ? t.design1 : t.designs.replace("{n}", n); };
+    if(ONLY && liveItems.length){
+      var o1 = liveItems[0];
+      $("lead").textContent = (o1.quartier ? o1.quartier + " · " : "") + cnt(liveItems.length) + " · " + t.shopLead;
+      $("shopbar").hidden = false;
+      $("shop-share").textContent = t.shopShare;
+      if(o1.wa){
+        $("shop-wa").textContent = t.shopWa;
+        $("shop-wa").href = "https://wa.me/" + o1.wa + "?text=" + encodeURIComponent(t.shopHello.replace("{u}", shopUrl(o1)));
+        $("shop-wa").hidden = false;
+      } else $("shop-wa").hidden = true;
+    } else $("shopbar").hidden = true;
+
+    var byShop = {};
+    liveItems.forEach(function(o){
+      var k = o.bid; if(!k) return;
+      if(!byShop[k]) byShop[k] = { o:o, n:0 };
+      byShop[k].n++;
+    });
+    var sk = Object.keys(byShop).sort(function(a,b){ return (byShop[a].o.boutique||"").localeCompare(byShop[b].o.boutique||""); });
+    var strip = $("shops"); strip.innerHTML = "";
+    $("shops-t").textContent = t.shopsT;
+    $("shopsbox").hidden = !!ONLY || !sk.length;
+    sk.forEach(function(k){
+      var e = byShop[k], a = document.createElement("a");
+      a.className = "shop"; a.href = "?a=" + encodeURIComponent(shopKey(e.o));
+      var b = document.createElement("b"); b.textContent = e.o.boutique || "—"; a.appendChild(b);
+      if(e.o.quartier){ var q = document.createElement("span"); q.textContent = e.o.quartier; a.appendChild(q); }
+      var n = document.createElement("span"); n.className = "n"; n.textContent = cnt(e.n); a.appendChild(n);
+      strip.appendChild(a);
+    });
+
     var shops = {}; ITEMS.forEach(function(o){ if(o.bid) shops[o.bid] = o.boutique + (o.quartier ? " · " + o.quartier : ""); });
     var sel = $("shop"); sel.innerHTML = "";
     var o0 = document.createElement("option"); o0.value = ""; o0.textContent = t.allShops; sel.appendChild(o0);
@@ -244,7 +309,7 @@
       var o = document.createElement("option"); o.value = k; o.textContent = shops[k]; sel.appendChild(o);
     });
     sel.value = SHOP;
-    sel.hidden = Object.keys(shops).length < 2;
+    sel.hidden = true;
 
     var NOW = Date.now();
     var list = ITEMS.filter(function(o){
@@ -286,6 +351,12 @@
       $("wave-copy").textContent = t.waveCopy; $("wave-h").textContent = t.waveH;
       $("wave").hidden = false;
     } else $("wave").hidden = true;
+    var ss = $("s-shop");
+    if(!ONLY && shopKey(o)){
+      ss.textContent = t.seeShop.replace("{b}", o.boutique || "");
+      ss.href = "?a=" + encodeURIComponent(shopKey(o));
+      ss.hidden = false;
+    } else ss.hidden = true;
   }
   function openSheet(o){
     if(o.subExpMs && Number(o.subExpMs) < Date.now()) return;
@@ -298,6 +369,13 @@
   }
   function closeSheet(){ CURRENT = null; $("sheet").hidden = true; document.body.style.overflow = ""; }
 
+  $("shop-share").addEventListener("click", function(){
+    var b = $("shop-share"), t = L(), u = location.href;
+    function ok(){ b.textContent = t.shopCopied; setTimeout(function(){ b.textContent = t.shopShare; }, 2500); }
+    if(navigator.share){ navigator.share({ title: document.title, url: u }).catch(function(){}); return; }
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(u).then(ok).catch(function(){ prompt("", u); });
+    else prompt("", u);
+  });
   $("wave-copy").addEventListener("click", function(){
     var n = $("wave-n").textContent, b = $("wave-copy"), t = L();
     function ok(){ b.textContent = t.waveCopied; setTimeout(function(){ b.textContent = t.waveCopy; }, 2500); }
