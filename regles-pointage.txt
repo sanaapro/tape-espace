@@ -1,0 +1,4 @@
+      match /pointages/{id} {
+        allow read: if owns(bid);
+        allow write: if owns(bid) && active(bid) && premium(bid);
+      }

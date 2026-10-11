@@ -81,6 +81,8 @@
   <p class="lead" id="lead"></p>
 
   <div class="chips" id="chips"></div>
+  <div class="chips" id="styles"></div>
+  <select id="quartier" aria-label="Neighbourhood"></select>
   <select id="shop" aria-label="Workshop"></select>
 
   <div class="grid" id="grid"></div>
@@ -117,25 +119,28 @@
   var T = {
     en:{ h1:"Tailors of The Gambia, in one catalogue.", lead:"Browse designs from workshops near you, then order directly from the tailor on WhatsApp.",
          all:"All", femme:"Women", homme:"Men", enfant:"Children", allShops:"All workshops",
+         allStyles:"All styles", allAreas:"All neighbourhoods", S:{robe:"Dress", boubou:"Boubou", ensemble:"Outfit / suit", chemise:"Shirt", pantalon:"Trousers", jupe:"Skirt", kaftan:"Kaftan", ceremonie:"Wedding / ceremony", uniforme:"Uniform", autre:"Other"},
          loading:"Loading designs…", empty:"No designs here yet.", net:"Can't reach the catalogue. Check your connection and try again.",
          more:"Show more", from:"from", back:"‹ Back", order:"Order on WhatsApp",
          waveT:"Pay a deposit with Wave", waveCopy:"Copy the number", waveCopied:"Number copied ✓",
          waveH:"After paying, send the screenshot to the workshop on WhatsApp.",
-         msg:"Hello, I saw your design \u201c{t}\u201d on the SanaaPro catalogue. I would like to order it.",
+         msg:"Hello, I saw your design \u201c{t}\u201d (Ref. {r}) on the SanaaPro catalogue. I would like to order it.\n{u}", ref:"Ref.",
          foot:"Catalogue by", other:"FR", seeAll:"‹ See all workshops", shopLead:"Pick a design and order directly on WhatsApp." },
     fr:{ h1:"Les couturiers de Gambie, dans un seul catalogue.", lead:"Parcourez les modèles des ateliers près de chez vous, puis commandez directement au couturier sur WhatsApp.",
          all:"Tous", femme:"Femme", homme:"Homme", enfant:"Enfant", allShops:"Tous les ateliers",
+         allStyles:"Tous les styles", allAreas:"Tous les quartiers", S:{robe:"Robe", boubou:"Boubou", ensemble:"Ensemble / complet", chemise:"Chemise", pantalon:"Pantalon", jupe:"Jupe", kaftan:"Kaftan", ceremonie:"Mariage / cérémonie", uniforme:"Uniforme", autre:"Autre"},
          loading:"Chargement des modèles…", empty:"Aucun modèle ici pour l'instant.", net:"Impossible de joindre le catalogue. Vérifiez votre connexion puis réessayez.",
          more:"Voir plus", from:"dès", back:"‹ Retour", order:"Commander sur WhatsApp",
          waveT:"Payer l'acompte par Wave", waveCopy:"Copier le numéro", waveCopied:"Numéro copié ✓",
          waveH:"Après le paiement, envoyez la capture à l'atelier sur WhatsApp.",
-         msg:"Bonjour, j'ai vu votre modèle \u00ab {t} \u00bb sur le catalogue SanaaPro. Je voudrais le commander.",
+         msg:"Bonjour, j'ai vu votre modèle \u00ab {t} \u00bb (Réf. {r}) sur le catalogue SanaaPro. Je voudrais le commander.\n{u}", ref:"Réf.",
          foot:"Catalogue par", other:"EN", seeAll:"‹ Voir tous les ateliers", shopLead:"Choisissez un modèle et commandez directement sur WhatsApp." }
   };
   var LANG = "en";
   try{ LANG = localStorage.getItem("sanaapro_site_lang") === "fr" ? "fr" : "en"; }catch(e){}
-  var ITEMS = [], NEXT = null, GENRE = "all", SHOP = "", LOADING = false, FAILED = false, CURRENT = null;
-  var ONLY = "";
+  var STYLE = "", AREA = "", ITEMS = [], NEXT = null, GENRE = "all", SHOP = "", LOADING = false, FAILED = false, CURRENT = null;
+  var ONLY = "", PICK = "";
+  try{ PICK = new URLSearchParams(location.search).get("m") || ""; }catch(e){}
   try{ ONLY = new URLSearchParams(location.search).get("a") || ""; }catch(e){}
   if(ONLY) SHOP = ONLY;
   var $ = function(id){ return document.getElementById(id); };
@@ -153,6 +158,8 @@
     Object.keys(f).forEach(function(k){ o[k] = val(f[k]); });
     return o;
   }
+  function ref(o){ return o.ref || ("M-" + String(o.id).slice(0,5).toUpperCase()); }
+  function link(o){ return location.origin + location.pathname + "?m=" + encodeURIComponent(o.id); }
   function money(o){ return Math.round(o.prix).toLocaleString(LANG==="fr"?"fr-FR":"en-GB") + " " + (o.devise || "D"); }
 
   function shopQuery(field){
@@ -208,6 +215,28 @@
       chips.appendChild(b);
     });
 
+    var styles = {}; ITEMS.forEach(function(o){ if(o.style && t.S[o.style]) styles[o.style] = 1; });
+    var sb = $("styles"); sb.innerHTML = "";
+    var skeys = Object.keys(styles);
+    sb.hidden = !skeys.length;
+    if(skeys.length){
+      [""].concat(skeys.sort(function(a,b){ return t.S[a].localeCompare(t.S[b]); })).forEach(function(k){
+        var b = document.createElement("button"); b.type = "button";
+        b.className = "chip" + (STYLE===k ? " on" : ""); b.textContent = k ? t.S[k] : t.allStyles;
+        b.addEventListener("click", function(){ STYLE = k; paint(); });
+        sb.appendChild(b);
+      });
+    }
+
+    var areas = {}; ITEMS.forEach(function(o){ var q = (o.quartier||"").trim(); if(q && !areas[q.toLowerCase()]) areas[q.toLowerCase()] = q; });
+    var qs = $("quartier"); qs.innerHTML = "";
+    var q0 = document.createElement("option"); q0.value = ""; q0.textContent = t.allAreas; qs.appendChild(q0);
+    Object.keys(areas).sort().forEach(function(k){
+      var o = document.createElement("option"); o.value = k; o.textContent = areas[k]; qs.appendChild(o);
+    });
+    qs.value = AREA;
+    qs.hidden = ONLY || Object.keys(areas).length < 2;
+
     var shops = {}; ITEMS.forEach(function(o){ if(o.bid) shops[o.bid] = o.boutique + (o.quartier ? " · " + o.quartier : ""); });
     var sel = $("shop"); sel.innerHTML = "";
     var o0 = document.createElement("option"); o0.value = ""; o0.textContent = t.allShops; sel.appendChild(o0);
@@ -218,14 +247,15 @@
     sel.hidden = Object.keys(shops).length < 2;
 
     var list = ITEMS.filter(function(o){
-      return (GENRE==="all" || o.genre===GENRE) && (!SHOP || o.bid===SHOP);
+      return (GENRE==="all" || o.genre===GENRE) && (!SHOP || o.bid===SHOP)
+        && (!STYLE || o.style===STYLE) && (!AREA || (o.quartier||"").trim().toLowerCase()===AREA);
     });
     var grid = $("grid"); grid.innerHTML = "";
     list.forEach(function(o){
       var b = document.createElement("button"); b.type = "button"; b.className = "item";
       var im = document.createElement("img"); im.src = o.thumb || ""; im.alt = o.titre || ""; im.loading = "lazy"; b.appendChild(im);
       var a = document.createElement("div"); a.className = "t"; a.textContent = o.titre || ""; b.appendChild(a);
-      var s = document.createElement("div"); s.className = "s"; s.textContent = (o.boutique||"") + (o.quartier ? " · " + o.quartier : ""); b.appendChild(s);
+      var s = document.createElement("div"); s.className = "s"; s.textContent = ref(o) + " · " + (o.boutique||"") + (o.quartier ? " · " + o.quartier : ""); b.appendChild(s);
       if(o.prix !== null && o.prix !== undefined){ var p = document.createElement("div"); p.className = "p"; p.textContent = t.from + " " + money(o); b.appendChild(p); }
       b.addEventListener("click", function(){ openSheet(o); });
       grid.appendChild(b);
@@ -243,10 +273,10 @@
   function fillSheet(o){
     var t = L();
     $("s-title").textContent = o.titre || "";
-    $("s-who").textContent = (o.boutique||"") + (o.quartier ? " · " + o.quartier : "");
+    $("s-who").textContent = t.ref + " " + ref(o) + " · " + (o.boutique||"") + (o.quartier ? " · " + o.quartier : "");
     $("s-price").textContent = (o.prix !== null && o.prix !== undefined) ? t.from + " " + money(o) : "";
     if(o.wa){
-      $("s-cta").href = "https://wa.me/" + o.wa + "?text=" + encodeURIComponent(t.msg.replace("{t}", o.titre || ""));
+      $("s-cta").href = "https://wa.me/" + o.wa + "?text=" + encodeURIComponent(t.msg.replace("{t}", o.titre || "").replace("{r}", ref(o)).replace("{u}", link(o)));
       $("s-cta").hidden = false;
     } else $("s-cta").hidden = true;
     if(o.wave){
@@ -274,6 +304,7 @@
   $("close").addEventListener("click", function(){ history.back(); });
   window.addEventListener("popstate", function(){ if(!$("sheet").hidden) closeSheet(); });
   $("shop").addEventListener("change", function(){ SHOP = $("shop").value; paint(); });
+  $("quartier").addEventListener("change", function(){ AREA = $("quartier").value; paint(); });
   $("more").addEventListener("click", load);
   $("lang").addEventListener("click", function(){
     LANG = LANG==="en" ? "fr" : "en";
@@ -282,6 +313,10 @@
   });
 
   paint(); load();
+  if(PICK){
+    fetch(BASE + "catalogue/" + encodeURIComponent(PICK) + "?key=" + KEY).then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){ if(d && d.name) openSheet(parse(d)); }).catch(function(){});
+  }
 })();
 </script>
 </body>
