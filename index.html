@@ -269,6 +269,48 @@
 
   <div id="loading" class="center">Chargement…</div>
 
+  <!-- Bandeau d'installation : icône SanaaPro sur l'écran d'accueil -->
+  <div id="inst" hidden style="position:fixed;left:0;right:0;bottom:0;z-index:50;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:#17181A;border-top:1px solid #C9A227;display:flex;align-items:center;gap:12px">
+    <img src="icon-192.png" alt="" width="40" height="40" style="border-radius:9px;flex:none">
+    <div style="flex:1;min-width:0;font-size:13.5px;line-height:1.4;color:#EDEBE6"><b id="inst-t" style="display:block;font-size:14.5px"></b><span id="inst-s" style="color:#98948C"></span></div>
+    <button id="inst-go" type="button" style="flex:none;padding:11px 16px;border:0;border-radius:10px;background:#C9A227;color:#141310;font-weight:700;font-size:14px;cursor:pointer"></button>
+    <button id="inst-x" type="button" aria-label="Fermer" style="flex:none;background:none;border:0;color:#98948C;font-size:22px;line-height:1;padding:4px 2px;cursor:pointer">&times;</button>
+  </div>
+  <script>
+  (function(){
+    var DEF=null, el=function(i){ return document.getElementById(i); };
+    function en(){ try{ return localStorage.getItem("sanaapro_lang_ui")==="en"; }catch(e){ return false; } }
+    function standalone(){ return (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone===true; }
+    function dismissed(){ try{ return Number(localStorage.getItem("sanaapro_inst_x")||0) > Date.now()-3*86400000; }catch(e){ return false; } }
+    var ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    function show(mode){
+      if(standalone() || dismissed()) return;
+      var E=en();
+      el("inst-t").textContent = E ? "Install SanaaPro" : "Installer SanaaPro";
+      el("inst-s").textContent = mode==="ios"
+        ? (E ? "Tap Share, then \u201cAdd to Home Screen\u201d." : "Touchez Partager, puis \u00ab Sur l\u2019\u00e9cran d\u2019accueil \u00bb.")
+        : (E ? "Get the app icon on your phone." : "Ayez l\u2019ic\u00f4ne de l\u2019app sur votre t\u00e9l\u00e9phone.");
+      el("inst-go").textContent = E ? "Install" : "Installer";
+      el("inst-go").hidden = (mode==="ios");
+      el("inst").hidden = false;
+      document.body.style.paddingBottom = "84px";
+    }
+    function hide(){ el("inst").hidden = true; document.body.style.paddingBottom = ""; }
+    window.addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); DEF=e; show("android"); });
+    window.addEventListener("appinstalled", hide);
+    el("inst-go").addEventListener("click", function(){
+      if(!DEF) return;
+      DEF.prompt();
+      DEF.userChoice.then(function(){ DEF=null; hide(); }).catch(hide);
+    });
+    el("inst-x").addEventListener("click", function(){
+      try{ localStorage.setItem("sanaapro_inst_x", String(Date.now())); }catch(e){}
+      hide();
+    });
+    if(ios) window.addEventListener("load", function(){ setTimeout(function(){ show("ios"); }, 1500); });
+  })();
+  </script>
+
   <div id="login" hidden>
     <div class="head" style="border-bottom:1px solid var(--line)">
       <img src="icon-192.png" alt="SanaaPro" width="56" height="56" style="display:block;margin:0 auto 8px;border-radius:12px">
