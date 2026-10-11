@@ -1578,6 +1578,7 @@
       BID=user.uid; BOUTIQUE=snap.data();
       renderDashboard(BOUTIQUE); paintLocks(); updateOffline(); setTab("apercu"); show("dash");
       loadAll();
+      syncCatalogueExpiry();
     }catch(e){ $("loading").textContent=t("loadFail"); show("loading"); }
   });
 
@@ -2319,6 +2320,22 @@
   });
 
   const VT_MAX_STD = 5;
+  // Catalogue : chaque modèle porte l'échéance de son atelier (subExpMs).
+  // Le catalogue public cache les modèles dont l'échéance est passée.
+  function subExpMs(){
+    const sub = (BOUTIQUE && BOUTIQUE.subscription) || {};
+    return (sub.expiresAt && sub.expiresAt.toDate) ? sub.expiresAt.toDate().getTime() : null;
+  }
+  function syncCatalogueExpiry(){
+    const ms = subExpMs();
+    if(!BID || ms === null) return;
+    getDocsSmart(query(collection(db,"catalogue"), where("bid","==",BID))).then(s=>{
+      s.forEach(d=>{
+        if(Number(d.data().subExpMs) !== ms)
+          _setDoc(doc(db,"catalogue",d.id), { subExpMs:ms }, { merge:true }).catch(function(){});
+      });
+    }).catch(function(){});
+  }
   async function loadVitrine(){
     if(!BID) return;
     $("vt-quartier").value = (BOUTIQUE && BOUTIQUE.quartier) || "";
@@ -2396,6 +2413,7 @@
         titre, genre:$("vt-genre").value, style:$("vt-style").value,
         prix: (pv!=="" && !isNaN(parseFloat(pv))) ? parseFloat(pv) : null,
         devise: cur(), thumb, createdMs: Date.now(), slug: (BOUTIQUE && BOUTIQUE.slug) || "",
+        subExpMs: subExpMs(),
         wave: (BOUTIQUE && BOUTIQUE.wave) || ""
       };
       await Promise.all([

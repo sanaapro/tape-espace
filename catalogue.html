@@ -246,7 +246,9 @@
     sel.value = SHOP;
     sel.hidden = Object.keys(shops).length < 2;
 
+    var NOW = Date.now();
     var list = ITEMS.filter(function(o){
+      if(o.subExpMs && Number(o.subExpMs) < NOW) return false;
       return (GENRE==="all" || o.genre===GENRE) && (!SHOP || o.bid===SHOP)
         && (!STYLE || o.style===STYLE) && (!AREA || (o.quartier||"").trim().toLowerCase()===AREA);
     });
@@ -286,6 +288,7 @@
     } else $("wave").hidden = true;
   }
   function openSheet(o){
+    if(o.subExpMs && Number(o.subExpMs) < Date.now()) return;
     CURRENT = o; fillSheet(o);
     var big = $("big"); big.src = o.thumb || "";
     $("sheet").hidden = false; document.body.style.overflow = "hidden";

@@ -144,7 +144,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { initializeFirestore, collection, getDocs, doc, setDoc, Timestamp }
+  import { initializeFirestore, collection, getDocs, doc, setDoc, Timestamp, query, where }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -351,6 +351,10 @@
                         tier: s.tier || "standard", renewedAt: Timestamp.fromDate(now) }
       }, { merge:true });
       s.exp = target; s.plan = "payant";
+      // les modèles de l'atelier réapparaissent dans le catalogue
+      getDocs(query(collection(db,"catalogue"), where("bid","==",s.id))).then(q=>{
+        q.forEach(d=>{ setDoc(doc(db,"catalogue",d.id), { subExpMs: target.getTime() }, { merge:true }).catch(function(){}); });
+      }).catch(function(){});
       SHOPS.sort((a,b)=>{ if(!a.exp) return 1; if(!b.exp) return -1; return a.exp - b.exp; });
       render();
       flash(s.name+" prolongé jusqu'au "+fmt(target)+".", "ok");
