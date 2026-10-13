@@ -483,6 +483,9 @@
         <input id="b-wa" type="tel" placeholder="+220 …">
         <label data-i18n="waveLabel">Numéro Wave (paiement des clientes)</label>
         <input id="b-wave" type="tel" placeholder="+220 …">
+        <label data-i18n="waveLinkLabel">Lien de paiement Wave (facultatif)</label>
+        <input id="b-wavelink" type="url" inputmode="url" placeholder="https://pay.wave.com/…">
+        <p style="margin:4px 0 0;font-size:12.5px;color:var(--muted)" data-i18n="waveLinkHint">Si vous avez un compte Wave Business, collez ici votre lien de paiement : la cliente tombera directement sur votre page de paiement Wave.</p>
         <label data-i18n="currency">Monnaie affichée</label>
         <input id="b-devise" type="text" maxlength="6" data-i18n-ph="currencyPh" placeholder="D, CFA, ₦…">
         <button class="ghost" id="b-save" data-i18n="saveShop">Enregistrer les modifications</button>
@@ -928,7 +931,7 @@
       vtNeedPhoto:"Choisissez une photo.", vtNeedName:"Donnez un nom au modèle.", vtWorking:"Préparation de la photo…",
       vtDone:"Modèle publié dans le catalogue.", vtFail:"Échec de la publication. Vérifiez la connexion.",
       vtConfirmDel:"Retirer ce modèle du catalogue ?", vtFrom:"dès",
-      waveLabel:"Numéro Wave (paiement des clientes)",
+      waveLabel:"Numéro Wave (paiement des clientes)", waveLinkLabel:"Lien de paiement Wave (facultatif)", waveLinkHint:"Si vous avez un compte Wave Business, collez ici votre lien de paiement : la cliente tombera directement sur votre page de paiement Wave.",
       vtLimit:"La formule Standard permet {n} modèles dans le catalogue. Passez au Premium pour en publier sans limite, ou supprimez un modèle.",
       vtLimitAsk:"Passer au Premium sur WhatsApp ?",
       vtShareT:"Envoyer ma vitrine aux clientes", vtShareBtn:"Partager sur WhatsApp", vtCopy:"Copier le lien",
@@ -1099,7 +1102,7 @@
       vtNeedPhoto:"Choose a photo.", vtNeedName:"Give the design a name.", vtWorking:"Preparing the photo…",
       vtDone:"Design published to the catalogue.", vtFail:"Publishing failed. Check your connection.",
       vtConfirmDel:"Remove this design from the catalogue?", vtFrom:"from",
-      waveLabel:"Wave number (client payments)",
+      waveLabel:"Wave number (client payments)", waveLinkLabel:"Wave payment link (optional)", waveLinkHint:"If you have a Wave Business account, paste your payment link here: clients will land directly on your Wave payment page.",
       vtLimit:"The Standard plan allows {n} designs in the catalogue. Upgrade to Premium to publish without limit, or remove a design.",
       vtLimitAsk:"Upgrade to Premium on WhatsApp?",
       vtShareT:"Send my showcase to clients", vtShareBtn:"Share on WhatsApp", vtCopy:"Copy the link",
@@ -1542,6 +1545,9 @@
     if(p==="mois"){ return new Date(d.getFullYear(), d.getMonth(), 1).getTime(); }
     return new Date(d.getFullYear(), 0, 1).getTime();
   }
+  function okWaveLink(u){
+    try{ const x = new URL(String(u||"").trim()); return (x.protocol==="https:" && /(^|\.)wave\.com$/.test(x.hostname)) ? x.href : ""; }catch(e){ return ""; }
+  }
   function waNumber(raw){
     let d=(raw||"").replace(/\D/g,"");
     if(d.indexOf("00")===0) d=d.slice(2);
@@ -1686,6 +1692,7 @@
     if(act !== $("b-owner")) $("b-owner").value = b.ownerName||"";
     if(act !== $("b-wa"))     $("b-wa").value     = b.whatsapp||"";
     if(act !== $("b-wave"))   $("b-wave").value   = b.wave||"";
+    if(act !== $("b-wavelink")) $("b-wavelink").value = b.waveLink||"";
     if(act !== $("b-devise")) $("b-devise").value = b.devise||CUR;
     if(document.activeElement !== $("b-code")){
       $("b-code").value = "";
@@ -2009,6 +2016,7 @@
         bid: BID,
         boutique: (BOUTIQUE && BOUTIQUE.name) || "",
         wa: waNumber(BOUTIQUE && BOUTIQUE.whatsapp) || "",
+        ...((BOUTIQUE && BOUTIQUE.waveLink) ? { waveLink: BOUTIQUE.waveLink } : {}),
         wave: (BOUTIQUE && BOUTIQUE.wave) || "",
         prenom: String(o.clienteName||"").trim().split(/\s+/)[0] || "",
         article: o.article || "",
@@ -2441,8 +2449,10 @@
       if(sl) VITRINE.forEach(m=>{ if(m.slug!==sl){ m.slug=sl; _setDoc(doc(db,"catalogue",m.id), { slug:sl }, { merge:true }).catch(function(){}); } });
       // le numéro Wave et le WhatsApp de l'atelier doivent être sur CHAQUE modèle publié
       const want = { wave: String((BOUTIQUE && BOUTIQUE.wave) || "").trim(), wa: waNumber(BOUTIQUE && BOUTIQUE.whatsapp) || "" };
+      const wantLink = (BOUTIQUE && BOUTIQUE.waveLink) || "";
+      if(wantLink || VITRINE.some(m=>m.waveLink)) want.waveLink = wantLink;
       VITRINE.forEach(m=>{
-        if(String(m.wave||"")!==want.wave || String(m.wa||"")!==want.wa){
+        if(String(m.wave||"")!==want.wave || String(m.wa||"")!==want.wa || ("waveLink" in want && String(m.waveLink||"")!==want.waveLink)){
           Object.assign(m, want);
           _setDoc(doc(db,"catalogue",m.id), want, { merge:true }).catch(function(e){ VT_SYNC_ERR = (e && e.code) || "error"; renderVitrine(); });
         }
@@ -2461,6 +2471,8 @@
     $("vt-empty").hidden = VITRINE.length>0;
     VITRINE.forEach(m=>{
       const el=document.createElement("div"); el.className="vt-item";
+      el.style.cursor="pointer";
+      el.addEventListener("click", ev=>{ if(ev.target.closest("button")) return; location.href = "catalogue.html?from=app&m=" + encodeURIComponent(m.id); });
       const im=document.createElement("img"); im.src=m.thumb||""; im.alt=""; el.appendChild(im);
       const t1=document.createElement("div"); t1.className="vt-t"; t1.textContent=m.titre||"—"; el.appendChild(t1);
       const t2=document.createElement("div"); t2.className="vt-s";
@@ -2521,6 +2533,7 @@
         prix: (pv!=="" && !isNaN(parseFloat(pv))) ? parseFloat(pv) : null,
         devise: cur(), thumb, createdMs: Date.now(), slug: (BOUTIQUE && BOUTIQUE.slug) || "",
         subExpMs: subExpMs(),
+        ...((BOUTIQUE && BOUTIQUE.waveLink) ? { waveLink: BOUTIQUE.waveLink } : {}),
         wave: (BOUTIQUE && BOUTIQUE.wave) || ""
       };
       await Promise.all([
@@ -3064,19 +3077,23 @@
       ownerName:$("b-owner").value.trim(),
       whatsapp:$("b-wa").value.trim(),
       wave:$("b-wave").value.trim(),
+      waveLink:okWaveLink($("b-wavelink").value),
       devise:($("b-devise").value.trim() || CUR),
       updatedAt:serverTimestamp()
     };
+    if(!data.waveLink && !(BOUTIQUE && BOUTIQUE.waveLink)) delete data.waveLink;
     if(BOUTIQUE){
       BOUTIQUE.name=data.name;
       BOUTIQUE.ownerName=data.ownerName;
       BOUTIQUE.whatsapp=data.whatsapp;
       BOUTIQUE.devise=data.devise;
       BOUTIQUE.wave=data.wave;
+      BOUTIQUE.waveLink=data.waveLink||"";
     }
     setDoc(doc(db,"boutiques",BID), data, { merge:true }).catch(function(){});
     // les modèles déjà publiés reprennent le nom, le WhatsApp, le numéro Wave et la monnaie
     const pub = { boutique:data.name, wa:waNumber(data.whatsapp)||"", wave:data.wave, devise:data.devise };
+    if(data.waveLink || VITRINE.some(m=>m.waveLink)) pub.waveLink = data.waveLink||"";
     getDocsSmart(query(collection(db,"catalogue"), where("bid","==",BID))).then(s=>{
       s.forEach(d=>{ _setDoc(doc(db,"catalogue",d.id), pub, { merge:true }).catch(function(){}); });
     }).catch(function(){});
