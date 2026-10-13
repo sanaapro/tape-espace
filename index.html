@@ -375,6 +375,7 @@
           <div class="seg" data-seg="ui"><button data-lang="fr">FR</button><button data-lang="en">EN</button></div>
         </div>
       </div>
+      <button class="logout" id="settings-btn" type="button" style="margin-right:8px">⚙ <span data-i18n="tabSettings">Réglages</span></button>
       <button class="logout" id="logout-btn" data-i18n="logout">Déconnexion</button>
     </div>
 
@@ -1294,6 +1295,8 @@
     $("tabs").querySelectorAll("button").forEach(b=>{
       b.classList.toggle("on", b.getAttribute("data-tab")===name);
     });
+    const onBtn = $("tabs").querySelector('button[data-tab="'+name+'"]');
+    if(onBtn && onBtn.scrollIntoView) onBtn.scrollIntoView({ block:"nearest", inline:"center" });
     window.scrollTo(0,0);
     if(name==="vitrine") loadVitrine();
   }
@@ -1622,6 +1625,7 @@
     }
   });
   $("logout-btn").addEventListener("click", () => signOut(auth));
+  $("settings-btn").addEventListener("click", () => setTab("reglages"));
 
   onAuthStateChanged(auth, async (user) => {
     window.__loaded = true;
