@@ -1276,7 +1276,26 @@
 
   const $ = id => document.getElementById(id);
   const views = ["loading","login","dash","cmd","cform","fiche","form"];
-  const show = v => { views.forEach(x=>{ $(x).hidden = (x!==v); }); window.scrollTo(0,0); };
+  const show = v => { views.forEach(x=>{ $(x).hidden = (x!==v); }); window.scrollTo(0,0); navSync(); };
+
+  /* ---------- Bouton retour du téléphone : revenir au tableau de bord au lieu de quitter ---------- */
+  const SUB_BACK = { cmd:"c-back", cform:"cf-back", fiche:"fiche-back", form:"form-back" };
+  function navHome(){ return !$("dash").hidden && TAB==="apercu"; }
+  function navSync(){
+    try{
+      if(!BID || !$("login").hidden || !$("loading").hidden) return;
+      const armed = !!(history.state && history.state.sp);
+      if(!navHome() && !armed) history.pushState({ sp:1 }, "");
+      else if(navHome() && armed) history.back();
+    }catch(e){}
+  }
+  window.addEventListener("popstate", ()=>{
+    try{
+      if(document.body.classList.contains("kiosk")){ history.pushState({ sp:1 }, ""); return; }
+      for(const k in SUB_BACK){ if(!$(k).hidden){ $(SUB_BACK[k]).click(); return; } }
+      if(!$("dash").hidden && TAB!=="apercu"){ setTab("apercu"); return; }
+    }catch(e){}
+  });
 
   let BID=null, BOUTIQUE=null, TAB="apercu";
   let editingId=null, currentCliente=null, CLIDATA=null;
@@ -1299,6 +1318,7 @@
     if(onBtn && onBtn.scrollIntoView) onBtn.scrollIntoView({ block:"nearest", inline:"center" });
     window.scrollTo(0,0);
     if(name==="vitrine") loadVitrine();
+    navSync();
   }
   $("tabs").querySelectorAll("button").forEach(b=>{
     b.addEventListener("click", ()=>setTab(b.getAttribute("data-tab")));
