@@ -653,6 +653,7 @@
         <p style="margin:0 0 4px;font-size:13px;color:var(--muted)" data-i18n="vtShareH">Le lien ouvre le catalogue directement sur vos modèles. Envoyez-le à une cliente, à une liste de diffusion ou mettez-le en statut.</p>
         <button class="primary" id="vt-share" data-i18n="vtShareBtn">Partager sur WhatsApp</button>
         <button class="ghost" id="vt-copy" data-i18n="vtCopy">Copier le lien</button>
+        <button class="ghost" id="vt-wave" type="button" data-i18n="vtWaveBtn">Envoyer mon lien de paiement Wave</button>
         <div class="msg ok" id="vt-share-msg"></div>
       </div>
       <div class="card">
@@ -923,7 +924,7 @@
       tabApercu:"Aperçu", tabAtelier:"Atelier", tabBoutique:"Boutique", tabMesures:"Mesures",
       tabVitrine:"Vitrine", vtTitle:"Ma vitrine",
       vtHint:"Vos modèles apparaissent dans le catalogue SanaaPro, que toutes les clientes peuvent consulter.",
-      vtQuartier:"Quartier de l'atelier", vtOpen:"Voir le catalogue public ›", vtNoWave:"Votre numéro Wave n'est pas rempli : les clientes ne voient pas l'option « Payer l'acompte par Wave » sur vos modèles.", vtNoWa:"Votre numéro WhatsApp n'est pas rempli : les clientes ne voient pas le bouton « Commander sur WhatsApp ».", vtWarnGo:"Ouvrir les Réglages ›", vtSyncFail:"Le catalogue a refusé la mise à jour de vos modèles : envoyez une capture de ce message à SanaaPro.", vtAdd:"Ajouter un modèle",
+      vtQuartier:"Quartier de l'atelier", vtOpen:"Voir le catalogue public ›", vtNoWave:"Votre numéro Wave n'est pas rempli : les clientes ne voient pas l'option « Payer l'acompte par Wave » sur vos modèles.", vtNoWa:"Votre numéro WhatsApp n'est pas rempli : les clientes ne voient pas le bouton « Commander sur WhatsApp ».", vtWarnGo:"Ouvrir les Réglages ›", vtWaveBtn:"Envoyer mon lien de paiement Wave", vtSyncFail:"Le catalogue a refusé la mise à jour de vos modèles : envoyez une capture de ce message à SanaaPro.", vtAdd:"Ajouter un modèle",
       vtPhoto:"Photo du modèle", vtName:"Nom du modèle", vtNamePh:"Ex. Robe en wax brodée", vtFor:"Pour",
       vtFemme:"Femme", vtHomme:"Homme", vtEnfant:"Enfant", vtPrice:"Prix à partir de (facultatif)",
       vtStyle:"Style", vtStyleNone:"Choisir un style", vtNeedStyle:"Choisissez le style du modèle.", st_robe:"Robe", st_boubou:"Boubou", st_ensemble:"Ensemble / complet", st_chemise:"Chemise", st_pantalon:"Pantalon", st_jupe:"Jupe", st_kaftan:"Kaftan", st_ceremonie:"Mariage / cérémonie", st_uniforme:"Uniforme", st_autre:"Autre",
@@ -1079,6 +1080,8 @@
       noShopPhone:"Aucun numéro WhatsApp enregistré pour la boutique.",
       waFoot:"Merci de votre confiance.",
       lineTrack:"Suivez votre commande ici : {v}",
+      lineWave:"Payer avec Wave : {v}", lineWaveNum:"Paiement Wave au {v}", lineWaveShot:"Après le paiement, envoyez-nous la capture d'écran.",
+      waveShare:"Bonjour, voici le lien pour régler votre acompte par Wave à l'atelier {boutique} :\n{v}",
       mRecu:"Bonjour {nom}, nous avons bien reçu votre {recu} à l'atelier {boutique}.",
       mCoupe:"Bonjour {nom}, la coupe de votre {article} commence à l'atelier {boutique}.",
       mEssayage:"Bonjour {nom}, votre {article} est prêt pour l'essayage. Vous pouvez passer à l'atelier {boutique} quand cela vous arrange.",
@@ -1094,7 +1097,7 @@
       tabApercu:"Overview", tabAtelier:"Workshop", tabBoutique:"Shop", tabMesures:"Measurements",
       tabVitrine:"Showcase", vtTitle:"My showcase",
       vtHint:"Your designs appear in the SanaaPro catalogue, which every client can browse.",
-      vtQuartier:"Workshop area", vtOpen:"See the public catalogue ›", vtNoWave:"Your Wave number is empty: clients don't see the “Pay a deposit with Wave” option on your designs.", vtNoWa:"Your WhatsApp number is empty: clients don't see the “Order on WhatsApp” button.", vtWarnGo:"Open Settings ›", vtSyncFail:"The catalogue refused to update your designs: send a screenshot of this message to SanaaPro.", vtAdd:"Add a design",
+      vtQuartier:"Workshop area", vtOpen:"See the public catalogue ›", vtNoWave:"Your Wave number is empty: clients don't see the “Pay a deposit with Wave” option on your designs.", vtNoWa:"Your WhatsApp number is empty: clients don't see the “Order on WhatsApp” button.", vtWarnGo:"Open Settings ›", vtWaveBtn:"Send my Wave payment link", vtSyncFail:"The catalogue refused to update your designs: send a screenshot of this message to SanaaPro.", vtAdd:"Add a design",
       vtPhoto:"Photo of the design", vtName:"Design name", vtNamePh:"E.g. Embroidered wax dress", vtFor:"For",
       vtFemme:"Women", vtHomme:"Men", vtEnfant:"Children", vtPrice:"Price from (optional)",
       vtStyle:"Style", vtStyleNone:"Choose a style", vtNeedStyle:"Choose the style of the design.", st_robe:"Dress", st_boubou:"Boubou", st_ensemble:"Outfit / suit", st_chemise:"Shirt", st_pantalon:"Trousers", st_jupe:"Skirt", st_kaftan:"Kaftan", st_ceremonie:"Wedding / ceremony", st_uniforme:"Uniform", st_autre:"Other",
@@ -1250,6 +1253,8 @@
       noShopPhone:"No WhatsApp number saved for the shop.",
       waFoot:"Thank you for your trust.",
       lineTrack:"Track your order here: {v}",
+      lineWave:"Pay with Wave: {v}", lineWaveNum:"Wave payment to {v}", lineWaveShot:"After paying, please send us the screenshot.",
+      waveShare:"Hello, here is the link to pay your deposit with Wave at {boutique}:\n{v}",
       mRecu:"Hello {nom}, we have received your {recu} at {boutique}.",
       mCoupe:"Hello {nom}, cutting has started on your {article} at {boutique}.",
       mEssayage:"Hello {nom}, your {article} is ready for fitting. Please come to {boutique} whenever it suits you.",
@@ -2411,6 +2416,15 @@
     const url="https://wa.me/?text="+encodeURIComponent(text);
     const w=window.open(url,"_blank"); if(!w) location.href=url;
   });
+  $("vt-wave").addEventListener("click", ()=>{
+    const link=(BOUTIQUE && BOUTIQUE.waveLink) || "";
+    const num=String((BOUTIQUE && BOUTIQUE.wave) || "").trim();
+    if(!link && !num){ setTab("reglages"); return; }
+    const text = tm("waveShare").replace("{boutique}", (BOUTIQUE && BOUTIQUE.name) || "").replace("{v}", link || num) + "\n" + tm("lineWaveShot");
+    if(navigator.share){ navigator.share({ text }).catch(function(){}); return; }
+    const url="https://wa.me/?text="+encodeURIComponent(text);
+    const w=window.open(url,"_blank"); if(!w) location.href=url;
+  });
   $("vt-copy").addEventListener("click", ()=>{
     const u = vitrineUrl();
     const done = ()=>vtShareNote("vtCopied");
@@ -2746,6 +2760,13 @@
     });
   });
 
+  function waveLines(){
+    const link=(BOUTIQUE && BOUTIQUE.waveLink) || "";
+    const num=String((BOUTIQUE && BOUTIQUE.wave) || "").trim();
+    if(link) return "\n" + tm("lineWave").replace("{v}", link) + "\n" + tm("lineWaveShot");
+    if(num)  return "\n" + tm("lineWaveNum").replace("{v}", num) + "\n" + tm("lineWaveShot");
+    return "";
+  }
   function clientMessage(o){
     const st=o.statut||"recu";
     const base = (st==="recu" && o.type==="pap") ? "mRecuPap" : msgKey(st);
@@ -2759,16 +2780,17 @@
       if(o.article) msg += "\n" + tm("lineModel").replace("{v}", o.article);
       if(o.prix || o.prix===0) msg += "\n" + tm("linePrice").replace("{v}", Math.round(Number(o.prix)||0)).replace("{cur}", cur());
       if(o.livraison) msg += "\n" + tm("lineDelivery").replace("{v}", fmtDate(o.livraison, LANG_MSG));
+      if(resteDe(o)>0) msg += waveLines();
     }
     if(st==="livre"){
       if(o.numero) msg += "\n" + tm("lineReceipt").replace("{v}", fmtNum(o.numero));
       const re=resteDe(o);
-      if(re>0) msg += "\n" + tm("mAmount").replace("{prix}", Math.round(re)).replace("{cur}", cur());
+      if(re>0) msg += "\n" + tm("mAmount").replace("{prix}", Math.round(re)).replace("{cur}", cur()) + waveLines();
       else if(o.prix) msg += "\n" + tm("mPaid");
     }
     if(st==="pret"){
       const re=resteDe(o);
-      if(re>0) msg += "\n" + tm("mAmount").replace("{prix}", Math.round(re)).replace("{cur}", cur());
+      if(re>0) msg += "\n" + tm("mAmount").replace("{prix}", Math.round(re)).replace("{cur}", cur()) + waveLines();
       else if(o.prix) msg += "\n" + tm("mPaid");
     }
     const su = suiviUrl(o);
