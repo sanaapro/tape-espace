@@ -638,8 +638,12 @@
         <p style="margin:0 0 10px;font-size:13px;color:var(--muted)" data-i18n="vtHint">Vos modèles apparaissent dans le catalogue SanaaPro, que toutes les clientes peuvent consulter.</p>
         <label data-i18n="vtQuartier">Quartier de l'atelier</label>
         <input id="vt-quartier" type="text" placeholder="Bakau, Serrekunda…">
-        <a id="vt-open" href="https://sanaapro.github.io/tape-espace/catalogue.html" target="_blank" rel="noopener"
+        <a id="vt-open" href="catalogue.html?from=app"
            style="display:block;margin-top:12px;color:var(--gold);font-size:14px;text-decoration:none" data-i18n="vtOpen">Voir le catalogue public ›</a>
+        <div id="vt-warn" hidden style="margin-top:12px;padding:12px 14px;border:1px solid var(--warn);border-radius:12px;font-size:13.5px;line-height:1.45">
+          <div id="vt-warn-t"></div>
+          <button class="ghost" id="vt-warn-go" type="button" style="margin-top:10px" data-i18n="vtWarnGo">Ouvrir les Réglages ›</button>
+        </div>
       </div>
       <div class="card">
         <h2 data-i18n="vtShareT">Envoyer ma vitrine aux clientes</h2>
@@ -916,7 +920,7 @@
       tabApercu:"Aperçu", tabAtelier:"Atelier", tabBoutique:"Boutique", tabMesures:"Mesures",
       tabVitrine:"Vitrine", vtTitle:"Ma vitrine",
       vtHint:"Vos modèles apparaissent dans le catalogue SanaaPro, que toutes les clientes peuvent consulter.",
-      vtQuartier:"Quartier de l'atelier", vtOpen:"Voir le catalogue public ›", vtAdd:"Ajouter un modèle",
+      vtQuartier:"Quartier de l'atelier", vtOpen:"Voir le catalogue public ›", vtNoWave:"Votre numéro Wave n'est pas rempli : les clientes ne voient pas l'option « Payer l'acompte par Wave » sur vos modèles.", vtNoWa:"Votre numéro WhatsApp n'est pas rempli : les clientes ne voient pas le bouton « Commander sur WhatsApp ».", vtWarnGo:"Ouvrir les Réglages ›", vtSyncFail:"Le catalogue a refusé la mise à jour de vos modèles : envoyez une capture de ce message à SanaaPro.", vtAdd:"Ajouter un modèle",
       vtPhoto:"Photo du modèle", vtName:"Nom du modèle", vtNamePh:"Ex. Robe en wax brodée", vtFor:"Pour",
       vtFemme:"Femme", vtHomme:"Homme", vtEnfant:"Enfant", vtPrice:"Prix à partir de (facultatif)",
       vtStyle:"Style", vtStyleNone:"Choisir un style", vtNeedStyle:"Choisissez le style du modèle.", st_robe:"Robe", st_boubou:"Boubou", st_ensemble:"Ensemble / complet", st_chemise:"Chemise", st_pantalon:"Pantalon", st_jupe:"Jupe", st_kaftan:"Kaftan", st_ceremonie:"Mariage / cérémonie", st_uniforme:"Uniforme", st_autre:"Autre",
@@ -1087,7 +1091,7 @@
       tabApercu:"Overview", tabAtelier:"Workshop", tabBoutique:"Shop", tabMesures:"Measurements",
       tabVitrine:"Showcase", vtTitle:"My showcase",
       vtHint:"Your designs appear in the SanaaPro catalogue, which every client can browse.",
-      vtQuartier:"Workshop area", vtOpen:"See the public catalogue ›", vtAdd:"Add a design",
+      vtQuartier:"Workshop area", vtOpen:"See the public catalogue ›", vtNoWave:"Your Wave number is empty: clients don't see the “Pay a deposit with Wave” option on your designs.", vtNoWa:"Your WhatsApp number is empty: clients don't see the “Order on WhatsApp” button.", vtWarnGo:"Open Settings ›", vtSyncFail:"The catalogue refused to update your designs: send a screenshot of this message to SanaaPro.", vtAdd:"Add a design",
       vtPhoto:"Photo of the design", vtName:"Design name", vtNamePh:"E.g. Embroidered wax dress", vtFor:"For",
       vtFemme:"Women", vtHomme:"Men", vtEnfant:"Children", vtPrice:"Price from (optional)",
       vtStyle:"Style", vtStyleNone:"Choose a style", vtNeedStyle:"Choose the style of the design.", st_robe:"Dress", st_boubou:"Boubou", st_ensemble:"Outfit / suit", st_chemise:"Shirt", st_pantalon:"Trousers", st_jupe:"Skirt", st_kaftan:"Kaftan", st_ceremonie:"Wedding / ceremony", st_uniforme:"Uniform", st_autre:"Other",
@@ -1646,6 +1650,7 @@
   });
   $("logout-btn").addEventListener("click", () => signOut(auth));
   $("settings-btn").addEventListener("click", () => setTab("reglages"));
+  $("vt-warn-go").addEventListener("click", () => setTab("reglages"));
 
   onAuthStateChanged(auth, async (user) => {
     window.__loaded = true;
@@ -2367,7 +2372,7 @@
   }
 
   /* ---------- Vitrine : modèles publiés dans le catalogue commun ---------- */
-  let VITRINE = [], VT_LOADED = false, VT_FILE = null;
+  let VITRINE = [], VT_LOADED = false, VT_FILE = null; let VT_SYNC_ERR = "";
   function compressImage(file, max, q){
     return new Promise((res, rej)=>{
       const url = URL.createObjectURL(file);
@@ -2434,10 +2439,24 @@
       VT_LOADED = true;
       const sl = (BOUTIQUE && BOUTIQUE.slug) || "";
       if(sl) VITRINE.forEach(m=>{ if(m.slug!==sl){ m.slug=sl; _setDoc(doc(db,"catalogue",m.id), { slug:sl }, { merge:true }).catch(function(){}); } });
+      // le numéro Wave et le WhatsApp de l'atelier doivent être sur CHAQUE modèle publié
+      const want = { wave: String((BOUTIQUE && BOUTIQUE.wave) || "").trim(), wa: waNumber(BOUTIQUE && BOUTIQUE.whatsapp) || "" };
+      VITRINE.forEach(m=>{
+        if(String(m.wave||"")!==want.wave || String(m.wa||"")!==want.wa){
+          Object.assign(m, want);
+          _setDoc(doc(db,"catalogue",m.id), want, { merge:true }).catch(function(e){ VT_SYNC_ERR = (e && e.code) || "error"; renderVitrine(); });
+        }
+      });
     }catch(e){}
     renderVitrine();
   }
   function renderVitrine(){
+    const vtMiss=[];
+    if(!(BOUTIQUE && String(BOUTIQUE.wave||"").trim())) vtMiss.push(escH(t("vtNoWave")));
+    if(!(BOUTIQUE && String(BOUTIQUE.whatsapp||"").trim())) vtMiss.push(escH(t("vtNoWa")));
+    if(VT_SYNC_ERR) vtMiss.push(escH(t("vtSyncFail")) + " (" + escH(VT_SYNC_ERR) + ")");
+    $("vt-warn-t").innerHTML = vtMiss.join("<br><br>");
+    $("vt-warn").hidden = vtMiss.length===0;
     const box=$("vt-list"); box.innerHTML="";
     $("vt-empty").hidden = VITRINE.length>0;
     VITRINE.forEach(m=>{
