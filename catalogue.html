@@ -65,6 +65,10 @@
   .wave .wh{ display:block; color:var(--muted); font-size:12.5px; margin-top:6px; line-height:1.4 }
   .wave button{ margin-top:10px; background:none; border:1px solid var(--line); color:var(--ink); border-radius:20px; padding:7px 16px; font:inherit; font-size:13.5px; cursor:pointer }
   .wave button:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+  .wave .wavego{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; min-height:52px; margin:0 0 12px;
+         background:#1DC8F2; color:#04121A; border:0; border-radius:12px; font-size:16.5px; font-weight:700 }
+  .wave .wavego .wl{ display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%;
+         background:#04121A; color:#1DC8F2; font-size:15px; font-weight:800 }
   /* ateliers */
   .shops-t{ font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:6px 0 8px }
   .shops{ display:flex; gap:10px; overflow-x:auto; padding-bottom:6px; margin-bottom:18px; scrollbar-width:none }
@@ -89,6 +93,7 @@
   <header>
     <img src="icon-192.png" alt="" width="32" height="32">
     <div class="brand">SanaaPro</div>
+    <a class="lang" id="toapp" href="index.html" hidden style="text-decoration:none;color:var(--gold)"></a>
     <button class="lang" id="lang" type="button">FR</button>
   </header>
 
@@ -128,6 +133,7 @@
       <span id="s-cta-t"></span>
     </a>
     <div class="wave" id="wave" hidden>
+      <button type="button" class="wavego" id="wave-go"><span class="wl">W</span><span id="wave-go-t"></span></button>
       <span class="wt" id="wave-t"></span>
       <span class="wn" id="wave-n"></span>
       <button type="button" id="wave-copy"></button>
@@ -147,25 +153,29 @@
          allStyles:"All styles", allAreas:"All neighbourhoods", S:{robe:"Dress", boubou:"Boubou", ensemble:"Outfit / suit", chemise:"Shirt", pantalon:"Trousers", jupe:"Skirt", kaftan:"Kaftan", ceremonie:"Wedding / ceremony", uniforme:"Uniform", autre:"Other"},
          loading:"Loading designs…", empty:"No designs here yet.", net:"Can't reach the catalogue. Check your connection and try again.",
          more:"Show more", from:"from", back:"‹ Back", order:"Order on WhatsApp",
-         waveT:"Pay a deposit with Wave", waveCopy:"Copy the number", waveCopied:"Number copied ✓",
+         waveT:"or send it to this Wave number:", waveCopy:"Copy the number", waveCopied:"Number copied ✓", waveGo:"Pay with Wave", waveOpening:"Number copied ✓ — paste it in Wave",
          waveH:"After paying, send the screenshot to the workshop on WhatsApp.",
          msg:"Hello, I saw your design \u201c{t}\u201d (Ref. {r}) on the SanaaPro catalogue. I would like to order it.\n{u}", ref:"Ref.",
          foot:"Catalogue by", other:"FR", seeAll:"‹ See all workshops", shopLead:"Pick a design and order directly on WhatsApp.",
          shopsT:"Workshops", designs:"{n} designs", design1:"1 design", shopWa:"Message the workshop", shopShare:"Share this page",
-         shopCopied:"Link copied ✓", shopHello:"Hello, I found your workshop on the SanaaPro catalogue.\n{u}", seeShop:"See all designs from {b} ›" },
+         shopCopied:"Link copied ✓", shopHello:"Hello, I found your workshop on the SanaaPro catalogue.\n{u}", seeShop:"See all designs from {b} ›", toApp:"‹ My workshop" },
     fr:{ h1:"Les couturiers de Gambie, dans un seul catalogue.", lead:"Parcourez les modèles des ateliers près de chez vous, puis commandez directement au couturier sur WhatsApp.",
          all:"Tous", femme:"Femme", homme:"Homme", enfant:"Enfant", allShops:"Tous les ateliers",
          allStyles:"Tous les styles", allAreas:"Tous les quartiers", S:{robe:"Robe", boubou:"Boubou", ensemble:"Ensemble / complet", chemise:"Chemise", pantalon:"Pantalon", jupe:"Jupe", kaftan:"Kaftan", ceremonie:"Mariage / cérémonie", uniforme:"Uniforme", autre:"Autre"},
          loading:"Chargement des modèles…", empty:"Aucun modèle ici pour l'instant.", net:"Impossible de joindre le catalogue. Vérifiez votre connexion puis réessayez.",
          more:"Voir plus", from:"dès", back:"‹ Retour", order:"Commander sur WhatsApp",
-         waveT:"Payer l'acompte par Wave", waveCopy:"Copier le numéro", waveCopied:"Numéro copié ✓",
+         waveT:"ou envoyez-le à ce numéro Wave :", waveCopy:"Copier le numéro", waveCopied:"Numéro copié ✓", waveGo:"Payer avec Wave", waveOpening:"Numéro copié ✓ — collez-le dans Wave",
          waveH:"Après le paiement, envoyez la capture à l'atelier sur WhatsApp.",
          msg:"Bonjour, j'ai vu votre modèle \u00ab {t} \u00bb (Réf. {r}) sur le catalogue SanaaPro. Je voudrais le commander.\n{u}", ref:"Réf.",
          foot:"Catalogue par", other:"EN", seeAll:"‹ Voir tous les ateliers", shopLead:"Choisissez un modèle et commandez directement sur WhatsApp.",
          shopsT:"Les ateliers", designs:"{n} modèles", design1:"1 modèle", shopWa:"Écrire à l'atelier", shopShare:"Partager cette page",
-         shopCopied:"Lien copié ✓", shopHello:"Bonjour, j'ai trouvé votre atelier sur le catalogue SanaaPro.\n{u}", seeShop:"Voir tous les modèles de {b} ›" }
+         shopCopied:"Lien copié ✓", shopHello:"Bonjour, j'ai trouvé votre atelier sur le catalogue SanaaPro.\n{u}", seeShop:"Voir tous les modèles de {b} ›", toApp:"‹ Mon atelier" }
   };
   var LANG = "en";
+  try{
+    var fromApp = /[?&]from=app\b/.test(location.search) || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
+    if(fromApp) document.getElementById("toapp").hidden = false;
+  }catch(e){}
   try{ LANG = localStorage.getItem("sanaapro_site_lang") === "fr" ? "fr" : "en"; }catch(e){}
   var STYLE = "", AREA = "", ITEMS = [], NEXT = null, GENRE = "all", SHOP = "", LOADING = false, FAILED = false, CURRENT = null;
   var ONLY = "", PICK = "";
@@ -234,6 +244,7 @@
     var t = L();
     document.documentElement.lang = LANG;
     $("lang").textContent = t.other; $("h1").textContent = t.h1; $("lead").textContent = t.lead;
+    $("toapp").textContent = t.toApp;
     $("foot").textContent = t.foot; $("close").textContent = t.back; $("s-cta-t").textContent = t.order;
     $("more").textContent = t.more;
     $("allshops").hidden = !ONLY; $("allshops").textContent = t.seeAll;
@@ -347,6 +358,7 @@
       $("s-cta").hidden = false;
     } else $("s-cta").hidden = true;
     if(o.wave){
+      $("wave-go-t").textContent = t.waveGo; WAVE_LINK = okWaveLink(o.waveLink);
       $("wave-t").textContent = t.waveT; $("wave-n").textContent = o.wave;
       $("wave-copy").textContent = t.waveCopy; $("wave-h").textContent = t.waveH;
       $("wave").hidden = false;
@@ -375,6 +387,25 @@
     if(navigator.share){ navigator.share({ title: document.title, url: u }).catch(function(){}); return; }
     if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(u).then(ok).catch(function(){ prompt("", u); });
     else prompt("", u);
+  });
+  var WAVE_LINK = "";
+  function okWaveLink(u){
+    try{ var x = new URL(String(u||"")); return (x.protocol==="https:" && /(^|\.)wave\.com$/.test(x.hostname)) ? x.href : ""; }catch(e){ return ""; }
+  }
+  $("wave-go").addEventListener("click", function(){
+    var t = L(), n = $("wave-n").textContent, b = $("wave-go-t");
+    // 1) l'atelier a un lien de paiement Wave : on l'ouvre directement
+    if(WAVE_LINK){ location.href = WAVE_LINK; return; }
+    // 2) sinon : on copie le numéro et on ouvre l'appli Wave
+    function go(){
+      b.textContent = t.waveOpening; setTimeout(function(){ b.textContent = t.waveGo; }, 4000);
+      if(/Android/i.test(navigator.userAgent)){
+        location.href = "intent://#Intent;package=com.wave.personal;S.browser_fallback_url=" +
+          encodeURIComponent("https://play.google.com/store/apps/details?id=com.wave.personal") + ";end";
+      }
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(n).then(go).catch(function(){ prompt("", n); go(); });
+    else { prompt("", n); go(); }
   });
   $("wave-copy").addEventListener("click", function(){
     var n = $("wave-n").textContent, b = $("wave-copy"), t = L();
