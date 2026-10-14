@@ -1,13 +1,13 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0E0E0F">
-<title>Suivi de commande — SanaaPro</title>
-<meta name="description" content="Suivez l'avancement de votre vêtement à l'atelier, sans appeler.">
-<meta property="og:title" content="Suivi de votre commande">
-<meta property="og:description" content="Voyez où en est votre vêtement à l'atelier.">
+<title>Order tracking · Suivi de commande — SanaaPro</title>
+<meta name="description" content="Follow your garment at the workshop without calling. Suivez votre vêtement sans appeler.">
+<meta property="og:title" content="Your order · Votre commande">
+<meta property="og:description" content="See where your garment is at the workshop. Voyez où en est votre vêtement.">
 <meta property="og:image" content="https://sanaapro.github.io/tape-espace/icon-512.png">
 <link rel="icon" href="icon-192.png">
 <link rel="preconnect" href="https://firestore.googleapis.com">
@@ -74,6 +74,10 @@
   .wave button{ margin-top:10px; background:none; border:1px solid var(--line); color:var(--ink); border-radius:20px; padding:7px 16px; font:inherit; font-size:13.5px; cursor:pointer }
   main .wave{ margin:0 0 16px }
   .wave button:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+  .wavepay{ display:flex; align-items:center; justify-content:center; width:100%; min-height:50px; margin:10px 0 4px;
+            background:#1DC8F2; color:#06222B; border-radius:12px; font-weight:600; font-size:16px; text-decoration:none }
+  .wavepay:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+  .wave .wor{ display:block; color:var(--muted); font-size:12.5px; margin-top:8px }
   .foot{ text-align:center; color:var(--muted); font-size:12px; margin-top:34px }
   .foot a{ color:var(--gold); text-decoration:none }
 
@@ -90,10 +94,10 @@
   <header>
     <img src="icon-192.png" alt="" width="34" height="34">
     <div class="shop" id="shop">SanaaPro</div>
-    <button class="lang" id="lang" type="button">EN</button>
+    <button class="lang" id="lang" type="button">FR</button>
   </header>
 
-  <div class="state" id="loading"><div class="spin"></div><p id="l-txt">Chargement…</p></div>
+  <div class="state" id="loading"><div class="spin"></div><p id="l-txt">Loading…</p></div>
   <div class="state" id="error" hidden><h1 id="e-title"></h1><p id="e-txt"></p></div>
 
   <main id="main" hidden>
@@ -106,6 +110,8 @@
 
     <div class="wave" id="wave" hidden>
       <span class="wt" id="wave-t"></span>
+      <a class="wavepay" id="wave-pay" hidden target="_blank" rel="noopener"></a>
+      <span class="wor" id="wave-or" hidden></span>
       <span class="wn" id="wave-n"></span>
       <button type="button" id="wave-copy"></button>
       <span class="wh" id="wave-h"></span>
@@ -150,7 +156,8 @@
       stamp:"Mis à jour le {d}", foot:"Suivi fourni par",
       discT:"Découvrez d'autres modèles", discS:"Les créations des couturiers de Gambie, réunies en un seul endroit.",
       waveT:"Payer le reste ({m}) par Wave", waveCopy:"Copier le numéro", waveCopied:"Numéro copié ✓",
-      waveH:"Après le paiement, envoyez la capture à l'atelier sur WhatsApp.",
+      waveH:"Après le paiement, envoyez la capture à l'atelier sur WhatsApp. Vous pouvez aussi payer directement à l'atelier, comme vous préférez.",
+      waveBtn:"Payer avec Wave", waveOr:"ou par le numéro Wave :",
       eNoT:"Lien incomplet", eNoTx:"Ce lien de suivi n'est pas complet. Demandez à l'atelier de vous le renvoyer.",
       eNF:"Commande introuvable", eNFx:"Ce suivi n'existe plus ou le lien a été mal copié. Contactez l'atelier.",
       eNet:"Pas de connexion", eNetx:"Impossible de joindre le serveur. Vérifiez votre réseau puis rouvrez le lien.",
@@ -174,7 +181,8 @@
       stamp:"Updated {d}", foot:"Tracking by",
       discT:"Discover more designs", discS:"Creations from tailors across The Gambia, all in one place.",
       waveT:"Pay the balance ({m}) with Wave", waveCopy:"Copy the number", waveCopied:"Number copied ✓",
-      waveH:"After paying, send the screenshot to the workshop on WhatsApp.",
+      waveH:"After paying, send the screenshot to the workshop on WhatsApp. You can also pay at the workshop if you prefer.",
+      waveBtn:"Pay with Wave", waveOr:"or with the Wave number:",
       eNoT:"Incomplete link", eNoTx:"This tracking link is incomplete. Ask the workshop to send it again.",
       eNF:"Order not found", eNFx:"This tracking no longer exists or the link was copied wrongly. Contact the workshop.",
       eNet:"No connection", eNetx:"Can't reach the server. Check your network and open the link again.",
@@ -187,7 +195,7 @@
   var DATA = null, LANG = null, ERR = null;
   try{ LANG = localStorage.getItem("sanaapro_suivi_lang"); }catch(e){}
 
-  function L(){ return T[LANG] || T.fr; }
+  function L(){ return T[LANG] || T.en; }
   function num3(n){ n = String(n||""); return n.length < 3 ? ("000"+n).slice(-3) : n; }
   function money(v){ return Math.round(Number(v)||0).toLocaleString(LANG==="en"?"en-GB":"fr-FR") + " " + (DATA.devise||"D"); }
   function fmtDate(v){
@@ -213,6 +221,15 @@
     ERR = kind;
     $("loading").hidden = true; $("main").hidden = true; $("error").hidden = false;
     $("e-title").textContent = L()["e"+kind]; $("e-txt").textContent = L()["e"+kind+"x"];
+  }
+
+  function safeWave(u){
+    try{
+      var x = new URL(String(u || ""));
+      if(x.protocol !== "https:") return "";
+      if(!/(^|\.)wave\.com$/i.test(x.hostname)) return "";
+      return x.href;
+    }catch(e){ return ""; }
   }
 
   function row(label, value, cls){
@@ -276,10 +293,15 @@
       }
     }
 
-    if(DATA.wave && DATA.reste > 0 && st !== "livre"){
+    var wLink = safeWave(DATA.waveLink), wNum = String(DATA.wave || "").trim();
+    if((wLink || wNum) && DATA.reste > 0){
       $("wave-t").textContent = t.waveT.replace("{m}", money(DATA.reste));
-      $("wave-n").textContent = DATA.wave;
-      $("wave-copy").textContent = t.waveCopy; $("wave-h").textContent = t.waveH;
+      if(wLink){ $("wave-pay").href = wLink; $("wave-pay").textContent = t.waveBtn; $("wave-pay").hidden = false; }
+      else $("wave-pay").hidden = true;
+      $("wave-or").textContent = t.waveOr; $("wave-or").hidden = !(wLink && wNum);
+      $("wave-n").textContent = wNum; $("wave-n").hidden = !wNum;
+      $("wave-copy").textContent = t.waveCopy; $("wave-copy").hidden = !wNum;
+      $("wave-h").textContent = t.waveH;
       $("wave").hidden = false;
     } else $("wave").hidden = true;
     if(DATA.wa){
@@ -297,7 +319,7 @@
   }
 
   function load(){
-    if(!/^[a-z0-9]{12,40}$/.test(token)){ if(!LANG) LANG = "fr"; showError("NoT"); paint(); return; }
+    if(!/^[a-z0-9]{12,40}$/.test(token)){ if(!LANG) LANG = "en"; showError("NoT"); paint(); return; }
     var url = "https://firestore.googleapis.com/v1/projects/" + PROJECT +
               "/databases/(default)/documents/suivi/" + token + "?key=" + API_KEY;
     fetch(url, { cache:"no-store" }).then(function(r){
@@ -308,11 +330,11 @@
       var f = j.fields || {}, d = {};
       Object.keys(f).forEach(function(k){ d[k] = val(f[k]); });
       DATA = d; ERR = null;
-      if(!LANG) LANG = (d.lang === "en") ? "en" : "fr";
+      if(!LANG) LANG = (d.lang === "fr") ? "fr" : "en";
       paint();
     }).catch(function(e){
       if(DATA) return; // on garde l'affichage précédent si un rafraîchissement échoue
-      if(!LANG) LANG = "fr";
+      if(!LANG) LANG = "en";
       showError(e === "NF" ? "NF" : "Net"); paint();
     });
   }
