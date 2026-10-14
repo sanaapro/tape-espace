@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0E0E0F">
+<title>SanaaPro — Your workshop, in your pocket</title>
+<meta name="description" content="SanaaPro: manage your clients, their measurements and your tailoring orders from your phone. Automatic WhatsApp updates. 14-day free trial.">
+<link rel="icon" href="tape-espace/icon-192.png"><meta property="og:title" content="SanaaPro — Your workshop, in your pocket">
+<meta property="og:description" content="Clients, measurements and orders from your phone. Automatic WhatsApp updates. 14-day free trial.">
+<meta property="og:image" content="https://sanaapro.github.io/tape-espace/icon-512.png">
+<meta property="og:url" content="https://sanaapro.github.io/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<style>
+  :root{
+    --bg:#0E0E0F; --panel:#17181A; --panel2:#1E1F22; --line:#2C2E32; --line2:#3A3D42;
+    --gold:#E0B23C; --txt:#EDEBE6; --muted:#98948C;
+    --ok:#4FD18B; --okbg:#12301F; --wa:#25D366; --wabg:#10281B;
+    --serif:Georgia,"Times New Roman",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{ margin:0; background:var(--bg); color:var(--txt); font-family:var(--sans); line-height:1.6; }
+  .wrap{ max-width:560px; margin:0 auto; padding:22px 18px 56px; }
+
+  .lang{ display:flex; justify-content:flex-end; }
+  .seg{ display:inline-flex; border:1px solid var(--line2); border-radius:20px; overflow:hidden; }
+  .seg button{ border:none; background:transparent; color:var(--muted); font-family:var(--sans);
+    font-size:12px; font-weight:700; letter-spacing:1px; padding:7px 17px; cursor:pointer; }
+  .seg button.on{ background:var(--gold); color:#141310; }
+
+  header{ text-align:center; padding:26px 0 8px; }
+  header .name{ font-family:var(--serif); font-size:34px; letter-spacing:5px; color:var(--gold);
+    text-transform:uppercase; margin:0; font-weight:700; }
+  header .tag{ font-size:11px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; margin-top:9px; }
+  header .pitch{ font-family:var(--serif); font-size:20px; margin:24px 0 0; line-height:1.5; }
+  header .sub{ color:var(--muted); font-size:15px; margin-top:12px; }
+
+  .cta{ display:block; text-align:center; text-decoration:none; margin-top:24px; padding:17px;
+    border-radius:11px; background:var(--gold); color:#141310; font-size:16px; font-weight:700; }
+  .cta.second{ background:transparent; color:var(--txt); border:1px solid var(--line2); font-weight:600; font-size:14px; margin-top:11px; }
+  .trial{ text-align:center; font-size:13px; color:var(--ok); margin-top:12px; }
+
+  h2{ font-family:var(--serif); font-size:20px; color:var(--gold); margin:42px 0 4px; font-weight:700; }
+  .rule{ border-top:1px solid var(--line); margin-top:10px; padding-top:18px; }
+
+  .feat{ display:flex; gap:13px; padding:13px 0; border-bottom:1px solid var(--line); }
+  .feat:last-child{ border-bottom:none; }
+  .feat .ic{ font-size:21px; line-height:1.3; flex:0 0 26px; }
+  .feat .tt{ font-weight:700; font-size:15px; }
+  .feat .dd{ color:var(--muted); font-size:14px; margin-top:3px; }
+
+  .plans{ display:grid; gap:13px; }
+  .plan{ background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:19px; }
+  .plan.best{ border-color:var(--gold); }
+  .plan .nm{ font-family:var(--serif); font-size:17px; color:var(--gold); font-weight:700; }
+  .plan .pr{ font-size:27px; font-weight:700; margin-top:7px; }
+  .plan .pr span{ font-size:14px; color:var(--muted); font-weight:400; }
+  .plan ul{ margin:13px 0 0; padding-left:19px; color:var(--muted); font-size:14px; }
+  .plan li{ margin-bottom:5px; }
+
+  ol.steps{ padding-left:21px; margin:0; }
+  ol.steps li{ margin-bottom:11px; font-size:15px; }
+
+  .wa{ display:block; text-align:center; text-decoration:none; margin-top:16px; padding:16px;
+    border:1px solid var(--wa); border-radius:11px; background:var(--wabg); color:var(--wa);
+    font-size:15px; font-weight:700; }
+  footer{ text-align:center; font-size:12px; color:#5F5B54; margin-top:44px; line-height:1.9; }
+  [hidden]{ display:none !important }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="lang">
+    <div class="seg" id="seg">
+      <button data-l="fr">FR</button><button data-l="en">EN</button>
+    </div>
+  </div>
+
+  <header>
+    <div class="name">SanaaPro</div>
+    <div class="tag" data-i="tag">votre atelier, en ligne</div>
+    <div class="pitch" data-i="pitch">Vos clientes, leurs mesures et vos commandes — dans votre téléphone.</div>
+    <div class="sub" data-i="sub">Fini le cahier perdu et les mesures introuvables. Votre atelier vous suit partout, même sans réseau.</div>
+  </header>
+
+  <a class="cta" href="inscription/" data-i="ctaMain">Essayer gratuitement</a>
+  <div class="trial" data-i="trialNote">14 jours offerts · aucune carte bancaire</div>
+  <a class="cta second" href="tape-espace/" data-i="ctaHave">J'ai déjà un compte</a>
+
+  <h2 data-i="whatTitle">Ce que fait SanaaPro</h2>
+  <div class="rule">
+    <div class="feat">
+      <div class="ic">📐</div>
+      <div><div class="tt" data-i="f1t">Carnets de mesures homme et femme</div>
+      <div class="dd" data-i="f1d">Deux carnets séparés, jamais mélangés. Vous tapez un nom ou un numéro, les mesures reviennent.</div></div>
+    </div>
+    <div class="feat">
+      <div class="ic">🧵</div>
+      <div><div class="tt" data-i="f2t">Commandes suivies étape par étape</div>
+      <div class="dd" data-i="f2d">Confection, retouche ou prêt-à-porter. Tissu reçu, coupe, essayage, prêt — avec numéro de reçu et date de livraison.</div></div>
+    </div>
+    <div class="feat">
+      <div class="ic">💬</div>
+      <div><div class="tt" data-i="f3t">La cliente prévenue sur WhatsApp</div>
+      <div class="dd" data-i="f3d">À chaque étape, le message part tout seul. Elle sait où en est son vêtement et ce qu'elle doit régler.</div></div>
+    </div>
+    <div class="feat">
+      <div class="ic">🔒</div>
+      <div><div class="tt" data-i="f4t">Les prix protégés par votre code</div>
+      <div class="dd" data-i="f4d">Vos employés font avancer le travail, vous seul modifiez un prix. Un code à distance quand vous n'êtes pas là.</div></div>
+    </div>
+    <div class="feat">
+      <div class="ic">📶</div>
+      <div><div class="tt" data-i="f5t">Fonctionne sans réseau</div>
+      <div class="dd" data-i="f5d">Une fois installée, l'application s'ouvre en un instant et enregistre même hors connexion.</div></div>
+    </div>
+  </div>
+
+  <h2 data-i="priceTitle">Tarifs</h2>
+  <div class="rule">
+    <div class="plans">
+      <div class="plan">
+        <div class="nm" data-i="pStd">Standard</div>
+        <div class="pr">500 D <span data-i="perMonth">par mois</span></div>
+        <ul>
+          <li data-i="s1">Clientes et carnets de mesures</li>
+          <li data-i="s2">Commandes et suivi des étapes</li>
+          <li data-i="s3">Notifications WhatsApp</li>
+          <li data-i="s4">Recherche et numéros de reçu</li>
+        </ul>
+      </div>
+      <div class="plan best">
+        <div class="nm" data-i="pPrem">Premium</div>
+        <div class="pr">750 D <span data-i="perMonth2">par mois</span></div>
+        <ul>
+          <li data-i="p1">Tout le Standard</li>
+          <li data-i="p2">Registre des salariés et des salaires</li>
+          <li data-i="p3">Registre des visiteurs</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <h2 data-i="installTitle">Installer l'application</h2>
+  <div class="rule">
+    <ol class="steps">
+      <li data-i="i1">Créez votre boutique : email, nom de l'atelier, mot de passe.</li>
+      <li data-i="i2">Ouvrez votre espace et connectez-vous.</li>
+      <li data-i="i3">Dans le menu du navigateur, choisissez « Ajouter à l'écran d'accueil ». L'icône SanaaPro s'installe comme une vraie application.</li>
+    </ol>
+    <p style="color:var(--muted);font-size:14px" data-i="i4">Le premier chargement demande une bonne connexion. Ensuite, tout est gardé sur le téléphone.</p>
+  </div>
+
+  <h2 data-i="askTitle">Une question ?</h2>
+  <div class="rule">
+    <a class="wa" id="walink" href="#" data-i="waBtn">Écrire sur WhatsApp</a>
+  </div>
+
+  <footer>
+    SanaaPro<br>
+    <span data-i="footNote">Fait en Gambie, pour les ateliers de couture.</span><br>
+    <a href="privacy.html" data-i="privacy" style="color:#98948C">Confidentialité</a>
+  </footer>
+</div>
+
+<script>
+  var WA = "2207628683";
+  document.getElementById("walink").href =
+    "https://wa.me/" + WA + "?text=" + encodeURIComponent("Bonjour, je voudrais des informations sur SanaaPro.");
+
+  var T = {
+    fr:{
+      tag:"votre atelier, en ligne",
+      pitch:"Vos clientes, leurs mesures et vos commandes — dans votre téléphone.",
+      sub:"Fini le cahier perdu et les mesures introuvables. Votre atelier vous suit partout, même sans réseau.",
+      ctaMain:"Essayer gratuitement", trialNote:"14 jours offerts · aucune carte bancaire",
+      ctaHave:"J'ai déjà un compte",
+      whatTitle:"Ce que fait SanaaPro",
+      f1t:"Carnets de mesures homme et femme",
+      f1d:"Deux carnets séparés, jamais mélangés. Vous tapez un nom ou un numéro, les mesures reviennent.",
+      f2t:"Commandes suivies étape par étape",
+      f2d:"Confection, retouche ou prêt-à-porter. Tissu reçu, coupe, essayage, prêt — avec numéro de reçu et date de livraison.",
+      f3t:"La cliente prévenue sur WhatsApp",
+      f3d:"À chaque étape, le message part tout seul. Elle sait où en est son vêtement et ce qu'elle doit régler.",
+      f4t:"Les prix protégés par votre code",
+      f4d:"Vos employés font avancer le travail, vous seul modifiez un prix. Un code à distance quand vous n'êtes pas là.",
+      f5t:"Fonctionne sans réseau",
+      f5d:"Une fois installée, l'application s'ouvre en un instant et enregistre même hors connexion.",
+      priceTitle:"Tarifs", pStd:"Standard", pPrem:"Premium",
+      perMonth:"par mois", perMonth2:"par mois",
+      s1:"Clientes et carnets de mesures", s2:"Commandes et suivi des étapes",
+      s3:"Notifications WhatsApp", s4:"Recherche et numéros de reçu",
+      p1:"Tout le Standard", p2:"Registre des salariés et des salaires", p3:"Registre des visiteurs",
+      installTitle:"Installer l'application",
+      i1:"Créez votre boutique : email, nom de l'atelier, mot de passe.",
+      i2:"Ouvrez votre espace et connectez-vous.",
+      i3:"Dans le menu du navigateur, choisissez « Ajouter à l'écran d'accueil ». L'icône SanaaPro s'installe comme une vraie application.",
+      i4:"Le premier chargement demande une bonne connexion. Ensuite, tout est gardé sur le téléphone.",
+      askTitle:"Une question ?", waBtn:"Écrire sur WhatsApp",
+      footNote:"Fait en Gambie, pour les ateliers de couture.", privacy:"Confidentialité de vos données"
+    },
+    en:{
+      tag:"your workshop, online",
+      pitch:"Your clients, their measurements and your orders — in your phone.",
+      sub:"No more lost notebooks or missing measurements. Your workshop follows you everywhere, even offline.",
+      ctaMain:"Start free", trialNote:"14 days free · no bank card",
+      ctaHave:"I already have an account",
+      whatTitle:"What SanaaPro does",
+      f1t:"Separate books for men and women",
+      f1d:"Two measurement books, never mixed up. Type a name or a number and the measurements come back.",
+      f2t:"Orders tracked stage by stage",
+      f2d:"Tailoring, alteration or ready-to-wear. Fabric received, cutting, fitting, ready — with a receipt number and a delivery date.",
+      f3t:"Your client kept informed on WhatsApp",
+      f3d:"At every stage the message goes out on its own. She knows where her garment stands and what is left to pay.",
+      f4t:"Prices protected by your code",
+      f4d:"Your staff move the work forward, only you change a price. A remote code for when you are away.",
+      f5t:"Works without network",
+      f5d:"Once installed, the app opens instantly and saves even offline.",
+      priceTitle:"Pricing", pStd:"Standard", pPrem:"Premium",
+      perMonth:"per month", perMonth2:"per month",
+      s1:"Clients and measurement books", s2:"Orders and stage tracking",
+      s3:"WhatsApp notifications", s4:"Search and receipt numbers",
+      p1:"Everything in Standard", p2:"Staff and salary register", p3:"Visitors register",
+      installTitle:"Install the app",
+      i1:"Create your shop: email, workshop name, password.",
+      i2:"Open your space and sign in.",
+      i3:"In the browser menu, choose \u201cAdd to Home screen\u201d. The SanaaPro icon installs like a real app.",
+      i4:"The first load needs a good connection. After that, everything is kept on the phone.",
+      askTitle:"A question?", waBtn:"Message us on WhatsApp",
+      footNote:"Made in The Gambia, for tailoring workshops.", privacy:"Your data and privacy"
+    }
+  };
+
+  var L = "en";
+  try { L = localStorage.getItem("sanaapro_site_lang") || "en"; } catch(e){}
+  if(!T[L]) L = "en";
+
+  function apply(){
+    document.documentElement.lang = L;
+    var d = T[L];
+    var els = document.querySelectorAll("[data-i]");
+    for(var i=0;i<els.length;i++){
+      var k = els[i].getAttribute("data-i");
+      if(d[k]) els[i].textContent = d[k];
+    }
+    var bs = document.querySelectorAll("#seg button");
+    for(var j=0;j<bs.length;j++){
+      bs[j].classList.toggle("on", bs[j].getAttribute("data-l") === L);
+    }
+  }
+
+  var bs = document.querySelectorAll("#seg button");
+  for(var k=0;k<bs.length;k++){
+    bs[k].addEventListener("click", function(){
+      L = this.getAttribute("data-l");
+      try { localStorage.setItem("sanaapro_site_lang", L); } catch(e){}
+      apply();
+    });
+  }
+  apply();
+</script>
+</body>
+</html>
