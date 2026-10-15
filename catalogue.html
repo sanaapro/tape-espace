@@ -237,9 +237,9 @@
          selNote:"Prices start from the amount shown. The workshop will confirm the final price and the delivery date with you on WhatsApp, then you can pay by Wave or at the workshop.",
          clear:"Clear my selection", clearQ:"Remove all designs from your selection?", remove:"Remove", max:"You can select up to {n} designs at a time.",
          empty2:"Your selection is empty. Tap ＋ on a design to add it.",
-         mMany:"Hello, I chose {n} designs from your workshop on the SanaaPro catalogue and I would like to order them:", mOne:"Hello, I chose this design from your workshop on the SanaaPro catalogue and I would like to order it:",
-         mEnd:"Could you tell me the total price and the delivery date? Thank you.",
-         mSeeN:"See the {n} designs with photos:", mSee1:"See the design with photos:",
+         mMany:"Hello, I chose {n} designs on the SanaaPro catalogue:", mOne:"Hello, I chose this design on the SanaaPro catalogue:",
+         mEnd:"What is the total price and the delivery time? Thank you.",
+         mSeeN:"📷 Photos:", mSee1:"📷 Photo:",
          shH:"Selection of {n} designs", shH1:"Selected design", shLead:"Designs chosen by a client on the SanaaPro catalogue.", shBack:"‹ Catalogue",
          shNone:"These designs are no longer in the catalogue.", shTotal:"Indicative total" },
     fr:{ h1:"Les couturiers de Gambie, dans un seul catalogue.", lead:"Parcourez les modèles des ateliers près de chez vous, puis commandez directement au couturier sur WhatsApp.",
@@ -260,9 +260,9 @@
          selNote:"Les prix indiqués sont des prix de départ. L'atelier vous confirmera le prix final et la date de livraison sur WhatsApp, puis vous pourrez payer par Wave ou à l'atelier.",
          clear:"Vider ma sélection", clearQ:"Retirer tous les modèles de votre sélection ?", remove:"Retirer", max:"Vous pouvez sélectionner jusqu'à {n} modèles à la fois.",
          empty2:"Votre sélection est vide. Touchez ＋ sur un modèle pour l'ajouter.",
-         mMany:"Bonjour, j'ai choisi {n} modèles de votre atelier sur le catalogue SanaaPro et je voudrais les commander :", mOne:"Bonjour, j'ai choisi ce modèle de votre atelier sur le catalogue SanaaPro et je voudrais le commander :",
-         mEnd:"Pouvez-vous me donner le prix total et la date de livraison ? Merci.",
-         mSeeN:"Voir les {n} modèles en photo :", mSee1:"Voir le modèle en photo :",
+         mMany:"Bonjour, j'ai choisi {n} modèles sur le catalogue SanaaPro :", mOne:"Bonjour, j'ai choisi ce modèle sur le catalogue SanaaPro :",
+         mEnd:"Quel est le prix total et le délai ? Merci.",
+         mSeeN:"📷 Photos :", mSee1:"📷 Photo :",
          shH:"Sélection de {n} modèles", shH1:"Modèle sélectionné", shLead:"Modèles choisis par une cliente sur le catalogue SanaaPro.", shBack:"‹ Catalogue",
          shNone:"Ces modèles ne sont plus dans le catalogue.", shTotal:"Total indicatif" }
   };
@@ -274,7 +274,11 @@
   }catch(e){}
   try{ LANG = localStorage.getItem("sanaapro_site_lang") === "fr" ? "fr" : "en"; }catch(e){}
   var STYLE = "", AREA = "", ITEMS = [], NEXT = null, GENRE = "all", SHOP = "", LOADING = false, FAILED = false, CURRENT = null;
-  var ONLY = "", PICK = "", SHARED = [];
+  var ONLY = "", PICK = "", SHARED = [], PREFIXES = [];
+  try{
+    var pq = new URLSearchParams(location.search).get("p") || "";
+    if(/^[A-Za-z0-9]{5,75}$/.test(pq) && pq.length % 5 === 0) PREFIXES = pq.match(/.{5}/g);
+  }catch(e){}
   try{ SHARED = (new URLSearchParams(location.search).get("s") || "").split(".").filter(function(x){ return /^[A-Za-z0-9_-]{4,64}$/.test(x); }).slice(0, 15); }catch(e){}
   try{ PICK = new URLSearchParams(location.search).get("m") || ""; }catch(e){}
   try{ ONLY = new URLSearchParams(location.search).get("a") || ""; }catch(e){}
@@ -339,22 +343,24 @@
     if(CURRENT){ var pk = $("s-pick"), on2 = isSel(CURRENT); pk.textContent = on2 ? t.added : t.add; pk.classList.toggle("on", on2); }
     if(!$("selp").hidden) paintSel();
   }
+  var SHORT_BASE = "https://sanaapro.github.io/c?";
   function selLink(items){
+    var ok = location.hostname === "sanaapro.github.io" &&
+             items.every(function(x){ return /^[A-Za-z0-9]{5,}$/.test(x.id); });
+    if(ok) return SHORT_BASE + items.map(function(x){ return x.id.slice(0,5); }).join("");
     var base = location.origin + location.pathname;
     return items.length === 1 ? base + "?m=" + encodeURIComponent(items[0].id)
                               : base + "?s=" + items.map(function(x){ return encodeURIComponent(x.id); }).join(".");
   }
   function selMessage(items){
-    var t = L(), lines = [items.length === 1 ? t.mOne : t.mMany.replace("{n}", items.length), ""];
+    var t = L(), lines = [items.length === 1 ? t.mOne : t.mMany.replace("{n}", items.length)];
     items.forEach(function(x, i){
       var l = (i+1) + ". " + (x.titre || "—");
       if(x.prix !== null && x.prix !== undefined) l += " — " + amt(x.prix, x.devise);
-      l += " (" + x.ref + ")";
       lines.push(l);
     });
     lines.push("");
-    lines.push(items.length === 1 ? t.mSee1 : t.mSeeN.replace("{n}", items.length));
-    lines.push(selLink(items));
+    lines.push((items.length === 1 ? t.mSee1 : t.mSeeN) + " " + selLink(items));
     lines.push(""); lines.push(t.mEnd);
     return lines.join("\n");
   }
@@ -652,15 +658,27 @@
     paint();
   });
 
-  function openShared(){
-    var t = L();
-    $("shv-close").textContent = t.shBack; $("shv-h").textContent = SHARED.length === 1 ? t.shH1 : t.shH.replace("{n}", SHARED.length);
+  var DOCROOT = "projects/sanaapro-app/databases/(default)/documents/";
+  function byId(id){
+    return fetch(BASE + "catalogue/" + encodeURIComponent(id) + "?key=" + KEY).then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){ return (d && d.name) ? parse(d) : null; }).catch(function(){ return null; });
+  }
+  function byPrefix(px){
+    var ref0 = DOCROOT + "catalogue/" + px;
+    var body = { structuredQuery: { from:[{ collectionId:"catalogue" }], limit:1, where:{ compositeFilter:{ op:"AND", filters:[
+      { fieldFilter:{ field:{ fieldPath:"__name__" }, op:"GREATER_THAN_OR_EQUAL", value:{ referenceValue: ref0 } } },
+      { fieldFilter:{ field:{ fieldPath:"__name__" }, op:"LESS_THAN", value:{ referenceValue: ref0 + "\uf8ff" } } } ] } } } };
+    return fetch(BASE.replace(/\/$/, "") + ":runQuery?key=" + KEY, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(body) })
+      .then(function(r){ return r.ok ? r.json() : []; })
+      .then(function(rows){ var d = (rows || []).filter(function(x){ return x.document; })[0]; return d ? parse(d.document) : null; })
+      .catch(function(){ return null; });
+  }
+  function openShared(getters){
+    var t = L(), n0 = getters.length;
+    $("shv-close").textContent = t.shBack; $("shv-h").textContent = n0 === 1 ? t.shH1 : t.shH.replace("{n}", n0);
     $("shv-lead").textContent = t.shLead;
     $("shv").hidden = false; document.body.style.overflow = "hidden";
-    Promise.all(SHARED.map(function(id){
-      return fetch(BASE + "catalogue/" + encodeURIComponent(id) + "?key=" + KEY).then(function(r){ return r.ok ? r.json() : null; })
-        .then(function(d){ return (d && d.name) ? parse(d) : null; }).catch(function(){ return null; });
-    })).then(function(docs){
+    Promise.all(getters.map(function(g){ return g(); })).then(function(docs){
       var box = $("shv-list"); box.innerHTML = "";
       var ok = docs.filter(function(o){ return o && live(o); }), total = 0, priced = 0, dev = "D";
       if(!ok.length){ var e = document.createElement("p"); e.className = "note"; e.textContent = t.shNone; box.appendChild(e); return; }
@@ -690,7 +708,9 @@
   });
 
   paint(); load();
-  if(SHARED.length) openShared();
+  if(SHARED.length) openShared(SHARED.map(function(id){ return function(){ return byId(id); }; }));
+  else if(PREFIXES.length === 1) byPrefix(PREFIXES[0]).then(function(o){ if(o) openSheet(o); });
+  else if(PREFIXES.length) openShared(PREFIXES.map(function(px){ return function(){ return byPrefix(px); }; }));
   if(PICK){
     fetch(BASE + "catalogue/" + encodeURIComponent(PICK) + "?key=" + KEY).then(function(r){ return r.ok ? r.json() : null; })
       .then(function(d){ if(d && d.name) openSheet(parse(d)); }).catch(function(){});
