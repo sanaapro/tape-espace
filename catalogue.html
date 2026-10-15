@@ -88,13 +88,17 @@
   .seeshop{ display:block; margin-top:18px; padding:13px 14px; border:1px solid var(--line); border-radius:12px; color:var(--gold); text-decoration:none; text-align:center }
   /* sélection de plusieurs modèles */
   .cell{ position:relative; align-self:start }
-  .pick{ position:absolute; top:7px; right:7px; width:42px; height:42px; padding:0; border-radius:50%;
-         border:1.5px solid rgba(255,255,255,.9); background:rgba(14,14,15,.6); color:#fff;
-         display:flex; align-items:center; justify-content:center; cursor:pointer }
-  .pick svg{ width:20px; height:20px }
-  .pick.on{ background:var(--gold); border-color:var(--gold); color:#16130B }
-  .pick:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
-  .cell.on .item img{ outline:3px solid var(--gold); outline-offset:-3px }
+  /* zone tactile de 40 px, pastille visible de 24 px */
+  .pick{ position:absolute; top:2px; right:2px; width:40px; height:40px; padding:0; border:0; background:none;
+         display:flex; align-items:center; justify-content:center; cursor:pointer; -webkit-tap-highlight-color:transparent }
+  .pick .dot{ width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+              background:rgba(14,14,15,.42); border:1px solid rgba(255,255,255,.75); color:#fff;
+              -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); transition:background .15s, border-color .15s }
+  .pick svg{ width:12px; height:12px }
+  .pick.on .dot{ background:var(--gold); border-color:var(--gold); color:#16130B }
+  .pick:focus-visible{ outline:none }
+  .pick:focus-visible .dot{ outline:2px solid var(--gold); outline-offset:2px }
+  .cell.on .item img{ outline:2px solid var(--gold); outline-offset:-2px }
   .selbar{ position:fixed; z-index:5; left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom,0px));
            max-width:560px; margin:0 auto; display:flex; align-items:center; gap:10px; min-height:56px; padding:8px 8px 8px 14px;
            background:var(--gold); color:#16130B; border:0; border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.45);
@@ -132,6 +136,11 @@
   #shv-total{ margin-top:22px; padding-top:14px; border-top:1px solid var(--line); font-size:15px }
   .note{ color:var(--muted); font-size:13px; line-height:1.45; margin:22px 0 0 }
   .clear{ display:block; margin:18px auto 0; background:none; border:0; color:var(--muted); text-decoration:underline; font:inherit; font-size:14px; cursor:pointer; padding:10px }
+  .toast{ position:fixed; z-index:20; left:12px; right:12px; bottom:calc(80px + env(safe-area-inset-bottom,0px)); max-width:560px; margin:0 auto;
+           display:flex; align-items:center; gap:12px; padding:12px 12px 12px 16px; border-radius:12px;
+           background:#F3EEE3; color:#16130B; font-size:14.5px; box-shadow:0 8px 24px rgba(0,0,0,.45) }
+  .toast span{ flex:1 }
+  .toast button{ flex:none; background:none; border:1px solid #16130B; color:#16130B; border-radius:8px; padding:7px 12px; font:inherit; font-weight:600; cursor:pointer }
   [hidden]{ display:none !important }
 </style>
 </head>
@@ -193,6 +202,8 @@
 
 <button type="button" class="selbar" id="selbar" hidden><span class="cnt" id="selbar-n"></span><span id="selbar-t"></span><span class="go" id="selbar-go"></span></button>
 
+<div class="toast" id="toast" hidden role="status"></div>
+
 <div class="sheet" id="shv" hidden role="dialog" aria-modal="true" aria-labelledby="shv-h">
   <div class="in">
     <button class="close" id="shv-close" type="button"></button>
@@ -238,7 +249,7 @@
          clear:"Clear my selection", clearQ:"Remove all designs from your selection?", remove:"Remove", max:"You can select up to {n} designs at a time.",
          empty2:"Your selection is empty. Tap ＋ on a design to add it.",
          mMany:"Hello, I chose {n} designs on the SanaaPro catalogue:", mOne:"Hello, I chose this design on the SanaaPro catalogue:",
-         mEnd:"What is the total price and the delivery time? Thank you.",
+         mEnd:"What is the total price and the delivery time? Thank you.", sentOk:"Sent to the workshop ✓ — removed from your selection", undo:"Undo",
          mSeeN:"📷 Photos:", mSee1:"📷 Photo:",
          shH:"Selection of {n} designs", shH1:"Selected design", shLead:"Designs chosen by a client on the SanaaPro catalogue.", shBack:"‹ Catalogue",
          shNone:"These designs are no longer in the catalogue.", shTotal:"Indicative total" },
@@ -261,7 +272,7 @@
          clear:"Vider ma sélection", clearQ:"Retirer tous les modèles de votre sélection ?", remove:"Retirer", max:"Vous pouvez sélectionner jusqu'à {n} modèles à la fois.",
          empty2:"Votre sélection est vide. Touchez ＋ sur un modèle pour l'ajouter.",
          mMany:"Bonjour, j'ai choisi {n} modèles sur le catalogue SanaaPro :", mOne:"Bonjour, j'ai choisi ce modèle sur le catalogue SanaaPro :",
-         mEnd:"Quel est le prix total et le délai ? Merci.",
+         mEnd:"Quel est le prix total et le délai ? Merci.", sentOk:"Envoyé à l'atelier ✓ — retiré de votre sélection", undo:"Annuler",
          mSeeN:"📷 Photos :", mSee1:"📷 Photo :",
          shH:"Sélection de {n} modèles", shH1:"Modèle sélectionné", shLead:"Modèles choisis par une cliente sur le catalogue SanaaPro.", shBack:"‹ Catalogue",
          shNone:"Ces modèles ne sont plus dans le catalogue.", shTotal:"Total indicatif" }
@@ -332,7 +343,7 @@
       var on = SEL.some(function(x){ return x.id === c.dataset.id; });
       c.classList.toggle("on", on);
       var b = c.querySelector(".pick");
-      b.classList.toggle("on", on); b.innerHTML = on ? CHECK : PLUS;
+      b.classList.toggle("on", on); b.innerHTML = '<span class="dot">' + (on ? CHECK : PLUS) + '</span>';
       b.setAttribute("aria-pressed", on ? "true" : "false"); b.setAttribute("aria-label", t.pickAria);
     });
     $("selbar").hidden = !n || !$("selp").hidden;
@@ -409,10 +420,34 @@
         c.href = "https://wa.me/" + f.wa + "?text=" + encodeURIComponent(selMessage(items));
         c.innerHTML = WA_ICON;
         var ct = document.createElement("span"); ct.textContent = items.length === 1 ? t.send1 : t.send.replace("{n}", items.length); c.appendChild(ct);
+        c.addEventListener("click", function(){
+          // Comme un panier : une fois envoyés à l'atelier, ces modèles quittent la sélection
+          var sent = items.map(function(x){ return x.id; });
+          setTimeout(function(){
+            var before = SEL.slice();
+            SEL = SEL.filter(function(y){ return sent.indexOf(y.id) < 0; });
+            saveSel();
+            if(!SEL.length && !$("selp").hidden) history.back();
+            refreshSel();
+            toast(L().sentOk, function(){ SEL = before; saveSel(); refreshSel(); });
+          }, 400);
+        });
         g.appendChild(c);
       }
       box.appendChild(g);
     });
+  }
+  var TOAST_T = null;
+  function toast(msg, undo){
+    var el = $("toast"); el.innerHTML = "";
+    var m = document.createElement("span"); m.textContent = msg; el.appendChild(m);
+    if(undo){
+      var b = document.createElement("button"); b.type = "button"; b.textContent = L().undo;
+      b.addEventListener("click", function(){ el.hidden = true; undo(); });
+      el.appendChild(b);
+    }
+    el.hidden = false; clearTimeout(TOAST_T);
+    TOAST_T = setTimeout(function(){ el.hidden = true; }, 7000);
   }
   function openSel(){
     $("selp").hidden = false; $("selbar").hidden = true; document.body.style.overflow = "hidden";
