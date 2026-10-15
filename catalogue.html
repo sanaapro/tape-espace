@@ -10,6 +10,12 @@
 <meta property="og:description" content="Designs from workshops across The Gambia. Order directly on WhatsApp.">
 <meta property="og:image" content="https://sanaapro.github.io/tape-espace/icon-512.png">
 <link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest-catalogue.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SanaaPro Style">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://firestore.googleapis.com">
 <style>
   :root{
@@ -25,6 +31,9 @@
   header img{ width:32px; height:32px; border-radius:8px }
   .brand{ font-family:Georgia,"Times New Roman",serif; font-size:17px; flex:1 }
   .lang{ background:none; border:1px solid var(--line); color:var(--muted); border-radius:20px; padding:5px 12px; font:inherit; font-size:13px; cursor:pointer }
+  .install{ background:var(--gold); border:1px solid var(--gold); color:#16130B; border-radius:20px; padding:5px 12px; font:inherit; font-size:13px; font-weight:600; cursor:pointer }
+  .ioshelp{ margin:14px 0 0; padding:12px 14px; border:1px solid var(--gold); border-radius:12px; background:var(--panel); font-size:14px; line-height:1.45 }
+  .ioshelp button{ float:right; background:none; border:none; color:var(--muted); font-size:18px; line-height:1; cursor:pointer; padding:0 0 0 10px }
   h1{ font-family:Georgia,"Times New Roman",serif; font-weight:normal; font-size:31px; line-height:1.18; margin:28px 0 8px; max-width:15em }
   .lead{ color:var(--muted); margin:0 0 22px; max-width:34em }
 
@@ -141,6 +150,38 @@
            background:#F3EEE3; color:#16130B; font-size:14.5px; box-shadow:0 8px 24px rgba(0,0,0,.45) }
   .toast span{ flex:1 }
   .toast button{ flex:none; background:none; border:1px solid #16130B; color:#16130B; border-radius:8px; padding:7px 12px; font:inherit; font-weight:600; cursor:pointer }
+  /* Mes modèles (favoris) et compte client */
+  #favp{ z-index:9 }
+  .favh{ display:inline-flex; align-items:center; gap:5px; background:none; border:1px solid var(--line); color:var(--ink); border-radius:20px; padding:5px 11px; font:inherit; font-size:13px; cursor:pointer }
+  .favh svg{ width:15px; height:15px; fill:var(--gold) }
+  .favh:focus-visible{ outline:2px solid var(--gold); outline-offset:2px }
+  .heart{ position:absolute; top:2px; left:2px; width:40px; height:40px; padding:0; border:0; background:none;
+          display:flex; align-items:center; justify-content:center; cursor:pointer; -webkit-tap-highlight-color:transparent }
+  .heart .dot{ width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+               background:rgba(14,14,15,.42); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px) }
+  .heart svg{ width:16px; height:16px; fill:none; stroke:#fff; stroke-width:2.2 }
+  .heart.on svg{ fill:#E0475B; stroke:#E0475B }
+  .heart.pop svg{ animation:hpop .32s ease }
+  @keyframes hpop{ 40%{ transform:scale(1.35) } }
+  .heart:focus-visible{ outline:none } .heart:focus-visible .dot{ outline:2px solid var(--gold); outline-offset:2px }
+  .favbtn.on{ border-color:#E0475B; color:#E0475B }
+  .acct{ margin:18px 0 22px; padding:16px; border:1px solid var(--line); border-radius:14px; background:var(--panel) }
+  .acct p{ margin:0 0 12px; font-size:14.5px; line-height:1.45 }
+  .acct .ok{ color:var(--ink) } .acct .ok b{ color:var(--gold); font-weight:600 }
+  .acct .btn{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; min-height:48px; margin-top:10px; border-radius:11px;
+              font:inherit; font-weight:600; font-size:15px; cursor:pointer; border:1px solid var(--line); background:none; color:var(--ink) }
+  .acct .btn.g{ background:#fff; color:#1F1F1F; border-color:#fff }
+  .acct .btn.g svg{ width:18px; height:18px }
+  .acct .btn.gold{ background:var(--gold); border-color:var(--gold); color:#16130B }
+  .acct input{ display:block; width:100%; margin-top:10px; background:var(--bg); color:var(--ink); border:1px solid var(--line); border-radius:10px; padding:12px; font:inherit; font-size:16px }
+  .acct input:focus{ outline:none; border-color:var(--gold) }
+  .acct .tabs{ display:flex; gap:6px; margin-bottom:4px }
+  .acct .tabs button{ flex:1; background:none; border:0; border-bottom:2px solid var(--line); color:var(--muted); padding:8px 4px; font:inherit; font-size:14px; cursor:pointer }
+  .acct .tabs button.on{ border-color:var(--gold); color:var(--ink) }
+  .acct .err{ color:#F08A8A; font-size:13.5px; margin:10px 0 0 } .acct .msg{ color:#8FD19E; font-size:13.5px; margin:10px 0 0 }
+  .acct .lnk{ background:none; border:0; color:var(--muted); text-decoration:underline; font:inherit; font-size:13.5px; cursor:pointer; padding:10px 0 0 }
+  .acct .or{ text-align:center; color:var(--muted); font-size:12.5px; margin:12px 0 0 }
+  .favgrid .gone img{ opacity:.35 } .favgrid .gone .s{ color:#F08A8A }
   [hidden]{ display:none !important }
 </style>
 </head>
@@ -150,8 +191,11 @@
     <img src="icon-192.png" alt="" width="32" height="32">
     <div class="brand">SanaaPro</div>
     <a class="lang" id="toapp" href="index.html" hidden style="text-decoration:none;color:var(--gold)"></a>
+    <button class="favh" id="favh" type="button" aria-label="My designs"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.3s-7.6-4.6-9.3-9.2C1.5 7.6 3.9 4.2 7.4 4.2c2 0 3.5 1.1 4.6 2.7 1.1-1.6 2.6-2.7 4.6-2.7 3.5 0 5.9 3.4 4.7 6.9-1.7 4.6-9.3 9.2-9.3 9.2Z"/></svg><span id="favh-n"></span></button>
+    <button class="install" id="install" type="button" hidden></button>
     <button class="lang" id="lang" type="button">FR</button>
   </header>
+  <div class="ioshelp" id="ioshelp" hidden><button type="button" id="ioshelp-x" aria-label="Close">×</button><span id="ioshelp-t"></span></div>
 
   <a id="allshops" href="catalogue.html" hidden style="display:inline-block;margin-top:22px;color:var(--gold);text-decoration:none;font-size:14px"></a>
   <h1 id="h1"></h1>
@@ -188,6 +232,7 @@
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.4.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3Z"/></svg>
       <span id="s-cta-t"></span>
     </a>
+    <button type="button" class="addsel favbtn" id="s-fav"></button>
     <button type="button" class="addsel" id="s-pick"></button>
     <div class="wave" id="wave" hidden>
       <button type="button" class="wavego" id="wave-go"><span class="wl">W</span><span id="wave-go-t"></span></button>
@@ -211,6 +256,17 @@
     <p class="who" id="shv-lead"></p>
     <div id="shv-list"></div>
     <div class="sub" id="shv-total" hidden></div>
+  </div>
+</div>
+
+<div class="sheet" id="favp" hidden role="dialog" aria-modal="true" aria-labelledby="favp-h">
+  <div class="in">
+    <button class="close" id="favp-close" type="button"></button>
+    <h2 id="favp-h"></h2>
+    <p class="who" id="favp-lead"></p>
+    <div class="acct" id="acct"></div>
+    <div class="grid favgrid" id="favgrid"></div>
+    <p class="note" id="favp-empty" hidden></p>
   </div>
 </div>
 
@@ -280,7 +336,10 @@
   var WA_ICON = document.querySelector("#s-cta svg").outerHTML;
   var LANG = "en";
   try{
-    var fromApp = /[?&]from=app\b/.test(location.search) || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
+    // Appli cliente installée (start_url ...?app=client) : jamais de lien vers l'espace atelier.
+    var isClient = /[?&]app=client\b/.test(location.search);
+    try{ if(isClient) sessionStorage.setItem("sanaapro_client_app", "1"); else isClient = sessionStorage.getItem("sanaapro_client_app") === "1"; }catch(e){}
+    var fromApp = !isClient && (/[?&]from=app\b/.test(location.search) || (window.matchMedia && matchMedia("(display-mode: standalone)").matches));
     if(fromApp) document.getElementById("toapp").hidden = false;
   }catch(e){}
   try{ LANG = localStorage.getItem("sanaapro_site_lang") === "fr" ? "fr" : "en"; }catch(e){}
@@ -592,6 +651,7 @@
       var pk = document.createElement("button"); pk.type = "button"; pk.className = "pick";
       pk.addEventListener("click", function(ev){ ev.stopPropagation(); toggleSel(o); });
       cell.appendChild(pk);
+      if(window.SPFav) cell.appendChild(window.SPFav.heart(o));
       grid.appendChild(cell);
     });
 
@@ -607,6 +667,7 @@
 
   function fillSheet(o){
     var t = L();
+    if(window.SPFav) window.SPFav.sheet(o);
     $("s-title").textContent = o.titre || "";
     $("s-who").textContent = t.ref + " " + ref(o) + " · " + (o.boutique||"") + (o.quartier ? " · " + o.quartier : "");
     $("s-price").textContent = (o.prix !== null && o.prix !== undefined) ? t.from + " " + money(o) : "";
@@ -742,6 +803,7 @@
     try{ history.replaceState(null, "", location.pathname); }catch(e){}
   });
 
+  window.SPCat = { openSheet: openSheet, repaint: paint, lang: function(){ return LANG; }, money: money, ref: ref, live: live, parse: parse, base: BASE, key: KEY };
   paint(); load();
   if(SHARED.length) openShared(SHARED.map(function(id){ return function(){ return byId(id); }; }));
   else if(PREFIXES.length === 1) byPrefix(PREFIXES[0]).then(function(o){ if(o) openSheet(o); });
@@ -749,6 +811,372 @@
   if(PICK){
     fetch(BASE + "catalogue/" + encodeURIComponent(PICK) + "?key=" + KEY).then(function(r){ return r.ok ? r.json() : null; })
       .then(function(d){ if(d && d.name) openSheet(parse(d)); }).catch(function(){});
+  }
+})();
+</script>
+<script>
+/* « Mes modèles » : favoris du client, façon Pinterest.
+   - Sans compte : gardés dans le téléphone (localStorage).
+   - Avec compte (email ou Google) : la liste des modèles est aussi rangée
+     dans Firestore sous /clients/{uid} { ids, updatedMs, email }, et
+     retrouvée sur n'importe quel téléphone.
+   Le SDK d'authentification n'est chargé que si le client se connecte
+   (ou l'était déjà) : le catalogue reste léger pour les petits réseaux. */
+(function(){
+  var C = window.SPCat; if(!C) return;
+  var FB = "https://www.gstatic.com/firebasejs/10.12.2/";
+  var CFG = { apiKey:"AIzaSyCqfAGGU7yFs_QYg70u3e5cNYPXQjRHzsI", authDomain:"sanaapro-app.firebaseapp.com", projectId:"sanaapro-app",
+              storageBucket:"sanaapro-app.firebasestorage.app", messagingSenderId:"451762519937", appId:"1:451762519937:web:0507928bc9f6ef0c937280" };
+  var ROOT = "projects/sanaapro-app/databases/(default)/documents/";
+  var KEY_FAV = "sanaapro_favoris", KEY_SIGNED = "sanaapro_client_signed", MAX = 300;
+  var HEART = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.3s-7.6-4.6-9.3-9.2C1.5 7.6 3.9 4.2 7.4 4.2c2 0 3.5 1.1 4.6 2.7 1.1-1.6 2.6-2.7 4.6-2.7 3.5 0 5.9 3.4 4.7 6.9-1.7 4.6-9.3 9.2-9.3 9.2Z"/></svg>';
+  var GLOGO = '<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
+  var T = {
+    en:{ title:"My designs", back:"‹ Catalogue", n0:"No saved designs yet", n1:"1 saved design", nN:"{n} saved designs",
+         empty:"Tap the ♡ on any design to keep it here. You can look at it later or send it to a tailor.",
+         save:"♡ Save to My designs", saved:"♥ Saved in My designs", aria:"Save this design",
+         pitch:"Create your free account to keep your designs on every phone, even if you change phones.",
+         google:"Continue with Google", email:"Continue with my email", or:"or",
+         tNew:"Create my account", tOld:"I already have an account", mail:"Email address", pass:"Password (6 characters minimum)",
+         goNew:"Create my free account", goOld:"Sign in", forgot:"Forgot your password?",
+         sentReset:"A reset link was sent to {e}. Check your spam folder too.",
+         ok:"Your designs are saved in your account", out:"Sign out", outQ:"Sign out? Your designs stay safe in your account.",
+         gone:"No longer available", wait:"Please wait…",
+         e:{ "auth/email-already-in-use":"This email already has an account: choose “I already have an account”.",
+             "auth/invalid-credential":"Wrong email or password.", "auth/wrong-password":"Wrong email or password.", "auth/user-not-found":"Wrong email or password.",
+             "auth/invalid-email":"This email address is not valid.", "auth/weak-password":"The password needs at least 6 characters.",
+             "auth/missing-password":"Enter your password.", "auth/network-request-failed":"No connection. Try again when you have network.",
+             "auth/too-many-requests":"Too many attempts. Wait a few minutes and try again.",
+             "auth/operation-not-allowed":"This sign-in method is not open yet. Use your email for now.",
+             "auth/popup-blocked":"Google sign-in could not open here. Use your email instead.",
+             "auth/unauthorized-domain":"Google sign-in is not open yet. Use your email for now.",
+             "load":"Could not load sign-in. Check your connection.", "x":"Something went wrong. Try again." } },
+    fr:{ title:"Mes modèles", back:"‹ Catalogue", n0:"Aucun modèle gardé pour l'instant", n1:"1 modèle gardé", nN:"{n} modèles gardés",
+         empty:"Touchez le ♡ sur un modèle pour le garder ici. Vous pourrez le revoir plus tard ou l'envoyer à un couturier.",
+         save:"♡ Garder dans Mes modèles", saved:"♥ Gardé dans Mes modèles", aria:"Garder ce modèle",
+         pitch:"Créez votre compte gratuit pour retrouver vos modèles sur tous vos téléphones, même si vous changez de téléphone.",
+         google:"Continuer avec Google", email:"Continuer avec mon email", or:"ou",
+         tNew:"Créer mon compte", tOld:"J'ai déjà un compte", mail:"Adresse email", pass:"Mot de passe (6 caractères minimum)",
+         goNew:"Créer mon compte gratuit", goOld:"Me connecter", forgot:"Mot de passe oublié ?",
+         sentReset:"Un lien de réinitialisation a été envoyé à {e}. Regardez aussi dans les spams.",
+         ok:"Vos modèles sont sauvegardés dans votre compte", out:"Me déconnecter", outQ:"Vous déconnecter ? Vos modèles restent en sécurité dans votre compte.",
+         gone:"N'est plus disponible", wait:"Un instant…",
+         e:{ "auth/email-already-in-use":"Cet email a déjà un compte : choisissez « J'ai déjà un compte ».",
+             "auth/invalid-credential":"Email ou mot de passe incorrect.", "auth/wrong-password":"Email ou mot de passe incorrect.", "auth/user-not-found":"Email ou mot de passe incorrect.",
+             "auth/invalid-email":"Cette adresse email n'est pas valide.", "auth/weak-password":"Le mot de passe doit avoir au moins 6 caractères.",
+             "auth/missing-password":"Entrez votre mot de passe.", "auth/network-request-failed":"Pas de connexion. Réessayez quand vous avez du réseau.",
+             "auth/too-many-requests":"Trop d'essais. Patientez quelques minutes puis réessayez.",
+             "auth/operation-not-allowed":"Cette méthode de connexion n'est pas encore ouverte. Utilisez votre email pour l'instant.",
+             "auth/popup-blocked":"La connexion Google ne peut pas s'ouvrir ici. Utilisez votre email.",
+             "auth/unauthorized-domain":"La connexion Google n'est pas encore ouverte. Utilisez votre email pour l'instant.",
+             "load":"Impossible de charger la connexion. Vérifiez votre réseau.", "x":"Un problème est survenu. Réessayez." } }
+  };
+  function t(){ return T[C.lang()] || T.en; }
+  var $ = function(id){ return document.getElementById(id); };
+
+  // ---- stockage local ----
+  var FAV = [];
+  try{ FAV = JSON.parse(localStorage.getItem(KEY_FAV) || "[]") || []; }catch(e){ FAV = []; }
+  if(!Array.isArray(FAV)) FAV = [];
+  FAV = FAV.filter(function(x){ return x && x.id; });
+  function store(){
+    try{ localStorage.setItem(KEY_FAV, JSON.stringify(FAV)); }
+    catch(e){ // mémoire pleine : on garde la liste sans les vignettes, elles seront rechargées
+      try{ localStorage.setItem(KEY_FAV, JSON.stringify(FAV.map(function(x){ var y = Object.assign({}, x); delete y.thumb; return y; }))); }catch(e2){}
+    }
+  }
+  function snap(o){
+    var y = {}; Object.keys(o).forEach(function(k){ if(k !== "thumb") y[k] = o[k]; });
+    if(o.thumb && String(o.thumb).length < 60000) y.thumb = o.thumb;
+    y.savedMs = Date.now(); return y;
+  }
+  function has(id){ return FAV.some(function(x){ return x.id === id; }); }
+  function ids(){ return FAV.map(function(x){ return x.id; }); }
+  function toggle(o){
+    if(has(o.id)) FAV = FAV.filter(function(x){ return x.id !== o.id; });
+    else { FAV.unshift(snap(o)); if(FAV.length > MAX) FAV.length = MAX; }
+    store(); refresh(); pushSoon();
+  }
+
+  // ---- cœurs sur les vignettes et dans la fiche ----
+  function heart(o){
+    var b = document.createElement("button"); b.type = "button"; b.className = "heart"; b.dataset.fid = o.id;
+    b.innerHTML = '<span class="dot">' + HEART + '</span>';
+    b.addEventListener("click", function(ev){
+      ev.stopPropagation(); var was = has(o.id); toggle(o);
+      if(!was){ b.classList.add("pop"); setTimeout(function(){ b.classList.remove("pop"); }, 350); }
+    });
+    paintHeart(b); return b;
+  }
+  function paintHeart(b){
+    var on = has(b.dataset.fid); b.classList.toggle("on", on);
+    b.setAttribute("aria-pressed", on ? "true" : "false"); b.setAttribute("aria-label", t().aria);
+  }
+  var CUR = null;
+  function sheet(o){ CUR = o; paintSheetBtn(); }
+  function paintSheetBtn(){
+    var b = $("s-fav"); if(!b || !CUR) return; var on = has(CUR.id);
+    b.textContent = on ? t().saved : t().save; b.classList.toggle("on", on);
+  }
+  $("s-fav").addEventListener("click", function(){ if(CUR) toggle(CUR); });
+
+  function refresh(){
+    Array.prototype.forEach.call(document.querySelectorAll(".heart"), paintHeart);
+    paintSheetBtn();
+    $("favh-n").textContent = FAV.length ? FAV.length : "";
+    $("favh").setAttribute("aria-label", t().title);
+    if(!$("favp").hidden) paintPage();
+  }
+
+  // ---- page « Mes modèles » ----
+  function openPage(){
+    $("favp").hidden = false; document.body.style.overflow = "hidden";
+    try{ history.pushState({ favp:1 }, ""); }catch(e){}
+    paintPage(); freshen();
+  }
+  function closePage(){ $("favp").hidden = true; if($("sheet").hidden) document.body.style.overflow = ""; }
+  $("favh").addEventListener("click", openPage);
+  $("favp-close").addEventListener("click", function(){
+    if(history.state && history.state.favp) history.back(); else closePage();
+  });
+  // Retour arrière : on ne ferme la page que lorsqu'on quitte son propre état
+  // (revenir d'une fiche modèle ouverte depuis « Mes modèles » la laisse ouverte).
+  window.addEventListener("popstate", function(){
+    if(!$("favp").hidden && !(history.state && history.state.favp)) closePage();
+  });
+
+  function paintPage(){
+    var x = t(), n = FAV.length;
+    $("favp-close").textContent = x.back; $("favp-h").textContent = x.title;
+    $("favp-lead").textContent = n === 0 ? x.n0 : n === 1 ? x.n1 : x.nN.replace("{n}", n);
+    $("favp-empty").textContent = x.empty; $("favp-empty").hidden = n > 0;
+    var g = $("favgrid"); g.innerHTML = "";
+    FAV.forEach(function(o){
+      var gone = !!o._gone || !C.live(o);
+      var cell = document.createElement("div"); cell.className = "cell" + (gone ? " gone" : "");
+      var b = document.createElement("button"); b.type = "button"; b.className = "item";
+      var im = document.createElement("img"); im.src = o.thumb || ""; im.alt = o.titre || ""; im.loading = "lazy"; b.appendChild(im);
+      var a = document.createElement("div"); a.className = "t"; a.textContent = o.titre || "—"; b.appendChild(a);
+      var s = document.createElement("div"); s.className = "s"; s.textContent = gone ? x.gone : (o.boutique || "") + (o.quartier ? " · " + o.quartier : ""); b.appendChild(s);
+      if(!gone && o.prix !== null && o.prix !== undefined){ var p = document.createElement("div"); p.className = "p"; p.textContent = (C.lang() === "fr" ? "dès " : "from ") + C.money(o); b.appendChild(p); }
+      if(!gone) b.addEventListener("click", function(){ C.openSheet(o); });
+      cell.appendChild(b); cell.appendChild(heart(o));
+      g.appendChild(cell);
+    });
+    paintAcct();
+  }
+
+  // Recharge les modèles gardés depuis le catalogue (prix à jour, vignettes, modèles retirés).
+  var FRESH_AT = 0;
+  function freshen(force){
+    if(!FAV.length || (!force && Date.now() - FRESH_AT < 60000)) return Promise.resolve();
+    FRESH_AT = Date.now();
+    return batchGet(ids()).then(function(map){
+      if(!map) return;
+      FAV = FAV.map(function(x){
+        var d = map[x.id];
+        if(d === undefined) return x;            // pas de réponse : on garde tel quel
+        if(d === null){ var g = Object.assign({}, x); g._gone = true; return g; }
+        var y = snap(d); y.savedMs = x.savedMs || y.savedMs; return y;
+      });
+      store(); refresh();
+    });
+  }
+  function batchGet(list){
+    if(!list.length) return Promise.resolve({});
+    var chunks = []; for(var i = 0; i < list.length; i += 100) chunks.push(list.slice(i, i + 100));
+    var out = {};
+    return Promise.all(chunks.map(function(ch){
+      return fetch("https://firestore.googleapis.com/v1/" + ROOT.replace(/\/$/, "") + ":batchGet?key=" + C.key, {
+        method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ documents: ch.map(function(id){ return ROOT + "catalogue/" + id; }) })
+      }).then(function(r){ return r.ok ? r.json() : null; }).then(function(rows){
+        (rows || []).forEach(function(r){
+          if(r.found) out[r.found.name.split("/").pop()] = C.parse(r.found);
+          else if(r.missing) out[r.missing.split("/").pop()] = null;
+        });
+      });
+    })).then(function(){ return out; }).catch(function(){ return null; });
+  }
+
+  // ---- compte client ----
+  var AUTH = null, MOD = null, USER = null, MODE = "new", SHOW_FORM = false, BUSY = false, ERR = "", MSG = "";
+  function loadAuth(){
+    if(MOD) return Promise.resolve(MOD);
+    return Promise.all([import(FB + "firebase-app.js"), import(FB + "firebase-auth.js")]).then(function(m){
+      var app = m[0].initializeApp(CFG, "sanaapro-clients");
+      MOD = m[1]; AUTH = MOD.getAuth(app);
+      try{ AUTH.languageCode = C.lang(); }catch(e){}
+      MOD.onAuthStateChanged(AUTH, function(u){
+        USER = u || null;
+        try{ if(u) localStorage.setItem(KEY_SIGNED, "1"); else localStorage.removeItem(KEY_SIGNED); }catch(e){}
+        paintAcct();
+        if(u) pull();
+      });
+      return MOD;
+    });
+  }
+  function fail(e){
+    BUSY = false;
+    var code = (e && e.code) || "";
+    if(code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request"){ ERR = ""; paintAcct(); return; }
+    ERR = t().e[code] || (e === "load" ? t().e.load : t().e.x); MSG = ""; paintAcct();
+  }
+  function withAuth(fn){
+    BUSY = true; ERR = ""; MSG = ""; paintAcct();
+    loadAuth().then(function(){ return fn(); }).then(function(){ BUSY = false; paintAcct(); })
+      .catch(function(e){ fail(e && e.code ? e : (MOD ? e : "load")); });
+  }
+  function google(){
+    withAuth(function(){ return MOD.signInWithPopup(AUTH, new MOD.GoogleAuthProvider()); });
+  }
+  function emailGo(){
+    var em = ($("ac-mail").value || "").trim(), pw = $("ac-pass").value || "";
+    withAuth(function(){
+      return MODE === "new" ? MOD.createUserWithEmailAndPassword(AUTH, em, pw) : MOD.signInWithEmailAndPassword(AUTH, em, pw);
+    });
+  }
+  function reset(){
+    var em = ($("ac-mail").value || "").trim();
+    if(!em){ ERR = t().e["auth/invalid-email"]; paintAcct(); return; }
+    withAuth(function(){ return MOD.sendPasswordResetEmail(AUTH, em).then(function(){ MSG = t().sentReset.replace("{e}", em); }); });
+  }
+  function signOut(){
+    if(!confirm(t().outQ)) return;
+    loadAuth().then(function(){ return MOD.signOut(AUTH); }).then(function(){
+      FAV = []; store(); refresh();          // téléphone partagé : on ne laisse pas la liste derrière soi
+    }).catch(function(){});
+  }
+
+  function paintAcct(){
+    var box = $("acct"); if(!box || $("favp").hidden) return;
+    var x = t(), h = "";
+    var keepMail = $("ac-mail") ? $("ac-mail").value : "", keepPass = $("ac-pass") ? $("ac-pass").value : "";
+    if(USER){
+      h = '<p class="ok">✓ ' + esc(x.ok) + '<br><b>' + esc(USER.email || "") + '</b></p>' +
+          '<button type="button" class="btn" id="ac-out">' + esc(x.out) + '</button>';
+    } else {
+      h = '<p>' + esc(x.pitch) + '</p>' +
+          '<button type="button" class="btn g" id="ac-g">' + GLOGO + esc(x.google) + '</button>';
+      if(!SHOW_FORM) h += '<button type="button" class="btn" id="ac-e">' + esc(x.email) + '</button>';
+      else h += '<p class="or">' + esc(x.or) + '</p>' +
+          '<div class="tabs"><button type="button" id="ac-tn" class="' + (MODE === "new" ? "on" : "") + '">' + esc(x.tNew) + '</button>' +
+          '<button type="button" id="ac-to" class="' + (MODE === "old" ? "on" : "") + '">' + esc(x.tOld) + '</button></div>' +
+          '<input id="ac-mail" type="email" autocomplete="email" inputmode="email" placeholder="' + esc(x.mail) + '">' +
+          '<input id="ac-pass" type="password" autocomplete="' + (MODE === "new" ? "new-password" : "current-password") + '" placeholder="' + esc(x.pass) + '">' +
+          '<button type="button" class="btn gold" id="ac-go">' + esc(BUSY ? x.wait : (MODE === "new" ? x.goNew : x.goOld)) + '</button>' +
+          (MODE === "old" ? '<button type="button" class="lnk" id="ac-fg">' + esc(x.forgot) + '</button>' : "");
+    }
+    if(ERR) h += '<p class="err">' + esc(ERR) + '</p>';
+    if(MSG) h += '<p class="msg">' + esc(MSG) + '</p>';
+    box.innerHTML = h;
+    if($("ac-mail")){ $("ac-mail").value = keepMail; $("ac-pass").value = keepPass; }
+    on("ac-out", signOut); on("ac-g", google);
+    on("ac-e", function(){ SHOW_FORM = true; ERR = ""; paintAcct(); setTimeout(function(){ if($("ac-mail")) $("ac-mail").focus(); }, 30); });
+    on("ac-tn", function(){ MODE = "new"; ERR = ""; MSG = ""; paintAcct(); });
+    on("ac-to", function(){ MODE = "old"; ERR = ""; MSG = ""; paintAcct(); });
+    on("ac-go", function(){ if(!BUSY) emailGo(); });
+    on("ac-fg", reset);
+    if($("ac-pass")) $("ac-pass").addEventListener("keydown", function(e){ if(e.key === "Enter" && !BUSY) emailGo(); });
+  }
+  function on(id, fn){ var el = $(id); if(el) el.addEventListener("click", fn); }
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]; }); }
+
+  // ---- synchronisation avec /clients/{uid} ----
+  function docUrl(){ return "https://firestore.googleapis.com/v1/" + ROOT + "clients/" + USER.uid; }
+  function pull(){
+    if(!USER) return;
+    USER.getIdToken().then(function(tok){
+      return fetch(docUrl(), { headers:{ Authorization:"Bearer " + tok } }).then(function(r){
+        if(r.status === 404) return [];
+        return r.ok ? r.json().then(function(d){
+          var v = (((d.fields || {}).ids || {}).arrayValue || {}).values || [];
+          return v.map(function(x){ return x.stringValue; }).filter(Boolean);
+        }) : null;
+      });
+    }).then(function(cloud){
+      if(cloud === null) return;
+      var local = ids(), missing = cloud.filter(function(id){ return local.indexOf(id) < 0; });
+      var needPush = local.some(function(id){ return cloud.indexOf(id) < 0; });
+      if(!missing.length){ if(needPush) push(); return; }
+      return batchGet(missing).then(function(map){
+        missing.forEach(function(id){
+          var d = map && map[id];
+          if(d) FAV.push(snap(d));
+          else if(d === undefined) FAV.push({ id:id, titre:"", _gone:false });
+        });
+        if(FAV.length > MAX) FAV.length = MAX;
+        store(); refresh();
+        if(needPush || (map && missing.some(function(id){ return map[id] === null; }))) push();
+      });
+    }).catch(function(){});
+  }
+  var PUSH_T = null;
+  function pushSoon(){ if(!USER) return; clearTimeout(PUSH_T); PUSH_T = setTimeout(push, 700); }
+  function push(){
+    if(!USER) return;
+    var list = FAV.filter(function(x){ return !x._gone; }).map(function(x){ return x.id; }).slice(0, MAX);
+    USER.getIdToken().then(function(tok){
+      return fetch(docUrl(), { method:"PATCH", headers:{ "Content-Type":"application/json", Authorization:"Bearer " + tok },
+        body: JSON.stringify({ fields:{
+          ids:{ arrayValue:{ values: list.map(function(id){ return { stringValue:id }; }) } },
+          updatedMs:{ integerValue: String(Date.now()) },
+          email:{ stringValue: USER.email || "" } } }) });
+    }).catch(function(){});
+  }
+
+  // ---- démarrage ----
+  window.SPFav = { heart: heart, sheet: sheet };
+  document.getElementById("lang").addEventListener("click", function(){ setTimeout(function(){ refresh(); paintAcct(); }, 0); });
+  C.repaint();
+  refresh();
+  var signed = false; try{ signed = localStorage.getItem(KEY_SIGNED) === "1"; }catch(e){}
+  if(signed) loadAuth().catch(function(){});
+})();
+</script>
+<script>
+/* Appli cliente « SanaaPro Style » : installation du catalogue seul,
+   sans espace atelier ni connexion. */
+(function(){
+  var TX = {
+    en:{ btn:"Install the app", ios:"To install the app: tap the Share button at the bottom of Safari, then “Add to Home Screen”." },
+    fr:{ btn:"Installer l'appli", ios:"Pour installer l'appli : touchez le bouton Partager en bas de Safari, puis « Sur l'écran d'accueil »." }
+  };
+  var btn = document.getElementById("install"), help = document.getElementById("ioshelp");
+  function lang(){ try{ return localStorage.getItem("sanaapro_site_lang") === "fr" ? "fr" : "en"; }catch(e){ return "en"; } }
+  function standalone(){
+    try{ return (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true; }catch(e){ return false; }
+  }
+  var ua = navigator.userAgent || "";
+  var isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  var deferred = null;
+  function label(){
+    var t = TX[lang()];
+    btn.textContent = t.btn;
+    document.getElementById("ioshelp-t").textContent = t.ios;
+  }
+  label();
+  document.getElementById("lang").addEventListener("click", function(){ setTimeout(label, 0); });
+
+  if(!standalone()){
+    window.addEventListener("beforeinstallprompt", function(e){
+      e.preventDefault(); deferred = e; btn.hidden = false;
+    });
+    if(isIOS) btn.hidden = false;
+  }
+  btn.addEventListener("click", function(){
+    if(deferred){
+      deferred.prompt();
+      deferred.userChoice.then(function(){ deferred = null; btn.hidden = true; }).catch(function(){});
+    } else if(isIOS){
+      help.hidden = !help.hidden;
+    }
+  });
+  document.getElementById("ioshelp-x").addEventListener("click", function(){ help.hidden = true; });
+  window.addEventListener("appinstalled", function(){ btn.hidden = true; help.hidden = true; });
+
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
   }
 })();
 </script>
