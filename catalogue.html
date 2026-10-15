@@ -48,6 +48,7 @@
   .foot a{ color:var(--gold); text-decoration:none }
 
   /* fiche d'un modèle */
+  #shv{ z-index:9 }
   .sheet{ position:fixed; inset:0; background:var(--bg); overflow-y:auto; z-index:10;
           padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px) }
   .sheet .in{ max-width:560px; margin:0 auto; padding:14px 16px 32px }
@@ -121,6 +122,14 @@
   .sub{ display:flex; justify-content:space-between; gap:10px; color:var(--muted); font-size:14px; margin:6px 0 0 }
   .sub b{ color:var(--gold); font-weight:600 }
   .grp .cta{ margin-top:12px }
+  .shitem{ display:block; width:100%; margin-top:20px; padding:0; background:none; border:0; color:inherit; font:inherit; text-align:left; cursor:pointer }
+  .shitem img{ display:block; width:100%; max-height:520px; object-fit:cover; border-radius:12px; background:var(--panel); min-height:200px }
+  .shitem .n{ display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:50%; background:var(--gold); color:#16130B; font-weight:700; font-size:13.5px; margin-right:8px }
+  .shitem b{ display:flex; align-items:center; font-family:Georgia,"Times New Roman",serif; font-weight:normal; font-size:20px; margin-top:12px }
+  .shitem span{ display:block; color:var(--muted); font-size:13px; margin-top:2px }
+  .shitem i{ display:block; font-style:normal; color:var(--gold); font-size:15.5px; margin-top:2px }
+  .shitem:focus-visible{ outline:2px solid var(--gold); outline-offset:3px }
+  #shv-total{ margin-top:22px; padding-top:14px; border-top:1px solid var(--line); font-size:15px }
   .note{ color:var(--muted); font-size:13px; line-height:1.45; margin:22px 0 0 }
   .clear{ display:block; margin:18px auto 0; background:none; border:0; color:var(--muted); text-decoration:underline; font:inherit; font-size:14px; cursor:pointer; padding:10px }
   [hidden]{ display:none !important }
@@ -184,6 +193,16 @@
 
 <button type="button" class="selbar" id="selbar" hidden><span class="cnt" id="selbar-n"></span><span id="selbar-t"></span><span class="go" id="selbar-go"></span></button>
 
+<div class="sheet" id="shv" hidden role="dialog" aria-modal="true" aria-labelledby="shv-h">
+  <div class="in">
+    <button class="close" id="shv-close" type="button"></button>
+    <h2 id="shv-h"></h2>
+    <p class="who" id="shv-lead"></p>
+    <div id="shv-list"></div>
+    <div class="sub" id="shv-total" hidden></div>
+  </div>
+</div>
+
 <div class="sheet" id="selp" hidden role="dialog" aria-modal="true" aria-labelledby="selp-h">
   <div class="in">
     <button class="close" id="selp-close" type="button"></button>
@@ -219,7 +238,10 @@
          clear:"Clear my selection", clearQ:"Remove all designs from your selection?", remove:"Remove", max:"You can select up to {n} designs at a time.",
          empty2:"Your selection is empty. Tap ＋ on a design to add it.",
          mMany:"Hello, I chose {n} designs from your workshop on the SanaaPro catalogue and I would like to order them:", mOne:"Hello, I chose this design from your workshop on the SanaaPro catalogue and I would like to order it:",
-         mEnd:"Could you tell me the total price and the delivery date? Thank you." },
+         mEnd:"Could you tell me the total price and the delivery date? Thank you.",
+         mSeeN:"See the {n} designs with photos:", mSee1:"See the design with photos:",
+         shH:"Selection of {n} designs", shH1:"Selected design", shLead:"Designs chosen by a client on the SanaaPro catalogue.", shBack:"‹ Catalogue",
+         shNone:"These designs are no longer in the catalogue.", shTotal:"Indicative total" },
     fr:{ h1:"Les couturiers de Gambie, dans un seul catalogue.", lead:"Parcourez les modèles des ateliers près de chez vous, puis commandez directement au couturier sur WhatsApp.",
          all:"Tous", femme:"Femme", homme:"Homme", enfant:"Enfant", allShops:"Tous les ateliers",
          allStyles:"Tous les styles", allAreas:"Tous les quartiers", S:{robe:"Robe", boubou:"Boubou", ensemble:"Ensemble / complet", chemise:"Chemise", pantalon:"Pantalon", jupe:"Jupe", kaftan:"Kaftan", ceremonie:"Mariage / cérémonie", uniforme:"Uniforme", autre:"Autre"},
@@ -239,7 +261,10 @@
          clear:"Vider ma sélection", clearQ:"Retirer tous les modèles de votre sélection ?", remove:"Retirer", max:"Vous pouvez sélectionner jusqu'à {n} modèles à la fois.",
          empty2:"Votre sélection est vide. Touchez ＋ sur un modèle pour l'ajouter.",
          mMany:"Bonjour, j'ai choisi {n} modèles de votre atelier sur le catalogue SanaaPro et je voudrais les commander :", mOne:"Bonjour, j'ai choisi ce modèle de votre atelier sur le catalogue SanaaPro et je voudrais le commander :",
-         mEnd:"Pouvez-vous me donner le prix total et la date de livraison ? Merci." }
+         mEnd:"Pouvez-vous me donner le prix total et la date de livraison ? Merci.",
+         mSeeN:"Voir les {n} modèles en photo :", mSee1:"Voir le modèle en photo :",
+         shH:"Sélection de {n} modèles", shH1:"Modèle sélectionné", shLead:"Modèles choisis par une cliente sur le catalogue SanaaPro.", shBack:"‹ Catalogue",
+         shNone:"Ces modèles ne sont plus dans le catalogue.", shTotal:"Total indicatif" }
   };
   var WA_ICON = document.querySelector("#s-cta svg").outerHTML;
   var LANG = "en";
@@ -249,7 +274,8 @@
   }catch(e){}
   try{ LANG = localStorage.getItem("sanaapro_site_lang") === "fr" ? "fr" : "en"; }catch(e){}
   var STYLE = "", AREA = "", ITEMS = [], NEXT = null, GENRE = "all", SHOP = "", LOADING = false, FAILED = false, CURRENT = null;
-  var ONLY = "", PICK = "";
+  var ONLY = "", PICK = "", SHARED = [];
+  try{ SHARED = (new URLSearchParams(location.search).get("s") || "").split(".").filter(function(x){ return /^[A-Za-z0-9_-]{4,64}$/.test(x); }).slice(0, 15); }catch(e){}
   try{ PICK = new URLSearchParams(location.search).get("m") || ""; }catch(e){}
   try{ ONLY = new URLSearchParams(location.search).get("a") || ""; }catch(e){}
   if(ONLY) SHOP = ONLY;
@@ -313,14 +339,22 @@
     if(CURRENT){ var pk = $("s-pick"), on2 = isSel(CURRENT); pk.textContent = on2 ? t.added : t.add; pk.classList.toggle("on", on2); }
     if(!$("selp").hidden) paintSel();
   }
+  function selLink(items){
+    var base = location.origin + location.pathname;
+    return items.length === 1 ? base + "?m=" + encodeURIComponent(items[0].id)
+                              : base + "?s=" + items.map(function(x){ return encodeURIComponent(x.id); }).join(".");
+  }
   function selMessage(items){
     var t = L(), lines = [items.length === 1 ? t.mOne : t.mMany.replace("{n}", items.length), ""];
     items.forEach(function(x, i){
-      var l = (i+1) + ". \u00ab " + (x.titre || "—") + " \u00bb — " + t.ref + " " + x.ref;
-      if(x.prix !== null && x.prix !== undefined) l += " — " + t.from + " " + amt(x.prix, x.devise);
+      var l = (i+1) + ". " + (x.titre || "—");
+      if(x.prix !== null && x.prix !== undefined) l += " — " + amt(x.prix, x.devise);
+      l += " (" + x.ref + ")";
       lines.push(l);
-      lines.push("   " + location.origin + location.pathname + "?m=" + encodeURIComponent(x.id));
     });
+    lines.push("");
+    lines.push(items.length === 1 ? t.mSee1 : t.mSeeN.replace("{n}", items.length));
+    lines.push(selLink(items));
     lines.push(""); lines.push(t.mEnd);
     return lines.join("\n");
   }
@@ -618,7 +652,45 @@
     paint();
   });
 
+  function openShared(){
+    var t = L();
+    $("shv-close").textContent = t.shBack; $("shv-h").textContent = SHARED.length === 1 ? t.shH1 : t.shH.replace("{n}", SHARED.length);
+    $("shv-lead").textContent = t.shLead;
+    $("shv").hidden = false; document.body.style.overflow = "hidden";
+    Promise.all(SHARED.map(function(id){
+      return fetch(BASE + "catalogue/" + encodeURIComponent(id) + "?key=" + KEY).then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(d){ return (d && d.name) ? parse(d) : null; }).catch(function(){ return null; });
+    })).then(function(docs){
+      var box = $("shv-list"); box.innerHTML = "";
+      var ok = docs.filter(function(o){ return o && live(o); }), total = 0, priced = 0, dev = "D";
+      if(!ok.length){ var e = document.createElement("p"); e.className = "note"; e.textContent = t.shNone; box.appendChild(e); return; }
+      ok.forEach(function(o, i){
+        var b = document.createElement("button"); b.type = "button"; b.className = "shitem";
+        var im = document.createElement("img"); im.src = o.thumb || ""; im.alt = o.titre || ""; b.appendChild(im);
+        var h = document.createElement("b"); var n = document.createElement("span"); n.className = "n"; n.textContent = i + 1;
+        h.appendChild(n); h.appendChild(document.createTextNode(o.titre || "—")); b.appendChild(h);
+        var w = document.createElement("span"); w.textContent = t.ref + " " + ref(o) + " · " + (o.boutique || "") + (o.quartier ? " · " + o.quartier : ""); b.appendChild(w);
+        if(o.prix !== null && o.prix !== undefined){ var p = document.createElement("i"); p.textContent = t.from + " " + money(o); b.appendChild(p); total += Number(o.prix); priced++; dev = o.devise || dev; }
+        b.addEventListener("click", function(){ openSheet(o); });
+        box.appendChild(b);
+        fetch(BASE + "catalogue_photos/" + o.id + "?key=" + KEY).then(function(r){ return r.ok ? r.json() : null; })
+          .then(function(j){ var ph = j && val((j.fields||{}).photo); if(ph) im.src = ph; }).catch(function(){});
+      });
+      if(priced > 1){
+        var tt = $("shv-total"); tt.innerHTML = "";
+        var a1 = document.createElement("span"); a1.textContent = t.shTotal;
+        var a2 = document.createElement("b"); a2.textContent = t.from + " " + amt(total, dev);
+        tt.appendChild(a1); tt.appendChild(a2); tt.hidden = false;
+      }
+    });
+  }
+  $("shv-close").addEventListener("click", function(){
+    $("shv").hidden = true; document.body.style.overflow = "";
+    try{ history.replaceState(null, "", location.pathname); }catch(e){}
+  });
+
   paint(); load();
+  if(SHARED.length) openShared();
   if(PICK){
     fetch(BASE + "catalogue/" + encodeURIComponent(PICK) + "?key=" + KEY).then(function(r){ return r.ok ? r.json() : null; })
       .then(function(d){ if(d && d.name) openSheet(parse(d)); }).catch(function(){});
