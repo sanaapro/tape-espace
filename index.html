@@ -489,6 +489,18 @@
     <div id="pane-apercu">
       <div class="greet"><span data-i18n="hello">Bonjour</span> <span id="d-owner"></span><div class="sub" id="d-name"></div></div>
 
+      <div class="card">
+        <h2 data-i18n="search">Recherche globale</h2>
+        <input id="q" type="search" data-i18n-ph="searchPh" placeholder="Nom, téléphone ou modèle">
+        <div id="q-res"></div>
+      </div>
+
+      <div class="stats3">
+        <div class="stat"><div class="n" id="s-cmd">—</div><div class="l" data-i18n="statOrders">Commandes</div></div>
+        <div class="stat"><div class="n" id="s-cli">—</div><div class="l" id="s-cli-l" data-i18n="statClients">Clientes</div></div>
+        <div class="stat"><div class="n" id="s-du">—</div><div class="l" data-i18n="statDue">À encaisser</div></div>
+      </div>
+
       <div class="card" id="due-card" hidden>
         <h2 data-i18n="dueTitle">Impayés et vêtements à récupérer</h2>
         <div class="stats3" style="margin-top:4px">
@@ -503,28 +515,29 @@
         </div>
         <div id="due-list"></div>
       </div>
+      <div class="card" id="clo-card">
+        <h2 data-i18n="cloTitle">Clôture du jour</h2>
+        <div id="clo-sum" style="font-size:14px;line-height:1.7"></div>
+        <div class="mline" style="margin-top:8px;border-top:1px solid var(--line);padding-top:10px"><span class="k" data-i18n="cloTotal">Total reçu aujourd'hui</span><span class="v" id="clo-tot" style="color:var(--ok);font-size:20px">0</span></div>
+        <div class="mline"><span class="k" data-i18n="cloDep">Dépenses du jour</span><span class="v" id="clo-dep" style="color:var(--err)">0</span></div>
+        <div id="clo-state" style="font-size:13px;color:var(--ok);margin-top:6px"></div>
+        <button class="primary" id="clo-btn" type="button" data-i18n="cloBtn">🔒 Clôturer la journée et notifier le propriétaire</button>
+        <button class="flink" id="clo-detail-btn" type="button" data-i18n="cloCheck">Vérifier les recettes du jour</button>
+        <div id="clo-detail" hidden></div>
+        <button class="flink" id="clo-hist-btn" type="button" data-i18n="cloHist">Historique des clôtures</button>
+        <div id="clo-hist" hidden></div>
+        <button class="flink" id="clo-owner-btn" type="button" data-i18n="cloOwner">Changer le numéro du propriétaire</button>
+      </div>
+      <div class="card" id="alert-card" hidden style="border-color:var(--warn)">
+        <h2 data-i18n="todoTitle" style="color:var(--warn);border-bottom-color:var(--warnbg)">À faire aujourd'hui</h2>
+        <div id="alert-list"></div>
+        <div id="ready-box"></div>
+      </div>
       <div class="card" id="thx-card" hidden>
         <h2 data-i18n="thxTitle">Remerciements à envoyer</h2>
         <p style="margin:0 0 6px;font-size:13px;color:var(--muted)" data-i18n="thxHint">Clients servis et payés : un petit merci sur WhatsApp les fait revenir.</p>
         <div id="thx-list"></div>
       </div>
-      <div class="card" id="alert-card" hidden style="border-color:var(--warn)">
-        <h2 data-i18n="soonDue" style="color:var(--warn);border-bottom-color:var(--warnbg)">Rendez-vous proches</h2>
-        <div id="alert-list"></div>
-      </div>
-
-      <div class="card">
-        <h2 data-i18n="search">Recherche globale</h2>
-        <input id="q" type="search" data-i18n-ph="searchPh" placeholder="Nom, téléphone ou modèle">
-        <div id="q-res"></div>
-      </div>
-
-      <div class="stats3">
-        <div class="stat"><div class="n" id="s-cmd">—</div><div class="l" data-i18n="statOrders">Commandes</div></div>
-        <div class="stat"><div class="n" id="s-cli">—</div><div class="l" data-i18n="statClients">Clientes</div></div>
-        <div class="stat"><div class="n" id="s-du">—</div><div class="l" data-i18n="statDue">À encaisser</div></div>
-      </div>
-
       <div class="card" id="charge-teaser" hidden>
         <h2 data-i18n="chargeTeaserTitle" style="color:var(--gold)">Plan de charge</h2>
         <div style="display:flex;gap:5px;opacity:0.55;filter:grayscale(0.4);pointer-events:none;">
@@ -1368,6 +1381,14 @@
       stCodeUsed:"Ce code est déjà utilisé par un autre employé.", stCodeNone:"Pas de code de pointage", stCodeSet:"Code de pointage : ••••",
       stCodeBtn:"Changer le code de pointage", stCodeAsk:"Nouveau code à 4 chiffres pour {n} :",
       ptHint:"Tapez votre code à 4 chiffres", ptExit:"Quitter le mode tablette", ptKiosk:"Mode tablette (plein écran)",
+      cloTitle:"Clôture du jour", cloTotal:"Total reçu aujourd'hui", cloDep:"Dépenses du jour", cloBtn:"🔒 Clôturer la journée et notifier le propriétaire",
+      cloCheck:"Vérifier les recettes du jour", cloHist:"Historique des clôtures", cloOwner:"Changer le numéro du propriétaire",
+      cloLine:"{a} : {n} encaissement(s) — {v}", cloDone:"✓ Journée clôturée à {h} — {v}", cloNoHist:"Aucune clôture enregistrée.",
+      cloOwnerAsk:"Numéro WhatsApp du propriétaire (reçoit le résumé de la clôture) :", cloNoOwner:"Ajoutez d'abord le numéro du propriétaire.",
+      cloAgainQ:"La journée est déjà clôturée. Renvoyer le résumé au propriétaire ?", cloNoRec:"Aucun encaissement aujourd'hui.",
+      mClo:"📊 Clôture du {d} — {shop}", mCloTot:"TOTAL REÇU : {v}", mCloDep:"Dépenses : {v}", mCloSol:"Solde du jour : {v}",
+      todoTitle:"À faire aujourd'hui", todoReady:"✅ {n} commande(s) prête(s) — la cliente doit passer", todoLate:"en RETARD de {n} j", todoToday:"AUJOURD'HUI",
+      todoSoon:"dans {n} j", todoDeliv:"livraison", todoPick:"retrait", statTickets:"Tickets",
       phTitle:"Photos du tissu et du modèle", phFabric:"📷 Photo du tissu", phModel:"🖼️ Modèle (galerie)", phTagFabric:"Tissu", phTagModel:"Modèle",
       phNone:"Aucune photo pour cette commande.", phLoading:"Chargement des photos…", phSaving:"Envoi des photos…", phSaved:"Photo(s) enregistrée(s).",
       phDelQ:"Supprimer cette photo ?", phFail:"Photo non enregistrée : {e}",
@@ -1628,6 +1649,14 @@
       stCodeUsed:"This code is already used by another employee.", stCodeNone:"No clock-in code", stCodeSet:"Clock-in code: ••••",
       stCodeBtn:"Change clock-in code", stCodeAsk:"New 4-digit code for {n}:",
       ptHint:"Enter your 4-digit code", ptExit:"Exit tablet mode", ptKiosk:"Tablet mode (full screen)",
+      cloTitle:"Close of day", cloTotal:"Total received today", cloDep:"Today's expenses", cloBtn:"🔒 Close the day and notify the owner",
+      cloCheck:"Check today's income", cloHist:"Closing history", cloOwner:"Change the owner's number",
+      cloLine:"{a}: {n} payment(s) — {v}", cloDone:"✓ Day closed at {h} — {v}", cloNoHist:"No closings yet.",
+      cloOwnerAsk:"Owner's WhatsApp number (receives the closing summary):", cloNoOwner:"First add the owner's number.",
+      cloAgainQ:"The day is already closed. Send the summary to the owner again?", cloNoRec:"No payments today.",
+      mClo:"📊 Close of {d} — {shop}", mCloTot:"TOTAL RECEIVED: {v}", mCloDep:"Expenses: {v}", mCloSol:"Balance for the day: {v}",
+      todoTitle:"To do today", todoReady:"✅ {n} order(s) ready — the customer must come", todoLate:"{n} days LATE", todoToday:"TODAY",
+      todoSoon:"in {n} days", todoDeliv:"delivery", todoPick:"pick-up", statTickets:"Tickets",
       phTitle:"Fabric and model photos", phFabric:"📷 Fabric photo", phModel:"🖼️ Model (gallery)", phTagFabric:"Fabric", phTagModel:"Model",
       phNone:"No photos for this order.", phLoading:"Loading photos…", phSaving:"Sending photos…", phSaved:"Photo(s) saved.",
       phDelQ:"Delete this photo?", phFail:"Photo not saved: {e}",
@@ -2491,7 +2520,8 @@
 
   function renderLists(){
     $("s-cmd").textContent = COMMANDES.length;
-    $("s-cli").textContent = CLIENTES.length;
+    if(hasAct("pressing")){ $("s-cli").textContent = PRESS.length; $("s-cli-l").textContent = t("statTickets"); }
+    else { $("s-cli").textContent = CLIENTES.length; $("s-cli-l").textContent = t("statClients"); }
     let sdu=0; COMMANDES.forEach(o=>{ sdu += resteDe(o); }); PRESS.forEach(o=>{ if(o.statut!=="recupere" || resteDe(o)>0) sdu += resteDe(o); });
     renderPressing();
     $("s-du").textContent = money(sdu);
@@ -2732,28 +2762,108 @@
       const st=o.statut||"recu";
       if(st==="pret" || st==="livre") return;
       const n=joursAvant(o.livraison);
-      if(n===null || n>3) return;
-      list.push({ o, n });
+      if(n===null || n>2) return;
+      list.push({ o, n, kind:"atelier" });
+    });
+    PRESS.forEach(o=>{
+      const st=o.statut||"recu";
+      if(st==="pret" || st==="recupere") return;
+      const n=joursAvant(o.retrait);
+      if(n===null || n>1) return;
+      list.push({ o, n, kind:"pressing" });
     });
     list.sort((a,b)=>a.n-b.n);
-    $("alert-card").hidden = list.length===0;
-    list.forEach(({o,n})=>{
+    const ready=COMMANDES.filter(o=>o.statut==="pret").map(o=>({ o, kind:"atelier" }))
+      .concat(PRESS.filter(o=>o.statut==="pret").map(o=>({ o, kind:"pressing" })));
+    $("alert-card").hidden = !list.length && !ready.length;
+    list.forEach(({o,n,kind})=>{
       const el=document.createElement("div"); el.className="rec";
       el.style.borderColor = n<=0 ? "var(--err)" : "var(--warn)";
       const nm=document.createElement("div"); nm.className="nm";
-      nm.textContent=(o.clienteName||t("noName"));
+      nm.textContent=(kind==="pressing"?"🧺 ":"✂️ ")+(o.clienteName||t("noName"));
       const l1=document.createElement("div"); l1.className="ln";
-      l1.textContent=fmtNum(o.numero)+" · "+(o.article||"—")+" · "+t(stepKey(o.statut||"recu"));
+      l1.textContent=fmtNum(o.numero)+" · "+((kind==="pressing"?o.resume:o.article)||"—").slice(0,60);
       const l2=document.createElement("div"); l2.className="ln";
-      l2.textContent=libelleEcheance(n);
+      l2.textContent=t(kind==="pressing"?"todoPick":"todoDeliv")+" "+(n<0 ? t("todoLate").replace("{n}", -n) : n===0 ? t("todoToday") : t("todoSoon").replace("{n}", n));
       l2.style.color = n<=0 ? "var(--err)" : "var(--warn)";
       l2.style.fontWeight = "700";
       el.appendChild(nm); el.appendChild(l1); el.appendChild(l2);
       el.style.cursor="pointer";
-      el.addEventListener("click", ()=>openCmd(o.id));
+      el.addEventListener("click", ()=>{ if(kind==="atelier") openCmd(o.id); else { setTab("pressing"); PZ_FILTER="tous"; $("q-pz").value=fmtNum(o.numero); renderPressing(); } });
       box.appendChild(el);
     });
+    const rb=$("ready-box"); rb.innerHTML="";
+    if(ready.length){
+      const h=document.createElement("div"); h.className="nm"; h.style.cssText="margin-top:14px;color:var(--ok)";
+      h.textContent=t("todoReady").replace("{n}", ready.length); rb.appendChild(h);
+      ready.forEach(({o,kind})=>{
+        const d=document.createElement("div"); d.className="ln"; d.style.cssText="padding:4px 0;cursor:pointer";
+        const late = kind==="pressing" ? lateDays(o.retrait) : lateDays(o.livraison);
+        d.textContent="• "+(o.clienteName||"")+" — "+t(kind==="pressing"?"tabPressing":"tabAtelier")+" "+fmtNum(o.numero)+(late>0?" ("+t("todoLate").replace("{n}", late)+")":"");
+        d.addEventListener("click", ()=>{ if(kind==="atelier") openCmd(o.id); else { setTab("pressing"); PZ_FILTER="pret"; renderPressing(); } });
+        rb.appendChild(d);
+      });
+    }
+    try{ renderCloture(); }catch(e){}
   }
+
+  // =================== CLÔTURE DU JOUR ===================
+  function todayStats(){
+    const d0=new Date(); d0.setHours(0,0,0,0); const from=d0.getTime();
+    const by={ atelier:[0,0], pressing:[0,0], boutique:[0,0], general:[0,0] }; let dep=0; const rows=[];
+    MOUV.forEach(m=>{
+      if((Number(m.ms)||0)<from) return;
+      const v=Number(m.montant)||0;
+      if(m.type==="recette"){ const k=by[m.source]?m.source:"atelier"; by[k][0]++; by[k][1]+=v; rows.push(m); }
+      else dep+=v;
+    });
+    const tot=by.atelier[1]+by.pressing[1]+by.boutique[1]+by.general[1];
+    return { by, dep, tot, rows };
+  }
+  function renderCloture(){
+    const st=todayStats(), box=$("clo-sum"); if(!box) return; box.innerHTML="";
+    finSources().filter(k=>k!=="general").forEach(k=>{
+      const d=document.createElement("div"); d.textContent=t("cloLine").replace("{a}", SRC_LBL(k)).replace("{n}", st.by[k][0]).replace("{v}", money(st.by[k][1]));
+      box.appendChild(d);
+    });
+    $("clo-tot").textContent=money(st.tot); $("clo-dep").textContent=money(st.dep);
+    const c=lastClosing();
+    $("clo-state").textContent = (c && c.day===todayISO()) ? t("cloDone").replace("{h}", new Date(c.ms).toLocaleTimeString(LANG_UI==="en"?"en-GB":"fr-FR",{hour:"2-digit",minute:"2-digit"})).replace("{v}", money(c.total)) : "";
+  }
+  function lastClosing(){ const l=(BOUTIQUE && Array.isArray(BOUTIQUE.clotures)) ? BOUTIQUE.clotures : []; return l.length ? l[l.length-1] : null; }
+  function ownerNum(){ return waNumber((BOUTIQUE && (BOUTIQUE.ownerWa || BOUTIQUE.whatsapp)) || ""); }
+  $("clo-btn").addEventListener("click", ()=>{
+    const st=todayStats(), day=todayISO(), c=lastClosing();
+    if(c && c.day===day && !confirm(t("cloAgainQ"))) return;
+    const num=ownerNum(); if(!num){ alert(t("cloNoOwner")); return; }
+    let msg=tm("mClo").replace("{d}", fmtDate(day, LANG_MSG)).replace("{shop}", (BOUTIQUE&&BOUTIQUE.name)||"");
+    finSources().filter(k=>k!=="general").forEach(k=>{ msg+="\n"+tm("cloLine").replace("{a}", SRC_LBL(k)).replace("{n}", st.by[k][0]).replace("{v}", money(st.by[k][1])); });
+    msg+="\n\n"+tm("mCloTot").replace("{v}", money(st.tot))+"\n"+tm("mCloDep").replace("{v}", money(st.dep))+"\n"+tm("mCloSol").replace("{v}", money(st.tot-st.dep));
+    const entry={ day, ms:Date.now(), total:st.tot, dep:st.dep, atelier:st.by.atelier[1], pressing:st.by.pressing[1], boutique:st.by.boutique[1], n:st.rows.length };
+    const list=((BOUTIQUE && Array.isArray(BOUTIQUE.clotures)) ? BOUTIQUE.clotures : []).filter(x=>x.day!==day).concat([entry]).slice(-120);
+    if(BOUTIQUE) BOUTIQUE.clotures=list;
+    setDoc(doc(db,"boutiques",BID), { clotures:list, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+    renderCloture();
+    openWa(num, msg);
+  });
+  $("clo-detail-btn").addEventListener("click", ()=>{
+    const box=$("clo-detail"); box.hidden=!box.hidden; if(box.hidden) return; box.innerHTML="";
+    const st=todayStats();
+    if(!st.rows.length){ const e=document.createElement("div"); e.className="empty"; e.style.padding="8px 0"; e.textContent=t("cloNoRec"); box.appendChild(e); return; }
+    st.rows.forEach(m=>{ const d=document.createElement("div"); d.className="ln"; d.style.padding="3px 0"; d.textContent="+ "+money(m.montant)+" · "+(m.label||"")+" · "+SRC_LBL(m.source)+" · "+fmtWhen(m.ms).split("· ").pop(); box.appendChild(d); });
+  });
+  $("clo-hist-btn").addEventListener("click", ()=>{
+    const box=$("clo-hist"); box.hidden=!box.hidden; if(box.hidden) return; box.innerHTML="";
+    const l=((BOUTIQUE && Array.isArray(BOUTIQUE.clotures)) ? BOUTIQUE.clotures : []).slice().reverse();
+    if(!l.length){ const e=document.createElement("div"); e.className="empty"; e.style.padding="8px 0"; e.textContent=t("cloNoHist"); box.appendChild(e); return; }
+    box.appendChild(ftable(t("fDay"), l.slice(0,60).map(c=>[fmtDate(c.day, LANG_UI), c.total||0, c.dep||0])));
+  });
+  $("clo-owner-btn").addEventListener("click", async ()=>{
+    if(!await askCode()) return;
+    const v=prompt(t("cloOwnerAsk"), (BOUTIQUE && (BOUTIQUE.ownerWa||BOUTIQUE.whatsapp)) || ""); if(v===null) return;
+    if(BOUTIQUE) BOUTIQUE.ownerWa=v.trim();
+    setDoc(doc(db,"boutiques",BID), { ownerWa:v.trim(), updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+  });
 
   function renderAtelierStats(){
     $("a-tot").textContent = COMMANDES.length;
