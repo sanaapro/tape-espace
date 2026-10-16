@@ -871,6 +871,14 @@
         <h2 data-i18n="staffRecap">Récapitulatif mensuel</h2>
         <div class="row"><span class="k" data-i18n="tabStaff">Salariés</span><span class="v" id="st-count">0</span></div>
         <div class="row"><span class="k" data-i18n="staffTotal">Total mensuel</span><span class="v amt" id="st-total">0 D</span></div>
+        <label data-i18n="fMonth">Mois</label>
+        <input id="sr-month" type="month">
+        <div class="stats3" style="margin-top:10px">
+          <div class="stat"><div class="n" id="sr-due">0</div><div class="l" data-i18n="srDue">Salaires dus</div></div>
+          <div class="stat"><div class="n" id="sr-adv">0</div><div class="l" data-i18n="srAdv">Avances notées</div></div>
+          <div class="stat"><div class="n" id="sr-left">0</div><div class="l" data-i18n="srLeft">À payer fin de mois</div></div>
+        </div>
+        <div id="sr-list"></div>
       </div>
       <div id="st-list"></div>
       <div id="st-empty" class="empty" data-i18n="noStaff" hidden>Aucun employé enregistré.</div>
@@ -1329,6 +1337,10 @@
       stCodeUsed:"Ce code est déjà utilisé par un autre employé.", stCodeNone:"Pas de code de pointage", stCodeSet:"Code de pointage : ••••",
       stCodeBtn:"Changer le code de pointage", stCodeAsk:"Nouveau code à 4 chiffres pour {n} :",
       ptHint:"Tapez votre code à 4 chiffres", ptExit:"Quitter le mode tablette", ptKiosk:"Mode tablette (plein écran)",
+      srDue:"Salaires dus", srAdv:"Avances notées", srLeft:"À payer fin de mois", srSalary:"Salaire", srAdvances:"Avances", srRest:"Reste",
+      srDays:"Jours présents ce mois : {n}", srAbs:"Absences non annoncées : {n}", srNoAdv:"Aucune avance notée — salaire dû en fin de mois.",
+      srAdvBtn:"💰 Noter une avance", srAbsBtn:"📅 Absence non annoncée", srAdvAsk:"Montant de l'avance donnée à {n} :", srAdvLabel:"Avance sur salaire",
+      srAbsAsk:"Date de l'absence (AAAA-MM-JJ) :", srPaidMonth:"✓ Salaire payé", srAdvList:"Avances : {v}",
       artsTitle:"Articles de la commande (facture détaillée)", cfArtAdd:"＋ Ajouter un article", cfTotal:"Total commande",
       artNamePh2:"Ex. Robe, pantalon, boubou", artPricePh:"Prix", depotLabel:"Date de dépôt", cfDone:"Vêtement déjà terminé — rien à coudre",
       cfGift:"C'est un cadeau — le vêtement est pour quelqu'un d'autre", giftName:"Pour qui ?", giftPhone:"Téléphone de la personne (optionnel)", giftFor:"Cadeau pour",
@@ -1578,6 +1590,10 @@
       stCodeUsed:"This code is already used by another employee.", stCodeNone:"No clock-in code", stCodeSet:"Clock-in code: ••••",
       stCodeBtn:"Change clock-in code", stCodeAsk:"New 4-digit code for {n}:",
       ptHint:"Enter your 4-digit code", ptExit:"Exit tablet mode", ptKiosk:"Tablet mode (full screen)",
+      srDue:"Wages due", srAdv:"Advances noted", srLeft:"To pay at month end", srSalary:"Wage", srAdvances:"Advances", srRest:"Left",
+      srDays:"Days present this month: {n}", srAbs:"Unannounced absences: {n}", srNoAdv:"No advance noted — wage due at month end.",
+      srAdvBtn:"💰 Note an advance", srAbsBtn:"📅 Unannounced absence", srAdvAsk:"Advance given to {n}:", srAdvLabel:"Wage advance",
+      srAbsAsk:"Date of absence (YYYY-MM-DD):", srPaidMonth:"✓ Wage paid", srAdvList:"Advances: {v}",
       artsTitle:"Order items (detailed invoice)", cfArtAdd:"＋ Add an item", cfTotal:"Order total",
       artNamePh2:"E.g. dress, trousers, boubou", artPricePh:"Price", depotLabel:"Drop-off date", cfDone:"Item already finished — nothing to sew",
       cfGift:"It's a gift — the garment is for someone else", giftName:"For whom?", giftPhone:"That person's phone (optional)", giftFor:"Gift for",
@@ -2841,7 +2857,7 @@
   // ---- charges fixes (stockées sur le doc boutique) et salaires : payés mois par mois
   function paidThisMonth(key, val){
     const mk=monthKey(Date.now());
-    return MOUV.find(m=>m.type==="depense" && m[key]===val && m.mois===mk) || null;
+    return MOUV.find(m=>m.type==="depense" && m[key]===val && m.mois===mk && !m.avance) || null;
   }
   function payLine(box, name, sub, paid, onPay){
     const r=document.createElement("div"); r.className="pay-line";
@@ -2887,7 +2903,8 @@
       const p=paidThisMonth("salId", sx.id); if(p) paidTot+=Number(p.montant)||0;
       payLine(box, sx.nom||"—", money(sx.salaire)+" · "+roleLabel(sx), p, async ()=>{
         if(!await askCode()) return;
-        const v=prompt(t("fPayAsk").replace("{n}", sx.nom||"").replace("{m}", mlabel), String(Number(sx.salaire)||0));
+        const adv=advancesOf(sx.id, mk);
+        const v=prompt(t("fPayAsk").replace("{n}", sx.nom||"").replace("{m}", mlabel), String(Math.max(0,(Number(sx.salaire)||0)-adv)));
         if(v===null) return; const amt=parseFloat(String(v).replace(",", "."));
         if(isNaN(amt) || amt<=0){ alert(t("amountRequired")); return; }
         addMouv("depense", "general", amt, t("fSalLabel")+" — "+(sx.nom||"")+" — "+mlabel, { categorie:t("catSalaires"), salId:sx.id, mois:mk });
@@ -2938,6 +2955,7 @@
     $("st-count").textContent = SALARIES.length;
     $("st-total").textContent = money(total);
     $("st-empty").hidden = SALARIES.length>0;
+    try{ renderWageRecap(); }catch(e){}
     SALARIES.forEach(x=>{
       const el=document.createElement("div"); el.className="rec";
       const nm=document.createElement("div"); nm.className="nm"; nm.textContent=x.nom||"—";
@@ -3674,6 +3692,62 @@
     });
   });
 
+
+  // =================== SALAIRES : avances, présences, absences ===================
+  function advancesOf(salId, mk){
+    let s0=0; MOUV.forEach(m=>{ if(m.type==="depense" && m.salId===salId && m.mois===mk && m.avance) s0+=Number(m.montant)||0; }); return s0;
+  }
+  function srMonth(){ const v=$("sr-month").value; return /^\d{4}-\d{2}$/.test(v) ? v : monthKey(Date.now()); }
+  function renderWageRecap(){
+    const box=$("sr-list"); if(!box) return;
+    if(!$("sr-month").value) $("sr-month").value=monthKey(Date.now());
+    const mk=srMonth(); box.innerHTML="";
+    let due=0, adv=0, left=0;
+    SALARIES.forEach(sx=>{
+      const sal=Number(sx.salaire)||0, a=advancesOf(sx.id, mk);
+      const paid=MOUV.find(m=>m.type==="depense" && m.salId===sx.id && m.mois===mk && !m.avance);
+      const rest=paid ? 0 : Math.max(0, sal-a);
+      due+=sal; adv+=a; left+=rest;
+      const days=new Set(POINTAGES.filter(p=>p.salId===sx.id && String(p.day||"").slice(0,7)===mk).map(p=>p.day)).size;
+      const abs=((sx.absences||{})[mk]||[]).length;
+      const el=document.createElement("div"); el.className="rec";
+      const nm=document.createElement("div"); nm.className="nm"; nm.textContent=sx.nom||"—"; el.appendChild(nm);
+      const g=document.createElement("div"); g.className="stats3"; g.style.marginTop="8px";
+      [[t("srSalary"),money(sal),""],[t("srAdvances"),money(a),"var(--warn)"],[t("srRest"),paid?t("srPaidMonth"):money(rest),paid?"var(--ok)":""]].forEach(x=>{
+        const c=document.createElement("div"); c.className="stat";
+        const n=document.createElement("div"); n.className="n"; n.style.fontSize="16px"; n.textContent=x[1]; if(x[2]) n.style.color=x[2];
+        const l=document.createElement("div"); l.className="l"; l.textContent=x[0];
+        c.appendChild(n); c.appendChild(l); g.appendChild(c);
+      });
+      el.appendChild(g);
+      const l1=document.createElement("div"); l1.className="ln"; l1.textContent=a>0 ? t("srAdvList").replace("{v}", MOUV.filter(m=>m.salId===sx.id && m.mois===mk && m.avance).map(m=>money(m.montant)+" ("+fmtWhen(m.ms).split(" ·")[0]+")").join(", ")) : t("srNoAdv");
+      const l2=document.createElement("div"); l2.className="ln"; l2.textContent=t("srDays").replace("{n}", days)+" · "+t("srAbs").replace("{n}", abs);
+      if(abs>0) l2.style.color="var(--warn)";
+      el.appendChild(l1); el.appendChild(l2);
+      const acts=document.createElement("div"); acts.className="pz-acts";
+      const b1=document.createElement("button"); b1.type="button"; b1.textContent=t("srAdvBtn");
+      b1.addEventListener("click", async ()=>{
+        if(!await askCode()) return;
+        const v=prompt(t("srAdvAsk").replace("{n}", sx.nom||""), ""); if(v===null) return;
+        const amt=parseFloat(String(v).replace(",", ".")); if(isNaN(amt) || amt<=0){ alert(t("amountRequired")); return; }
+        addMouv("depense","general",amt, t("srAdvLabel")+" — "+(sx.nom||""), { categorie:t("catSalaires"), salId:sx.id, mois:mk, avance:true });
+        renderWageRecap(); renderFinances();
+      });
+      const b2=document.createElement("button"); b2.type="button"; b2.textContent=t("srAbsBtn");
+      b2.addEventListener("click", ()=>{
+        const v=prompt(t("srAbsAsk"), todayISO()); if(v===null) return;
+        const d=String(v).trim(); if(!/^\d{4}-\d{2}-\d{2}$/.test(d)){ alert(t("qReschedBad")); return; }
+        const k=d.slice(0,7); const ab=Object.assign({}, sx.absences||{}); ab[k]=(ab[k]||[]).concat([d]);
+        sx.absences=ab;
+        setDoc(doc(db,"boutiques",BID,"salaries",sx.id), { absences:ab, updatedAt:serverTimestamp() }, { merge:true }).catch(e=>alert(t("ptSaveFail").replace("{e}", (e&&(e.code||e.message))||"?")));
+        renderWageRecap();
+      });
+      acts.appendChild(b1); acts.appendChild(b2); el.appendChild(acts);
+      box.appendChild(el);
+    });
+    $("sr-due").textContent=money(due); $("sr-adv").textContent=money(adv); $("sr-left").textContent=money(left);
+  }
+  $("sr-month").addEventListener("change", renderWageRecap);
 
   // =================== COMMANDE DÉTAILLÉE : articles, état par vêtement ===================
   function todayISO(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
