@@ -175,6 +175,14 @@
     color:var(--txt); font-size:13px; cursor:pointer; font-family:var(--sans); }
   .chips button.on{ background:var(--gold); color:#141310; border-color:var(--gold); }
   .vt-prev{ display:none; width:100%; max-height:260px; object-fit:cover; border-radius:10px; margin-top:10px; }
+  .vt-batch{ margin-top:12px; display:flex; flex-direction:column; gap:10px }
+  .vt-row{ display:flex; gap:10px; align-items:flex-start; padding:10px; border:1px solid var(--line); border-radius:12px; background:var(--panel) }
+  .vt-row img{ flex:none; width:64px; height:84px; object-fit:cover; border-radius:8px; background:#222 }
+  .vt-row .f{ flex:1; min-width:0; display:flex; flex-direction:column; gap:6px }
+  .vt-row .f input{ margin:0 }
+  .vt-row .x{ flex:none; width:36px; height:36px; border-radius:50%; border:1px solid var(--line); background:none; color:var(--muted); font-size:18px; cursor:pointer }
+  .vt-row.done{ opacity:.45 }
+  .vt-hint{ font-size:13px; color:var(--muted); margin:8px 0 0 }
   .vt-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
   .vt-item{ background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
   .vt-item img{ display:block; width:100%; aspect-ratio:3/4; object-fit:cover; background:#222; }
@@ -659,10 +667,15 @@
       <div class="card">
         <h2 data-i18n="vtAdd">Ajouter un modèle</h2>
         <label data-i18n="vtPhoto">Photo du modèle</label>
-        <input id="vt-file" type="file" accept="image/*">
+        <input id="vt-file" type="file" accept="image/*" multiple>
+        <p class="vt-hint" data-i18n="vtMultiHint">Vous pouvez choisir plusieurs photos à la fois (jusqu'à 20).</p>
         <img id="vt-prev" class="vt-prev" alt="">
+        <div id="vt-batch" class="vt-batch" hidden></div>
+        <p class="vt-hint" id="vt-batch-hint" hidden data-i18n="vtBatchHint">Donnez un nom et un prix à chaque photo. Le « Pour » et le « Style » ci-dessous s'appliquent à toutes.</p>
+        <div id="vt-single-name">
         <label data-i18n="vtName">Nom du modèle</label>
         <input id="vt-titre" type="text" data-i18n-ph="vtNamePh" placeholder="Ex. Robe en wax brodée">
+        </div>
         <label data-i18n="vtFor">Pour</label>
         <select id="vt-genre">
           <option value="femme" data-i18n="vtFemme">Femme</option>
@@ -683,8 +696,10 @@
           <option value="uniforme" data-i18n="st_uniforme">Uniforme</option>
           <option value="autre" data-i18n="st_autre">Autre</option>
         </select>
+        <div id="vt-single-price">
         <label data-i18n="vtPrice">Prix à partir de (facultatif)</label>
         <input id="vt-prix" type="number" step="1" inputmode="decimal" placeholder="1500">
+        </div>
         <button class="primary" id="vt-add" data-i18n="vtPublish">Publier dans le catalogue</button>
         <div class="msg err" id="vt-msg"></div>
       </div>
@@ -931,6 +946,12 @@
       vtPublish:"Publier dans le catalogue", vtNone:"Aucun modèle publié pour l'instant.",
       vtNeedPhoto:"Choisissez une photo.", vtNeedName:"Donnez un nom au modèle.", vtWorking:"Préparation de la photo…",
       vtDone:"Modèle publié dans le catalogue.", vtFail:"Échec de la publication. Vérifiez la connexion.",
+      vtMultiHint:"Vous pouvez choisir plusieurs photos à la fois (jusqu'à 20).",
+      vtBatchHint:"Donnez un nom et un prix à chaque photo. Le « Pour » et le « Style » ci-dessous s'appliquent à toutes.",
+      vtRowName:"Nom du modèle", vtRowPrice:"Prix dès (facultatif)", vtPublishN:"Publier les {n} modèles",
+      vtProgress:"Publication {i} sur {n}…", vtBatchDone:"{n} modèles publiés dans le catalogue.",
+      vtBatchCut:"La formule Standard est limitée à 5 modèles : les photos restantes sont en attente.",
+      vtBatchStop:"Arrêt à la photo {i} : {e}. Les modèles restants sont toujours là, réessayez.",
       vtConfirmDel:"Retirer ce modèle du catalogue ?", vtFrom:"dès",
       waveLabel:"Numéro Wave (paiement des clientes)", waveLinkLabel:"Lien de paiement Wave (facultatif)", waveLinkHint:"Si vous avez un compte Wave Business, collez ici votre lien de paiement : la cliente tombera directement sur votre page de paiement Wave.",
       vtLimit:"La formule Standard permet {n} modèles dans le catalogue. Passez au Premium pour en publier sans limite, ou supprimez un modèle.",
@@ -1104,6 +1125,12 @@
       vtPublish:"Publish to the catalogue", vtNone:"No design published yet.",
       vtNeedPhoto:"Choose a photo.", vtNeedName:"Give the design a name.", vtWorking:"Preparing the photo…",
       vtDone:"Design published to the catalogue.", vtFail:"Publishing failed. Check your connection.",
+      vtMultiHint:"You can choose several photos at once (up to 20).",
+      vtBatchHint:"Give each photo a name and a price. “For” and “Style” below apply to all of them.",
+      vtRowName:"Design name", vtRowPrice:"Price from (optional)", vtPublishN:"Publish the {n} designs",
+      vtProgress:"Publishing {i} of {n}…", vtBatchDone:"{n} designs published to the catalogue.",
+      vtBatchCut:"The Standard plan is limited to 5 designs: the remaining photos are waiting.",
+      vtBatchStop:"Stopped at photo {i}: {e}. The remaining designs are still here, try again.",
       vtConfirmDel:"Remove this design from the catalogue?", vtFrom:"from",
       waveLabel:"Wave number (client payments)", waveLinkLabel:"Wave payment link (optional)", waveLinkHint:"If you have a Wave Business account, paste your payment link here: clients will land directly on your Wave payment page.",
       vtLimit:"The Standard plan allows {n} designs in the catalogue. Upgrade to Premium to publish without limit, or remove a design.",
@@ -2513,10 +2540,47 @@
     setDoc(doc(db,"boutiques",BID), { quartier:v, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
     VITRINE.forEach(m=>{ _setDoc(doc(db,"catalogue",m.id), { quartier:v }, { merge:true }).catch(function(){}); });
   });
+  // ---- plusieurs photos à la fois ----
+  let VT_BATCH = [];   // [{ file, url, titre, prix }]
+  const VT_BATCH_MAX = 20;
+  function vtMode(){
+    const multi = VT_BATCH.length > 1;
+    $("vt-batch").hidden = !multi; $("vt-batch-hint").hidden = !multi;
+    $("vt-single-name").hidden = multi; $("vt-single-price").hidden = multi;
+    $("vt-add").textContent = multi ? t("vtPublishN").replace("{n}", VT_BATCH.length) : t("vtPublish");
+  }
+  function renderVtBatch(){
+    const box=$("vt-batch"); box.innerHTML="";
+    VT_BATCH.forEach((it, i)=>{
+      const row=document.createElement("div"); row.className="vt-row";
+      const im=document.createElement("img"); im.src=it.url; im.alt=""; row.appendChild(im);
+      const f=document.createElement("div"); f.className="f";
+      const n=document.createElement("input"); n.type="text"; n.placeholder=t("vtRowName"); n.value=it.titre||"";
+      n.addEventListener("input", ()=>{ it.titre=n.value; });
+      const pr=document.createElement("input"); pr.type="number"; pr.step="1"; pr.inputMode="decimal"; pr.placeholder=t("vtRowPrice"); pr.value=it.prix||"";
+      pr.addEventListener("input", ()=>{ it.prix=pr.value; });
+      f.appendChild(n); f.appendChild(pr); row.appendChild(f);
+      const x=document.createElement("button"); x.type="button"; x.className="x"; x.textContent="×";
+      x.addEventListener("click", ()=>{ URL.revokeObjectURL(it.url); VT_BATCH.splice(i,1); afterBatchChange(); });
+      row.appendChild(x);
+      box.appendChild(row);
+    });
+  }
+  function afterBatchChange(){
+    if(VT_BATCH.length === 1){
+      // une seule photo restante : on revient au formulaire simple
+      const it = VT_BATCH[0];
+      VT_FILE = it.file; $("vt-titre").value = it.titre || $("vt-titre").value; $("vt-prix").value = it.prix || $("vt-prix").value;
+      const pv=$("vt-prev"); pv.src=it.url; pv.style.display="block";
+    } else if(!VT_BATCH.length){ VT_FILE=null; $("vt-prev").style.display="none"; $("vt-file").value=""; }
+    else { VT_FILE=null; $("vt-prev").style.display="none"; }
+    renderVtBatch(); vtMode();
+  }
   $("vt-file").addEventListener("change", ()=>{
-    VT_FILE = $("vt-file").files[0] || null;
-    const pv=$("vt-prev");
-    if(VT_FILE){ pv.src=URL.createObjectURL(VT_FILE); pv.style.display="block"; } else pv.style.display="none";
+    VT_BATCH.forEach(it=>URL.revokeObjectURL(it.url));
+    const files = Array.from($("vt-file").files || []).slice(0, VT_BATCH_MAX);
+    VT_BATCH = files.map(f=>({ file:f, url:URL.createObjectURL(f), titre:"", prix:"" }));
+    afterBatchChange();
   });
   $("vt-add").addEventListener("click", async ()=>{
     const msg=$("vt-msg"), btn=$("vt-add");
@@ -2529,6 +2593,7 @@
       }
       return;
     }
+    if(VT_BATCH.length > 1) return publishBatch();
     if(!VT_FILE) return fail("vtNeedPhoto");
     const titre=$("vt-titre").value.trim();
     if(!titre) return fail("vtNeedName");
@@ -2557,12 +2622,74 @@
       VITRINE.unshift(Object.assign({ id:ref.id }, data));
       renderVitrine();
       $("vt-file").value=""; VT_FILE=null; $("vt-prev").style.display="none";
+      VT_BATCH.forEach(it=>URL.revokeObjectURL(it.url)); VT_BATCH=[]; renderVtBatch(); vtMode();
       $("vt-titre").value=""; $("vt-prix").value=""; $("vt-style").value="";
       msg.textContent=t("vtDone"); msg.className="msg ok show";
       setTimeout(()=>{ msg.classList.remove("show"); }, 4000);
     }catch(e){ fail("vtFail"); msg.textContent += " [" + ((e && (e.code || e.message)) || "?") + "]"; }
     btn.disabled=false;
   });
+
+  function vtModelData(titre, prix, thumb){
+    return {
+      bid:BID, boutique:(BOUTIQUE && BOUTIQUE.name) || "",
+      wa: waNumber(BOUTIQUE && BOUTIQUE.whatsapp) || "",
+      quartier: $("vt-quartier").value.trim() || (BOUTIQUE && BOUTIQUE.quartier) || "",
+      titre, genre:$("vt-genre").value, style:$("vt-style").value,
+      prix: (prix!=="" && prix!==null && prix!==undefined && !isNaN(parseFloat(prix))) ? parseFloat(prix) : null,
+      devise: cur(), thumb, createdMs: Date.now(), slug: (BOUTIQUE && BOUTIQUE.slug) || "",
+      subExpMs: subExpMs(),
+      ...((BOUTIQUE && BOUTIQUE.waveLink) ? { waveLink: BOUTIQUE.waveLink } : {}),
+      wave: (BOUTIQUE && BOUTIQUE.wave) || ""
+    };
+  }
+  async function publishBatch(){
+    const msg=$("vt-msg"), btn=$("vt-add");
+    const fail = k => { msg.textContent=t(k); msg.className="msg err show"; };
+    if(VT_BATCH.some(it=>!String(it.titre||"").trim())) return fail("vtNeedName");
+    if(!$("vt-style").value) return fail("vtNeedStyle");
+    let todo = VT_BATCH.slice(), cut = false;
+    if(!subInfo().premium){
+      const room = Math.max(0, VT_MAX_STD - VITRINE.length);
+      if(todo.length > room){ todo = todo.slice(0, room); cut = true; }
+      if(!room){
+        msg.textContent = t("vtLimit").replace("{n}", VT_MAX_STD); msg.className="msg err show";
+        if(confirm(t("vtLimitAsk"))) openWa(SANAAPRO_WA, t("upgradeMsg").replace("{shop}", (BOUTIQUE && BOUTIQUE.name) || "").replace("{slug}", (BOUTIQUE && BOUTIQUE.slug) || ""));
+        return;
+      }
+    }
+    btn.disabled=true;
+    let done = 0; const base = Date.now();
+    for(let i=0; i<todo.length; i++){
+      const it = todo[i];
+      msg.textContent = t("vtProgress").replace("{i}", i+1).replace("{n}", todo.length); msg.className="msg ok show";
+      try{
+        const thumb = await compressImage(it.file, 360, 0.6);
+        const photo = await compressImage(it.file, 1000, 0.72);
+        const ref = doc(collection(db,"catalogue"));
+        const data = vtModelData(String(it.titre).trim(), it.prix, thumb);
+        data.createdMs = base + (todo.length - i); // la 1re photo choisie apparaît en premier
+        await Promise.all([ _setDoc(ref, data), _setDoc(doc(db,"catalogue_photos",ref.id), { bid:BID, photo }) ]);
+        VITRINE.unshift(Object.assign({ id:ref.id }, data));
+        URL.revokeObjectURL(it.url);
+        VT_BATCH.splice(VT_BATCH.indexOf(it), 1);
+        done++;
+      }catch(e){
+        renderVitrine(); afterBatchChange(); btn.disabled=false;
+        msg.textContent = t("vtBatchStop").replace("{i}", i+1).replace("{e}", (e && (e.code || e.message)) || "?"); msg.className="msg err show";
+        return;
+      }
+    }
+    VITRINE.sort((a,b)=>(Number(b.createdMs)||0)-(Number(a.createdMs)||0));
+    renderVitrine();
+    if(!VT_BATCH.length){ $("vt-file").value=""; $("vt-style").value=""; }
+    afterBatchChange();
+    btn.disabled=false;
+    msg.textContent = t("vtBatchDone").replace("{n}", done) + (cut ? " " + t("vtBatchCut") : "");
+    msg.className = "msg " + (cut ? "err" : "ok") + " show";
+    if(cut && confirm(t("vtLimitAsk"))) openWa(SANAAPRO_WA, t("upgradeMsg").replace("{shop}", (BOUTIQUE && BOUTIQUE.name) || "").replace("{slug}", (BOUTIQUE && BOUTIQUE.slug) || ""));
+    if(!cut) setTimeout(()=>{ msg.classList.remove("show"); }, 5000);
+  }
 
   function renderSearch(){
     const box=$("q-res"); box.innerHTML="";
