@@ -784,20 +784,40 @@
     </div>
 
     <div id="pane-finances" hidden>
-      <div class="seg big" data-seg="periode" style="margin-bottom:6px">
-        <button data-p="jour" data-i18n="pJour" style="flex:1">Jour</button><button data-p="semaine" data-i18n="pSemaine" style="flex:1">Semaine</button><button data-p="mois" data-i18n="pMois" style="flex:1">Mois</button><button data-p="annee" data-i18n="pAnnee" style="flex:1">Année</button>
+      <div hidden>
+        <div id="fi-row-atelier"></div><div id="fi-row-pressing"></div><div id="fi-row-boutique"></div><div id="fi-row-general"></div>
       </div>
       <div class="card">
-        <h2 id="fi-title" data-i18n="balance">Bilan</h2>
-        <div class="row" id="fi-row-atelier"><span class="k" data-i18n="tabAtelier">Atelier</span><span class="v" id="fi-atelier">—</span></div>
-        <div class="row" id="fi-row-pressing"><span class="k" data-i18n="tabPressing">Pressing</span><span class="v" id="fi-pressing">—</span></div>
-        <div class="row" id="fi-row-boutique"><span class="k" data-i18n="tabBoutique">Boutique</span><span class="v" id="fi-boutique">—</span></div>
-        <div class="row" id="fi-row-general"><span class="k" data-i18n="fGeneral">Général (charges, salaires)</span><span class="v" id="fi-general">—</span></div>
-        <div class="mline" style="margin-top:8px;border-top:1px solid var(--line);padding-top:12px">
-          <span class="k" data-i18n="income">Recettes</span><span class="v" id="fi-rec" style="color:var(--ok)">0</span>
+        <h2 data-i18n="fBilanT">Bilan — Recettes, Dépenses, Solde</h2>
+        <div id="fb-blocks"></div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="fTrendT">📈 Tendance des recettes (14 derniers jours)</h2>
+        <div id="ftrend"></div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="fWhoPaid">Qui a payé — nom par nom</h2>
+        <p style="margin:0 0 6px;font-size:13px;color:var(--muted)" data-i18n="fWhoHint">Chaque encaissement avec le nom du client. Choisissez la période et le rayon.</p>
+        <div class="fchips" id="wp-per">
+          <button type="button" data-p="jour" data-i18n="fToday">Aujourd'hui</button>
+          <button type="button" data-p="semaine" data-i18n="fThisWeek">Cette semaine</button>
+          <button type="button" data-p="mois" data-i18n="fThisMonth">Ce mois</button>
         </div>
-        <div class="mline"><span class="k" data-i18n="expenses">Dépenses</span><span class="v" id="fi-dep" style="color:var(--err)">0</span></div>
-        <div class="mline"><span class="k" data-i18n="netBalance">Solde</span><span class="v" id="fi-sol">0</span></div>
+        <div class="fchips" id="wp-src" style="margin-top:8px"></div>
+        <div class="stats3" style="margin-top:10px;grid-template-columns:1fr 1fr">
+          <div class="stat"><div class="n" id="wp-n">0</div><div class="l" data-i18n="fPayments">Paiements</div></div>
+          <div class="stat"><div class="n" id="wp-sum">0</div><div class="l" data-i18n="fCollected">Encaissé</div></div>
+        </div>
+        <div id="mv-list"></div>
+        <div id="mv-empty" class="empty" data-i18n="fNoPay" hidden>Aucun encaissement sur cette période.</div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="fDaily2">Détail jour par jour (mois en cours)</h2>
+        <div id="fday"></div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="fYearly">Bilan annuel — mois par mois</h2>
+        <div id="fmonth"></div>
       </div>
       <div class="card">
         <h2 data-i18n="fAddExp">Ajouter une dépense</h2>
@@ -813,10 +833,12 @@
         <div class="fchips" id="fx-when">
           <button type="button" data-d="0" data-i18n="fToday">Aujourd'hui</button>
           <button type="button" data-d="1" data-i18n="fYesterday">Hier</button>
+          <button type="button" data-d="2" data-i18n="fBeforeY">Avant-hier</button>
         </div>
         <label data-i18n="notesOpt">Notes (optionnel)</label>
         <input id="fx-desc" type="text" data-i18n-ph="expDescPh" placeholder="Description (optionnel)">
         <button class="primary" id="fx-save" type="button" data-i18n="saveExpense">Enregistrer la dépense</button>
+        <button class="ghost" id="fx-spread" type="button" data-i18n="fSpread">📅 Étaler sur plusieurs mois (loyer, assurance…)</button>
         <div class="msg" id="fx-msg"></div>
       </div>
 
@@ -839,29 +861,17 @@
       </div>
 
       <div class="card">
-        <h2 data-i18n="fByCat">Dépenses par catégorie</h2>
+        <h2 data-i18n="fByCat2">Dépenses par catégorie (ce mois)</h2>
         <div id="fcat-list"></div>
       </div>
-
       <div class="card">
-        <h2 data-i18n="fWhoPaid">Qui a payé — nom par nom</h2>
-        <div class="fchips" id="mv-filter">
-          <button type="button" data-f="recette" data-i18n="income">Recettes</button>
-          <button type="button" data-f="depense" data-i18n="expenses">Dépenses</button>
-          <button type="button" data-f="tous" data-i18n="pzAll">Tous</button>
-        </div>
-        <div id="mv-list"></div>
-        <div id="mv-empty" class="empty" data-i18n="noMoves" hidden>Aucun mouvement sur cette période.</div>
+        <h2 data-i18n="fRecentExp">Dépenses récentes</h2>
+        <button class="ghost" id="fdup-btn" type="button" data-i18n="fDupBtn">🔎 Vérifier les doublons</button>
+        <div id="fexp-list"></div>
       </div>
-
       <div class="card">
-        <h2 data-i18n="fDaily">Jour par jour — ce mois</h2>
-        <div id="fday"></div>
-      </div>
-
-      <div class="card">
-        <h2 data-i18n="fMonthly">L'année mois par mois</h2>
-        <div id="fmonth"></div>
+        <h2 data-i18n="fRecentRec">Recettes récentes</h2>
+        <div id="frec-list"></div>
       </div>
     </div>
 
@@ -1381,6 +1391,14 @@
       stCodeUsed:"Ce code est déjà utilisé par un autre employé.", stCodeNone:"Pas de code de pointage", stCodeSet:"Code de pointage : ••••",
       stCodeBtn:"Changer le code de pointage", stCodeAsk:"Nouveau code à 4 chiffres pour {n} :",
       ptHint:"Tapez votre code à 4 chiffres", ptExit:"Quitter le mode tablette", ptKiosk:"Mode tablette (plein écran)",
+      fBilanT:"Bilan — Recettes, Dépenses, Solde", fTrendT:"📈 Tendance des recettes (14 derniers jours)", fWhoHint:"Chaque encaissement avec le nom du client. Choisissez la période et le rayon.",
+      fThisWeek:"Cette semaine", fThisMonth:"Ce mois", fPayments:"Paiements", fCollected:"Encaissé", fNoPay:"Aucun encaissement sur cette période.",
+      fDaily2:"Détail jour par jour (mois en cours)", fYearly:"Bilan annuel — mois par mois", fBeforeY:"Avant-hier",
+      fSpread:"📅 Étaler sur plusieurs mois (loyer, assurance…)", fSpreadAsk:"Sur combien de mois étaler {v} ? (ex. 12)", fSpreadDone:"Dépense étalée sur {n} mois : {v} par mois.",
+      fByCat2:"Dépenses par catégorie (ce mois)", fRecentExp:"Dépenses récentes", fRecentRec:"Recettes récentes", fDupBtn:"🔎 Vérifier les doublons",
+      fDupNone:"Aucun doublon trouvé.", fDupFound:"{n} doublon(s) possible(s) surlignés en rouge.", fFix:"✏️ Corriger", fDel:"Supprimer",
+      fFixAsk:"Nouveau montant pour « {l} » :", fBlkToday:"Aujourd'hui ({d})", fBlkWeek:"Semaine ({a} → {b})", fBlkMonth:"Mois en cours ({m})", fBlkYear:"Année en cours ({y}) — bilan annuel",
+      fLine:"{a} — Encaissé : {r} · Dépenses : {d} · Solde : {s}", fTotLine:"TOTAL — Encaissé : {r} · Dépenses : {d} · Solde : {s}", fTodayAmt:"Aujourd'hui", fMore:"Voir plus",
       cloTitle:"Clôture du jour", cloTotal:"Total reçu aujourd'hui", cloDep:"Dépenses du jour", cloBtn:"🔒 Clôturer la journée et notifier le propriétaire",
       cloCheck:"Vérifier les recettes du jour", cloHist:"Historique des clôtures", cloOwner:"Changer le numéro du propriétaire",
       cloLine:"{a} : {n} encaissement(s) — {v}", cloDone:"✓ Journée clôturée à {h} — {v}", cloNoHist:"Aucune clôture enregistrée.",
@@ -1439,6 +1457,7 @@
       impSum2:"Dans ce fichier : {a} commandes atelier · {p} tickets pressing · {c} clients avec mesures · {s} employés. Reste dû au total : {r}. Ce qui est déjà importé est mis à jour, jamais dupliqué.",
       impStep:"Import en cours : {x}…", impDone2:"Import terminé : {a} commandes, {p} tickets, {c} clients, {s} employés.",
       impSecClients:"clients", impSecAtelier:"commandes atelier", impSecPressing:"tickets pressing", impSecStaff:"employés",
+      impSkipped:"{n} élément(s) déjà présent(s) dans SanaaPro laissé(s) tel(s) quel(s).", impSecMoves:"historique des finances", impMoves:"+ {n} mouvements de l'historique des finances.",
       impRun:"Import en cours… {i}/{n}", impDone:"Import terminé : {ok} tickets enregistrés.", impSomeFail:"{ko} partie(s) refusée(s) : {e}.",
       tabPressing:"Pressing", pzInProgress:"En cours", pzReadyN:"Prêts", pzPicked:"Récupérés", pzAll:"Tous",
       pzNew:"Nouveau dépôt", pzClient:"Nom du client", pzClientPh:"Nom complet", pzTotal:"Total",
@@ -1649,6 +1668,14 @@
       stCodeUsed:"This code is already used by another employee.", stCodeNone:"No clock-in code", stCodeSet:"Clock-in code: ••••",
       stCodeBtn:"Change clock-in code", stCodeAsk:"New 4-digit code for {n}:",
       ptHint:"Enter your 4-digit code", ptExit:"Exit tablet mode", ptKiosk:"Tablet mode (full screen)",
+      fBilanT:"Balance — Income, Expenses, Net", fTrendT:"📈 Income trend (last 14 days)", fWhoHint:"Each payment with the customer's name. Pick the period and the department.",
+      fThisWeek:"This week", fThisMonth:"This month", fPayments:"Payments", fCollected:"Collected", fNoPay:"No payments in this period.",
+      fDaily2:"Day by day (this month)", fYearly:"Yearly balance — month by month", fBeforeY:"Day before",
+      fSpread:"📅 Spread over several months (rent, insurance…)", fSpreadAsk:"Spread {v} over how many months? (e.g. 12)", fSpreadDone:"Expense spread over {n} months: {v} per month.",
+      fByCat2:"Expenses by category (this month)", fRecentExp:"Recent expenses", fRecentRec:"Recent income", fDupBtn:"🔎 Check for duplicates",
+      fDupNone:"No duplicates found.", fDupFound:"{n} possible duplicate(s) highlighted in red.", fFix:"✏️ Correct", fDel:"Delete",
+      fFixAsk:"New amount for “{l}”:", fBlkToday:"Today ({d})", fBlkWeek:"Week ({a} → {b})", fBlkMonth:"This month ({m})", fBlkYear:"This year ({y}) — annual balance",
+      fLine:"{a} — In: {r} · Out: {d} · Net: {s}", fTotLine:"TOTAL — In: {r} · Out: {d} · Net: {s}", fTodayAmt:"Today", fMore:"Show more",
       cloTitle:"Close of day", cloTotal:"Total received today", cloDep:"Today's expenses", cloBtn:"🔒 Close the day and notify the owner",
       cloCheck:"Check today's income", cloHist:"Closing history", cloOwner:"Change the owner's number",
       cloLine:"{a}: {n} payment(s) — {v}", cloDone:"✓ Day closed at {h} — {v}", cloNoHist:"No closings yet.",
@@ -1707,6 +1734,7 @@
       impSum2:"In this file: {a} tailoring orders · {p} dry-cleaning tickets · {c} customers with measurements · {s} employees. Total balance due: {r}. Anything already imported is updated, never duplicated.",
       impStep:"Importing: {x}…", impDone2:"Import finished: {a} orders, {p} tickets, {c} customers, {s} employees.",
       impSecClients:"customers", impSecAtelier:"tailoring orders", impSecPressing:"dry-cleaning tickets", impSecStaff:"employees",
+      impSkipped:"{n} item(s) already in SanaaPro left unchanged.", impSecMoves:"finance history", impMoves:"+ {n} entries of finance history.",
       impRun:"Importing… {i}/{n}", impDone:"Import finished: {ok} tickets saved.", impSomeFail:"{ko} part(s) refused: {e}.",
       tabPressing:"Dry cleaning", pzInProgress:"In progress", pzReadyN:"Ready", pzPicked:"Collected", pzAll:"All",
       pzNew:"New drop-off", pzClient:"Customer name", pzClientPh:"Full name", pzTotal:"Total",
@@ -2939,81 +2967,169 @@
     else if(id==="fc-src") sel.value="general";
   }
   function signed(m){ const v=Number(m.montant)||0; return m.type==="recette" ? v : -v; }
-  function renderFinances(){
-    const from = periodStart(PERIODE);
+  function finBlock(title, from, to){
     const T0={ atelier:[0,0], pressing:[0,0], boutique:[0,0], general:[0,0] };
-    const rows=[], cats={};
-    MOUV.forEach(m=>{
-      if((Number(m.ms)||0) < from) return;
-      const v=Number(m.montant)||0, src=T0[m.source] ? m.source : "atelier";
-      if(m.type==="recette") T0[src][0]+=v; else { T0[src][1]+=v; const c=(m.categorie||String(m.label||"").split(" — ")[0]||"—").trim(); cats[c]=(cats[c]||0)+v; }
-      rows.push(m);
+    MOUV.forEach(m=>{ const ms=Number(m.ms)||0; if(ms<from || ms>=to) return; const k=T0[m.source]?m.source:"atelier"; if(m.type==="recette") T0[k][0]+=Number(m.montant)||0; else T0[k][1]+=Number(m.montant)||0; });
+    const el=document.createElement("div"); el.className="rec";
+    const h=document.createElement("div"); h.className="nm"; h.textContent=title; el.appendChild(h);
+    let R=0, D=0;
+    const keys=finSources().filter(k=>k!=="general" || T0.general[0] || T0.general[1]);
+    keys.forEach(k=>{
+      const [r,d]=T0[k]; R+=r; D+=d;
+      const l=document.createElement("div"); l.className="ln";
+      l.textContent=(k==="pressing"?"🧺 ":k==="boutique"?"🛍️ ":k==="general"?"📋 ":"✂️ ")+t("fLine").replace("{a}", SRC_LBL(k)).replace("{r}", money(r)).replace("{d}", money(d)).replace("{s}", money(r-d));
+      if(r-d<0) l.style.color="var(--err)";
+      el.appendChild(l);
     });
-    const rec=T0.atelier[0]+T0.pressing[0]+T0.boutique[0]+T0.general[0];
-    const dep=T0.atelier[1]+T0.pressing[1]+T0.boutique[1]+T0.general[1];
-    $("fi-title").textContent = t("balance")+" — "+t("p"+PERIODE.charAt(0).toUpperCase()+PERIODE.slice(1));
-    $("fi-atelier").textContent  = money(T0.atelier[0])+" / −"+money(T0.atelier[1]);
-    $("fi-pressing").textContent = money(T0.pressing[0])+" / −"+money(T0.pressing[1]);
-    $("fi-boutique").textContent = money(T0.boutique[0])+" / −"+money(T0.boutique[1]);
-    $("fi-general").textContent  = money(T0.general[0])+" / −"+money(T0.general[1]);
-    $("fi-row-general").style.display = (T0.general[0]||T0.general[1]) ? "" : "none";
-    $("fi-rec").textContent = money(rec);
-    $("fi-dep").textContent = money(dep);
-    $("fi-sol").textContent = money(rec-dep);
-    $("fi-sol").style.color = (rec-dep) < 0 ? "var(--err)" : "var(--ok)";
-    fillSrcSelect("fx-src"); fillSrcSelect("fc-src");
-    // catégories proposées
-    const dl=$("fx-cats"); if(dl && !dl.children.length){
-      ["catLoyer","catElec","catEau","catTransport","catFourn","catRepas","catInternet","catSalaires"].forEach(k=>{ const o=document.createElement("option"); o.value=t(k); dl.appendChild(o); });
-    }
-    // dépenses par catégorie
+    const tl=document.createElement("div"); tl.style.cssText="margin-top:6px;font-weight:700;font-size:13.5px;color:"+((R-D)<0?"var(--err)":"var(--ok)");
+    tl.textContent=t("fTotLine").replace("{r}", money(R)).replace("{d}", money(D)).replace("{s}", money(R-D));
+    el.appendChild(tl);
+    return el;
+  }
+  let WP_PER="semaine", WP_SRC="tous", EXP_N=20, REC_N=20, DUP_IDS=null;
+  function renderFinances(){
+    const now=new Date(), loc=LANG_UI==="en"?"en-GB":"fr-FR";
+    const d0=new Date(now); d0.setHours(0,0,0,0);
+    const w0=new Date(d0); w0.setDate(w0.getDate()-((w0.getDay()+6)%7));
+    const w1=new Date(w0); w1.setDate(w1.getDate()+5);
+    const m0=new Date(now.getFullYear(), now.getMonth(), 1), y0=new Date(now.getFullYear(),0,1);
+    const FAR=8.64e15;
+    const fb=$("fb-blocks"); fb.innerHTML="";
+    const sd=d=>d.toLocaleDateString(loc,{day:"2-digit",month:"2-digit"});
+    fb.appendChild(finBlock(t("fBlkToday").replace("{d}", d0.toLocaleDateString(loc)), d0.getTime(), d0.getTime()+86400000));
+    fb.appendChild(finBlock(t("fBlkWeek").replace("{a}", sd(w0)).replace("{b}", w1.toLocaleDateString(loc)), w0.getTime(), w0.getTime()+7*86400000));
+    fb.appendChild(finBlock(t("fBlkMonth").replace("{m}", now.toLocaleDateString(loc,{month:"long",year:"numeric"})), m0.getTime(), new Date(now.getFullYear(), now.getMonth()+1, 1).getTime()));
+    fb.appendChild(finBlock(t("fBlkYear").replace("{y}", now.getFullYear()), y0.getTime(), new Date(now.getFullYear()+1,0,1).getTime()));
+    // tendance 14 jours
+    const days=[]; for(let i=13;i>=0;i--){ const d=new Date(d0); d.setDate(d.getDate()-i); days.push({ t:d.getTime(), v:0 }); }
+    MOUV.forEach(m=>{ if(m.type!=="recette") return; const ms=Number(m.ms)||0; const k=days.findIndex(x=>ms>=x.t && ms<x.t+86400000); if(k>=0) days[k].v+=Number(m.montant)||0; });
+    const mx=Math.max(1, ...days.map(x=>x.v));
+    const tr=$("ftrend"); tr.innerHTML="";
+    const big=document.createElement("div"); big.innerHTML='<span style="font:700 26px Georgia,serif;color:var(--ok)">'+escH(money(days[13].v))+'</span> <span style="color:var(--muted);font-size:13px">'+escH(t("fTodayAmt"))+'</span>'; tr.appendChild(big);
+    const bars=document.createElement("div"); bars.style.cssText="display:flex;align-items:flex-end;gap:4px;height:90px;margin-top:10px";
+    days.forEach(x=>{ const b0=document.createElement("div"); b0.title=new Date(x.t).toLocaleDateString(loc)+" · "+money(x.v); b0.style.cssText="flex:1;border-radius:4px 4px 0 0;background:"+(x.v?"var(--ok)":"var(--line2)")+";height:"+Math.max(3, Math.round(86*x.v/mx))+"px"; bars.appendChild(b0); });
+    tr.appendChild(bars);
+    const ax=document.createElement("div"); ax.style.cssText="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px";
+    ax.innerHTML="<span>"+escH(sd(new Date(days[0].t)))+"</span><span>"+escH(sd(new Date(days[13].t)))+"</span>"; tr.appendChild(ax);
+    // qui a payé
+    const pFrom = WP_PER==="jour" ? d0.getTime() : WP_PER==="semaine" ? w0.getTime() : m0.getTime();
+    const recs=MOUV.filter(m=>m.type==="recette" && (Number(m.ms)||0)>=pFrom && (Number(m.ms)||0)<d0.getTime()+86400000);
+    $("wp-per").querySelectorAll("button").forEach(x=>x.classList.toggle("on", x.getAttribute("data-p")===WP_PER));
+    const srcB=$("wp-src"); srcB.innerHTML="";
+    ["tous"].concat(finSources().filter(k=>k!=="general")).forEach(k=>{
+      const n=k==="tous" ? recs.length : recs.filter(m=>(m.source||"atelier")===k).length;
+      const bt=document.createElement("button"); bt.type="button"; bt.textContent=(k==="tous"?t("pzAll"):SRC_LBL(k))+" ("+n+")";
+      bt.classList.toggle("on", k===WP_SRC); bt.addEventListener("click", ()=>{ WP_SRC=k; renderFinances(); }); srcB.appendChild(bt);
+    });
+    const shown=recs.filter(m=>WP_SRC==="tous" || (m.source||"atelier")===WP_SRC).sort((a,b)=>(Number(b.ms)||0)-(Number(a.ms)||0));
+    let sum=0; shown.forEach(m=>{ sum+=Number(m.montant)||0; });
+    $("wp-n").textContent=shown.length; $("wp-sum").textContent=money(sum);
+    const box=$("mv-list"); box.innerHTML=""; $("mv-empty").hidden = shown.length>0;
+    shown.forEach(m=>box.appendChild(mvRow(m, false)));
+    // jour par jour (mois en cours)
+    const dayMap={};
+    MOUV.forEach(m=>{ const ms=Number(m.ms)||0; if(ms<m0.getTime() || ms>=d0.getTime()+86400000) return; const k=new Date(ms).getDate(); dayMap[k]=dayMap[k]||{ atelier:0, pressing:0, boutique:0, general:0, dep:0 }; if(m.type==="recette") dayMap[k][m.source&&dayMap[k][m.source]!==undefined?m.source:"atelier"]+=Number(m.montant)||0; else dayMap[k].dep+=Number(m.montant)||0; });
+    const fd=$("fday"); fd.innerHTML="";
+    const dk=Object.keys(dayMap).map(Number).sort((a,b)=>b-a);
+    if(!dk.length){ const e=document.createElement("div"); e.className="empty"; e.style.padding="8px 0"; e.textContent=t("fNoData"); fd.appendChild(e); }
+    dk.forEach(k=>fd.appendChild(periodCard(new Date(now.getFullYear(), now.getMonth(), k).toLocaleDateString(loc,{weekday:"long",day:"numeric",month:"long"}), dayMap[k])));
+    // bilan annuel mois par mois
+    const monMap={};
+    MOUV.forEach(m=>{ const ms=Number(m.ms)||0; if(ms<y0.getTime()) return; const dd=new Date(ms); if(dd.getFullYear()!==now.getFullYear()) return; const k=dd.getMonth(); monMap[k]=monMap[k]||{ atelier:0, pressing:0, boutique:0, general:0, dep:0 }; if(m.type==="recette") monMap[k][m.source&&monMap[k][m.source]!==undefined?m.source:"atelier"]+=Number(m.montant)||0; else monMap[k].dep+=Number(m.montant)||0; });
+    const fm=$("fmonth"); fm.innerHTML="";
+    const mk2=Object.keys(monMap).map(Number).sort((a,b)=>b-a);
+    if(!mk2.length){ const e=document.createElement("div"); e.className="empty"; e.style.padding="8px 0"; e.textContent=t("fNoData"); fm.appendChild(e); }
+    mk2.forEach(k=>{ const nm=new Date(now.getFullYear(),k,1).toLocaleDateString(loc,{month:"long",year:"numeric"}); fm.appendChild(periodCard(nm.charAt(0).toUpperCase()+nm.slice(1), monMap[k])); });
+    // dépenses par catégorie (ce mois)
+    const cats={};
+    MOUV.forEach(m=>{ if(m.type!=="depense") return; const ms=Number(m.ms)||0; if(ms<m0.getTime() || ms>=d0.getTime()+86400000) return; const c=(m.categorie||String(m.label||"").split(" — ")[0]||"—").trim(); cats[c]=(cats[c]||0)+(Number(m.montant)||0); });
     const cb=$("fcat-list"); cb.innerHTML="";
     const ck=Object.keys(cats).sort((a,b)=>cats[b]-cats[a]);
     if(!ck.length){ const e=document.createElement("div"); e.className="empty"; e.style.padding="10px 0"; e.textContent=t("fNoExp"); cb.appendChild(e); }
-    ck.forEach(k=>{
-      const r=document.createElement("div"); r.className="mline";
-      const a1=document.createElement("span"); a1.className="k"; a1.textContent=k;
-      const a2=document.createElement("span"); a2.className="v"; a2.style.color="var(--err)"; a2.textContent=money(cats[k]);
-      r.appendChild(a1); r.appendChild(a2); cb.appendChild(r);
-    });
-    // qui a payé — nom par nom
-    $("mv-filter").querySelectorAll("button").forEach(x=>x.classList.toggle("on", x.getAttribute("data-f")===MV_FILTER));
-    const box=$("mv-list"); box.innerHTML="";
-    const shown=rows.filter(m=>MV_FILTER==="tous" || m.type===MV_FILTER).sort((a,b)=>(Number(b.ms)||0)-(Number(a.ms)||0));
-    $("mv-empty").hidden = shown.length>0;
-    shown.slice(0,300).forEach(m=>{
-      const el=document.createElement("div"); el.className="rec mvrow";
-      const g=document.createElement("div"); g.className="grow";
-      const nm=document.createElement("div"); nm.className="nm";
-      const sv=signed(m);
-      nm.textContent = (sv>=0 ? "+ " : "− ") + money(Math.abs(sv));
-      nm.style.color = sv>=0 ? "var(--ok)" : "var(--err)";
-      const l1=document.createElement("div"); l1.className="ln"; l1.textContent=(m.label||"—")+" · "+SRC_LBL(m.source);
-      const l2=document.createElement("div"); l2.className="ln"; l2.textContent=fmtWhen(m.ms);
-      g.appendChild(nm); g.appendChild(l1); g.appendChild(l2); el.appendChild(g);
-      if(m.id){
-        const x=document.createElement("button"); x.className="x"; x.type="button"; x.textContent="✕";
-        x.addEventListener("click", async ()=>{
-          if(!confirm(t("fDelQ").replace("{v}", (sv>=0?"+":"−")+money(Math.abs(sv))+" · "+(m.label||"")))) return;
-          if(!await askCode()) return;
-          MOUV=MOUV.filter(y=>y!==m); renderFinances();
-          deleteDoc(doc(db,"boutiques",BID,"mouvements",m.id)).catch(e=>{ MOUV.push(m); MOUV.sort((a,b)=>(Number(b.ms)||0)-(Number(a.ms)||0)); renderFinances(); alert(t("ptSaveFail").replace("{e}", (e&&(e.code||e.message))||"?")); });
-        });
-        el.appendChild(x);
-      }
-      box.appendChild(el);
-    });
-    // jour par jour (mois en cours)
-    const now=new Date(), mStart=new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-    const days={};
-    MOUV.forEach(m=>{ const ms=Number(m.ms)||0; if(ms<mStart) return; const d=new Date(ms).getDate(); days[d]=days[d]||[0,0]; if(m.type==="recette") days[d][0]+=Number(m.montant)||0; else days[d][1]+=Number(m.montant)||0; });
-    $("fday").innerHTML=""; $("fday").appendChild(ftable(t("fDay"), Object.keys(days).map(Number).sort((a,b)=>b-a).map(d=>[String(d).padStart(2,"0")+" "+monthName(now.getMonth()), days[d][0], days[d][1]])));
-    // année mois par mois
-    const yStart=new Date(now.getFullYear(),0,1).getTime(), months={};
-    MOUV.forEach(m=>{ const ms=Number(m.ms)||0; if(ms<yStart) return; const k=new Date(ms).getMonth(); months[k]=months[k]||[0,0]; if(m.type==="recette") months[k][0]+=Number(m.montant)||0; else months[k][1]+=Number(m.montant)||0; });
-    $("fmonth").innerHTML=""; $("fmonth").appendChild(ftable(t("fMonth"), Object.keys(months).map(Number).sort((a,b)=>b-a).map(k=>[monthName(k)+" "+now.getFullYear(), months[k][0], months[k][1]])));
+    ck.forEach(k=>{ const r=document.createElement("div"); r.className="mline"; const a1=document.createElement("span"); a1.className="k"; a1.textContent=k; const a2=document.createElement("span"); a2.className="v"; a2.style.color="var(--err)"; a2.textContent=money(cats[k]); r.appendChild(a1); r.appendChild(a2); cb.appendChild(r); });
+    // dépenses / recettes récentes
+    const exps=MOUV.filter(m=>m.type==="depense").sort((a,b)=>(Number(b.ms)||0)-(Number(a.ms)||0));
+    const el1=$("fexp-list"); el1.innerHTML=""; exps.slice(0,EXP_N).forEach(m=>el1.appendChild(mvRow(m, true)));
+    if(exps.length>EXP_N){ const mb=document.createElement("button"); mb.type="button"; mb.className="ghost"; mb.textContent=t("fMore")+" ("+(exps.length-EXP_N)+")"; mb.addEventListener("click", ()=>{ EXP_N+=40; renderFinances(); }); el1.appendChild(mb); }
+    const rcs=MOUV.filter(m=>m.type==="recette").sort((a,b)=>(Number(b.ms)||0)-(Number(a.ms)||0));
+    const el2=$("frec-list"); el2.innerHTML=""; rcs.slice(0,REC_N).forEach(m=>el2.appendChild(mvRow(m, false)));
+    if(rcs.length>REC_N){ const mb=document.createElement("button"); mb.type="button"; mb.className="ghost"; mb.textContent=t("fMore")+" ("+(rcs.length-REC_N)+")"; mb.addEventListener("click", ()=>{ REC_N+=40; renderFinances(); }); el2.appendChild(mb); }
+    fillSrcSelect("fx-src"); fillSrcSelect("fc-src");
+    const dl=$("fx-cats"); if(dl && !dl.children.length){
+      ["catLoyer","catElec","catEau","catTransport","catFourn","catRepas","catInternet","catSalaires"].forEach(k=>{ const o=document.createElement("option"); o.value=t(k); dl.appendChild(o); });
+    }
     renderFixed(); renderWages();
   }
+  function periodCard(title, v){
+    const el=document.createElement("div"); el.className="rec";
+    const h=document.createElement("div"); h.className="nm"; h.textContent=title; el.appendChild(h);
+    const parts=finSources().filter(k=>k!=="general").map(k=>SRC_LBL(k)+" : "+money(v[k]));
+    if(v.general) parts.push(SRC_LBL("general")+" : "+money(v.general));
+    const l1=document.createElement("div"); l1.className="ln"; l1.textContent=parts.join(" · "); el.appendChild(l1);
+    const rec=v.atelier+v.pressing+v.boutique+v.general;
+    const l2=document.createElement("div"); l2.className="ln"; l2.style.fontWeight="700";
+    l2.innerHTML=escH(t("fRec"))+" : "+escH(money(rec))+" · "+escH(t("fDep"))+" : "+escH(money(v.dep))+' · <span style="color:'+((rec-v.dep)<0?"var(--err)":"var(--ok)")+'">'+escH(t("fSol"))+" : "+escH(money(rec-v.dep))+"</span>";
+    el.appendChild(l2); return el;
+  }
+  function mvRow(m, isExp){
+    const el=document.createElement("div"); el.className="rec mvrow";
+    if(DUP_IDS && DUP_IDS.has(m)) el.style.borderColor="var(--err)";
+    const g=document.createElement("div"); g.className="grow";
+    const nm=document.createElement("div"); nm.className="nm";
+    const sv=signed(m);
+    nm.textContent=(isExp ? ((m.categorie||String(m.label||"").split(" — ")[0]||"—")+" — ") : SRC_LBL(m.source)+" — ")+money(Math.abs(Number(m.montant)||0));
+    nm.style.color = sv>=0 ? "var(--ok)" : "var(--err)";
+    const l1=document.createElement("div"); l1.className="ln"; l1.textContent=(isExp?SRC_LBL(m.source)+" · ":"")+fmtWhen(m.ms).split(" ·")[0];
+    const l2=document.createElement("div"); l2.className="ln"; l2.textContent=m.label||"";
+    g.appendChild(nm); g.appendChild(l1); if(m.label) g.appendChild(l2); el.appendChild(g);
+    if(m.id){
+      const col=document.createElement("div"); col.style.cssText="display:flex;flex-direction:column;gap:6px";
+      if(isExp){
+        const fx=document.createElement("button"); fx.className="x"; fx.type="button"; fx.textContent="✏️";
+        fx.addEventListener("click", async ()=>{
+          if(!await askCode()) return;
+          const v=prompt(t("fFixAsk").replace("{l}", m.label||""), String(m.montant)); if(v===null) return;
+          const nv=parseFloat(String(v).replace(",", ".")); if(isNaN(nv) || nv<=0){ alert(t("amountRequired")); return; }
+          m.montant=nv; renderFinances();
+          setDoc(doc(db,"boutiques",BID,"mouvements",m.id), { montant:nv }, { merge:true }).catch(function(){});
+        });
+        col.appendChild(fx);
+      }
+      const x=document.createElement("button"); x.className="x"; x.type="button"; x.textContent="✕";
+      x.addEventListener("click", async ()=>{
+        if(!confirm(t("fDelQ").replace("{v}", money(m.montant)+" · "+(m.label||"")))) return;
+        if(!await askCode()) return;
+        MOUV=MOUV.filter(y=>y!==m); renderFinances();
+        deleteDoc(doc(db,"boutiques",BID,"mouvements",m.id)).catch(e=>{ MOUV.push(m); MOUV.sort((a,b)=>(Number(b.ms)||0)-(Number(a.ms)||0)); renderFinances(); alert(t("ptSaveFail").replace("{e}", (e&&(e.code||e.message))||"?")); });
+      });
+      col.appendChild(x); el.appendChild(col);
+    }
+    return el;
+  }
+  $("wp-per").querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{ WP_PER=b.getAttribute("data-p"); renderFinances(); }));
+  $("fdup-btn").addEventListener("click", ()=>{
+    const seen={}, dups=new Set();
+    MOUV.filter(m=>m.type==="depense").forEach(m=>{ const k=dayKey(Number(m.ms)||0)+"|"+(Number(m.montant)||0)+"|"+String(m.label||"").toLowerCase().trim(); if(seen[k]){ dups.add(seen[k]); dups.add(m); } else seen[k]=m; });
+    DUP_IDS=dups.size?dups:null; EXP_N=Math.max(EXP_N, 200); renderFinances();
+    alert(dups.size ? t("fDupFound").replace("{n}", dups.size) : t("fDupNone"));
+  });
+  $("fx-spread").addEventListener("click", ()=>{
+    const msg=$("fx-msg");
+    const cat=$("fx-cat").value.trim(), v=$("fx-amt").value.trim(), amt=parseFloat(v);
+    if(!cat || v==="" || isNaN(amt) || amt<=0){ msg.textContent=t("expenseRequired"); msg.className="msg err show"; return; }
+    const nv=prompt(t("fSpreadAsk").replace("{v}", money(amt)), "12"); if(nv===null) return;
+    const n=Math.max(1, Math.min(60, parseInt(nv,10)||0)); if(!n) return;
+    const per=Math.round(amt/n), desc=$("fx-desc").value.trim(), src=$("fx-src").value||"general";
+    const d=$("fx-date").value; const base=/^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(d+"T12:00:00") : new Date();
+    for(let i=0;i<n;i++){
+      const dt=new Date(base.getFullYear(), base.getMonth()+i, Math.min(base.getDate(), 28), 12);
+      addMouv("depense", src, i===n-1 ? amt-per*(n-1) : per, cat+(desc?" — "+desc:"")+" ("+(i+1)+"/"+n+")", { categorie:cat, ms:dt.getTime() });
+    }
+    MOUV.sort((a,b)=>(Number(b.ms)||0)-(Number(a.ms)||0));
+    $("fx-cat").value=""; $("fx-amt").value=""; $("fx-desc").value="";
+    msg.textContent=t("fSpreadDone").replace("{n}", n).replace("{v}", money(per)); msg.className="msg ok show"; setTimeout(()=>msg.classList.remove("show"), 5000);
+    renderLists();
+  });
   function ftable(first, data){
     if(!data.length){ const e=document.createElement("div"); e.className="empty"; e.style.padding="10px 0"; e.textContent=t("fNoData"); return e; }
     const tb=document.createElement("table"); tb.className="ftab";
@@ -3088,7 +3204,6 @@
     const f=document.createElement("div"); f.className="sub"; f.style.cssText="margin-top:10px;font-size:13px;color:var(--muted)";
     f.textContent=t("fTotalMonth").replace("{a}", money(paidTot)).replace("{b}", money(tot)); box.appendChild(f);
   }
-  $("mv-filter").querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{ MV_FILTER=b.getAttribute("data-f"); renderFinances(); }));
   function dayISO(offset){ const d=new Date(); d.setDate(d.getDate()-offset); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
   $("fx-when").querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{ $("fx-date").value=dayISO(Number(b.getAttribute("data-d"))); paintWhen(); }));
   function paintWhen(){ const v=$("fx-date").value; $("fx-when").querySelectorAll("button").forEach(b=>b.classList.toggle("on", v===dayISO(Number(b.getAttribute("data-d"))))); }
@@ -4214,11 +4329,13 @@
         pressing: arr(d.pressing).filter(x=>x && x.numero && x.clienteName),
         atelier:  arr(d.atelier).filter(x=>x && x.numero && x.clienteName),
         clientes: arr(d.clientes).filter(x=>x && x.name),
-        salaries: arr(d.salaries).filter(x=>x && x.nom)
+        salaries: arr(d.salaries).filter(x=>x && x.nom),
+        mouvements: arr(d.mouvements).filter(x=>x && x.ref && (x.type==="recette"||x.type==="depense") && Number(x.montant))
       };
       let du=0; IMP.pressing.concat(IMP.atelier).forEach(x=>{ du+=Math.max(0,(Number(x.prix)||0)-(Number(x.paye)||0)); });
       $("imp-sum").textContent=t("impSum2").replace("{a}",IMP.atelier.length).replace("{p}",IMP.pressing.length)
-        .replace("{c}",IMP.clientes.length).replace("{s}",IMP.salaries.length).replace("{r}",money(du));
+        .replace("{c}",IMP.clientes.length).replace("{s}",IMP.salaries.length).replace("{r}",money(du))
+        + (IMP.mouvements.length ? " "+t("impMoves").replace("{n}", IMP.mouvements.length) : "");
       $("imp-box").hidden=false;
     }catch(e){ m.textContent=t("impBad"); m.className="msg err show"; }
   });
@@ -4276,10 +4393,19 @@
           articles:[], resume:String(x.resume||""), prix:Number(x.prix)||0, paye:Number(x.paye)||0,
           statut:PZ_STEPS.indexOf(x.statut)!==-1 ? x.statut : "recu", retrait:String(x.retrait||""),
           createdAtMs:Number(x.createdAtMs)||now, importe:true, updatedAt:serverTimestamp() } ])],
+      ["impSecMoves", IMP.mouvements.map(x=>[ doc(db,"boutiques",BID,"mouvements","imp-mv-"+String(x.ref).replace(/[^A-Za-z0-9_-]/g,"")),
+        Object.assign({ type:x.type, source:["atelier","pressing","boutique","general"].indexOf(x.source)!==-1?x.source:"atelier",
+          montant:Number(x.montant)||0, label:String(x.label||""), ms:Number(x.ms)||now, importe:true },
+          x.categorie ? { categorie:String(x.categorie) } : {}) ])],
       ["impSecStaff", IMP.salaries.map(x=>[ doc(db,"boutiques",BID,"salaries","imp-sal-"+impHash(String(x.nom).toLowerCase())),
         { nom:String(x.nom), poste:String(x.poste||""), phone:String(x.phone||""), salaire:Number(x.salaire)||0,
           createdAtMs:now, importe:true, updatedAt:serverTimestamp() } ])]
     ];
+    // Ce qui existe déjà dans SanaaPro n'est jamais écrasé : depuis le transfert,
+    // c'est SanaaPro qui fait foi (un paiement noté ici ne doit pas être effacé).
+    const have=new Set([].concat(COMMANDES, PRESS, CLIENTES, SALARIES, MOUV).map(x=>x && x.id).filter(Boolean));
+    let skipped=0;
+    steps.forEach(st=>{ const before=st[1].length; st[1]=st[1].filter(o=>!have.has(o[0].id)); skipped+=before-st[1].length; });
     const done={}, errs=[];
     for(const [lab, ops] of steps){
       done[lab]=0;
@@ -4291,6 +4417,8 @@
     try{ await loadAll(); }catch(e){}
     m.textContent=t("impDone2").replace("{a}",done.impSecAtelier).replace("{p}",done.impSecPressing)
       .replace("{c}",done.impSecClients).replace("{s}",done.impSecStaff)
+      + (done.impSecMoves ? " "+t("impMoves").replace("{n}", done.impSecMoves) : "")
+      + (skipped ? " "+t("impSkipped").replace("{n}", skipped) : "")
       + (errs.length ? " "+t("impSomeFail").replace("{ko}",errs.length).replace("{e}",errs.join(" · ")) : "");
     m.className="msg "+(errs.length?"err":"ok")+" show";
     btn.disabled=false;
