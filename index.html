@@ -247,6 +247,16 @@
     body.printbadges .pt-badge button{ display:none !important }
     body.printbadges .pt-badge{ break-inside:avoid; border:1px dashed #888 }
   }
+  .ph-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(86px,1fr)); gap:8px; margin-top:8px; }
+  .ph-item{ position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--line2); aspect-ratio:1; background:#111; }
+  .ph-item img{ width:100%; height:100%; object-fit:cover; display:block; cursor:zoom-in; }
+  .ph-item .tag{ position:absolute; left:4px; bottom:4px; background:rgba(0,0,0,.65); color:#fff; font-size:10.5px; padding:2px 6px; border-radius:6px; }
+  .ph-item .x{ position:absolute; right:4px; top:4px; width:24px; height:24px; border-radius:50%; border:none; background:rgba(0,0,0,.7); color:#fff; font-size:13px; cursor:pointer; }
+  .ph-btns{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .ph-btns label{ flex:1 1 140px; display:flex; align-items:center; justify-content:center; gap:6px; padding:11px 8px; border:1px dashed var(--gold); border-radius:10px; color:var(--gold); font-size:13.5px; cursor:pointer; text-transform:none; letter-spacing:0; margin:0; }
+  .ph-btns input{ display:none; }
+  .ph-view{ position:fixed; inset:0; z-index:70; background:rgba(0,0,0,.92); display:flex; align-items:center; justify-content:center; padding:16px; }
+  .ph-view img{ max-width:100%; max-height:100%; border-radius:8px; }
   .art-row{ display:grid; grid-template-columns:1fr 96px 36px; gap:6px; margin-top:6px; }
   .art-row input{ margin:0; }
   .art-row button{ border:1px solid var(--line2); border-radius:9px; background:none; color:var(--err); cursor:pointer; font-size:15px; }
@@ -1035,6 +1045,15 @@
       <div class="row" id="c-gift-row"><span class="k" data-i18n="giftFor">Cadeau pour</span><span class="v" id="c-gift"></span></div>
       <div class="row" id="c-notes-row"><span class="k" data-i18n="notes">Notes</span><span class="v" id="c-notes"></span></div>
     </div>
+    <div class="card" id="c-ph-card">
+      <h2 data-i18n="phTitle">Photos du tissu et du modèle</h2>
+      <div class="ph-grid" id="c-ph"></div>
+      <div class="ph-btns">
+        <label><input type="file" id="c-ph-tissu" accept="image/*" multiple><span data-i18n="phFabric">📷 Photo du tissu</span></label>
+        <label><input type="file" id="c-ph-modele" accept="image/*" multiple><span data-i18n="phModel">🖼️ Modèle (galerie)</span></label>
+      </div>
+      <div class="msg" id="c-ph-msg"></div>
+    </div>
     <div class="card" id="c-vt-card">
       <h2 data-i18n="vtTitle">Vêtements</h2>
       <p style="margin:0 0 4px;font-size:13px;color:var(--muted)" data-i18n="vtHint">Touchez un vêtement quand il est terminé. Quand tout est fait, la commande passe à « Prêt ».</p>
@@ -1125,6 +1144,12 @@
       </div>
       <label data-i18n="notesOpt">Notes (optionnel)</label>
       <textarea id="cf-notes" rows="2" data-i18n-ph="orderNotesPh" placeholder="Couleur, broderie, remarques…"></textarea>
+      <label data-i18n="phTitle">Photos du tissu et du modèle</label>
+      <div class="ph-btns">
+        <label><input type="file" id="cf-ph-tissu" accept="image/*" multiple><span data-i18n="phFabric">📷 Photo du tissu</span></label>
+        <label><input type="file" id="cf-ph-modele" accept="image/*" multiple><span data-i18n="phModel">🖼️ Modèle (galerie)</span></label>
+      </div>
+      <div class="ph-grid" id="cf-ph"></div>
     </div>
     <div class="card">
       <h2 data-i18n="measures">Mesures (cm)</h2>
@@ -1343,6 +1368,9 @@
       stCodeUsed:"Ce code est déjà utilisé par un autre employé.", stCodeNone:"Pas de code de pointage", stCodeSet:"Code de pointage : ••••",
       stCodeBtn:"Changer le code de pointage", stCodeAsk:"Nouveau code à 4 chiffres pour {n} :",
       ptHint:"Tapez votre code à 4 chiffres", ptExit:"Quitter le mode tablette", ptKiosk:"Mode tablette (plein écran)",
+      phTitle:"Photos du tissu et du modèle", phFabric:"📷 Photo du tissu", phModel:"🖼️ Modèle (galerie)", phTagFabric:"Tissu", phTagModel:"Modèle",
+      phNone:"Aucune photo pour cette commande.", phLoading:"Chargement des photos…", phSaving:"Envoi des photos…", phSaved:"Photo(s) enregistrée(s).",
+      phDelQ:"Supprimer cette photo ?", phFail:"Photo non enregistrée : {e}",
       csEncours:"⏳ En cours", csPret:"✅ Prêts", csImpaye:"💰 Impayés", csTermine:"📦 Terminés", csTout:"Tout voir",
       csMonth:"<b>Ce mois</b> — {n} commande(s) · Total {t} · Encaissé {e}", csNone:"Aucune commande ici.",
       qTrack:"🔗 Envoyer le lien de suivi", qCopy:"📋 Copier le lien de suivi", qCopied:"Lien copié : {v}",
@@ -1600,6 +1628,9 @@
       stCodeUsed:"This code is already used by another employee.", stCodeNone:"No clock-in code", stCodeSet:"Clock-in code: ••••",
       stCodeBtn:"Change clock-in code", stCodeAsk:"New 4-digit code for {n}:",
       ptHint:"Enter your 4-digit code", ptExit:"Exit tablet mode", ptKiosk:"Tablet mode (full screen)",
+      phTitle:"Fabric and model photos", phFabric:"📷 Fabric photo", phModel:"🖼️ Model (gallery)", phTagFabric:"Fabric", phTagModel:"Model",
+      phNone:"No photos for this order.", phLoading:"Loading photos…", phSaving:"Sending photos…", phSaved:"Photo(s) saved.",
+      phDelQ:"Delete this photo?", phFail:"Photo not saved: {e}",
       csEncours:"⏳ In progress", csPret:"✅ Ready", csImpaye:"💰 Unpaid", csTermine:"📦 Finished", csTout:"See all",
       csMonth:"<b>This month</b> — {n} order(s) · Total {t} · Collected {e}", csNone:"No orders here.",
       qTrack:"🔗 Send the tracking link", qCopy:"📋 Copy the tracking link", qCopied:"Link copied: {v}",
@@ -2232,7 +2263,7 @@
   async function loadAll(){
     try{
       const s = await getDocsSmart(query(collection(db,"boutiques",BID,"clientes"), orderBy("name")));
-      CLIENTES=[]; s.forEach(d=>{ const c=d.data(); CLIENTES.push(Object.assign({ id:d.id }, c)); });
+      CLIENTES=[]; s.forEach(d=>{ const c=d.data(); if(c && c.photo) return; CLIENTES.push(Object.assign({ id:d.id }, c)); });
     }catch(e){}
     try{
       const s = await getDocsSmart(collection(db,"boutiques",BID,"commandes"));
@@ -3802,6 +3833,75 @@
     const m=$("p-msg"); m.textContent=t("qCopied").replace("{v}", u); m.className="msg ok show"; setTimeout(()=>m.classList.remove("show"), 6000);
   });
 
+  // =================== PHOTOS DU TISSU ET DU MODÈLE ===================
+  // Pas de Cloud Storage (carte bancaire exigée) : chaque photo est compressée dans le
+  // navigateur et rangée dans un petit document à part, sans champ "name", dans la
+  // sous-collection clientes. Le chargement des clientes (orderBy "name") ne les lit donc
+  // jamais : la liste reste légère. On les charge seulement à l'ouverture d'une commande.
+  let CF_PH=[];   // photos en attente dans le formulaire : { role, data }
+  const PH_CACHE={};
+  async function addPhotos(files, role, list){
+    for(const f of Array.from(files||[])){
+      try{ list.push({ role, data: await compressImage(f, 1100, 0.62) }); }catch(e){}
+    }
+  }
+  function phThumb(box, p, onDel){
+    const it=document.createElement("div"); it.className="ph-item";
+    const im=document.createElement("img"); im.src=p.data; im.alt="";
+    im.addEventListener("click", ()=>{ const v=document.createElement("div"); v.className="ph-view"; const i2=document.createElement("img"); i2.src=p.data; v.appendChild(i2); v.addEventListener("click", ()=>v.remove()); document.body.appendChild(v); });
+    const tg=document.createElement("span"); tg.className="tag"; tg.textContent=t(p.role==="tissu"?"phTagFabric":"phTagModel");
+    it.appendChild(im); it.appendChild(tg);
+    if(onDel){ const x=document.createElement("button"); x.type="button"; x.className="x"; x.textContent="✕"; x.addEventListener("click", onDel); it.appendChild(x); }
+    box.appendChild(it);
+  }
+  function renderCfPh(){ const box=$("cf-ph"); box.innerHTML=""; CF_PH.forEach((p,i)=>phThumb(box, p, ()=>{ CF_PH.splice(i,1); renderCfPh(); })); }
+  ["tissu","modele"].forEach(role=>{
+    $("cf-ph-"+role).addEventListener("change", async e=>{ await addPhotos(e.target.files, role, CF_PH); e.target.value=""; renderCfPh(); });
+  });
+  async function savePhotos(cmdId, list, msgEl){
+    if(!list.length) return 0;
+    if(msgEl){ msgEl.textContent=t("phSaving"); msgEl.className="msg ok show"; }
+    let ok=0;
+    for(const p of list){
+      const ref=doc(db,"boutiques",BID,"clientes","ph-"+cmdId+"-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
+      const data={ photo:true, cmdId, role:p.role, data:p.data, createdAtMs:Date.now() };
+      try{ await Promise.race([ setDoc(ref, data), timeout(30000) ]); ok++; (PH_CACHE[cmdId]=PH_CACHE[cmdId]||[]).push(Object.assign({ id:ref.id }, data)); }
+      catch(e){ if(msgEl){ msgEl.textContent=t("phFail").replace("{e}", (e&&(e.code||e.message))||"?"); msgEl.className="msg err show"; } }
+    }
+    if(ok && msgEl){ msgEl.textContent=t("phSaved"); msgEl.className="msg ok show"; setTimeout(()=>msgEl.classList.remove("show"), 3000); }
+    const o=COMMANDES.find(x=>x.id===cmdId); if(o && ok){ o.nbPhotos=(Number(o.nbPhotos)||0)+ok; setDoc(doc(db,"boutiques",BID,"commandes",cmdId), { nbPhotos:o.nbPhotos }, { merge:true }).catch(function(){}); }
+    return ok;
+  }
+  async function renderCmdPhotos(id){
+    const box=$("c-ph"); if(!box) return; box.innerHTML="";
+    const draw=()=>{
+      box.innerHTML="";
+      const list=PH_CACHE[id]||[];
+      if(!list.length){ const e=document.createElement("div"); e.className="empty"; e.style.cssText="padding:6px 0;grid-column:1/-1"; e.textContent=t("phNone"); box.appendChild(e); return; }
+      list.forEach(p=>phThumb(box, p, async ()=>{
+        if(!confirm(t("phDelQ"))) return;
+        if(!await askCode()) return;
+        PH_CACHE[id]=list.filter(x=>x!==p); draw();
+        deleteDoc(doc(db,"boutiques",BID,"clientes",p.id)).catch(function(){});
+      }));
+    };
+    if(PH_CACHE[id]){ draw(); return; }
+    const l=document.createElement("div"); l.className="empty"; l.style.cssText="padding:6px 0;grid-column:1/-1"; l.textContent=t("phLoading"); box.appendChild(l);
+    try{
+      const snap=await getDocsSmart(query(collection(db,"boutiques",BID,"clientes"), where("cmdId","==",id)));
+      const arr=[]; snap.forEach(d=>{ const v=d.data(); if(v && v.photo) arr.push(Object.assign({ id:d.id }, v)); });
+      arr.sort((a,b)=>(a.createdAtMs||0)-(b.createdAtMs||0));
+      PH_CACHE[id]=arr;
+    }catch(e){ PH_CACHE[id]=[]; }
+    if(ORDID===id) draw();
+  }
+  ["tissu","modele"].forEach(role=>{
+    $("c-ph-"+role).addEventListener("change", async e=>{
+      if(!ORDID) return; const list=[]; await addPhotos(e.target.files, role, list); e.target.value="";
+      await savePhotos(ORDID, list, $("c-ph-msg")); renderCmdPhotos(ORDID);
+    });
+  });
+
   // =================== COMMANDE DÉTAILLÉE : articles, état par vêtement ===================
   function todayISO(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
   function articlesOf(o){
@@ -4408,6 +4508,7 @@
     if(o.depot){ $("c-depot").textContent=fmtDate(o.depot, LANG_UI); $("c-depot-row").hidden=false; } else $("c-depot-row").hidden=true;
     if(o.beneficiaire){ $("c-gift").textContent=o.beneficiaire+(o.beneficiaireTel?" · "+o.beneficiaireTel:""); $("c-gift-row").hidden=false; } else $("c-gift-row").hidden=true;
     renderVt(o);
+    renderCmdPhotos(id);
     $("q-solde").hidden = resteDe(o)<=0;
     const cur=o.statut||"recu", ci=STEPS.indexOf(cur);
     $("c-steps").querySelectorAll("button").forEach(b=>{
@@ -4568,6 +4669,7 @@
       $("cf-new-name").value=""; $("cf-new-phone").value="";
       $("cf-avance").value=""; $("cf-av-box").hidden=false;
       buildArtRows([{ nom:"", prix:"" }]);
+      CF_PH=[]; renderCfPh();
       $("cf-depot").value=todayISO(); $("cf-done").checked=false; $("cf-done-row").hidden=false;
       $("cf-gift").checked=false; $("cf-gift-name").value=""; $("cf-gift-tel").value=""; $("cf-gift-box").hidden=true;
       TYPE_CF="confection"; paintTypes();
@@ -4592,6 +4694,7 @@
     $("cf-notes").value=o.notes||"";
     buildArtRows(Array.isArray(o.articles) && o.articles.length ? o.articles : [{ nom:o.article||"", prix:(o.prix||o.prix===0)?o.prix:"" }]);
     $("cf-depot").value=o.depot||""; $("cf-done-row").hidden=true;
+    CF_PH=[]; renderCfPh();
     $("cf-gift").checked=!!o.beneficiaire; $("cf-gift-name").value=o.beneficiaire||""; $("cf-gift-tel").value=o.beneficiaireTel||""; $("cf-gift-box").hidden=!o.beneficiaire;
     show("cform");
   }
@@ -4657,6 +4760,7 @@
     if(existing) Object.assign(existing, data);
     else COMMANDES.unshift(Object.assign({ id }, data));
     editingOrd=null;
+    if(CF_PH.length){ const pend=CF_PH.slice(); CF_PH=[]; renderCfPh(); savePhotos(id, pend, $("c-ph-msg")).then(()=>{ if(ORDID===id) renderCmdPhotos(id); }); }
     syncSuivi(COMMANDES.find(x=>x.id===id), id);
     renderLists();
     renderCmd(COMMANDES.find(x=>x.id===id), id);
