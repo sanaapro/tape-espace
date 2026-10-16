@@ -140,7 +140,10 @@
   var T = {
     fr:{
       loading:"Chargement…", hello:"Bonjour {p},", helloNo:"Bonjour,",
-      recu:"Reçu", coupe:"En cours", essayage:"Essayage", pret:"Prêt",
+      recu:"Reçu", coupe:"En cours", essayage:"Essayage", pret:"Prêt", lavage:"Lavage", repassage:"Repassage",
+      h_lavage:"Vos vêtements sont en cours de lavage.", h_repassage:"Vos vêtements sont en cours de repassage.",
+      h_recu_p:"Vos vêtements sont bien arrivés au pressing.", h_pret_p:"Vos vêtements sont prêts. Vous pouvez venir les récupérer.",
+      h_livre_p:"Vous avez récupéré vos vêtements. Merci !", artP:"vêtements", ticket:"Ticket n°", items:"Articles", pickup:"Retrait prévu",
       h_recu:"Votre commande est bien arrivée à l'atelier.",
       h_coupe:"Votre {a} est en cours de confection.",
       h_coupe_ret:"La retouche de votre {a} est en cours.",
@@ -165,7 +168,10 @@
     },
     en:{
       loading:"Loading…", hello:"Hello {p},", helloNo:"Hello,",
-      recu:"Received", coupe:"In progress", essayage:"Fitting", pret:"Ready",
+      recu:"Received", coupe:"In progress", essayage:"Fitting", pret:"Ready", lavage:"Washing", repassage:"Ironing",
+      h_lavage:"Your clothes are being washed.", h_repassage:"Your clothes are being ironed.",
+      h_recu_p:"Your clothes have arrived at the dry cleaner's.", h_pret_p:"Your clothes are ready. You can come and collect them.",
+      h_livre_p:"You have collected your clothes. Thank you!", artP:"clothes", ticket:"Ticket no.", items:"Items", pickup:"Pick-up date",
       h_recu:"Your order has arrived at the workshop.",
       h_coupe:"Your {a} is being made.",
       h_coupe_ret:"Your {a} is being altered.",
@@ -250,19 +256,22 @@
     if(ERR){ showError(ERR); return; }
     if(!DATA) return;
 
+    var P = DATA.kind === "pressing";
+    var STP = P ? ["recu","lavage","repassage","pret"] : STEPS;
     var st = DATA.statut || "recu";
-    var livre = st === "livre";
-    var ci = livre ? STEPS.length : Math.max(0, STEPS.indexOf(st));
-    var art = DATA.article || t.art;
+    var livre = st === "livre" || st === "recupere";
+    var ci = livre ? STP.length : Math.max(0, STP.indexOf(st));
+    var art = DATA.article || (P ? t.artP : t.art);
 
     $("shop").textContent = DATA.boutique || "SanaaPro";
     document.title = (DATA.boutique ? DATA.boutique + " — " : "") + (LANG==="en" ? "Order tracking" : "Suivi de commande");
     $("hello").textContent = DATA.prenom ? t.hello.replace("{p}", DATA.prenom) : t.helloNo;
-    var hk = livre ? "h_livre" : (st==="coupe" && DATA.type==="retouche" ? "h_coupe_ret" : "h_"+st);
+    var hk = P ? (livre ? "h_livre_p" : (st==="recu" ? "h_recu_p" : st==="pret" ? "h_pret_p" : "h_"+st))
+               : (livre ? "h_livre" : (st==="coupe" && DATA.type==="retouche" ? "h_coupe_ret" : "h_"+st));
     $("headline").textContent = (t[hk] || t.h_recu).replace("{a}", art);
 
     var ol = $("thread"); ol.innerHTML = "";
-    STEPS.forEach(function(s, i){
+    STP.forEach(function(s, i){
       var li = document.createElement("li");
       if(i < ci) li.className = "done"; else if(i === ci) li.className = "now";
       var d = document.createElement("div"); d.className = "step"; d.textContent = t[s]; li.appendChild(d);
@@ -271,8 +280,8 @@
     });
 
     var f = $("facts"); f.innerHTML = "";
-    if(DATA.numero) f.appendChild(row(t.receipt, num3(DATA.numero)));
-    if(DATA.article) f.appendChild(row(t.model, DATA.article));
+    if(DATA.numero) f.appendChild(row(P ? t.ticket : t.receipt, num3(DATA.numero)));
+    if(DATA.article) f.appendChild(row(P ? t.items : t.model, DATA.article));
     if(DATA.livraison && !livre){
       var n = daysTo(DATA.livraison), note = "", cls = "";
       if(n !== null && st !== "pret"){
@@ -281,7 +290,7 @@
         else if(n === 1){ note = t.tomorrow; cls = "soon"; }
         else note = t.inDays.replace("{n}", n);
       }
-      f.appendChild(row(t.delivery, fmtDate(DATA.livraison) + (note ? " · " + note : ""), cls));
+      f.appendChild(row(P ? t.pickup : t.delivery, fmtDate(DATA.livraison) + (note ? " · " + note : ""), cls));
     }
     if(DATA.prix !== null && DATA.prix !== undefined){
       f.appendChild(row(t.price, money(DATA.prix)));

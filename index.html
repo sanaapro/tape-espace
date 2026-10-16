@@ -1052,6 +1052,8 @@
         <button type="button" id="q-solde" data-i18n="qSolde">💰 Solde payé</button>
         <button type="button" id="q-receipt" data-i18n="qReceipt">🧾 Renvoyer le reçu</button>
         <button type="button" id="q-resched" data-i18n="qResched">📅 Reporter la livraison</button>
+        <button type="button" id="q-track" data-i18n="qTrack">🔗 Envoyer le lien de suivi</button>
+        <button type="button" id="q-copy" data-i18n="qCopy">📋 Copier le lien de suivi</button>
       </div>
     </div>
     <div class="card">
@@ -1337,6 +1339,8 @@
       stCodeUsed:"Ce code est déjà utilisé par un autre employé.", stCodeNone:"Pas de code de pointage", stCodeSet:"Code de pointage : ••••",
       stCodeBtn:"Changer le code de pointage", stCodeAsk:"Nouveau code à 4 chiffres pour {n} :",
       ptHint:"Tapez votre code à 4 chiffres", ptExit:"Quitter le mode tablette", ptKiosk:"Mode tablette (plein écran)",
+      qTrack:"🔗 Envoyer le lien de suivi", qCopy:"📋 Copier le lien de suivi", qCopied:"Lien copié : {v}",
+      mTrack:"Bonjour {nom}, suivez l'avancement de votre commande chez {boutique} ici :\n{v}", pzTrack:"🔗 Suivi",
       srDue:"Salaires dus", srAdv:"Avances notées", srLeft:"À payer fin de mois", srSalary:"Salaire", srAdvances:"Avances", srRest:"Reste",
       srDays:"Jours présents ce mois : {n}", srAbs:"Absences non annoncées : {n}", srNoAdv:"Aucune avance notée — salaire dû en fin de mois.",
       srAdvBtn:"💰 Noter une avance", srAbsBtn:"📅 Absence non annoncée", srAdvAsk:"Montant de l'avance donnée à {n} :", srAdvLabel:"Avance sur salaire",
@@ -1590,6 +1594,8 @@
       stCodeUsed:"This code is already used by another employee.", stCodeNone:"No clock-in code", stCodeSet:"Clock-in code: ••••",
       stCodeBtn:"Change clock-in code", stCodeAsk:"New 4-digit code for {n}:",
       ptHint:"Enter your 4-digit code", ptExit:"Exit tablet mode", ptKiosk:"Tablet mode (full screen)",
+      qTrack:"🔗 Send the tracking link", qCopy:"📋 Copy the tracking link", qCopied:"Link copied: {v}",
+      mTrack:"Hello {nom}, follow the progress of your order at {boutique} here:\n{v}", pzTrack:"🔗 Tracking",
       srDue:"Wages due", srAdv:"Advances noted", srLeft:"To pay at month end", srSalary:"Wage", srAdvances:"Advances", srRest:"Left",
       srDays:"Days present this month: {n}", srAbs:"Unannounced absences: {n}", srNoAdv:"No advance noted — wage due at month end.",
       srAdvBtn:"💰 Note an advance", srAbsBtn:"📅 Unannounced absence", srAdvAsk:"Advance given to {n}:", srAdvLabel:"Wage advance",
@@ -2511,7 +2517,7 @@
         o.suiviToken = Array.from(a, b => abc[b % 32]).join("");
         setDoc(doc(db,"boutiques",BID,"commandes",id), { suiviToken:o.suiviToken }, { merge:true }).catch(function(){});
       }
-      const local = COMMANDES.find(x=>x.id===id);
+      const local = COMMANDES.find(x=>x.id===id) || PRESS.find(x=>x.id===id);
       if(local && local!==o) local.suiviToken = o.suiviToken;
       _setDoc(doc(db,"suivi",o.suiviToken), {
         bid: BID,
@@ -2520,10 +2526,11 @@
         ...((BOUTIQUE && BOUTIQUE.waveLink) ? { waveLink: BOUTIQUE.waveLink } : {}),
         wave: (BOUTIQUE && BOUTIQUE.wave) || "",
         prenom: String(o.clienteName||"").trim().split(/\s+/)[0] || "",
-        article: o.article || "",
+        article: o.article || o.resume || "",
         type: o.type || "confection",
+        kind: o.kind === "pressing" ? "pressing" : "atelier",
         statut: o.statut || "recu",
-        livraison: o.livraison || null,
+        livraison: o.livraison || o.retrait || null,
         numero: o.numero || null,
         prix: (o.prix || o.prix===0) ? Number(o.prix) : null,
         paye: Number(o.paye) || 0,
@@ -3749,6 +3756,26 @@
   }
   $("sr-month").addEventListener("change", renderWageRecap);
 
+  // =================== LIEN DE SUIVI POUR LE CLIENT ===================
+  function trackMsg(o){
+    return tm("mTrack").replace("{nom}", o.clienteName||"").replace("{boutique}", (BOUTIQUE&&BOUTIQUE.name)||"").replace("{v}", suiviUrl(o));
+  }
+  async function copyText(txt){
+    try{ await navigator.clipboard.writeText(txt); return true; }
+    catch(e){ try{ const ta=document.createElement("textarea"); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); return true; }catch(_){ return false; } }
+  }
+  $("q-track").addEventListener("click", ()=>{
+    if(!ORD || !ORDID) return;
+    const num=waNumber(ORD.clientePhone); if(!num){ alert(t("noPhone")); return; }
+    syncSuivi(ORD, ORDID); openWa(num, trackMsg(ORD));
+  });
+  $("q-copy").addEventListener("click", async ()=>{
+    if(!ORD || !ORDID) return;
+    syncSuivi(ORD, ORDID);
+    const u=suiviUrl(ORD); await copyText(u);
+    const m=$("p-msg"); m.textContent=t("qCopied").replace("{v}", u); m.className="msg ok show"; setTimeout(()=>m.classList.remove("show"), 6000);
+  });
+
   // =================== COMMANDE DÉTAILLÉE : articles, état par vêtement ===================
   function todayISO(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
   function articlesOf(o){
@@ -4096,6 +4123,7 @@
       if(re>0) msg += "\n" + tm("mAmount").replace("{prix}", Math.round(re)).replace("{cur}", cur()) + waveLines();
       else if(o.prix) msg += "\n" + tm("mPaid");
     }
+    if(st!=="recupere" && o.id){ syncSuivi(o, o.id); const su=suiviUrl(o); if(su) msg += "\n\n" + tm("lineTrack").replace("{v}", su); }
     return msg + "\n" + tm("waFoot");
   }
   function pzSend(o){
@@ -4175,6 +4203,7 @@
           const old=o.statut; o.statut=st;
           setDoc(doc(db,"boutiques",BID,"commandes",o.id), { statut:st, updatedAt:serverTimestamp() }, { merge:true })
             .catch(e=>{ o.statut=old; renderLists(); pzFail(e); });
+          if(o.suiviToken) syncSuivi(o, o.id);
           renderLists();
           if(autoNotifyOn() && o.clientePhone) openWa(waNumber(o.clientePhone), pzMessage(o));
         });
@@ -4200,6 +4229,8 @@
       if(o.clientePhone){
         const wb=document.createElement("button"); wb.type="button"; wb.textContent=t("pzWaMsg");
         wb.addEventListener("click", ()=>pzSend(o)); acts.appendChild(wb);
+        const tb=document.createElement("button"); tb.type="button"; tb.textContent=t("pzTrack");
+        tb.addEventListener("click", ()=>{ syncSuivi(o, o.id); openWa(waNumber(o.clientePhone), trackMsg(o)); }); acts.appendChild(tb);
       }
       const fx=document.createElement("button"); fx.type="button"; fx.textContent=t("pzFix");
       fx.addEventListener("click", async ()=>{
