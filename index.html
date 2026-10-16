@@ -275,6 +275,9 @@
   .fchips button{ padding:8px 12px; border-radius:18px; border:1px solid var(--line2); background:none; color:var(--txt); font:inherit; font-size:13px; cursor:pointer; }
   .fchips button.on{ background:var(--gold); border-color:var(--gold); color:#141310; font-weight:700; }
   /* Finances en couleurs : chaque rayon et chaque période a sa couleur, textes plus grands */
+  #due-filter button{ font-size:15px; padding:10px 15px; border-width:2px; border-color:var(--c); color:var(--c); font-weight:600; }
+  #due-filter button.on{ background:var(--c); border-color:var(--c); color:#141310; font-weight:800; }
+  #due-list .rec{ border-left:5px solid var(--c,var(--line2)); }
   #pane-finances .fchips button{ font-size:15px; padding:10px 15px; border-width:2px; border-color:var(--c,var(--line2)); color:var(--c,var(--txt)); font-weight:600; }
   #pane-finances .fchips button.on{ background:var(--c,var(--gold)); border-color:var(--c,var(--gold)); color:#141310; font-weight:800; }
   #wp-per{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
@@ -527,9 +530,9 @@
           <div class="stat"><div class="n" id="due-ready">0</div><div class="l" data-i18n="dueReady">Prêts à récupérer</div></div>
         </div>
         <div class="fchips" id="due-filter" style="margin-top:10px">
-          <button type="button" data-f="tous" data-i18n="pzAll">Tous</button>
-          <button type="button" data-f="atelier" data-i18n="tabAtelier">Atelier</button>
-          <button type="button" data-f="pressing" data-i18n="tabPressing">Pressing</button>
+          <button type="button" data-f="tous" data-i18n="pzAll" style="--c:#e0b43a">Tous</button>
+          <button type="button" data-f="atelier" data-i18n="tabAtelier" style="--c:#4ade80">Atelier</button>
+          <button type="button" data-f="pressing" data-i18n="tabPressing" style="--c:#7dd3fc">Pressing</button>
         </div>
         <div id="due-list"></div>
       </div>
@@ -1246,6 +1249,8 @@
 </div>
 
 <script type="module">
+  const SRC_COLORS={ atelier:"#4ade80", pressing:"#7dd3fc", boutique:"#f472b6", general:"#facc15", tous:"#e0b43a", jour:"#ff9f43", semaine:"#e0b43a", mois:"#a78bfa" };
+  function SRC_COL(k){ return SRC_COLORS[k]||SRC_COLORS.atelier; }
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -2738,14 +2743,14 @@
     const box=$("due-list"); box.innerHTML="";
     if(!list.length){ const e=document.createElement("div"); e.className="empty"; e.style.padding="10px 0"; e.textContent=t("dueNone"); box.appendChild(e); return; }
     (DUE_ALL ? list : list.slice(0,8)).forEach(it=>{
-      const o=it.o, el=document.createElement("div"); el.className="rec";
+      const o=it.o, el=document.createElement("div"); el.className="rec"; el.style.setProperty("--c", SRC_COL(it.kind));
       const top=document.createElement("div"); top.style.cssText="display:flex;justify-content:space-between;gap:8px;align-items:baseline";
       const nm=document.createElement("div"); nm.className="nm"; nm.textContent=(it.kind==="pressing"?"🧺 ":"✂️ ")+(o.clienteName||t("noName"));
       const am=document.createElement("div"); am.style.cssText="font-weight:700;white-space:nowrap;color:"+(it.re>0?"var(--err)":"var(--ok)");
       am.textContent = it.re>0 ? money(it.re) : "✓";
       top.appendChild(nm); top.appendChild(am); el.appendChild(top);
       const l1=document.createElement("div"); l1.className="ln";
-      l1.textContent=t(it.kind==="pressing"?"tabPressing":"tabAtelier")+" · "+fmtNum(o.numero)+(it.art?" · "+it.art.slice(0,60):"");
+      l1.innerHTML='<span class="fpill" style="--c:'+SRC_COL(it.kind)+'">'+escH(t(it.kind==="pressing"?"tabPressing":"tabAtelier"))+"</span> "+escH(fmtNum(o.numero)+(it.art?" · "+it.art.slice(0,60):""));
       el.appendChild(l1);
       const l2=document.createElement("div"); l2.className="ln";
       const bits=[];
@@ -2846,7 +2851,7 @@
         const d=document.createElement("div");
         d.style.cssText="margin:7px 0;padding:10px 12px;border-radius:12px;cursor:pointer;background:linear-gradient(135deg,rgba(255,140,40,.22),rgba(255,190,70,.12));border-left:5px solid #ff8c28;font-size:16px;line-height:1.4";
         const late = kind==="pressing" ? lateDays(o.retrait) : lateDays(o.livraison);
-        const col = kind==="pressing" ? "#38bdf8" : "#ff9f43";
+        const col = SRC_COL(kind);
         d.innerHTML='<div style="font-weight:800;color:#ffe2b8;font-size:17px">'+escH(o.clienteName||"")+'</div>'
           +'<span class="fpill" style="--c:'+col+'">'+(kind==="pressing"?"🧺 ":"✂️ ")+escH(t(kind==="pressing"?"tabPressing":"tabAtelier")+" "+fmtNum(o.numero))+'</span>'
           +(late>0?'<span class="fpill" style="--c:#ff5e3a;color:#fff">⏰ '+escH(t("todoLate").replace("{n}", late))+'</span>':'');
@@ -2988,8 +2993,6 @@
     if(cur0 && finSources().indexOf(cur0)!==-1) sel.value=cur0;
     else if(id==="fc-src") sel.value="general";
   }
-  const SRC_COLORS={ atelier:"#ff9f43", pressing:"#38bdf8", boutique:"#f472b6", general:"#facc15", tous:"#e0b43a", jour:"#4ade80", semaine:"#e0b43a", mois:"#a78bfa" };
-  function SRC_COL(k){ return SRC_COLORS[k]||SRC_COLORS.atelier; }
   function signed(m){ const v=Number(m.montant)||0; return m.type==="recette" ? v : -v; }
   function finBlock(title, from, to, col){
     const T0={ atelier:[0,0], pressing:[0,0], boutique:[0,0], general:[0,0] };
