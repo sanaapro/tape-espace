@@ -206,9 +206,16 @@
       render(); show("board");
     }catch(e){
       const denied = String(e && e.code || e).indexOf("permission-denied") !== -1;
-      $("loading").textContent = denied
-        ? "Lecture refusée par les règles Firestore. Ton compte n'est pas reconnu comme admin : il manque le document /admins/<ton UID> dans la console Firebase."
+      const z=$("loading"); z.textContent="";
+      const p1=document.createElement("div");
+      const who=(auth.currentUser && auth.currentUser.email) || "";
+      p1.textContent = denied
+        ? "Ce compte (" + who + ") n'est pas le compte administrateur. Déconnecte-toi puis connecte-toi avec ton compte admin."
         : "Impossible de lire les abonnements. Réessaie avec une meilleure connexion.";
+      z.appendChild(p1);
+      const bo=document.createElement("button"); bo.className="logout"; bo.textContent="Changer de compte";
+      bo.style.marginTop="18px"; bo.addEventListener("click", ()=>signOut(auth));
+      z.appendChild(bo);
       show("loading");
     }
   }
