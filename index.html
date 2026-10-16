@@ -247,6 +247,24 @@
     body.printbadges .pt-badge button{ display:none !important }
     body.printbadges .pt-badge{ break-inside:avoid; border:1px dashed #888 }
   }
+  .pz-cat{ margin:14px 0 4px; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--gold); font-weight:700 }
+  .pz-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid var(--line) }
+  .pz-row .nm{ font-size:14.5px } .pz-row .pr{ font-size:12.5px; color:var(--muted); margin-top:2px }
+  .pz-q{ display:flex; align-items:center; gap:8px }
+  .pz-q button{ width:36px; height:36px; border-radius:10px; border:1px solid var(--line2); background:none; color:var(--txt); font-size:19px; cursor:pointer; line-height:1 }
+  .pz-q span{ min-width:22px; text-align:center; font-weight:700 }
+  .pz-q.has span{ color:var(--gold) }
+  .pz-tot{ display:flex; justify-content:space-between; align-items:baseline; margin-top:12px; font-size:15px }
+  .pz-tot b{ font-size:20px; color:var(--gold) }
+  .pz-steps{ display:flex; gap:5px; flex-wrap:wrap; margin-top:10px }
+  .pz-steps button{ flex:1 1 auto; padding:7px 6px; border-radius:8px; border:1px solid var(--line2); background:none; color:var(--muted); font:inherit; font-size:12px; cursor:pointer }
+  .pz-steps button.done{ color:var(--txt); border-color:var(--line2); opacity:.6 }
+  .pz-steps button.on{ background:var(--gold); border-color:var(--gold); color:#141310; font-weight:700; opacity:1 }
+  .pz-acts{ display:flex; gap:6px; flex-wrap:wrap; margin-top:10px }
+  .pz-acts button{ padding:8px 11px; border-radius:9px; border:1px solid var(--line2); background:none; color:var(--txt); font:inherit; font-size:13px; cursor:pointer }
+  .pz-trow{ display:grid; grid-template-columns:1fr 1.4fr 80px 34px; gap:6px; margin-top:6px }
+  .pz-trow input{ margin:0; padding:9px 8px; font-size:14px }
+  .pz-trow button{ border:1px solid var(--line2); border-radius:8px; background:none; color:var(--err); cursor:pointer }
   .pt-exit{ display:none; margin:22px auto 0; background:none; border:none; color:#5F5B54; font-size:12px; cursor:pointer; font-family:var(--sans); }
   body.kiosk .pt-exit{ display:block; }
   .otp{ font-family:var(--serif); font-size:34px; color:var(--gold); letter-spacing:8px;
@@ -414,6 +432,7 @@
     <div class="tabs" id="tabs">
       <button data-tab="apercu" data-i18n="tabApercu">Aperçu</button>
       <button data-tab="atelier" data-i18n="tabAtelier">Atelier</button>
+      <button data-tab="pressing" data-i18n="tabPressing">Pressing</button>
       <button data-tab="charge" data-i18n="tabCharge">Charge</button>
       <button data-tab="boutique" data-i18n="tabBoutique">Boutique</button>
       <button data-tab="vitrine" data-i18n="tabVitrine">Vitrine</button>
@@ -485,6 +504,56 @@
       <div id="cmd-empty" class="empty" data-i18n="noOrders" hidden>Aucune commande pour le moment.</div>
     </div>
 
+    <div id="pane-pressing" hidden>
+      <div class="stats3">
+        <div class="stat"><div class="n" id="pz-n-cours">0</div><div class="l" data-i18n="pzInProgress">En cours</div></div>
+        <div class="stat"><div class="n" id="pz-n-prets">0</div><div class="l" data-i18n="pzReadyN">Prêts</div></div>
+        <div class="stat"><div class="n" id="pz-n-du">0</div><div class="l" data-i18n="statDue">À encaisser</div></div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="pzNew">Nouveau dépôt</h2>
+        <label data-i18n="pzClient">Nom du client</label>
+        <input id="pz-nom" type="text" autocomplete="off" data-i18n-ph="pzClientPh" placeholder="Nom complet">
+        <label data-i18n="phoneWa">Téléphone / WhatsApp</label>
+        <input id="pz-tel" type="tel" placeholder="+220 …">
+        <div id="pz-grid"></div>
+        <div class="pz-tot"><span data-i18n="pzTotal">Total</span><b id="pz-total">0</b></div>
+        <div class="mgrid">
+          <div><label data-i18n="pzAdvance">Avance payée</label><input id="pz-avance" type="number" step="1" inputmode="decimal" placeholder="0"></div>
+          <div><label data-i18n="pzPickup">Retrait prévu</label><input id="pz-retrait" type="date"></div>
+        </div>
+        <div class="pz-tot" style="font-size:14px"><span data-i18n="pzRest">Reste à payer</span><span id="pz-reste">0</span></div>
+        <button class="primary" id="pz-add" data-i18n="pzAdd">Valider le dépôt et envoyer le reçu</button>
+        <div class="msg" id="pz-msg"></div>
+        <button class="ghost" id="pz-tarifs" type="button" data-i18n="pzEditPrices">Modifier mes tarifs</button>
+      </div>
+      <div class="card" id="pz-tedit" hidden>
+        <h2 data-i18n="pzPricesT">Mes tarifs pressing</h2>
+        <p style="margin:0;font-size:13px;color:var(--muted)" data-i18n="pzPricesHint">Catégorie, article et prix. Ajoutez, modifiez ou supprimez librement.</p>
+        <div id="pz-tlist"></div>
+        <button class="ghost" id="pz-tadd" type="button" data-i18n="pzAddItem">+ Ajouter un article</button>
+        <button class="primary" id="pz-tsave" type="button" data-i18n="pzSavePrices">Enregistrer les tarifs</button>
+        <button class="ghost" id="pz-tcancel" type="button" data-i18n="cancel">Annuler</button>
+      </div>
+      <div class="card">
+        <h2 data-i18n="quickExpensePz">Dépense rapide — Pressing</h2>
+        <input id="dp-cat" type="text" data-i18n-ph="expCatPzPh" placeholder="Catégorie (ex. savon, javel, électricité)">
+        <input id="dp-amt" type="number" step="1" inputmode="decimal" placeholder="0" style="margin-top:10px">
+        <input id="dp-desc" type="text" data-i18n-ph="expDescPh" placeholder="Description (optionnel)" style="margin-top:10px">
+        <button class="ghost" id="dp-save" data-i18n="saveExpense">Enregistrer la dépense</button>
+        <div class="msg" id="dp-msg"></div>
+      </div>
+      <input id="q-pz" type="search" data-i18n-ph="pzSearchPh" placeholder="Nom, téléphone ou n° de ticket…" style="margin-top:14px">
+      <div class="chips" id="pz-filter" style="margin-top:10px">
+        <button data-f="encours" data-i18n="pzInProgress">En cours</button>
+        <button data-f="pret" data-i18n="pzReadyN">Prêts</button>
+        <button data-f="recupere" data-i18n="pzPicked">Récupérés</button>
+        <button data-f="tous" data-i18n="pzAll">Tous</button>
+      </div>
+      <div id="pz-list"></div>
+      <div id="pz-empty" class="empty" data-i18n="pzNone" hidden>Aucun ticket ici.</div>
+    </div>
+
     <div id="pane-charge" hidden>
       <div class="lock" id="lock-charge" hidden></div>
       <div id="body-charge">
@@ -525,6 +594,15 @@
         <div class="row" style="margin-top:16px"><span class="k" data-i18n="email">Email</span><span class="v" id="d-email"></span></div>
         <div class="row"><span class="k" data-i18n="shopSlug">Identifiant</span><span class="v" id="d-slug"></span></div>
         <p style="margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.5" data-i18n="idNote">L'email de connexion et l'identifiant ne se modifient pas ici.</p>
+      </div>
+      <div class="card">
+        <h2 data-i18n="actTitle">Mes activités</h2>
+        <p style="margin:0 0 6px;font-size:13px;color:var(--muted)" data-i18n="actHint">Choisissez ce que fait votre commerce. Seuls les onglets utiles s'affichent.</p>
+        <div class="chips" id="act-chips">
+          <button type="button" data-act="couture" data-i18n="actCouture">Couture</button>
+          <button type="button" data-act="pressing" data-i18n="actPressing">Pressing</button>
+          <button type="button" data-act="boutique" data-i18n="actBoutique">Boutique</button>
+        </div>
       </div>
       <div class="card">
         <h2 data-i18n="ownerCode">Code propriétaire</h2>
@@ -591,8 +669,9 @@
       </div>
       <div class="card">
         <h2 id="fi-title" data-i18n="balance">Bilan</h2>
-        <div class="row"><span class="k" data-i18n="tabAtelier">Atelier</span><span class="v" id="fi-atelier">—</span></div>
-        <div class="row"><span class="k" data-i18n="tabBoutique">Boutique</span><span class="v" id="fi-boutique">—</span></div>
+        <div class="row" id="fi-row-atelier"><span class="k" data-i18n="tabAtelier">Atelier</span><span class="v" id="fi-atelier">—</span></div>
+        <div class="row" id="fi-row-pressing"><span class="k" data-i18n="tabPressing">Pressing</span><span class="v" id="fi-pressing">—</span></div>
+        <div class="row" id="fi-row-boutique"><span class="k" data-i18n="tabBoutique">Boutique</span><span class="v" id="fi-boutique">—</span></div>
         <div class="mline" style="margin-top:8px;border-top:1px solid var(--line);padding-top:12px">
           <span class="k" data-i18n="income">Recettes</span><span class="v" id="fi-rec" style="color:var(--ok)">0</span>
         </div>
@@ -932,7 +1011,7 @@
   const PRICE_STD = 500, PRICE_PREM = 750;
   const SANAAPRO_WA = "2207628683";
   const STEPS = ["recu","coupe","essayage","pret","livre"];
-  const TABS = ["apercu","atelier","charge","boutique","vitrine","mesures","finances","staff","pointage","visits","reglages"];
+  const TABS = ["apercu","atelier","pressing","charge","boutique","vitrine","mesures","finances","staff","pointage","visits","reglages"];
   const PERIODES = ["jour","semaine","mois","annee"];
   const ROLES = ["roleCouturier","roleCouturiere","roleManager","roleVendeuse","roleApprenti","roleMenagere"];
 
@@ -1068,6 +1147,27 @@
       stCodeUsed:"Ce code est déjà utilisé par un autre employé.", stCodeNone:"Pas de code de pointage", stCodeSet:"Code de pointage : ••••",
       stCodeBtn:"Changer le code de pointage", stCodeAsk:"Nouveau code à 4 chiffres pour {n} :",
       ptHint:"Tapez votre code à 4 chiffres", ptExit:"Quitter le mode tablette", ptKiosk:"Mode tablette (plein écran)",
+      tabPressing:"Pressing", pzInProgress:"En cours", pzReadyN:"Prêts", pzPicked:"Récupérés", pzAll:"Tous",
+      pzNew:"Nouveau dépôt", pzClient:"Nom du client", pzClientPh:"Nom complet", pzTotal:"Total",
+      pzAdvance:"Avance payée", pzPickup:"Retrait prévu", pzRest:"Reste à payer",
+      pzAdd:"Valider le dépôt et envoyer le reçu", pzEditPrices:"Modifier mes tarifs", pzPricesT:"Mes tarifs pressing",
+      pzPricesHint:"Catégorie, article et prix. Ajoutez, modifiez ou supprimez librement.", pzAddItem:"+ Ajouter un article",
+      pzSavePrices:"Enregistrer les tarifs", pzPricesSaved:"Tarifs enregistrés.", pzCat:"Catégorie", pzItem:"Article", pzPrice:"Prix",
+      quickExpensePz:"Dépense rapide — Pressing", expCatPzPh:"Catégorie (ex. savon, javel, électricité)",
+      pzSearchPh:"Nom, téléphone ou n° de ticket…", pzNone:"Aucun ticket ici.",
+      pzNeedName:"Entrez le nom du client.", pzNeedItem:"Choisissez au moins un article.",
+      pzCreated:"Ticket n° {n} créé.", pzTicket:"Ticket", pzPickupOn:"Retrait prévu le {d}",
+      pzRecu:"Reçu", pzLavage:"Lavage", pzRepassage:"Repassage", pzPret:"Prêt", pzRecupere:"Récupéré",
+      pzCash:"Encaisser", pzCashAsk:"Montant reçu de {n} :", pzReceipt:"Reçu WhatsApp", pzDelete:"Supprimer",
+      pzDeleteQ:"Supprimer le ticket n° {n} de {c} ?", pzPaidAll:"Payé", pzDueShort:"Reste {v}",
+      pzWaMsg:"WhatsApp", noPhonePz:"Pas de numéro pour ce client.",
+      actTitle:"Mes activités", actHint:"Choisissez ce que fait votre commerce. Seuls les onglets utiles s'affichent.",
+      actCouture:"Couture", actPressing:"Pressing", actBoutique:"Boutique", actNeedOne:"Gardez au moins une activité.",
+      pmRecu:"Bonjour {nom}, voici votre reçu de dépôt chez {boutique}.", pmLavage:"Bonjour {nom}, vos vêtements sont en cours de lavage chez {boutique}.",
+      pmRepassage:"Bonjour {nom}, vos vêtements sont en cours de repassage chez {boutique}.",
+      pmPret:"Bonjour {nom}, vos vêtements sont prêts. Vous pouvez passer les récupérer chez {boutique}.",
+      pmRecupere:"Merci {nom} d'avoir choisi {boutique}. À très bientôt !",
+      pmTicket:"Ticket n° {v}", pmItems:"Articles : {v}", pmTotal:"Total : {v}", pmAdvance:"Avance : {v}",
       ptScan:"Scanner mon badge", ptAddStaff:"＋ Ajouter un employé", ptModeT:"Comment vos employés pointent",
       ptModeCode:"Code à 4 chiffres", ptModeBadge:"Badge (code-barres)", ptModeBoth:"Les deux",
       ptModeHint:"Avec le badge, l'employé montre sa carte à la caméra du téléphone, ou la passe devant un lecteur de code-barres branché.",
@@ -1256,6 +1356,27 @@
       stCodeUsed:"This code is already used by another employee.", stCodeNone:"No clock-in code", stCodeSet:"Clock-in code: ••••",
       stCodeBtn:"Change clock-in code", stCodeAsk:"New 4-digit code for {n}:",
       ptHint:"Enter your 4-digit code", ptExit:"Exit tablet mode", ptKiosk:"Tablet mode (full screen)",
+      tabPressing:"Dry cleaning", pzInProgress:"In progress", pzReadyN:"Ready", pzPicked:"Collected", pzAll:"All",
+      pzNew:"New drop-off", pzClient:"Customer name", pzClientPh:"Full name", pzTotal:"Total",
+      pzAdvance:"Deposit paid", pzPickup:"Pick-up date", pzRest:"Balance due",
+      pzAdd:"Confirm drop-off and send receipt", pzEditPrices:"Edit my prices", pzPricesT:"My dry-cleaning prices",
+      pzPricesHint:"Category, item and price. Add, change or remove freely.", pzAddItem:"+ Add an item",
+      pzSavePrices:"Save prices", pzPricesSaved:"Prices saved.", pzCat:"Category", pzItem:"Item", pzPrice:"Price",
+      quickExpensePz:"Quick expense — Dry cleaning", expCatPzPh:"Category (e.g. soap, bleach, electricity)",
+      pzSearchPh:"Name, phone or ticket no.…", pzNone:"No tickets here.",
+      pzNeedName:"Enter the customer's name.", pzNeedItem:"Choose at least one item.",
+      pzCreated:"Ticket no. {n} created.", pzTicket:"Ticket", pzPickupOn:"Pick-up on {d}",
+      pzRecu:"Received", pzLavage:"Washing", pzRepassage:"Ironing", pzPret:"Ready", pzRecupere:"Collected",
+      pzCash:"Take payment", pzCashAsk:"Amount received from {n}:", pzReceipt:"WhatsApp receipt", pzDelete:"Delete",
+      pzDeleteQ:"Delete ticket no. {n} for {c}?", pzPaidAll:"Paid", pzDueShort:"Due {v}",
+      pzWaMsg:"WhatsApp", noPhonePz:"No phone number for this customer.",
+      actTitle:"My activities", actHint:"Choose what your business does. Only the useful tabs are shown.",
+      actCouture:"Tailoring", actPressing:"Dry cleaning", actBoutique:"Shop", actNeedOne:"Keep at least one activity.",
+      pmRecu:"Hello {nom}, here is your drop-off receipt from {boutique}.", pmLavage:"Hello {nom}, your clothes are being washed at {boutique}.",
+      pmRepassage:"Hello {nom}, your clothes are being ironed at {boutique}.",
+      pmPret:"Hello {nom}, your clothes are ready. You can collect them at {boutique}.",
+      pmRecupere:"Thank you {nom} for choosing {boutique}. See you soon!",
+      pmTicket:"Ticket no. {v}", pmItems:"Items: {v}", pmTotal:"Total: {v}", pmAdvance:"Deposit: {v}",
       ptScan:"Scan my badge", ptAddStaff:"＋ Add an employee", ptModeT:"How your staff clock in",
       ptModeCode:"4-digit code", ptModeBadge:"Badge (barcode)", ptModeBoth:"Both",
       ptModeHint:"With a badge, the employee shows their card to the phone camera, or passes it in front of a plugged-in barcode reader.",
@@ -1402,6 +1523,7 @@
   let CLIENTES=[], COMMANDES=[], ORD=null, ORDID=null, editingOrd=null;
   let SALARIES=[], VISITEURS=[], POINTAGES=[], ROLE=null;
   let STOCK=[], MOUV=[], PERIODE="jour";
+  let PRESS=[], PZ_CART={}, PZ_FILTER="encours", PZ_EDIT=null;
   const cur = () => (BOUTIQUE && BOUTIQUE.devise) ? BOUTIQUE.devise : CUR;
   const money = n => (Math.round(Number(n)||0)) + " " + cur();
   let GENRE_FORM="femme", GENRE_CF="femme", GENRE_MES="femme", TYPE_CF="confection";
@@ -1776,6 +1898,7 @@
   function renderDashboard(b){
     BOUTIQUE=b;
     try{ applyPtMode(); }catch(e){}
+    try{ applyActivities(); buildPzGrid(); }catch(e){}
     $("d-brand").textContent = b.name || "SanaaPro";
     $("d-owner").textContent = b.ownerName||"";
     $("d-name").textContent = b.name||"";
@@ -1821,7 +1944,9 @@
     }catch(e){}
     try{
       const s = await getDocsSmart(collection(db,"boutiques",BID,"commandes"));
-      COMMANDES=[]; s.forEach(d=>{ COMMANDES.push(Object.assign({ id:d.id }, d.data())); });
+      COMMANDES=[]; PRESS=[];
+      s.forEach(d=>{ const o=Object.assign({ id:d.id }, d.data()); (o.kind==="pressing" ? PRESS : COMMANDES).push(o); });
+      PRESS.sort((a,b)=>(Number(b.createdAtMs)||0)-(Number(a.createdAtMs)||0));
       COMMANDES.sort((a,b)=>{
         const ai=STEPS.indexOf(a.statut||"recu"), bi=STEPS.indexOf(b.statut||"recu");
         if(ai!==bi) return ai-bi;
@@ -2044,7 +2169,8 @@
   function renderLists(){
     $("s-cmd").textContent = COMMANDES.length;
     $("s-cli").textContent = CLIENTES.length;
-    let sdu=0; COMMANDES.forEach(o=>{ sdu += resteDe(o); });
+    let sdu=0; COMMANDES.forEach(o=>{ sdu += resteDe(o); }); PRESS.forEach(o=>{ if(o.statut!=="recupere" || resteDe(o)>0) sdu += resteDe(o); });
+    renderPressing();
     $("s-du").textContent = money(sdu);
     renderCharge();
     renderChargeTeaser();
@@ -2234,16 +2360,18 @@
 
   function renderFinances(){
     const from = periodStart(PERIODE);
-    let recA=0, depA=0, recB=0, depB=0;
+    let recA=0, depA=0, recB=0, depB=0, recP=0, depP=0;
     const rows=[];
     MOUV.forEach(m=>{
       if((Number(m.ms)||0) < from) return;
       const v=Number(m.montant)||0;
       if(m.source==="boutique"){ if(m.type==="recette") recB+=v; else depB+=v; }
+      else if(m.source==="pressing"){ if(m.type==="recette") recP+=v; else depP+=v; }
       else { if(m.type==="recette") recA+=v; else depA+=v; }
       rows.push(m);
     });
-    const rec=recA+recB, dep=depA+depB;
+    const rec=recA+recB+recP, dep=depA+depB+depP;
+    $("fi-pressing").textContent = money(recP)+" / −"+money(depP);
     $("fi-title").textContent = t("balance")+" — "+t("p"+PERIODE.charAt(0).toUpperCase()+PERIODE.slice(1));
     $("fi-atelier").textContent  = money(recA)+" / −"+money(depA);
     $("fi-boutique").textContent = money(recB)+" / −"+money(depB);
@@ -2260,7 +2388,7 @@
       nm.textContent = (m.type==="recette" ? "+ " : "− ") + money(m.montant);
       nm.style.color = m.type==="recette" ? "var(--ok)" : "var(--err)";
       const l1=document.createElement("div"); l1.className="ln";
-      l1.textContent = (m.label||"—") + " · " + t(m.source==="boutique" ? "tabBoutique" : "tabAtelier");
+      l1.textContent = (m.label||"—") + " · " + t(m.source==="boutique" ? "tabBoutique" : (m.source==="pressing" ? "tabPressing" : "tabAtelier"));
       const l2=document.createElement("div"); l2.className="ln"; l2.textContent = fmtWhen(m.ms);
       el.appendChild(nm); el.appendChild(l1); el.appendChild(l2);
       box.appendChild(el);
@@ -2890,6 +3018,12 @@
         o.clienteName||t("noName"), o.article||"—", t("orders"), "soft", ()=>openCmd(o.id)
       ));
     });
+    PRESS.forEach(o=>{
+      const hay=(fmtNum(o.numero)+" "+(o.clienteName||"")+" "+(o.clientePhone||"")+" "+(o.resume||"")).toLowerCase();
+      if(hay.indexOf(q)!==-1) hits.push(itemRow(
+        o.clienteName||t("noName"), fmtNum(o.numero)+" · "+(o.resume||""), t("tabPressing"), "soft", ()=>{ setTab("pressing"); PZ_FILTER="tous"; $("q-pz").value=fmtNum(o.numero); renderPressing(); }
+      ));
+    });
     CLIENTES.forEach(c=>{
       const hay=((c.name||"")+" "+(c.phone||"")).toLowerCase();
       if(hay.indexOf(q)!==-1) hits.push(itemRow(
@@ -2977,6 +3111,260 @@
   $("q-cmd").addEventListener("input", renderLists);
   $("q-cli").addEventListener("input", renderLists);
 
+  // =================== ACTIVITÉS (couture / pressing / boutique) ===================
+  const ACT_TABS = { couture:["atelier","charge","mesures","vitrine"], pressing:["pressing"], boutique:["boutique"] };
+  function activites(){
+    const a = BOUTIQUE && BOUTIQUE.activites;
+    return (Array.isArray(a) && a.length) ? a : ["couture","boutique"];
+  }
+  function hasAct(k){ return activites().indexOf(k) !== -1; }
+  function applyActivities(){
+    const hide = new Set();
+    Object.keys(ACT_TABS).forEach(k=>{ if(!hasAct(k)) ACT_TABS[k].forEach(x=>hide.add(x)); });
+    $("tabs").querySelectorAll("button").forEach(b=>{ b.style.display = hide.has(b.getAttribute("data-tab")) ? "none" : ""; });
+    $("act-chips").querySelectorAll("button").forEach(b=>b.classList.toggle("on", hasAct(b.getAttribute("data-act"))));
+    $("fi-row-atelier").style.display  = hasAct("couture")  ? "" : "none";
+    $("fi-row-pressing").style.display = hasAct("pressing") ? "" : "none";
+    $("fi-row-boutique").style.display = hasAct("boutique") ? "" : "none";
+    if(hide.has(TAB)) setTab("apercu");
+  }
+  $("act-chips").querySelectorAll("button").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      const k=b.getAttribute("data-act");
+      let a=activites().slice();
+      if(a.indexOf(k)!==-1) a=a.filter(x=>x!==k); else a.push(k);
+      if(!a.length){ alert(t("actNeedOne")); return; }
+      if(BOUTIQUE) BOUTIQUE.activites=a;
+      applyActivities();
+      setDoc(doc(db,"boutiques",BID), { activites:a, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+    });
+  });
+
+  // =================== PRESSING ===================
+  const PZ_STEPS = ["recu","lavage","repassage","pret","recupere"];
+  const PZ_DEFAULT = [
+    { cat:"Suits & Jackets", items:[ {nom:"Full suit and trousers",prix:450},{nom:"Suit only",prix:300},{nom:"Jacket",prix:350} ]},
+    { cat:"African Wear", items:[ {nom:"African full dress",prix:350},{nom:"African dress short",prix:300},{nom:"Men African full long kaftan",prix:350},{nom:"Men African short sleeve",prix:300} ]},
+    { cat:"Dresses & Gowns", items:[ {nom:"European dress",prix:500},{nom:"Gown",prix:350},{nom:"Lace dress",prix:450},{nom:"Long lady dress",prix:250} ]},
+    { cat:"Tops & Bottoms", items:[ {nom:"Long sleeve T-shirt",prix:100},{nom:"Short sleeve T-shirt",prix:75},{nom:"Shirt",prix:100},{nom:"Trousers",prix:150},{nom:"Jeans",prix:150},{nom:"Skirt",prix:100} ]},
+    { cat:"Bedding & Curtains", items:[ {nom:"Bed sheet big",prix:1500},{nom:"Bed sheet small",prix:800},{nom:"Pillow case",prix:50},{nom:"Blanket big",prix:800},{nom:"Blanket small",prix:600},{nom:"Window curtains",prix:100} ]},
+    { cat:"Others", items:[ {nom:"Towels",prix:100} ]}
+  ];
+  function pzTarifs(){
+    const g = BOUTIQUE && BOUTIQUE.tarifsPressing;
+    return (Array.isArray(g) && g.length) ? g : PZ_DEFAULT;
+  }
+  const pzKey = (c,n) => c+"|"+n;
+  function pzStepLabel(st){ return t("pz"+st.charAt(0).toUpperCase()+st.slice(1)); }
+  function buildPzGrid(){
+    const box=$("pz-grid"); if(!box) return;
+    box.innerHTML="";
+    pzTarifs().forEach(g=>{
+      const h=document.createElement("div"); h.className="pz-cat"; h.textContent=g.cat||""; box.appendChild(h);
+      (g.items||[]).forEach(it=>{
+        const k=pzKey(g.cat,it.nom);
+        const row=document.createElement("div"); row.className="pz-row";
+        const l=document.createElement("div");
+        const nm=document.createElement("div"); nm.className="nm"; nm.textContent=it.nom;
+        const pr=document.createElement("div"); pr.className="pr"; pr.textContent=money(it.prix);
+        l.appendChild(nm); l.appendChild(pr);
+        const q=document.createElement("div"); q.className="pz-q";
+        const mi=document.createElement("button"); mi.type="button"; mi.textContent="−";
+        const sp=document.createElement("span");
+        const pl=document.createElement("button"); pl.type="button"; pl.textContent="+";
+        const paint=()=>{ const n=(PZ_CART[k]&&PZ_CART[k].qte)||0; sp.textContent=n; q.classList.toggle("has", n>0); };
+        const chg=d=>{
+          const n=Math.max(0, ((PZ_CART[k]&&PZ_CART[k].qte)||0)+d);
+          if(n) PZ_CART[k]={ nom:it.nom, prix:Number(it.prix)||0, qte:n }; else delete PZ_CART[k];
+          paint(); pzTotal();
+        };
+        mi.addEventListener("click", ()=>chg(-1)); pl.addEventListener("click", ()=>chg(1));
+        q.appendChild(mi); q.appendChild(sp); q.appendChild(pl); paint();
+        row.appendChild(l); row.appendChild(q); box.appendChild(row);
+      });
+    });
+    pzTotal();
+  }
+  function pzTotal(){
+    let tot=0; Object.values(PZ_CART).forEach(it=>{ tot += it.prix*it.qte; });
+    const av=Math.max(0, parseFloat($("pz-avance").value)||0);
+    $("pz-total").textContent=money(tot);
+    $("pz-reste").textContent=money(Math.max(0, tot-av));
+    return tot;
+  }
+  $("pz-avance").addEventListener("input", pzTotal);
+  function pzMessage(o){
+    const st=o.statut||"recu";
+    const key="pm"+st.charAt(0).toUpperCase()+st.slice(1);
+    let msg=tm(key).replace("{nom}", o.clienteName||"").replace("{boutique}", (BOUTIQUE && BOUTIQUE.name) || "");
+    const re=resteDe(o);
+    if(st!=="recupere") msg += "\n" + tm("pmTicket").replace("{v}", fmtNum(o.numero));
+    if(st==="recu"){
+      if(o.resume) msg += "\n" + tm("pmItems").replace("{v}", o.resume);
+      msg += "\n" + tm("pmTotal").replace("{v}", money(o.prix));
+      if(Number(o.paye)>0) msg += "\n" + tm("pmAdvance").replace("{v}", money(o.paye));
+      if(o.retrait) msg += "\n" + tm("pzPickupOn").replace("{d}", fmtDate(o.retrait, LANG_MSG));
+    }
+    if(st==="recu" || st==="pret"){
+      if(re>0) msg += "\n" + tm("mAmount").replace("{prix}", Math.round(re)).replace("{cur}", cur()) + waveLines();
+      else if(o.prix) msg += "\n" + tm("mPaid");
+    }
+    return msg + "\n" + tm("waFoot");
+  }
+  function pzSend(o){
+    const num=waNumber(o.clientePhone);
+    if(!num){ alert(t("noPhonePz")); return; }
+    openWa(num, pzMessage(o));
+  }
+  function pzFail(e){ alert(t("ptSaveFail").replace("{e}", (e && (e.code||e.message)) || "?")); }
+  $("pz-add").addEventListener("click", ()=>{
+    const msg=$("pz-msg");
+    const nom=$("pz-nom").value.trim();
+    if(!nom){ msg.textContent=t("pzNeedName"); msg.className="msg err show"; return; }
+    const items=Object.values(PZ_CART).filter(x=>x.qte>0);
+    if(!items.length){ msg.textContent=t("pzNeedItem"); msg.className="msg err show"; return; }
+    const total=pzTotal();
+    const avance=Math.min(total, Math.max(0, parseFloat($("pz-avance").value)||0));
+    let mx=0; PRESS.forEach(o=>{ const n=Number(o.numero)||0; if(n>mx) mx=n; });
+    const data={
+      kind:"pressing", numero:mx+1,
+      clienteName:nom, clientePhone:$("pz-tel").value.trim(),
+      articles:items, resume:items.map(x=>x.qte+"× "+x.nom).join(", "),
+      prix:total, paye:avance, statut:"recu", retrait:$("pz-retrait").value||"",
+      createdAtMs:Date.now(), createdAt:serverTimestamp()
+    };
+    const ref=doc(collection(db,"boutiques",BID,"commandes"));
+    setDoc(ref, data, { merge:true }).catch(e=>{ PRESS=PRESS.filter(x=>x.id!==ref.id); renderLists(); pzFail(e); });
+    const o=Object.assign({ id:ref.id }, data);
+    PRESS.unshift(o);
+    if(avance>0) addMouv("recette","pressing",avance, t("pzTicket")+" "+fmtNum(o.numero)+" — "+nom, { commandeId:ref.id });
+    PZ_CART={}; ["pz-nom","pz-tel","pz-avance","pz-retrait"].forEach(id=>{ $(id).value=""; });
+    buildPzGrid();
+    msg.textContent=t("pzCreated").replace("{n}", fmtNum(o.numero)); msg.className="msg ok show";
+    setTimeout(()=>{ msg.classList.remove("show"); }, 4000);
+    PZ_FILTER="encours"; renderLists();
+    if(o.clientePhone && autoNotifyOn()) pzSend(o);
+  });
+  function pzMatch(o){
+    const st=o.statut||"recu";
+    if(PZ_FILTER==="encours" && (st==="pret" || st==="recupere")) return false;
+    if(PZ_FILTER==="pret" && st!=="pret") return false;
+    if(PZ_FILTER==="recupere" && st!=="recupere") return false;
+    const q=$("q-pz").value.trim().toLowerCase();
+    if(!q) return true;
+    return (fmtNum(o.numero)+" "+(o.clienteName||"")+" "+(o.clientePhone||"")+" "+(o.resume||"")).toLowerCase().indexOf(q)!==-1;
+  }
+  function renderPressing(){
+    const box=$("pz-list"); if(!box) return;
+    let nc=0, np=0, du=0;
+    PRESS.forEach(o=>{ const st=o.statut||"recu"; if(st==="pret") np++; else if(st!=="recupere") nc++; du+=resteDe(o); });
+    $("pz-n-cours").textContent=nc; $("pz-n-prets").textContent=np; $("pz-n-du").textContent=money(du);
+    $("pz-filter").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.getAttribute("data-f")===PZ_FILTER));
+    box.innerHTML="";
+    const shown=PRESS.filter(pzMatch);
+    $("pz-empty").hidden = shown.length>0;
+    shown.slice(0,150).forEach(o=>{
+      const el=document.createElement("div"); el.className="rec";
+      const top=document.createElement("div"); top.style.cssText="display:flex;justify-content:space-between;gap:8px;align-items:baseline";
+      const nm=document.createElement("div"); nm.className="nm"; nm.textContent=o.clienteName||t("noName");
+      const re=resteDe(o);
+      const am=document.createElement("div"); am.style.cssText="font-size:13px;font-weight:700;white-space:nowrap";
+      am.textContent = re>0 ? t("pzDueShort").replace("{v}", money(re)) : t("pzPaidAll");
+      am.style.color = re>0 ? "var(--warn)" : "var(--ok)";
+      top.appendChild(nm); top.appendChild(am); el.appendChild(top);
+      const l1=document.createElement("div"); l1.className="ln";
+      l1.textContent = t("pzTicket")+" "+fmtNum(o.numero)+" · "+(o.resume||"")+" · "+money(o.prix);
+      el.appendChild(l1);
+      const l2=document.createElement("div"); l2.className="ln";
+      l2.textContent = fmtWhen(o.createdAtMs) + (o.retrait ? " · "+t("pzPickupOn").replace("{d}", fmtDate(o.retrait, LANG_UI)) : "") + (o.clientePhone ? " · "+o.clientePhone : "");
+      el.appendChild(l2);
+      const steps=document.createElement("div"); steps.className="pz-steps";
+      const ci=PZ_STEPS.indexOf(o.statut||"recu");
+      PZ_STEPS.forEach((st,i)=>{
+        const b=document.createElement("button"); b.type="button"; b.textContent=pzStepLabel(st);
+        b.classList.toggle("on", i===ci); b.classList.toggle("done", i<ci);
+        b.addEventListener("click", ()=>{
+          if(st===(o.statut||"recu")) return;
+          const old=o.statut; o.statut=st;
+          setDoc(doc(db,"boutiques",BID,"commandes",o.id), { statut:st, updatedAt:serverTimestamp() }, { merge:true })
+            .catch(e=>{ o.statut=old; renderLists(); pzFail(e); });
+          renderLists();
+          if(autoNotifyOn() && o.clientePhone) openWa(waNumber(o.clientePhone), pzMessage(o));
+        });
+        steps.appendChild(b);
+      });
+      el.appendChild(steps);
+      const acts=document.createElement("div"); acts.className="pz-acts";
+      if(re>0){
+        const cb=document.createElement("button"); cb.type="button"; cb.textContent=t("pzCash"); cb.style.color="var(--ok)";
+        cb.addEventListener("click", ()=>{
+          const v=prompt(t("pzCashAsk").replace("{n}", o.clienteName||""), String(Math.round(re)));
+          if(v===null) return;
+          const amt=parseFloat(String(v).replace(",", "."));
+          if(isNaN(amt) || amt<=0){ alert(t("amountRequired")); return; }
+          const paye=(Number(o.paye)||0)+amt; const old=o.paye; o.paye=paye;
+          setDoc(doc(db,"boutiques",BID,"commandes",o.id), { paye, updatedAt:serverTimestamp() }, { merge:true })
+            .catch(e=>{ o.paye=old; renderLists(); pzFail(e); });
+          addMouv("recette","pressing",amt, t("pzTicket")+" "+fmtNum(o.numero)+" — "+(o.clienteName||""), { commandeId:o.id });
+          renderLists();
+        });
+        acts.appendChild(cb);
+      }
+      if(o.clientePhone){
+        const wb=document.createElement("button"); wb.type="button"; wb.textContent=t("pzWaMsg");
+        wb.addEventListener("click", ()=>pzSend(o)); acts.appendChild(wb);
+      }
+      const db_=document.createElement("button"); db_.type="button"; db_.textContent=t("pzDelete"); db_.style.color="var(--err)";
+      db_.addEventListener("click", async ()=>{
+        if(!confirm(t("pzDeleteQ").replace("{n}", fmtNum(o.numero)).replace("{c}", o.clienteName||""))) return;
+        if(!await askCode()) return;
+        PRESS=PRESS.filter(x=>x.id!==o.id); renderLists();
+        deleteDoc(doc(db,"boutiques",BID,"commandes",o.id)).catch(e=>{ PRESS.push(o); renderLists(); pzFail(e); });
+      });
+      acts.appendChild(db_);
+      el.appendChild(acts);
+      box.appendChild(el);
+    });
+  }
+  $("pz-filter").querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{ PZ_FILTER=b.getAttribute("data-f"); renderPressing(); }));
+  $("q-pz").addEventListener("input", renderPressing);
+  // ---- éditeur de tarifs ----
+  function pzEditRow(r){
+    const row=document.createElement("div"); row.className="pz-trow";
+    const c=document.createElement("input"); c.placeholder=t("pzCat"); c.value=r.cat||"";
+    const n=document.createElement("input"); n.placeholder=t("pzItem"); n.value=r.nom||"";
+    const p=document.createElement("input"); p.type="number"; p.inputMode="decimal"; p.placeholder=t("pzPrice"); p.value=(r.prix||r.prix===0)?r.prix:"";
+    const x=document.createElement("button"); x.type="button"; x.textContent="✕"; x.addEventListener("click", ()=>row.remove());
+    row.appendChild(c); row.appendChild(n); row.appendChild(p); row.appendChild(x);
+    return row;
+  }
+  $("pz-tarifs").addEventListener("click", async ()=>{
+    if(!await askCode()) return;
+    const box=$("pz-tlist"); box.innerHTML="";
+    pzTarifs().forEach(g=>(g.items||[]).forEach(it=>box.appendChild(pzEditRow({ cat:g.cat, nom:it.nom, prix:it.prix }))));
+    $("pz-tedit").hidden=false; $("pz-tedit").scrollIntoView({ block:"start" });
+  });
+  $("pz-tadd").addEventListener("click", ()=>{
+    const box=$("pz-tlist"); const last=box.lastElementChild;
+    const r=pzEditRow({ cat: last ? last.children[0].value : "" }); box.appendChild(r); r.children[1].focus();
+  });
+  $("pz-tcancel").addEventListener("click", ()=>{ $("pz-tedit").hidden=true; });
+  $("pz-tsave").addEventListener("click", ()=>{
+    const groups=[], idx={};
+    $("pz-tlist").querySelectorAll(".pz-trow").forEach(r=>{
+      const cat=r.children[0].value.trim()||"—", nom=r.children[1].value.trim(), prix=Math.max(0, parseFloat(r.children[2].value)||0);
+      if(!nom) return;
+      if(!(cat in idx)){ idx[cat]=groups.length; groups.push({ cat, items:[] }); }
+      groups[idx[cat]].items.push({ nom, prix });
+    });
+    if(!groups.length){ alert(t("pzNeedItem")); return; }
+    if(BOUTIQUE) BOUTIQUE.tarifsPressing=groups;
+    PZ_CART={}; buildPzGrid();
+    $("pz-tedit").hidden=true;
+    setDoc(doc(db,"boutiques",BID), { tarifsPressing:groups, updatedAt:serverTimestamp() }, { merge:true }).catch(pzFail);
+    const m=$("pz-msg"); m.textContent=t("pzPricesSaved"); m.className="msg ok show"; setTimeout(()=>m.classList.remove("show"), 3000);
+  });
+
   function bindExpense(prefix, source){
     $(prefix+"-save").addEventListener("click", ()=>{
       const msg=$(prefix+"-msg");
@@ -2996,6 +3384,7 @@
   }
   bindExpense("da","atelier");
   bindExpense("db","boutique");
+  bindExpense("dp","pressing");
 
   $("ar-add").addEventListener("click", ()=>{
     const msg=$("ar-msg");
