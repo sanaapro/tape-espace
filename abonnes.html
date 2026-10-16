@@ -115,6 +115,7 @@
         <button class="eye" id="eye-btn" type="button" aria-label="Afficher le mot de passe">👁</button>
       </div>
       <button class="primary" id="login-btn">Se connecter</button>
+      <button class="primary" id="google-btn" type="button" style="margin-top:10px;background:#fff;color:#1f1f1f;border-color:#fff">G&nbsp; Se connecter avec Google</button>
       <div class="msg err" id="login-msg"></div>
       <button class="flink" id="forgot-btn" type="button">Mot de passe oublié ? Recevoir un lien par email</button>
       <a class="flink" href="https://sanaapro.github.io/inscription/recuperer-compte.html">Email oublié ? Retrouver mon compte avec mon numéro</a>
@@ -155,7 +156,8 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail }
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail,
+           GoogleAuthProvider, signInWithPopup, signInWithRedirect }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { initializeFirestore, collection, getDocs, doc, setDoc, Timestamp, query, where }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -240,6 +242,16 @@
       else if(e.code==="auth/too-many-requests") m="Trop de tentatives. Patiente un instant.";
       else if(e.code==="auth/network-request-failed") m="Pas de connexion.";
       msg.textContent=m; msg.classList.add("show"); $("login-btn").disabled=false;
+    }
+  });
+  $("google-btn").addEventListener("click", async ()=>{
+    const msg=$("login-msg"); msg.className="msg err";
+    const prov=new GoogleAuthProvider(); prov.setCustomParameters({ prompt:"select_account" });
+    try{ await signInWithPopup(auth, prov); }
+    catch(e){
+      if(e && (e.code==="auth/popup-blocked" || e.code==="auth/operation-not-supported-in-this-environment")){ try{ await signInWithRedirect(auth, prov); return; }catch(e2){ e=e2; } }
+      if(e && e.code==="auth/popup-closed-by-user") return;
+      msg.textContent="Connexion Google impossible ("+((e&&e.code)||"?")+")."; msg.classList.add("show");
     }
   });
   $("logout-btn").addEventListener("click", ()=>signOut(auth));
