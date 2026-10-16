@@ -247,6 +247,12 @@
     body.printbadges .pt-badge button{ display:none !important }
     body.printbadges .pt-badge{ break-inside:avoid; border:1px dashed #888 }
   }
+  details.hist{ margin-top:12px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:0 16px; }
+  details.hist summary{ cursor:pointer; padding:14px 0; color:var(--gold); font-weight:700; font-size:14.5px; list-style:none; }
+  details.hist summary::-webkit-details-marker{ display:none; }
+  details.hist[open]{ padding-bottom:14px; }
+  .qacts{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  .qacts button{ flex:1 1 140px; padding:11px 10px; border-radius:10px; border:1px solid var(--line2); background:none; color:var(--txt); font:inherit; font-size:13.5px; cursor:pointer; }
   .pz-cat{ margin:14px 0 4px; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--gold); font-weight:700 }
   .pz-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid var(--line) }
   .pz-row .nm{ font-size:14.5px } .pz-row .pr{ font-size:12.5px; color:var(--muted); margin-top:2px }
@@ -499,6 +505,20 @@
         <div class="msg" id="da-msg"></div>
       </div>
       <button class="primary" id="cmd-add" data-i18n="newOrder">+ Nouvelle commande</button>
+      <details class="hist" id="ha-box">
+        <summary data-i18n="histTitle">＋ Client historique (avant l'application)</summary>
+        <p style="margin:0 0 6px;font-size:13px;color:var(--muted)" data-i18n="histHint">Pour une cliente servie avant d'utiliser l'application : on enregistre ce qu'elle a payé et ce qu'elle doit encore.</p>
+        <label data-i18n="pzClient">Nom du client</label><input id="ha-nom" type="text">
+        <label data-i18n="phoneWa">Téléphone / WhatsApp</label><input id="ha-tel" type="tel" placeholder="+220 …">
+        <label data-i18n="histWhat">Ce qui a été fait</label><input id="ha-desc" type="text" data-i18n-ph="garmentPh" placeholder="Ex. Boubou, robe brodée, ensemble">
+        <div class="mgrid">
+          <div><label data-i18n="histPaid">Déjà payé</label><input id="ha-paye" type="number" step="1" inputmode="decimal" placeholder="0"></div>
+          <div><label data-i18n="histDue">Reste dû</label><input id="ha-reste" type="number" step="1" inputmode="decimal" placeholder="0"></div>
+        </div>
+        <label data-i18n="histDate">Date du paiement</label><input id="ha-date" type="date">
+        <button class="primary" id="ha-save" type="button" data-i18n="histSave">Enregistrer le client historique</button>
+        <div class="msg" id="ha-msg"></div>
+      </details>
       <input id="q-cmd" type="search" data-i18n-ph="searchOrdersPh" placeholder="Chercher une commande…" style="margin-top:14px">
       <div id="cmd-list"></div>
       <div id="cmd-empty" class="empty" data-i18n="noOrders" hidden>Aucune commande pour le moment.</div>
@@ -535,6 +555,20 @@
         <button class="primary" id="pz-tsave" type="button" data-i18n="pzSavePrices">Enregistrer les tarifs</button>
         <button class="ghost" id="pz-tcancel" type="button" data-i18n="cancel">Annuler</button>
       </div>
+      <details class="hist" id="hp-box" style="margin-bottom:14px">
+        <summary data-i18n="histTitle">＋ Client historique (avant l'application)</summary>
+        <p style="margin:0 0 6px;font-size:13px;color:var(--muted)" data-i18n="histHint">Pour une cliente servie avant d'utiliser l'application : on enregistre ce qu'elle a payé et ce qu'elle doit encore.</p>
+        <label data-i18n="pzClient">Nom du client</label><input id="hp-nom" type="text">
+        <label data-i18n="phoneWa">Téléphone / WhatsApp</label><input id="hp-tel" type="tel" placeholder="+220 …">
+        <label data-i18n="histWhat">Ce qui a été fait</label><input id="hp-desc" type="text">
+        <div class="mgrid">
+          <div><label data-i18n="histPaid">Déjà payé</label><input id="hp-paye" type="number" step="1" inputmode="decimal" placeholder="0"></div>
+          <div><label data-i18n="histDue">Reste dû</label><input id="hp-reste" type="number" step="1" inputmode="decimal" placeholder="0"></div>
+        </div>
+        <label data-i18n="histDate">Date du paiement</label><input id="hp-date" type="date">
+        <button class="primary" id="hp-save" type="button" data-i18n="histSave">Enregistrer le client historique</button>
+        <div class="msg" id="hp-msg"></div>
+      </details>
       <div class="card">
         <h2 data-i18n="quickExpensePz">Dépense rapide — Pressing</h2>
         <input id="dp-cat" type="text" data-i18n-ph="expCatPzPh" placeholder="Catégorie (ex. savon, javel, électricité)">
@@ -886,6 +920,10 @@
         <button id="p-add" data-i18n="cashIn">Encaisser</button>
       </div>
       <div class="msg" id="p-msg"></div>
+      <div class="qacts">
+        <button type="button" id="q-addart" data-i18n="qAddArt">＋ Ajouter un article</button>
+        <button type="button" id="q-fixpaid" data-i18n="qFixPaid">Corriger le montant payé</button>
+      </div>
     </div>
     <div class="card">
       <h2 data-i18n="stage">Étape</h2>
@@ -935,6 +973,10 @@
       <input id="cf-article" type="text" data-i18n-ph="garmentPh" placeholder="Ex. Boubou, robe brodée, ensemble">
       <label data-i18n="priceOpt">Prix (optionnel)</label>
       <input id="cf-prix" type="number" step="1" inputmode="decimal" placeholder="1500">
+      <div id="cf-av-box">
+        <label data-i18n="advanceOpt">Avance payée aujourd'hui (optionnel)</label>
+        <input id="cf-avance" type="number" step="1" inputmode="decimal" placeholder="0">
+      </div>
       <label data-i18n="deliveryOpt">Date de livraison (optionnel)</label>
       <input id="cf-liv" type="date">
       <label data-i18n="notesOpt">Notes (optionnel)</label>
@@ -1157,6 +1199,13 @@
       stCodeUsed:"Ce code est déjà utilisé par un autre employé.", stCodeNone:"Pas de code de pointage", stCodeSet:"Code de pointage : ••••",
       stCodeBtn:"Changer le code de pointage", stCodeAsk:"Nouveau code à 4 chiffres pour {n} :",
       ptHint:"Tapez votre code à 4 chiffres", ptExit:"Quitter le mode tablette", ptKiosk:"Mode tablette (plein écran)",
+      advanceOpt:"Avance payée aujourd'hui (optionnel)", advanceLabel:"Avance",
+      qAddArt:"＋ Ajouter un article", qFixPaid:"Corriger le montant payé", qArtName:"Nom de l'article ajouté :", qArtPrice:"Prix de cet article :",
+      qArtDone:"Article ajouté. Nouveau total : {v}", qFixAsk:"Montant TOTAL réellement payé par {n} (actuellement {v}) :", qFixDone:"Montant payé corrigé : {v}", qFixLabel:"Correction paiement",
+      pzFix:"Corriger", pzFixPrice:"Prix total du ticket (actuellement {v}) :",
+      histTitle:"＋ Client historique (avant l'application)", histHint:"Pour une cliente servie avant d'utiliser l'application : on enregistre ce qu'elle a payé et ce qu'elle doit encore.",
+      histWhat:"Ce qui a été fait", histPaid:"Déjà payé", histDue:"Reste dû", histDate:"Date du paiement", histSave:"Enregistrer le client historique",
+      histNeed:"Entrez le nom et au moins un montant.", histDone:"Client historique enregistré (n° {n}).", histLabel:"Client historique",
       impTitle:"Importer mes anciennes données", impHint:"Choisissez le fichier d'import que vous avez reçu (.json). Rien n'est enregistré avant votre confirmation.",
       impGo:"Importer maintenant", impBad:"Ce fichier n'est pas un fichier d'import SanaaPro.",
       impSum:"{n} tickets pressing trouvés · total {t} · reste dû {r}. Un ticket déjà importé est mis à jour, jamais dupliqué.",
@@ -1373,6 +1422,13 @@
       stCodeUsed:"This code is already used by another employee.", stCodeNone:"No clock-in code", stCodeSet:"Clock-in code: ••••",
       stCodeBtn:"Change clock-in code", stCodeAsk:"New 4-digit code for {n}:",
       ptHint:"Enter your 4-digit code", ptExit:"Exit tablet mode", ptKiosk:"Tablet mode (full screen)",
+      advanceOpt:"Deposit paid today (optional)", advanceLabel:"Deposit",
+      qAddArt:"＋ Add an item", qFixPaid:"Correct the amount paid", qArtName:"Name of the added item:", qArtPrice:"Price of this item:",
+      qArtDone:"Item added. New total: {v}", qFixAsk:"TOTAL amount actually paid by {n} (currently {v}):", qFixDone:"Amount paid corrected: {v}", qFixLabel:"Payment correction",
+      pzFix:"Correct", pzFixPrice:"Total ticket price (currently {v}):",
+      histTitle:"＋ Past customer (before the app)", histHint:"For a customer served before you used the app: record what she paid and what she still owes.",
+      histWhat:"What was done", histPaid:"Already paid", histDue:"Still owed", histDate:"Payment date", histSave:"Save past customer",
+      histNeed:"Enter the name and at least one amount.", histDone:"Past customer saved (no. {n}).", histLabel:"Past customer",
       impTitle:"Import my old data", impHint:"Choose the import file you received (.json). Nothing is saved until you confirm.",
       impGo:"Import now", impBad:"This is not a SanaaPro import file.",
       impSum:"{n} dry-cleaning tickets found · total {t} · balance due {r}. A ticket already imported is updated, never duplicated.",
@@ -2409,8 +2465,9 @@
     rows.slice(0,12).forEach(m=>{
       const el=document.createElement("div"); el.className="rec";
       const nm=document.createElement("div"); nm.className="nm";
-      nm.textContent = (m.type==="recette" ? "+ " : "− ") + money(m.montant);
-      nm.style.color = m.type==="recette" ? "var(--ok)" : "var(--err)";
+      const plus = (m.type==="recette") === ((Number(m.montant)||0) >= 0);
+      nm.textContent = (plus ? "+ " : "− ") + money(Math.abs(Number(m.montant)||0));
+      nm.style.color = plus ? "var(--ok)" : "var(--err)";
       const l1=document.createElement("div"); l1.className="ln";
       l1.textContent = (m.label||"—") + " · " + t(m.source==="boutique" ? "tabBoutique" : (m.source==="pressing" ? "tabPressing" : "tabAtelier"));
       const l2=document.createElement("div"); l2.className="ln"; l2.textContent = fmtWhen(m.ms);
@@ -3164,6 +3221,83 @@
     });
   });
 
+
+  // =================== RAJOUTS / CORRECTIONS SUR UNE COMMANDE ===================
+  $("q-addart").addEventListener("click", ()=>{
+    if(!ORD || !ORDID) return;
+    const nom=prompt(t("qArtName"), ""); if(nom===null || !nom.trim()) return;
+    const pv=prompt(t("qArtPrice"), ""); if(pv===null) return;
+    const px=parseFloat(String(pv).replace(",", "."));
+    if(isNaN(px) || px<0){ alert(t("amountRequired")); return; }
+    const article=(ORD.article ? ORD.article+", " : "")+nom.trim();
+    const prix=(Number(ORD.prix)||0)+px;
+    ORD.article=article; ORD.prix=prix;
+    const local=COMMANDES.find(x=>x.id===ORDID); if(local){ local.article=article; local.prix=prix; }
+    setDoc(doc(db,"boutiques",BID,"commandes",ORDID), { article, prix, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+    syncSuivi(ORD, ORDID); renderCmd(ORD, ORDID); renderLists();
+    const m=$("p-msg"); m.textContent=t("qArtDone").replace("{v}", money(prix)); m.className="msg ok show";
+    setTimeout(()=>m.classList.remove("show"), 4000);
+  });
+  $("q-fixpaid").addEventListener("click", async ()=>{
+    if(!ORD || !ORDID) return;
+    if(!await askCode()) return;
+    const old=Number(ORD.paye)||0;
+    const v=prompt(t("qFixAsk").replace("{n}", ORD.clienteName||"").replace("{v}", money(old)), String(old));
+    if(v===null || String(v).trim()==="") return;
+    const nv=parseFloat(String(v).replace(",", "."));
+    if(isNaN(nv) || nv<0){ alert(t("amountRequired")); return; }
+    if(nv===old) return;
+    ORD.paye=nv;
+    const local=COMMANDES.find(x=>x.id===ORDID); if(local) local.paye=nv;
+    setDoc(doc(db,"boutiques",BID,"commandes",ORDID), { paye:nv, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+    // l'écart part dans les Finances (positif ou négatif) pour que la caisse reste juste
+    addMouv("recette","atelier", nv-old, t("qFixLabel")+" "+fmtNum(ORD.numero)+" — "+(ORD.clienteName||""), { commandeId:ORDID });
+    syncSuivi(ORD, ORDID); renderCmd(ORD, ORDID); renderLists();
+    const m=$("p-msg"); m.textContent=t("qFixDone").replace("{v}", money(nv)); m.className="msg ok show";
+    setTimeout(()=>m.classList.remove("show"), 4000);
+  });
+
+  // =================== CLIENT HISTORIQUE (avant l'application) ===================
+  function saveHistorique(pfx, kind){
+    const msg=$(pfx+"-msg");
+    const nom=$(pfx+"-nom").value.trim(), tel=$(pfx+"-tel").value.trim(), desc=$(pfx+"-desc").value.trim();
+    const paye=Math.max(0, parseFloat($(pfx+"-paye").value)||0), reste=Math.max(0, parseFloat($(pfx+"-reste").value)||0);
+    if(!nom || (paye<=0 && reste<=0)){ msg.textContent=t("histNeed"); msg.className="msg err show"; return; }
+    const d=$(pfx+"-date").value;
+    const when = /^\d{4}-\d{2}-\d{2}$/.test(d) ? new Date(d+"T12:00:00").getTime() : Date.now();
+    const ref=doc(collection(db,"boutiques",BID,"commandes"));
+    let data, numero;
+    if(kind==="pressing"){
+      let mx=0; PRESS.forEach(o=>{ const n=Number(o.numero)||0; if(n>mx) mx=n; }); numero=mx+1;
+      data={ kind:"pressing", numero, clienteName:nom, clientePhone:tel, articles:[], resume:desc||t("histLabel"),
+             prix:paye+reste, paye, statut:"recupere", retrait:"", historique:true, createdAtMs:when, createdAt:serverTimestamp() };
+      PRESS.unshift(Object.assign({ id:ref.id }, data));
+    } else {
+      numero=nextNumero();
+      let c=CLIENTES.find(x=>(x.name||"").trim().toLowerCase()===nom.toLowerCase() && (!tel || String(x.phone||"").replace(/\D/g,"").slice(-7)===tel.replace(/\D/g,"").slice(-7)));
+      if(!c){
+        const cref=doc(collection(db,"boutiques",BID,"clientes"));
+        const cdata={ name:nom, phone:tel, notes:"", genre:"femme", mesures:{}, createdAt:serverTimestamp(), updatedAt:serverTimestamp() };
+        setDoc(cref, cdata, { merge:true }).catch(function(){});
+        c=Object.assign({ id:cref.id }, cdata); CLIENTES.push(c);
+      }
+      data={ clienteId:c.id, clienteName:nom, clientePhone:tel, article:desc||t("histLabel"), type:"confection", recu:"tissu",
+             livraison:null, notes:t("histLabel"), prix:paye+reste, paye, statut:"livre", numero, historique:true,
+             createdAtMs:when, createdAt:serverTimestamp(), updatedAt:serverTimestamp() };
+      COMMANDES.push(Object.assign({ id:ref.id }, data));
+    }
+    setDoc(ref, data, { merge:true }).catch(function(e){ alert(t("ptSaveFail").replace("{e}", (e && (e.code||e.message)) || "?")); });
+    // l'argent est daté du jour où il a vraiment été reçu : les totaux du jour restent justes
+    if(paye>0) addMouv("recette", kind==="pressing"?"pressing":"atelier", paye, t("histLabel")+" "+fmtNum(numero)+" — "+nom, { commandeId:ref.id, ms:when });
+    MOUV.sort((a,b)=>(Number(b.ms)||0)-(Number(a.ms)||0));
+    ["-nom","-tel","-desc","-paye","-reste","-date"].forEach(x=>{ $(pfx+x).value=""; });
+    msg.textContent=t("histDone").replace("{n}", fmtNum(numero)); msg.className="msg ok show";
+    setTimeout(()=>msg.classList.remove("show"), 5000);
+    renderLists();
+  }
+  $("ha-save").addEventListener("click", ()=>saveHistorique("ha","atelier"));
+  $("hp-save").addEventListener("click", ()=>saveHistorique("hp","pressing"));
+
   // =================== IMPORT (fichier .json préparé pour la boutique) ===================
   // Format : { format:"sanaapro-import", pressing:[], atelier:[], clientes:[], salaries:[] }
   // Identifiants fixes (imp-…) : réimporter met à jour, ne duplique jamais.
@@ -3443,6 +3577,24 @@
         const wb=document.createElement("button"); wb.type="button"; wb.textContent=t("pzWaMsg");
         wb.addEventListener("click", ()=>pzSend(o)); acts.appendChild(wb);
       }
+      const fx=document.createElement("button"); fx.type="button"; fx.textContent=t("pzFix");
+      fx.addEventListener("click", async ()=>{
+        if(!await askCode()) return;
+        const v1=prompt(t("pzFixPrice").replace("{v}", money(o.prix)), String(Number(o.prix)||0));
+        if(v1===null) return;
+        const np=parseFloat(String(v1).replace(",", "."));
+        if(isNaN(np) || np<0){ alert(t("amountRequired")); return; }
+        const old=Number(o.paye)||0;
+        const v2=prompt(t("qFixAsk").replace("{n}", o.clienteName||"").replace("{v}", money(old)), String(old));
+        if(v2===null) return;
+        const nv=parseFloat(String(v2).replace(",", "."));
+        if(isNaN(nv) || nv<0){ alert(t("amountRequired")); return; }
+        o.prix=np; o.paye=nv;
+        setDoc(doc(db,"boutiques",BID,"commandes",o.id), { prix:np, paye:nv, updatedAt:serverTimestamp() }, { merge:true }).catch(pzFail);
+        if(nv!==old) addMouv("recette","pressing", nv-old, t("qFixLabel")+" "+fmtNum(o.numero)+" — "+(o.clienteName||""), { commandeId:o.id });
+        renderLists();
+      });
+      acts.appendChild(fx);
       const db_=document.createElement("button"); db_.type="button"; db_.textContent=t("pzDelete"); db_.style.color="var(--err)";
       db_.addEventListener("click", async ()=>{
         if(!confirm(t("pzDeleteQ").replace("{n}", fmtNum(o.numero)).replace("{c}", o.clienteName||""))) return;
@@ -3716,6 +3868,7 @@
       $("cf-article").value=""; $("cf-prix").value=""; $("cf-notes").value="";
       $("cf-recu").value="tissu"; $("cf-liv").value="";
       $("cf-new-name").value=""; $("cf-new-phone").value="";
+      $("cf-avance").value=""; $("cf-av-box").hidden=false;
       TYPE_CF="confection"; paintTypes();
       $("cf-cliente").value="__new"; toggleNewCliente();
       buildCmdGrid({});
@@ -3723,6 +3876,7 @@
     }
     const o = COMMANDES.find(x=>x.id===editingOrd) || {};
     $("cf-title").textContent=t("editOrderTitle");
+    $("cf-av-box").hidden=true;
     TYPE_CF = o.type || "confection"; paintTypes();
     const oc = CLIENTES.find(x=>x.id===o.clienteId);
     GENRE_CF = (oc && oc.genre==="homme") ? "homme" : "femme";
@@ -3778,9 +3932,15 @@
     const ref = editingOrd
       ? doc(db,"boutiques",BID,"commandes",editingOrd)
       : doc(collection(db,"boutiques",BID,"commandes"));
-    if(!editingOrd){ data.statut="recu"; data.numero=nextNumero(); data.createdAt=serverTimestamp(); }
+    let AVANCE=0;
+    if(!editingOrd){
+      data.statut="recu"; data.numero=nextNumero(); data.createdAt=serverTimestamp(); data.createdAtMs=Date.now();
+      const av=parseFloat($("cf-avance").value);
+      if(!isNaN(av) && av>0){ AVANCE = (data.prix!=null) ? Math.min(av, data.prix) : av; data.paye=AVANCE; }
+    }
     setDoc(ref, data, { merge:true }).catch(function(){});
     const id = editingOrd || ref.id;
+    if(AVANCE>0) addMouv("recette","atelier",AVANCE, t("advanceLabel")+" "+fmtNum(data.numero)+" — "+(data.clienteName||""), { commandeId:id });
     const existing = COMMANDES.find(x=>x.id===id);
     if(existing) Object.assign(existing, data);
     else COMMANDES.unshift(Object.assign({ id, statut:"recu" }, data));
