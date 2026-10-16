@@ -247,6 +247,15 @@
     body.printbadges .pt-badge button{ display:none !important }
     body.printbadges .pt-badge{ break-inside:avoid; border:1px dashed #888 }
   }
+  .art-row{ display:grid; grid-template-columns:1fr 96px 36px; gap:6px; margin-top:6px; }
+  .art-row input{ margin:0; }
+  .art-row button{ border:1px solid var(--line2); border-radius:9px; background:none; color:var(--err); cursor:pointer; font-size:15px; }
+  .chk{ display:flex; gap:10px; align-items:center; margin-top:12px; font-size:14px; color:var(--txt); text-transform:none; letter-spacing:0; cursor:pointer; }
+  .chk input{ width:20px; height:20px; margin:0; flex:0 0 auto; }
+  .vt-item{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); }
+  .vt-item .nm{ font-size:14.5px; } .vt-item .pr{ font-size:12.5px; color:var(--muted); }
+  .vt-item button{ padding:8px 10px; border-radius:9px; border:1px solid var(--line2); background:none; color:var(--muted); font:inherit; font-size:12.5px; cursor:pointer; white-space:nowrap; }
+  .vt-item button.ok{ border-color:var(--ok); color:var(--ok); }
   .ftab{ width:100%; border-collapse:collapse; font-size:13.5px; }
   .ftab th{ text-align:right; color:var(--muted); font-weight:600; font-size:11.5px; letter-spacing:.04em; text-transform:uppercase; padding:6px 4px; border-bottom:1px solid var(--line); }
   .ftab th:first-child, .ftab td:first-child{ text-align:left; }
@@ -554,6 +563,12 @@
         <div class="msg" id="ha-msg"></div>
       </details>
       <input id="q-cmd" type="search" data-i18n-ph="searchOrdersPh" placeholder="Chercher une commande…" style="margin-top:14px">
+      <div class="fchips" id="cmd-type-f" style="margin-top:10px">
+        <button type="button" data-f="tous" data-i18n="pzAll">Tous</button>
+        <button type="button" data-f="confection" data-i18n="tConfection">Confection</button>
+        <button type="button" data-f="retouche" data-i18n="tRetouche">Retouche</button>
+        <button type="button" data-f="pap" data-i18n="tPap">Prêt-à-porter</button>
+      </div>
       <div id="cmd-list"></div>
       <div id="cmd-empty" class="empty" data-i18n="noOrders" hidden>Aucune commande pour le moment.</div>
     </div>
@@ -1003,8 +1018,15 @@
       <div class="row" id="c-recu-row"><span class="k" data-i18n="received">Reçu</span><span class="v" id="c-recu"></span></div>
       <div class="row"><span class="k" data-i18n="garment">Modèle</span><span class="v" id="c-article"></span></div>
       <div class="row" id="c-price-row"><span class="k" data-i18n="price">Prix</span><span class="v" id="c-prix"></span></div>
+      <div class="row" id="c-depot-row"><span class="k" data-i18n="depotLabel">Date de dépôt</span><span class="v" id="c-depot"></span></div>
       <div class="row" id="c-liv-row"><span class="k" data-i18n="delivery">Livraison prévue</span><span class="v" id="c-liv"></span></div>
+      <div class="row" id="c-gift-row"><span class="k" data-i18n="giftFor">Cadeau pour</span><span class="v" id="c-gift"></span></div>
       <div class="row" id="c-notes-row"><span class="k" data-i18n="notes">Notes</span><span class="v" id="c-notes"></span></div>
+    </div>
+    <div class="card" id="c-vt-card">
+      <h2 data-i18n="vtTitle">Vêtements</h2>
+      <p style="margin:0 0 4px;font-size:13px;color:var(--muted)" data-i18n="vtHint">Touchez un vêtement quand il est terminé. Quand tout est fait, la commande passe à « Prêt ».</p>
+      <div id="c-vt"></div>
     </div>
     <div class="card">
       <h2 data-i18n="payment">Paiement</h2>
@@ -1019,6 +1041,9 @@
       <div class="qacts">
         <button type="button" id="q-addart" data-i18n="qAddArt">＋ Ajouter un article</button>
         <button type="button" id="q-fixpaid" data-i18n="qFixPaid">Corriger le montant payé</button>
+        <button type="button" id="q-solde" data-i18n="qSolde">💰 Solde payé</button>
+        <button type="button" id="q-receipt" data-i18n="qReceipt">🧾 Renvoyer le reçu</button>
+        <button type="button" id="q-resched" data-i18n="qResched">📅 Reporter la livraison</button>
       </div>
     </div>
     <div class="card">
@@ -1065,16 +1090,25 @@
         <option value="materiel" data-i18n="rcvMaterial">matériel</option>
         <option value="vetement" data-i18n="rcvGarment">vêtement</option>
       </select>
-      <label data-i18n="garment">Modèle</label>
-      <input id="cf-article" type="text" data-i18n-ph="garmentPh" placeholder="Ex. Boubou, robe brodée, ensemble">
-      <label data-i18n="priceOpt">Prix (optionnel)</label>
-      <input id="cf-prix" type="number" step="1" inputmode="decimal" placeholder="1500">
+      <label data-i18n="artsTitle">Articles de la commande (facture détaillée)</label>
+      <div id="cf-arts"></div>
+      <button type="button" class="ghost" id="cf-art-add" data-i18n="cfArtAdd">＋ Ajouter un article</button>
+      <div class="pz-tot"><span data-i18n="cfTotal">Total commande</span><b id="cf-total">0</b></div>
+      <input id="cf-article" type="hidden"><input id="cf-prix" type="hidden">
       <div id="cf-av-box">
         <label data-i18n="advanceOpt">Avance payée aujourd'hui (optionnel)</label>
         <input id="cf-avance" type="number" step="1" inputmode="decimal" placeholder="0">
       </div>
-      <label data-i18n="deliveryOpt">Date de livraison (optionnel)</label>
-      <input id="cf-liv" type="date">
+      <div class="mgrid">
+        <div><label data-i18n="depotLabel">Date de dépôt</label><input id="cf-depot" type="date"></div>
+        <div><label data-i18n="deliveryOpt">Date de livraison (optionnel)</label><input id="cf-liv" type="date"></div>
+      </div>
+      <label class="chk" id="cf-done-row"><input type="checkbox" id="cf-done"><span data-i18n="cfDone">Vêtement déjà terminé — rien à coudre</span></label>
+      <label class="chk"><input type="checkbox" id="cf-gift"><span data-i18n="cfGift">C'est un cadeau — le vêtement est pour quelqu'un d'autre</span></label>
+      <div id="cf-gift-box" hidden>
+        <label data-i18n="giftName">Pour qui ?</label><input id="cf-gift-name" type="text">
+        <label data-i18n="giftPhone">Téléphone de la personne (optionnel)</label><input id="cf-gift-tel" type="tel" placeholder="+220 …">
+      </div>
       <label data-i18n="notesOpt">Notes (optionnel)</label>
       <textarea id="cf-notes" rows="2" data-i18n-ph="orderNotesPh" placeholder="Couleur, broderie, remarques…"></textarea>
     </div>
@@ -1295,6 +1329,14 @@
       stCodeUsed:"Ce code est déjà utilisé par un autre employé.", stCodeNone:"Pas de code de pointage", stCodeSet:"Code de pointage : ••••",
       stCodeBtn:"Changer le code de pointage", stCodeAsk:"Nouveau code à 4 chiffres pour {n} :",
       ptHint:"Tapez votre code à 4 chiffres", ptExit:"Quitter le mode tablette", ptKiosk:"Mode tablette (plein écran)",
+      artsTitle:"Articles de la commande (facture détaillée)", cfArtAdd:"＋ Ajouter un article", cfTotal:"Total commande",
+      artNamePh2:"Ex. Robe, pantalon, boubou", artPricePh:"Prix", depotLabel:"Date de dépôt", cfDone:"Vêtement déjà terminé — rien à coudre",
+      cfGift:"C'est un cadeau — le vêtement est pour quelqu'un d'autre", giftName:"Pour qui ?", giftPhone:"Téléphone de la personne (optionnel)", giftFor:"Cadeau pour",
+      vtTitle:"Vêtements", vtHint:"Touchez un vêtement quand il est terminé. Quand tout est fait, la commande passe à « Prêt ».",
+      vtTodo:"⏳ À faire", vtDone:"✅ Fait", vtAllDone:"Tous les vêtements sont faits : la commande passe à « Prêt ».",
+      qSolde:"💰 Solde payé", qSoldeQ:"Encaisser le solde de {v} pour {n} ?", qReceipt:"🧾 Renvoyer le reçu", qResched:"📅 Reporter la livraison",
+      qReschedQ:"Nouvelle date de livraison (AAAA-MM-JJ) :", qReschedBad:"Date invalide. Exemple : 2026-10-25", soldeLabel:"Solde",
+      lineItem:"• {n} : {p} {cur}",
       dueTitle:"Impayés et vêtements à récupérer", dueTotal:"Total dû", dueLate:"En retard", dueReady:"Prêts à récupérer",
       dueLateDays:"en retard de {n} j", duePlanned:"prévu le {d}", duePaid:"Payé {a} / {b}", dueRemind:"Relancer", dueNone:"Rien à relancer.",
       dueReadyTag:"prêt, pas encore récupéré", dueMore:"Voir les {n} autres",
@@ -1536,6 +1578,14 @@
       stCodeUsed:"This code is already used by another employee.", stCodeNone:"No clock-in code", stCodeSet:"Clock-in code: ••••",
       stCodeBtn:"Change clock-in code", stCodeAsk:"New 4-digit code for {n}:",
       ptHint:"Enter your 4-digit code", ptExit:"Exit tablet mode", ptKiosk:"Tablet mode (full screen)",
+      artsTitle:"Order items (detailed invoice)", cfArtAdd:"＋ Add an item", cfTotal:"Order total",
+      artNamePh2:"E.g. dress, trousers, boubou", artPricePh:"Price", depotLabel:"Drop-off date", cfDone:"Item already finished — nothing to sew",
+      cfGift:"It's a gift — the garment is for someone else", giftName:"For whom?", giftPhone:"That person's phone (optional)", giftFor:"Gift for",
+      vtTitle:"Garments", vtHint:"Tap a garment when it is finished. When all are done, the order moves to “Ready”.",
+      vtTodo:"⏳ To do", vtDone:"✅ Done", vtAllDone:"All garments are done: the order moves to “Ready”.",
+      qSolde:"💰 Balance paid", qSoldeQ:"Take the balance of {v} from {n}?", qReceipt:"🧾 Resend the receipt", qResched:"📅 Postpone delivery",
+      qReschedQ:"New delivery date (YYYY-MM-DD):", qReschedBad:"Invalid date. Example: 2026-10-25", soldeLabel:"Balance",
+      lineItem:"• {n}: {p} {cur}",
       dueTitle:"Unpaid and items to collect", dueTotal:"Total due", dueLate:"Late", dueReady:"Ready to collect",
       dueLateDays:"{n} days late", duePlanned:"due {d}", duePaid:"Paid {a} / {b}", dueRemind:"Remind", dueNone:"Nothing to chase.",
       dueReadyTag:"ready, not yet collected", dueMore:"Show the {n} others",
@@ -2389,7 +2439,9 @@
 
     const qc=$("q-cmd").value.trim().toLowerCase();
     const cl=$("cmd-list"); cl.innerHTML="";
+    $("cmd-type-f").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.getAttribute("data-f")===CMD_TYPE));
     const cmdShown = COMMANDES.filter(o=>{
+      if(CMD_TYPE!=="tous" && (o.type||"confection")!==CMD_TYPE) return false;
       if(!qc) return true;
       return (fmtNum(o.numero)+" "+(o.clienteName||"")+" "+(o.article||"")+" "+(o.clientePhone||"")).toLowerCase().indexOf(qc)!==-1;
     });
@@ -3623,6 +3675,100 @@
   });
 
 
+  // =================== COMMANDE DÉTAILLÉE : articles, état par vêtement ===================
+  function todayISO(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+  function articlesOf(o){
+    if(Array.isArray(o.articles) && o.articles.length) return o.articles.map(a=>Object.assign({}, a));
+    return o.article ? [{ nom:o.article, prix:Number(o.prix)||0, etat:(o.statut==="pret"||o.statut==="livre")?"pret":"a_faire" }] : [];
+  }
+  function artTotal(){
+    let tot=0; $("cf-arts").querySelectorAll(".art-row").forEach(r=>{ tot+=parseFloat(r.children[1].value)||0; });
+    $("cf-total").textContent=money(tot);
+  }
+  function artRow(a){
+    const r=document.createElement("div"); r.className="art-row"; r.dataset.etat=a.etat||"a_faire";
+    const n=document.createElement("input"); n.type="text"; n.placeholder=t("artNamePh2"); n.value=a.nom||"";
+    const p=document.createElement("input"); p.type="number"; p.inputMode="decimal"; p.step="1"; p.placeholder=t("artPricePh"); p.value=(a.prix||a.prix===0)&&a.prix!==""?a.prix:"";
+    const x=document.createElement("button"); x.type="button"; x.textContent="✕";
+    p.addEventListener("input", artTotal);
+    x.addEventListener("click", ()=>{ if($("cf-arts").children.length>1){ r.remove(); artTotal(); } else { n.value=""; p.value=""; artTotal(); } });
+    r.appendChild(n); r.appendChild(p); r.appendChild(x);
+    return r;
+  }
+  function buildArtRows(arts){ const box=$("cf-arts"); box.innerHTML=""; arts.forEach(a=>box.appendChild(artRow(a))); artTotal(); }
+  function readArts(){
+    const out=[];
+    $("cf-arts").querySelectorAll(".art-row").forEach(r=>{
+      const nom=r.children[0].value.trim(); if(!nom) return;
+      const pv=r.children[1].value.trim();
+      out.push({ nom, prix: pv==="" ? "" : (parseFloat(pv)||0), etat:r.dataset.etat||"a_faire" });
+    });
+    return out;
+  }
+  $("cf-art-add").addEventListener("click", ()=>{ const r=artRow({ nom:"", prix:"" }); $("cf-arts").appendChild(r); r.children[0].focus(); });
+  $("cf-gift").addEventListener("change", ()=>{ $("cf-gift-box").hidden=!$("cf-gift").checked; });
+  function renderVt(o){
+    const arts=articlesOf(o), box=$("c-vt"); box.innerHTML="";
+    $("c-vt-card").hidden = arts.length<1;
+    arts.forEach((a,i)=>{
+      const r=document.createElement("div"); r.className="vt-item";
+      const l=document.createElement("div");
+      const nm=document.createElement("div"); nm.className="nm"; nm.textContent=a.nom||"—";
+      const pr=document.createElement("div"); pr.className="pr"; pr.textContent=money(a.prix);
+      l.appendChild(nm); l.appendChild(pr);
+      const b=document.createElement("button"); b.type="button";
+      const done=a.etat==="pret";
+      b.textContent=done ? t("vtDone") : t("vtTodo"); b.classList.toggle("ok", done);
+      b.addEventListener("click", ()=>{
+        const list=articlesOf(ORD); list[i].etat = list[i].etat==="pret" ? "a_faire" : "pret";
+        const upd={ articles:list };
+        const allDone=list.every(x=>x.etat==="pret");
+        const st=ORD.statut||"recu";
+        if(allDone && st!=="pret" && st!=="livre") upd.statut="pret";
+        if(!allDone && st==="pret") upd.statut="coupe";
+        Object.assign(ORD, upd);
+        const local=COMMANDES.find(x=>x.id===ORDID); if(local && local!==ORD) Object.assign(local, upd);
+        setDoc(doc(db,"boutiques",BID,"commandes",ORDID), Object.assign({ updatedAt:serverTimestamp() }, upd), { merge:true }).catch(function(){});
+        syncSuivi(ORD, ORDID); renderCmd(ORD, ORDID); renderLists();
+        if(upd.statut==="pret"){
+          const m=$("p-msg"); m.textContent=t("vtAllDone"); m.className="msg ok show"; setTimeout(()=>m.classList.remove("show"), 5000);
+          if(autoNotifyOn()){ const num=waNumber(ORD.clientePhone); if(num) openWa(num, clientMessage(ORD)); }
+        }
+      });
+      r.appendChild(l); r.appendChild(b); box.appendChild(r);
+    });
+  }
+  $("q-solde").addEventListener("click", ()=>{
+    if(!ORD || !ORDID) return;
+    const re=resteDe(ORD); if(re<=0) return;
+    if(!confirm(t("qSoldeQ").replace("{v}", money(re)).replace("{n}", ORD.clienteName||""))) return;
+    const paye=(Number(ORD.paye)||0)+re; ORD.paye=paye;
+    const local=COMMANDES.find(x=>x.id===ORDID); if(local && local!==ORD) local.paye=paye;
+    setDoc(doc(db,"boutiques",BID,"commandes",ORDID), { paye, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+    addMouv("recette","atelier",re, t("soldeLabel")+" "+fmtNum(ORD.numero)+" — "+(ORD.clienteName||""), { commandeId:ORDID });
+    syncSuivi(ORD, ORDID); renderCmd(ORD, ORDID); renderLists();
+    const m=$("p-msg"); m.textContent=t("cashedIn")+" "+money(re); m.className="msg ok show"; setTimeout(()=>m.classList.remove("show"), 4000);
+  });
+  $("q-receipt").addEventListener("click", ()=>{
+    if(!ORD) return;
+    const num=waNumber(ORD.clientePhone); if(!num){ alert(t("noPhone")); return; }
+    syncSuivi(ORD, ORDID);
+    openWa(num, clientMessage(Object.assign({}, ORD, { statut:"recu" })));
+  });
+  $("q-resched").addEventListener("click", ()=>{
+    if(!ORD || !ORDID) return;
+    const v=prompt(t("qReschedQ"), ORD.livraison||todayISO()); if(v===null) return;
+    const d=String(v).trim();
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(d) || isNaN(new Date(d+"T12:00:00").getTime())){ alert(t("qReschedBad")); return; }
+    const upd={ livraison:d }; if(!ORD.livraisonInitiale && ORD.livraison) upd.livraisonInitiale=ORD.livraison;
+    Object.assign(ORD, upd);
+    const local=COMMANDES.find(x=>x.id===ORDID); if(local && local!==ORD) Object.assign(local, upd);
+    setDoc(doc(db,"boutiques",BID,"commandes",ORDID), Object.assign({ updatedAt:serverTimestamp() }, upd), { merge:true }).catch(function(){});
+    syncSuivi(ORD, ORDID); renderCmd(ORD, ORDID); renderLists();
+  });
+  let CMD_TYPE="tous";
+  $("cmd-type-f").querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{ CMD_TYPE=b.getAttribute("data-f"); renderLists(); }));
+
   // =================== RAJOUTS / CORRECTIONS SUR UNE COMMANDE ===================
   $("q-addart").addEventListener("click", ()=>{
     if(!ORD || !ORDID) return;
@@ -3630,11 +3776,14 @@
     const pv=prompt(t("qArtPrice"), ""); if(pv===null) return;
     const px=parseFloat(String(pv).replace(",", "."));
     if(isNaN(px) || px<0){ alert(t("amountRequired")); return; }
-    const article=(ORD.article ? ORD.article+", " : "")+nom.trim();
+    const arts=articlesOf(ORD).concat([{ nom:nom.trim(), prix:px, etat:"a_faire" }]);
+    const article=arts.map(a=>a.nom).join(", ");
     const prix=(Number(ORD.prix)||0)+px;
-    ORD.article=article; ORD.prix=prix;
-    const local=COMMANDES.find(x=>x.id===ORDID); if(local){ local.article=article; local.prix=prix; }
-    setDoc(doc(db,"boutiques",BID,"commandes",ORDID), { article, prix, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+    const upd={ article, prix, articles:arts };
+    if(ORD.statut==="pret") upd.statut="coupe";
+    Object.assign(ORD, upd);
+    const local=COMMANDES.find(x=>x.id===ORDID); if(local && local!==ORD) Object.assign(local, upd);
+    setDoc(doc(db,"boutiques",BID,"commandes",ORDID), Object.assign({ updatedAt:serverTimestamp() }, upd), { merge:true }).catch(function(){});
     syncSuivi(ORD, ORDID); renderCmd(ORD, ORDID); renderLists();
     const m=$("p-msg"); m.textContent=t("qArtDone").replace("{v}", money(prix)); m.className="msg ok show";
     setTimeout(()=>m.classList.remove("show"), 4000);
@@ -4118,6 +4267,10 @@
     if(o.prix || o.prix===0){ $("c-prix").textContent = money(o.prix); $("c-price-row").hidden=false; } else $("c-price-row").hidden=true;
     if(o.livraison){ $("c-liv").textContent = fmtDate(o.livraison, LANG_UI); $("c-liv-row").hidden=false; } else $("c-liv-row").hidden=true;
     if(o.notes){ $("c-notes").textContent=o.notes; $("c-notes-row").hidden=false; } else $("c-notes-row").hidden=true;
+    if(o.depot){ $("c-depot").textContent=fmtDate(o.depot, LANG_UI); $("c-depot-row").hidden=false; } else $("c-depot-row").hidden=true;
+    if(o.beneficiaire){ $("c-gift").textContent=o.beneficiaire+(o.beneficiaireTel?" · "+o.beneficiaireTel:""); $("c-gift-row").hidden=false; } else $("c-gift-row").hidden=true;
+    renderVt(o);
+    $("q-solde").hidden = resteDe(o)<=0;
     const cur=o.statut||"recu", ci=STEPS.indexOf(cur);
     $("c-steps").querySelectorAll("button").forEach(b=>{
       const i=STEPS.indexOf(b.getAttribute("data-st"));
@@ -4167,8 +4320,14 @@
       .replace("{boutique}", (BOUTIQUE && BOUTIQUE.name) || "");
     if(st==="recu"){
       if(o.numero) msg += "\n" + tm("lineReceipt").replace("{v}", fmtNum(o.numero));
-      if(o.article) msg += "\n" + tm("lineModel").replace("{v}", o.article);
+      if(Array.isArray(o.articles) && o.articles.length>1){
+        o.articles.forEach(a=>{ msg += "\n" + tm("lineItem").replace("{n}", a.nom||"").replace("{p}", Math.round(Number(a.prix)||0)).replace("{cur}", cur()); });
+      } else if(o.article) msg += "\n" + tm("lineModel").replace("{v}", o.article);
       if(o.prix || o.prix===0) msg += "\n" + tm("linePrice").replace("{v}", Math.round(Number(o.prix)||0)).replace("{cur}", cur());
+      if(Number(o.paye)>0){
+        msg += "\n" + tm("pmAdvance").replace("{v}", money(o.paye));
+        if(resteDe(o)>0) msg += "\n" + tm("mAmount").replace("{prix}", Math.round(resteDe(o))).replace("{cur}", cur());
+      }
       if(o.livraison) msg += "\n" + tm("lineDelivery").replace("{v}", fmtDate(o.livraison, LANG_MSG));
       if(resteDe(o)>0) msg += waveLines();
     }
@@ -4270,6 +4429,9 @@
       $("cf-recu").value="tissu"; $("cf-liv").value="";
       $("cf-new-name").value=""; $("cf-new-phone").value="";
       $("cf-avance").value=""; $("cf-av-box").hidden=false;
+      buildArtRows([{ nom:"", prix:"" }]);
+      $("cf-depot").value=todayISO(); $("cf-done").checked=false; $("cf-done-row").hidden=false;
+      $("cf-gift").checked=false; $("cf-gift-name").value=""; $("cf-gift-tel").value=""; $("cf-gift-box").hidden=true;
       TYPE_CF="confection"; paintTypes();
       $("cf-cliente").value="__new"; toggleNewCliente();
       buildCmdGrid({});
@@ -4290,14 +4452,20 @@
     $("cf-prix").value=(o.prix||o.prix===0)?o.prix:"";
     $("cf-liv").value=o.livraison||"";
     $("cf-notes").value=o.notes||"";
+    buildArtRows(Array.isArray(o.articles) && o.articles.length ? o.articles : [{ nom:o.article||"", prix:(o.prix||o.prix===0)?o.prix:"" }]);
+    $("cf-depot").value=o.depot||""; $("cf-done-row").hidden=true;
+    $("cf-gift").checked=!!o.beneficiaire; $("cf-gift-name").value=o.beneficiaire||""; $("cf-gift-tel").value=o.beneficiaireTel||""; $("cf-gift-box").hidden=!o.beneficiaire;
     show("cform");
   }
 
   $("cf-save").addEventListener("click", ()=>{
     const msg=$("cf-msg"); msg.classList.remove("show");
     let cid=$("cf-cliente").value;
-    const article=$("cf-article").value.trim();
-    if(!article){ msg.textContent=t("garmentRequired"); msg.classList.add("show"); return; }
+    const ARTS=readArts();
+    if(!ARTS.length){ msg.textContent=t("garmentRequired"); msg.classList.add("show"); return; }
+    const article=ARTS.map(a=>a.nom).join(", ");
+    const sumArts=ARTS.reduce((s0,a)=>s0+(Number(a.prix)||0),0);
+    $("cf-prix").value = ARTS.some(a=>a.prix!=="" && a.prix!=null) ? String(sumArts) : "";
 
     let c;
     if(cid === "__new"){
@@ -4328,6 +4496,10 @@
       article, type:TYPE_CF, recu:$("cf-recu").value, livraison:$("cf-liv").value||null,
       notes:$("cf-notes").value.trim(),
       prix: (pv!=="" && !isNaN(parseFloat(pv))) ? parseFloat(pv) : null,
+      articles: ARTS.map(a=>({ nom:a.nom, prix:Number(a.prix)||0, etat:a.etat||"a_faire" })),
+      depot: $("cf-depot").value||"",
+      beneficiaire: $("cf-gift").checked ? $("cf-gift-name").value.trim() : "",
+      beneficiaireTel: $("cf-gift").checked ? $("cf-gift-tel").value.trim() : "",
       updatedAt:serverTimestamp()
     };
     const ref = editingOrd
@@ -4336,6 +4508,7 @@
     let AVANCE=0;
     if(!editingOrd){
       data.statut="recu"; data.numero=nextNumero(); data.createdAt=serverTimestamp(); data.createdAtMs=Date.now();
+      if($("cf-done").checked){ data.statut="pret"; data.articles.forEach(a=>{ a.etat="pret"; }); }
       const av=parseFloat($("cf-avance").value);
       if(!isNaN(av) && av>0){ AVANCE = (data.prix!=null) ? Math.min(av, data.prix) : av; data.paye=AVANCE; }
     }
@@ -4344,7 +4517,7 @@
     if(AVANCE>0) addMouv("recette","atelier",AVANCE, t("advanceLabel")+" "+fmtNum(data.numero)+" — "+(data.clienteName||""), { commandeId:id });
     const existing = COMMANDES.find(x=>x.id===id);
     if(existing) Object.assign(existing, data);
-    else COMMANDES.unshift(Object.assign({ id, statut:"recu" }, data));
+    else COMMANDES.unshift(Object.assign({ id }, data));
     editingOrd=null;
     syncSuivi(COMMANDES.find(x=>x.id===id), id);
     renderLists();
