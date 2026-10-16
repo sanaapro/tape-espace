@@ -999,7 +999,7 @@
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { initializeFirestore, enableIndexedDbPersistence,
            doc, getDoc, getDocFromCache, collection, setDoc as _setDoc, getDocs, getDocsFromCache,
-           deleteDoc as _deleteDoc, query, orderBy, where, serverTimestamp }
+           deleteDoc as _deleteDoc, query, orderBy, where, serverTimestamp, writeBatch }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -1160,7 +1160,10 @@
       impTitle:"Importer mes anciennes données", impHint:"Choisissez le fichier d'import que vous avez reçu (.json). Rien n'est enregistré avant votre confirmation.",
       impGo:"Importer maintenant", impBad:"Ce fichier n'est pas un fichier d'import SanaaPro.",
       impSum:"{n} tickets pressing trouvés · total {t} · reste dû {r}. Un ticket déjà importé est mis à jour, jamais dupliqué.",
-      impRun:"Import en cours… {i}/{n}", impDone:"Import terminé : {ok} tickets enregistrés.", impSomeFail:"{ko} tickets refusés ({e}).",
+      impSum2:"Dans ce fichier : {a} commandes atelier · {p} tickets pressing · {c} clients avec mesures · {s} employés. Reste dû au total : {r}. Ce qui est déjà importé est mis à jour, jamais dupliqué.",
+      impStep:"Import en cours : {x}…", impDone2:"Import terminé : {a} commandes, {p} tickets, {c} clients, {s} employés.",
+      impSecClients:"clients", impSecAtelier:"commandes atelier", impSecPressing:"tickets pressing", impSecStaff:"employés",
+      impRun:"Import en cours… {i}/{n}", impDone:"Import terminé : {ok} tickets enregistrés.", impSomeFail:"{ko} partie(s) refusée(s) : {e}.",
       tabPressing:"Pressing", pzInProgress:"En cours", pzReadyN:"Prêts", pzPicked:"Récupérés", pzAll:"Tous",
       pzNew:"Nouveau dépôt", pzClient:"Nom du client", pzClientPh:"Nom complet", pzTotal:"Total",
       pzAdvance:"Avance payée", pzPickup:"Retrait prévu", pzRest:"Reste à payer",
@@ -1373,7 +1376,10 @@
       impTitle:"Import my old data", impHint:"Choose the import file you received (.json). Nothing is saved until you confirm.",
       impGo:"Import now", impBad:"This is not a SanaaPro import file.",
       impSum:"{n} dry-cleaning tickets found · total {t} · balance due {r}. A ticket already imported is updated, never duplicated.",
-      impRun:"Importing… {i}/{n}", impDone:"Import finished: {ok} tickets saved.", impSomeFail:"{ko} tickets refused ({e}).",
+      impSum2:"In this file: {a} tailoring orders · {p} dry-cleaning tickets · {c} customers with measurements · {s} employees. Total balance due: {r}. Anything already imported is updated, never duplicated.",
+      impStep:"Importing: {x}…", impDone2:"Import finished: {a} orders, {p} tickets, {c} customers, {s} employees.",
+      impSecClients:"customers", impSecAtelier:"tailoring orders", impSecPressing:"dry-cleaning tickets", impSecStaff:"employees",
+      impRun:"Importing… {i}/{n}", impDone:"Import finished: {ok} tickets saved.", impSomeFail:"{ko} part(s) refused: {e}.",
       tabPressing:"Dry cleaning", pzInProgress:"In progress", pzReadyN:"Ready", pzPicked:"Collected", pzAll:"All",
       pzNew:"New drop-off", pzClient:"Customer name", pzClientPh:"Full name", pzTotal:"Total",
       pzAdvance:"Deposit paid", pzPickup:"Pick-up date", pzRest:"Balance due",
@@ -3159,53 +3165,108 @@
   });
 
   // =================== IMPORT (fichier .json préparé pour la boutique) ===================
+  // Format : { format:"sanaapro-import", pressing:[], atelier:[], clientes:[], salaries:[] }
+  // Identifiants fixes (imp-…) : réimporter met à jour, ne duplique jamais.
   let IMP=null;
+  function impHash(str){ let h=5381; str=String(str||""); for(let i=0;i<str.length;i++){ h=((h<<5)+h+str.charCodeAt(i))>>>0; } return h.toString(36); }
+  function impKey(name, phone){
+    const n=String(name||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]/g,"");
+    const d=String(phone||"").replace(/\D/g,"").slice(-7);
+    return n+"|"+d;
+  }
+  function arr(x){ return Array.isArray(x) ? x : []; }
   $("imp-file").addEventListener("change", async ()=>{
     const f=$("imp-file").files[0]; IMP=null; $("imp-box").hidden=true;
     const m=$("imp-msg"); m.classList.remove("show");
     if(!f) return;
     try{
       const d=JSON.parse(await f.text());
-      if(!d || d.format!=="sanaapro-import" || !Array.isArray(d.pressing)) throw 0;
-      IMP=d.pressing.filter(x=>x && x.numero && x.clienteName);
-      let tot=0, du=0; IMP.forEach(x=>{ tot+=Number(x.prix)||0; du+=Math.max(0,(Number(x.prix)||0)-(Number(x.paye)||0)); });
-      $("imp-sum").textContent=t("impSum").replace("{n}",IMP.length).replace("{t}",money(tot)).replace("{r}",money(du));
+      if(!d || d.format!=="sanaapro-import") throw 0;
+      IMP={
+        pressing: arr(d.pressing).filter(x=>x && x.numero && x.clienteName),
+        atelier:  arr(d.atelier).filter(x=>x && x.numero && x.clienteName),
+        clientes: arr(d.clientes).filter(x=>x && x.name),
+        salaries: arr(d.salaries).filter(x=>x && x.nom)
+      };
+      let du=0; IMP.pressing.concat(IMP.atelier).forEach(x=>{ du+=Math.max(0,(Number(x.prix)||0)-(Number(x.paye)||0)); });
+      $("imp-sum").textContent=t("impSum2").replace("{a}",IMP.atelier.length).replace("{p}",IMP.pressing.length)
+        .replace("{c}",IMP.clientes.length).replace("{s}",IMP.salaries.length).replace("{r}",money(du));
       $("imp-box").hidden=false;
     }catch(e){ m.textContent=t("impBad"); m.className="msg err show"; }
   });
+  async function impCommit(ops, label){
+    // lots de 400 écritures maximum par envoi
+    for(let i=0;i<ops.length;i+=400){
+      const b=writeBatch(db);
+      ops.slice(i,i+400).forEach(o=>b.set(o[0], o[1], { merge:true }));
+      await Promise.race([ b.commit(), timeout(90000) ]);
+    }
+  }
   $("imp-go").addEventListener("click", async ()=>{
-    if(!IMP || !IMP.length) return;
+    if(!IMP) return;
+    if(isExpired()){ warnExpired(); return; }
     if(!await askCode()) return;
     const m=$("imp-msg"), btn=$("imp-go"); btn.disabled=true;
-    if(!hasAct("pressing")){
-      const a=activites().concat(["pressing"]); if(BOUTIQUE) BOUTIQUE.activites=a; applyActivities();
-      setDoc(doc(db,"boutiques",BID), { activites:a, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+    const now=Date.now();
+    // activités utiles
+    const acts=activites().slice();
+    if(IMP.pressing.length && acts.indexOf("pressing")===-1) acts.push("pressing");
+    if((IMP.atelier.length || IMP.clientes.length) && acts.indexOf("couture")===-1) acts.push("couture");
+    if(acts.join()!==activites().join()){
+      if(BOUTIQUE) BOUTIQUE.activites=acts; applyActivities();
+      setDoc(doc(db,"boutiques",BID), { activites:acts, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
     }
-    let ok=0, ko=0, lastErr="";
-    for(let i=0;i<IMP.length;i++){
-      const x=IMP[i];
-      m.textContent=t("impRun").replace("{i}",i+1).replace("{n}",IMP.length); m.className="msg ok show";
-      const id="pz-import-"+String(x.numero).padStart(3,"0");
-      const data={
-        kind:"pressing", numero:Number(x.numero), clienteName:String(x.clienteName||""), clientePhone:String(x.clientePhone||""),
-        articles:[], resume:String(x.resume||""), prix:Number(x.prix)||0, paye:Number(x.paye)||0,
-        statut:PZ_STEPS.indexOf(x.statut)!==-1 ? x.statut : "recu", retrait:String(x.retrait||""),
-        createdAtMs:Number(x.createdAtMs)||Date.now(), importe:true, updatedAt:serverTimestamp()
-      };
-      try{
-        const r = await Promise.race([ setDoc(doc(db,"boutiques",BID,"commandes",id), data, { merge:true }), timeout(15000) ]);
-        if(r===false) throw { code:"expired" };
-        ok++;
-        const ex=PRESS.find(y=>y.id===id);
-        if(ex) Object.assign(ex, data); else PRESS.push(Object.assign({ id }, data));
-      }catch(e){ ko++; lastErr=(e && (e.code||e.message)) || "?"; if(lastErr==="expired" || lastErr==="permission-denied") break; }
+    // 1) clients (fiches + mesures) — complétés par les clients des commandes
+    const cli={};
+    IMP.clientes.forEach(c=>{
+      const k=impKey(c.name,c.phone);
+      cli[k]={ id:"imp-cli-"+impHash(k), name:String(c.name), phone:String(c.phone||""), genre:c.genre==="homme"?"homme":"femme", mesures:Object.assign({}, c.mesures||{}) };
+    });
+    function findCli(name, phone){
+      const k=impKey(name,phone); if(cli[k]) return cli[k];
+      const n=k.split("|")[0]; const same=Object.keys(cli).filter(x=>x.split("|")[0]===n);
+      return same.length===1 ? cli[same[0]] : null;
     }
-    PRESS.sort((a,b)=>(Number(b.createdAtMs)||0)-(Number(a.createdAtMs)||0));
-    renderLists();
-    m.textContent=t("impDone").replace("{ok}",ok) + (ko ? " "+t("impSomeFail").replace("{ko}",ko).replace("{e}",lastErr) : "");
-    m.className="msg "+(ko?"err":"ok")+" show";
+    IMP.atelier.forEach(o=>{
+      let c=findCli(o.clienteName,o.clientePhone);
+      if(!c){ const k=impKey(o.clienteName,o.clientePhone); c=cli[k]={ id:"imp-cli-"+impHash(k), name:String(o.clienteName), phone:String(o.clientePhone||""), genre:o.genre==="homme"?"homme":"femme", mesures:{} }; }
+      // une mesure prise sur une commande complète la fiche sans écraser
+      Object.keys(o.mesures||{}).forEach(mk=>{ if(c.mesures[mk]===undefined || c.mesures[mk]==="") c.mesures[mk]=o.mesures[mk]; });
+      o._cid=c.id; o._cname=c.name; o._cphone=c.phone;
+    });
+    const steps=[
+      ["impSecClients", Object.values(cli).map(c=>[ doc(db,"boutiques",BID,"clientes",c.id),
+        { name:c.name, phone:c.phone, genre:c.genre, mesures:c.mesures, notes:"", importe:true, updatedAt:serverTimestamp() } ])],
+      ["impSecAtelier", IMP.atelier.map(o=>[ doc(db,"boutiques",BID,"commandes","at-import-"+String(o.numero).padStart(3,"0")),
+        { clienteId:o._cid, clienteName:o._cname, clientePhone:o._cphone, article:String(o.article||""),
+          type:["confection","retouche","pap"].indexOf(o.type)!==-1 ? o.type : "confection",
+          recu: o.type==="retouche" ? "vetement" : "tissu", livraison:o.livraison||null, notes:String(o.notes||""),
+          prix:Number(o.prix)||0, paye:Number(o.paye)||0, statut:STEPS.indexOf(o.statut)!==-1 ? o.statut : "recu",
+          numero:Number(o.numero), createdAtMs:Number(o.createdAtMs)||now, importe:true, updatedAt:serverTimestamp() } ])],
+      ["impSecPressing", IMP.pressing.map(x=>[ doc(db,"boutiques",BID,"commandes","pz-import-"+String(x.numero).padStart(3,"0")),
+        { kind:"pressing", numero:Number(x.numero), clienteName:String(x.clienteName||""), clientePhone:String(x.clientePhone||""),
+          articles:[], resume:String(x.resume||""), prix:Number(x.prix)||0, paye:Number(x.paye)||0,
+          statut:PZ_STEPS.indexOf(x.statut)!==-1 ? x.statut : "recu", retrait:String(x.retrait||""),
+          createdAtMs:Number(x.createdAtMs)||now, importe:true, updatedAt:serverTimestamp() } ])],
+      ["impSecStaff", IMP.salaries.map(x=>[ doc(db,"boutiques",BID,"salaries","imp-sal-"+impHash(String(x.nom).toLowerCase())),
+        { nom:String(x.nom), poste:String(x.poste||""), phone:String(x.phone||""), salaire:Number(x.salaire)||0,
+          createdAtMs:now, importe:true, updatedAt:serverTimestamp() } ])]
+    ];
+    const done={}, errs=[];
+    for(const [lab, ops] of steps){
+      done[lab]=0;
+      if(!ops.length) continue;
+      m.textContent=t("impStep").replace("{x}", t(lab)); m.className="msg ok show";
+      try{ await impCommit(ops, lab); done[lab]=ops.length; }
+      catch(e){ errs.push(t(lab)+" : "+((e && (e.code||e.message)) || "?")); }
+    }
+    try{ await loadAll(); }catch(e){}
+    m.textContent=t("impDone2").replace("{a}",done.impSecAtelier).replace("{p}",done.impSecPressing)
+      .replace("{c}",done.impSecClients).replace("{s}",done.impSecStaff)
+      + (errs.length ? " "+t("impSomeFail").replace("{ko}",errs.length).replace("{e}",errs.join(" · ")) : "");
+    m.className="msg "+(errs.length?"err":"ok")+" show";
     btn.disabled=false;
-    if(!ko){ $("imp-box").hidden=true; $("imp-file").value=""; IMP=null; }
+    if(!errs.length){ $("imp-box").hidden=true; $("imp-file").value=""; IMP=null; }
   });
 
   // =================== PRESSING ===================
