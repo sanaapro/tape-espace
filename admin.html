@@ -138,7 +138,9 @@
     appId: "1:451762519937:web:0507928bc9f6ef0c937280"
   };
 
-  const app = initializeApp(firebaseConfig);
+  // Instance nommée : la connexion admin est rangée à part et ne touche plus
+  // la connexion de la boutique ouverte dans SanaaPro sur le même téléphone.
+  const app = initializeApp(firebaseConfig, "sanaapro-admin");
   const auth = getAuth(app);
   const db = initializeFirestore(app, { experimentalForceLongPolling: true });
 
