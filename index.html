@@ -563,11 +563,15 @@
         <div class="msg" id="ha-msg"></div>
       </details>
       <input id="q-cmd" type="search" data-i18n-ph="searchOrdersPh" placeholder="Chercher une commande…" style="margin-top:14px">
-      <div class="fchips" id="cmd-type-f" style="margin-top:10px">
+      <div class="card" style="margin-top:14px;padding-bottom:12px">
+      <div class="fchips" id="cmd-type-f">
         <button type="button" data-f="tous" data-i18n="pzAll">Tous</button>
         <button type="button" data-f="confection" data-i18n="tConfection">Confection</button>
         <button type="button" data-f="retouche" data-i18n="tRetouche">Retouche</button>
         <button type="button" data-f="pap" data-i18n="tPap">Prêt-à-porter</button>
+      </div>
+      <div id="cmd-month" style="margin-top:10px;font-size:13.5px;color:var(--muted);line-height:1.5"></div>
+      <div class="fchips" id="cmd-st-f" style="margin-top:8px"></div>
       </div>
       <div id="cmd-list"></div>
       <div id="cmd-empty" class="empty" data-i18n="noOrders" hidden>Aucune commande pour le moment.</div>
@@ -1339,6 +1343,8 @@
       stCodeUsed:"Ce code est déjà utilisé par un autre employé.", stCodeNone:"Pas de code de pointage", stCodeSet:"Code de pointage : ••••",
       stCodeBtn:"Changer le code de pointage", stCodeAsk:"Nouveau code à 4 chiffres pour {n} :",
       ptHint:"Tapez votre code à 4 chiffres", ptExit:"Quitter le mode tablette", ptKiosk:"Mode tablette (plein écran)",
+      csEncours:"⏳ En cours", csPret:"✅ Prêts", csImpaye:"💰 Impayés", csTermine:"📦 Terminés", csTout:"Tout voir",
+      csMonth:"<b>Ce mois</b> — {n} commande(s) · Total {t} · Encaissé {e}", csNone:"Aucune commande ici.",
       qTrack:"🔗 Envoyer le lien de suivi", qCopy:"📋 Copier le lien de suivi", qCopied:"Lien copié : {v}",
       mTrack:"Bonjour {nom}, suivez l'avancement de votre commande chez {boutique} ici :\n{v}", pzTrack:"🔗 Suivi",
       srDue:"Salaires dus", srAdv:"Avances notées", srLeft:"À payer fin de mois", srSalary:"Salaire", srAdvances:"Avances", srRest:"Reste",
@@ -1594,6 +1600,8 @@
       stCodeUsed:"This code is already used by another employee.", stCodeNone:"No clock-in code", stCodeSet:"Clock-in code: ••••",
       stCodeBtn:"Change clock-in code", stCodeAsk:"New 4-digit code for {n}:",
       ptHint:"Enter your 4-digit code", ptExit:"Exit tablet mode", ptKiosk:"Tablet mode (full screen)",
+      csEncours:"⏳ In progress", csPret:"✅ Ready", csImpaye:"💰 Unpaid", csTermine:"📦 Finished", csTout:"See all",
+      csMonth:"<b>This month</b> — {n} order(s) · Total {t} · Collected {e}", csNone:"No orders here.",
       qTrack:"🔗 Send the tracking link", qCopy:"📋 Copy the tracking link", qCopied:"Link copied: {v}",
       mTrack:"Hello {nom}, follow the progress of your order at {boutique} here:\n{v}", pzTrack:"🔗 Tracking",
       srDue:"Wages due", srAdv:"Advances noted", srLeft:"To pay at month end", srSalary:"Wage", srAdvances:"Advances", srRest:"Left",
@@ -2462,8 +2470,26 @@
     const qc=$("q-cmd").value.trim().toLowerCase();
     const cl=$("cmd-list"); cl.innerHTML="";
     $("cmd-type-f").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.getAttribute("data-f")===CMD_TYPE));
-    const cmdShown = COMMANDES.filter(o=>{
-      if(CMD_TYPE!=="tous" && (o.type||"confection")!==CMD_TYPE) return false;
+    const ofType = COMMANDES.filter(o=>CMD_TYPE==="tous" || (o.type||"confection")===CMD_TYPE);
+    const cnt={ encours:0, pret:0, impaye:0, termine:0, tout:ofType.length };
+    ofType.forEach(o=>{ cnt[cmdGroup(o)]++; });
+    const stBox=$("cmd-st-f"); stBox.innerHTML="";
+    CMD_STS.forEach(k=>{
+      const b=document.createElement("button"); b.type="button";
+      b.textContent=t("cs"+k.charAt(0).toUpperCase()+k.slice(1))+" ("+cnt[k]+")";
+      b.classList.toggle("on", k===CMD_ST);
+      b.addEventListener("click", ()=>{ CMD_ST=k; renderLists(); });
+      stBox.appendChild(b);
+    });
+    const m0=new Date(); const mStart=new Date(m0.getFullYear(), m0.getMonth(), 1).getTime();
+    let mn=0, mt=0, me=0;
+    ofType.forEach(o=>{ const ms=Number(o.createdAtMs)||0; if(ms>=mStart){ mn++; mt+=Number(o.prix)||0; } });
+    MOUV.forEach(m=>{ if(m.type==="recette" && m.source==="atelier" && (Number(m.ms)||0)>=mStart){
+      const o=COMMANDES.find(x=>x.id===m.commandeId);
+      if(!o || CMD_TYPE==="tous" || (o.type||"confection")===CMD_TYPE) me+=Number(m.montant)||0; } });
+    $("cmd-month").innerHTML=t("csMonth").replace("{n}", mn).replace("{t}", escH(money(mt))).replace("{e}", escH(money(me)));
+    const cmdShown = ofType.filter(o=>{
+      if(!qc && CMD_ST!=="tout" && cmdGroup(o)!==CMD_ST) return false;
       if(!qc) return true;
       return (fmtNum(o.numero)+" "+(o.clienteName||"")+" "+(o.article||"")+" "+(o.clientePhone||"")).toLowerCase().indexOf(qc)!==-1;
     });
@@ -3867,7 +3893,14 @@
     setDoc(doc(db,"boutiques",BID,"commandes",ORDID), Object.assign({ updatedAt:serverTimestamp() }, upd), { merge:true }).catch(function(){});
     syncSuivi(ORD, ORDID); renderCmd(ORD, ORDID); renderLists();
   });
-  let CMD_TYPE="tous";
+  let CMD_TYPE="tous", CMD_ST="encours";
+  const CMD_STS=["encours","pret","impaye","termine","tout"];
+  function cmdGroup(o){
+    const st=o.statut||"recu";
+    if(st==="pret") return "pret";
+    if(st==="livre") return resteDe(o)>0 ? "impaye" : "termine";
+    return "encours";
+  }
   $("cmd-type-f").querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{ CMD_TYPE=b.getAttribute("data-f"); renderLists(); }));
 
   // =================== RAJOUTS / CORRECTIONS SUR UNE COMMANDE ===================
