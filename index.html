@@ -470,6 +470,25 @@
     <div id="pane-apercu">
       <div class="greet"><span data-i18n="hello">Bonjour</span> <span id="d-owner"></span><div class="sub" id="d-name"></div></div>
 
+      <div class="card" id="due-card" hidden>
+        <h2 data-i18n="dueTitle">Impayés et vêtements à récupérer</h2>
+        <div class="stats3" style="margin-top:4px">
+          <div class="stat"><div class="n" id="due-tot">0</div><div class="l" data-i18n="dueTotal">Total dû</div></div>
+          <div class="stat"><div class="n" id="due-late" style="color:var(--err)">0</div><div class="l" data-i18n="dueLate">En retard</div></div>
+          <div class="stat"><div class="n" id="due-ready">0</div><div class="l" data-i18n="dueReady">Prêts à récupérer</div></div>
+        </div>
+        <div class="fchips" id="due-filter" style="margin-top:10px">
+          <button type="button" data-f="tous" data-i18n="pzAll">Tous</button>
+          <button type="button" data-f="atelier" data-i18n="tabAtelier">Atelier</button>
+          <button type="button" data-f="pressing" data-i18n="tabPressing">Pressing</button>
+        </div>
+        <div id="due-list"></div>
+      </div>
+      <div class="card" id="thx-card" hidden>
+        <h2 data-i18n="thxTitle">Remerciements à envoyer</h2>
+        <p style="margin:0 0 6px;font-size:13px;color:var(--muted)" data-i18n="thxHint">Clients servis et payés : un petit merci sur WhatsApp les fait revenir.</p>
+        <div id="thx-list"></div>
+      </div>
       <div class="card" id="alert-card" hidden style="border-color:var(--warn)">
         <h2 data-i18n="soonDue" style="color:var(--warn);border-bottom-color:var(--warnbg)">Rendez-vous proches</h2>
         <div id="alert-list"></div>
@@ -1276,6 +1295,13 @@
       stCodeUsed:"Ce code est déjà utilisé par un autre employé.", stCodeNone:"Pas de code de pointage", stCodeSet:"Code de pointage : ••••",
       stCodeBtn:"Changer le code de pointage", stCodeAsk:"Nouveau code à 4 chiffres pour {n} :",
       ptHint:"Tapez votre code à 4 chiffres", ptExit:"Quitter le mode tablette", ptKiosk:"Mode tablette (plein écran)",
+      dueTitle:"Impayés et vêtements à récupérer", dueTotal:"Total dû", dueLate:"En retard", dueReady:"Prêts à récupérer",
+      dueLateDays:"en retard de {n} j", duePlanned:"prévu le {d}", duePaid:"Payé {a} / {b}", dueRemind:"Relancer", dueNone:"Rien à relancer.",
+      dueReadyTag:"prêt, pas encore récupéré", dueMore:"Voir les {n} autres",
+      mRemind:"Bonjour {nom}, petit rappel de {boutique} concernant {article} (n° {num}).", mRemindReady:"Votre vêtement est prêt et vous attend.",
+      thxTitle:"Remerciements à envoyer", thxHint:"Clients servis et payés : un petit merci sur WhatsApp les fait revenir.", thxBtn:"Remercier",
+      thxDone:"Fait", thxAll:"Tout marquer comme fait",
+      mThanks:"Merci {nom} d'avoir choisi {boutique} ! C'était un plaisir. À très bientôt.",
       fGeneral:"Général (charges, salaires)", fAddExp:"Ajouter une dépense", fActivity:"Activité", fCategory:"Catégorie",
       fCatPh:"Ex. Électricité, fournitures, transport…", fAmount:"Montant", fDate:"Date", fToday:"Aujourd'hui", fYesterday:"Hier",
       fFixedT:"Charges fixes du mois", fFixedHint:"Loyer, électricité, assurance… Touchez « Payer » quand c'est réglé : la dépense est enregistrée.",
@@ -1510,6 +1536,13 @@
       stCodeUsed:"This code is already used by another employee.", stCodeNone:"No clock-in code", stCodeSet:"Clock-in code: ••••",
       stCodeBtn:"Change clock-in code", stCodeAsk:"New 4-digit code for {n}:",
       ptHint:"Enter your 4-digit code", ptExit:"Exit tablet mode", ptKiosk:"Tablet mode (full screen)",
+      dueTitle:"Unpaid and items to collect", dueTotal:"Total due", dueLate:"Late", dueReady:"Ready to collect",
+      dueLateDays:"{n} days late", duePlanned:"due {d}", duePaid:"Paid {a} / {b}", dueRemind:"Remind", dueNone:"Nothing to chase.",
+      dueReadyTag:"ready, not yet collected", dueMore:"Show the {n} others",
+      mRemind:"Hello {nom}, a quick reminder from {boutique} about {article} (no. {num}).", mRemindReady:"Your item is ready and waiting for you.",
+      thxTitle:"Thank-you messages to send", thxHint:"Customers served and paid: a quick thank-you on WhatsApp brings them back.", thxBtn:"Thank",
+      thxDone:"Done", thxAll:"Mark all as done",
+      mThanks:"Thank you {nom} for choosing {boutique}! It was a pleasure. See you soon.",
       fGeneral:"General (bills, wages)", fAddExp:"Add an expense", fActivity:"Activity", fCategory:"Category",
       fCatPh:"E.g. electricity, supplies, transport…", fAmount:"Amount", fDate:"Date", fToday:"Today", fYesterday:"Yesterday",
       fFixedT:"Fixed costs this month", fFixedHint:"Rent, electricity, insurance… Tap “Pay” when settled: the expense is recorded.",
@@ -2388,6 +2421,7 @@
     renderVisits();
     renderStock();
     renderAlerts();
+    try{ renderDue(); renderThx(); }catch(e){}
     renderAtelierStats();
     renderFinances();
     renderSearch();
@@ -2450,6 +2484,114 @@
     if(n === 0) return t("dueToday");
     if(n === 1) return t("dueTomorrow");
     return t("dueIn").replace("{n}", n);
+  }
+
+  // =================== IMPAYÉS / À RÉCUPÉRER / REMERCIEMENTS (Aperçu) ===================
+  let DUE_FILTER="tous", DUE_ALL=false;
+  function lateDays(dateStr){
+    if(!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(String(dateStr))) return 0;
+    const d=new Date(dateStr+"T23:59:59").getTime();
+    return Math.max(0, Math.floor((Date.now()-d)/86400000));
+  }
+  function dueItems(){
+    const out=[];
+    COMMANDES.forEach(o=>{
+      const st=o.statut||"recu", re=resteDe(o);
+      const ready = st==="pret";
+      const late = (st!=="pret" && st!=="livre") ? lateDays(o.livraison) : 0;
+      if(re>0 || ready) out.push({ o, kind:"atelier", re, ready, late, date:o.livraison, art:o.article||"" });
+    });
+    PRESS.forEach(o=>{
+      const st=o.statut||"recu", re=resteDe(o);
+      const ready = st==="pret";
+      const late = (st!=="pret" && st!=="recupere") ? lateDays(o.retrait) : 0;
+      if(re>0 || ready) out.push({ o, kind:"pressing", re, ready, late, date:o.retrait, art:o.resume||"" });
+    });
+    out.sort((a,b)=>(b.late-a.late) || (b.re-a.re));
+    return out;
+  }
+  function remindMsg(it){
+    const o=it.o;
+    let msg=tm("mRemind").replace("{nom}", o.clienteName||"").replace("{boutique}", (BOUTIQUE&&BOUTIQUE.name)||"")
+      .replace("{article}", it.art || "").replace("{num}", fmtNum(o.numero));
+    if(it.ready) msg+="\n"+tm("mRemindReady");
+    if(it.re>0) msg+="\n"+tm("mAmount").replace("{prix}", Math.round(it.re)).replace("{cur}", cur())+waveLines();
+    return msg+"\n"+tm("waFoot");
+  }
+  function renderDue(){
+    const card=$("due-card"); if(!card) return;
+    const all=dueItems();
+    card.hidden = !all.length;
+    let tot=0, late=0, ready=0; all.forEach(it=>{ tot+=it.re; if(it.late>0) late++; if(it.ready) ready++; });
+    $("due-tot").textContent=money(tot); $("due-late").textContent=late; $("due-ready").textContent=ready;
+    $("due-filter").style.display = (hasAct("couture") && hasAct("pressing")) ? "" : "none";
+    $("due-filter").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.getAttribute("data-f")===DUE_FILTER));
+    const list=all.filter(it=>DUE_FILTER==="tous" || it.kind===DUE_FILTER);
+    const box=$("due-list"); box.innerHTML="";
+    if(!list.length){ const e=document.createElement("div"); e.className="empty"; e.style.padding="10px 0"; e.textContent=t("dueNone"); box.appendChild(e); return; }
+    (DUE_ALL ? list : list.slice(0,8)).forEach(it=>{
+      const o=it.o, el=document.createElement("div"); el.className="rec";
+      const top=document.createElement("div"); top.style.cssText="display:flex;justify-content:space-between;gap:8px;align-items:baseline";
+      const nm=document.createElement("div"); nm.className="nm"; nm.textContent=(it.kind==="pressing"?"🧺 ":"✂️ ")+(o.clienteName||t("noName"));
+      const am=document.createElement("div"); am.style.cssText="font-weight:700;white-space:nowrap;color:"+(it.re>0?"var(--err)":"var(--ok)");
+      am.textContent = it.re>0 ? money(it.re) : "✓";
+      top.appendChild(nm); top.appendChild(am); el.appendChild(top);
+      const l1=document.createElement("div"); l1.className="ln";
+      l1.textContent=t(it.kind==="pressing"?"tabPressing":"tabAtelier")+" · "+fmtNum(o.numero)+(it.art?" · "+it.art.slice(0,60):"");
+      el.appendChild(l1);
+      const l2=document.createElement("div"); l2.className="ln";
+      const bits=[];
+      if(it.late>0) bits.push(t("dueLateDays").replace("{n}", it.late));
+      if(it.ready) bits.push(t("dueReadyTag"));
+      if(it.date) bits.push(t("duePlanned").replace("{d}", fmtDate(it.date, LANG_UI)));
+      l2.textContent=bits.join(" · "); if(it.late>0) l2.style.color="var(--err)";
+      el.appendChild(l2);
+      const l3=document.createElement("div"); l3.className="ln"; l3.textContent=t("duePaid").replace("{a}", money(o.paye)).replace("{b}", money(o.prix));
+      el.appendChild(l3);
+      const acts=document.createElement("div"); acts.className="pz-acts";
+      if(o.clientePhone){
+        const b=document.createElement("button"); b.type="button"; b.textContent="💬 "+t("dueRemind"); b.style.color="var(--ok)";
+        b.addEventListener("click", ()=>openWa(waNumber(o.clientePhone), remindMsg(it)));
+        acts.appendChild(b);
+      }
+      if(it.kind==="atelier"){
+        const b2=document.createElement("button"); b2.type="button"; b2.textContent="›"; b2.addEventListener("click", ()=>openCmd(o.id)); acts.appendChild(b2);
+      }
+      el.appendChild(acts);
+      box.appendChild(el);
+    });
+    if(!DUE_ALL && list.length>8){
+      const m=document.createElement("button"); m.type="button"; m.className="ghost"; m.textContent=t("dueMore").replace("{n}", list.length-8);
+      m.addEventListener("click", ()=>{ DUE_ALL=true; renderDue(); }); box.appendChild(m);
+    }
+  }
+  $("due-filter").querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{ DUE_FILTER=b.getAttribute("data-f"); renderDue(); }));
+  function thxItems(){
+    const out=[];
+    COMMANDES.forEach(o=>{ if((o.statut==="livre") && resteDe(o)===0 && !o.remercie && !o.importe && !o.historique && o.clientePhone) out.push({ o, kind:"atelier" }); });
+    PRESS.forEach(o=>{ if((o.statut==="recupere") && resteDe(o)===0 && !o.remercie && !o.importe && !o.historique && o.clientePhone) out.push({ o, kind:"pressing" }); });
+    return out;
+  }
+  function markThanked(o){
+    o.remercie=true;
+    setDoc(doc(db,"boutiques",BID,"commandes",o.id), { remercie:true, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+  }
+  function renderThx(){
+    const card=$("thx-card"); if(!card) return;
+    const list=thxItems(); card.hidden=!list.length;
+    const box=$("thx-list"); box.innerHTML="";
+    list.slice(0,10).forEach(it=>{
+      const o=it.o;
+      payLine(box, (it.kind==="pressing"?"🧺 ":"✂️ ")+(o.clienteName||""), fmtNum(o.numero)+" · "+((it.kind==="pressing"?o.resume:o.article)||"").slice(0,50), null, ()=>{
+        openWa(waNumber(o.clientePhone), tm("mThanks").replace("{nom}", o.clienteName||"").replace("{boutique}", (BOUTIQUE&&BOUTIQUE.name)||""));
+        markThanked(o); renderThx();
+      }).querySelector("button").textContent="💬 "+t("thxBtn");
+    });
+    if(list.length>1){
+      const all=document.createElement("button"); all.type="button"; all.className="ghost"; all.textContent=t("thxAll");
+      all.addEventListener("click", ()=>{ list.forEach(it=>markThanked(it.o)); renderThx(); });
+      box.appendChild(all);
+    }
   }
   function renderAlerts(){
     const box=$("alert-list"); box.innerHTML="";
