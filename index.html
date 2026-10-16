@@ -767,6 +767,19 @@
         </div>
         <button class="ghost" id="b-otp-gen" data-i18n="otpGen">Générer un code à usage unique</button>
       </div>
+      <div class="card" style="border-color:var(--err)">
+        <h2 style="color:var(--err)" data-i18n="delTitle">🗑 Supprimer mon compte</h2>
+        <p style="margin:0 0 8px;font-size:14px;color:var(--muted)" data-i18n="delHint">Efface définitivement cette boutique : commandes, tickets, clients, mesures, finances, employés, stock et le compte de connexion. Impossible de revenir en arrière.</p>
+        <button class="ghost" id="del-open" type="button" style="border-color:var(--err);color:var(--err)" data-i18n="delOpen">Supprimer ce compte…</button>
+        <div id="del-box" hidden style="margin-top:10px">
+          <label id="del-lbl"></label>
+          <input id="del-name" type="text" autocomplete="off">
+          <label data-i18n="delPass">Votre mot de passe de connexion</label>
+          <input id="del-pass" type="password" autocomplete="current-password">
+          <button class="primary" id="del-go" type="button" style="background:var(--err);border-color:var(--err);color:#fff" data-i18n="delGo">Supprimer définitivement</button>
+        </div>
+        <div class="msg err" id="del-msg"></div>
+      </div>
     </div>
 
     <div id="pane-boutique" hidden>
@@ -1252,7 +1265,8 @@
   const SRC_COLORS={ atelier:"#4ade80", pressing:"#7dd3fc", boutique:"#f472b6", general:"#facc15", tous:"#e0b43a", jour:"#ff9f43", semaine:"#e0b43a", mois:"#a78bfa" };
   function SRC_COL(k){ return SRC_COLORS[k]||SRC_COLORS.atelier; }
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail }
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail,
+           EmailAuthProvider, reauthenticateWithCredential, deleteUser }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { initializeFirestore, enableIndexedDbPersistence,
            doc, getDoc, getDocFromCache, collection, setDoc as _setDoc, getDocs, getDocsFromCache,
@@ -1480,6 +1494,7 @@
       impSum2:"Dans ce fichier : {a} commandes atelier · {p} tickets pressing · {c} clients avec mesures · {s} employés. Reste dû au total : {r}. Ce qui est déjà importé est mis à jour, jamais dupliqué.",
       impStep:"Import en cours : {x}…", impDone2:"Import terminé : {a} commandes, {p} tickets, {c} clients, {s} employés.",
       impSecClients:"clients", impSecAtelier:"commandes atelier", impSecPressing:"tickets pressing", impSecStaff:"employés",
+      delTitle:"🗑 Supprimer mon compte", delHint:"Efface définitivement cette boutique : commandes, tickets, clients, mesures, finances, employés, stock et le compte de connexion. Impossible de revenir en arrière.", delOpen:"Supprimer ce compte…", delPass:"Votre mot de passe de connexion", delGo:"Supprimer définitivement", delTypeName:"Pour confirmer, écrivez le nom de la boutique : {n}", delNameBad:"Le nom ne correspond pas. Rien n'a été supprimé.", delPassBad:"Mot de passe incorrect. Rien n'a été supprimé.", delSure:"Dernière confirmation : supprimer « {n} » et TOUTES ses données pour toujours ?", delRunning:"Suppression en cours… ne fermez pas l'application.", delDone:"Le compte « {n} » a été supprimé. Au revoir.", delFail:"La suppression n'a pas pu se terminer ({e}). Réessayez avec une bonne connexion.",
       impSkipped:"{n} élément(s) déjà présent(s) dans SanaaPro laissé(s) tel(s) quel(s).", impSecMoves:"historique des finances", impMoves:"+ {n} mouvements de l'historique des finances.",
       impRun:"Import en cours… {i}/{n}", impDone:"Import terminé : {ok} tickets enregistrés.", impSomeFail:"{ko} partie(s) refusée(s) : {e}.",
       tabPressing:"Pressing", pzInProgress:"En cours", pzReadyN:"Prêts", pzPicked:"Récupérés", pzAll:"Tous",
@@ -1757,6 +1772,7 @@
       impSum2:"In this file: {a} tailoring orders · {p} dry-cleaning tickets · {c} customers with measurements · {s} employees. Total balance due: {r}. Anything already imported is updated, never duplicated.",
       impStep:"Importing: {x}…", impDone2:"Import finished: {a} orders, {p} tickets, {c} customers, {s} employees.",
       impSecClients:"customers", impSecAtelier:"tailoring orders", impSecPressing:"dry-cleaning tickets", impSecStaff:"employees",
+      delTitle:"🗑 Delete my account", delHint:"Permanently erases this shop: orders, tickets, clients, measurements, finances, staff, stock and the login account. This cannot be undone.", delOpen:"Delete this account…", delPass:"Your login password", delGo:"Delete permanently", delTypeName:"To confirm, type the shop name: {n}", delNameBad:"The name does not match. Nothing was deleted.", delPassBad:"Wrong password. Nothing was deleted.", delSure:"Final confirmation: delete “{n}” and ALL its data forever?", delRunning:"Deleting… do not close the app.", delDone:"The account “{n}” has been deleted. Goodbye.", delFail:"Deletion could not finish ({e}). Try again with a good connection.",
       impSkipped:"{n} item(s) already in SanaaPro left unchanged.", impSecMoves:"finance history", impMoves:"+ {n} entries of finance history.",
       impRun:"Importing… {i}/{n}", impDone:"Import finished: {ok} tickets saved.", impSomeFail:"{ko} part(s) refused: {e}.",
       tabPressing:"Dry cleaning", pzInProgress:"In progress", pzReadyN:"Ready", pzPicked:"Collected", pzAll:"All",
@@ -2282,7 +2298,7 @@
     show("loading"); $("loading").textContent=t("loading");
     try{
       const snap = await getDocSmart(doc(db,"boutiques",user.uid));
-      if(!snap.exists()){
+      if(!snap.exists() || (snap.data()||{}).deleted){
         const zone=$("loading"); zone.textContent="";
         const p=document.createElement("div"); p.textContent=t("noShop"); zone.appendChild(p);
         const b=document.createElement("button");
@@ -4386,6 +4402,43 @@
       await Promise.race([ b.commit(), timeout(90000) ]);
     }
   }
+  // =================== SUPPRESSION DU COMPTE ===================
+  $("del-open").addEventListener("click", async ()=>{
+    if(!await askCode()) return;
+    const nm=(BOUTIQUE && BOUTIQUE.name) || "";
+    $("del-lbl").textContent=t("delTypeName").replace("{n}", nm);
+    $("del-box").hidden=false; $("del-msg").textContent=""; $("del-name").value=""; $("del-pass").value="";
+  });
+  $("del-go").addEventListener("click", async ()=>{
+    const nm=(BOUTIQUE && BOUTIQUE.name) || "", msg=$("del-msg");
+    const norm=x=>String(x||"").trim().toLowerCase().replace(/\s+/g," ");
+    if(norm($("del-name").value)!==norm(nm)){ msg.textContent=t("delNameBad"); return; }
+    const user=auth.currentUser; if(!user) return;
+    const btn=$("del-go"); btn.disabled=true;
+    try{ await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, $("del-pass").value)); }
+    catch(e){ btn.disabled=false; msg.textContent=t("delPassBad"); return; }
+    if(!confirm(t("delSure").replace("{n}", nm))){ btn.disabled=false; return; }
+    msg.className="msg"; msg.textContent=t("delRunning");
+    try{
+      for(const sub of ["commandes","clientes","mouvements","salaries","visiteurs","pointages","stock"]){
+        let snap; try{ snap=await getDocs(collection(db,"boutiques",BID,sub)); }catch(e){ continue; }
+        const ids=[]; snap.forEach(d=>ids.push(d.id));
+        for(let i=0;i<ids.length;i+=400){
+          const b=writeBatch(db); ids.slice(i,i+400).forEach(id=>b.delete(doc(db,"boutiques",BID,sub,id)));
+          try{ await b.commit(); }catch(e){}
+        }
+      }
+      // la fiche boutique est marquée supprimée (l'administrateur la retire de la liste)
+      try{ await _setDoc(doc(db,"boutiques",BID), { deleted:true, deletedAt:serverTimestamp(), deletedEmail:user.email||"", activites:[], name:nm }, { merge:true }); }catch(e){}
+      try{ await _deleteDoc(doc(db,"boutiques",BID)); }catch(e){}
+      await deleteUser(user);
+      alert(t("delDone").replace("{n}", nm));
+      location.reload();
+    }catch(e){
+      btn.disabled=false; msg.className="msg err"; msg.textContent=t("delFail").replace("{e}", (e&&(e.code||e.message))||"?");
+    }
+  });
+
   $("imp-go").addEventListener("click", async ()=>{
     if(!IMP) return;
     if(isExpired()){ warnExpired(); return; }

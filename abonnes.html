@@ -263,6 +263,7 @@
       SHOPS = [];
       snap.forEach(d=>{
         const b = d.data(), sub = b.subscription || {};
+        if(b.deleted) return;   // compte supprimé par l'abonné lui-même
         let exp = null;
         if(sub.expiresAt && sub.expiresAt.toDate) exp = sub.expiresAt.toDate();
         let createdMs = 0;
