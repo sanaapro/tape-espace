@@ -274,6 +274,16 @@
   .fchips{ display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
   .fchips button{ padding:8px 12px; border-radius:18px; border:1px solid var(--line2); background:none; color:var(--txt); font:inherit; font-size:13px; cursor:pointer; }
   .fchips button.on{ background:var(--gold); border-color:var(--gold); color:#141310; font-weight:700; }
+  /* Finances en couleurs : chaque rayon et chaque période a sa couleur, textes plus grands */
+  #pane-finances .fchips button{ font-size:15px; padding:10px 15px; border-width:2px; border-color:var(--c,var(--line2)); color:var(--c,var(--txt)); font-weight:600; }
+  #pane-finances .fchips button.on{ background:var(--c,var(--gold)); border-color:var(--c,var(--gold)); color:#141310; font-weight:800; }
+  #pane-finances .rec .ln{ font-size:15px; line-height:1.45; }
+  #pane-finances .rec .nm{ font-size:17px; }
+  #pane-finances .mvrow{ border-left:5px solid var(--c,var(--line2)); }
+  #pane-finances .stat .n{ font-size:30px; }
+  .fpill{ display:inline-block; padding:3px 10px; margin:3px 4px 3px 0; border-radius:12px; font-size:14px; font-weight:700; color:#141310; background:var(--c); }
+  .fblk{ border-left:5px solid var(--c); }
+  .fblk>.nm{ color:var(--c); }
   .mvrow{ display:flex; gap:10px; align-items:flex-start; }
   .mvrow .grow{ flex:1; min-width:0; }
   .mvrow .x{ border:1px solid var(--line2); background:none; color:var(--muted); border-radius:8px; padding:6px 9px; cursor:pointer; font-size:13px; }
@@ -2966,11 +2976,13 @@
     if(cur0 && finSources().indexOf(cur0)!==-1) sel.value=cur0;
     else if(id==="fc-src") sel.value="general";
   }
+  const SRC_COLORS={ atelier:"#ff9f43", pressing:"#38bdf8", boutique:"#f472b6", general:"#facc15", tous:"#e0b43a", jour:"#4ade80", semaine:"#e0b43a", mois:"#a78bfa" };
+  function SRC_COL(k){ return SRC_COLORS[k]||SRC_COLORS.atelier; }
   function signed(m){ const v=Number(m.montant)||0; return m.type==="recette" ? v : -v; }
-  function finBlock(title, from, to){
+  function finBlock(title, from, to, col){
     const T0={ atelier:[0,0], pressing:[0,0], boutique:[0,0], general:[0,0] };
     MOUV.forEach(m=>{ const ms=Number(m.ms)||0; if(ms<from || ms>=to) return; const k=T0[m.source]?m.source:"atelier"; if(m.type==="recette") T0[k][0]+=Number(m.montant)||0; else T0[k][1]+=Number(m.montant)||0; });
-    const el=document.createElement("div"); el.className="rec";
+    const el=document.createElement("div"); el.className="rec fblk"; el.style.setProperty("--c", col||"var(--gold)");
     const h=document.createElement("div"); h.className="nm"; h.textContent=title; el.appendChild(h);
     let R=0, D=0;
     const keys=finSources().filter(k=>k!=="general" || T0.general[0] || T0.general[1]);
@@ -2978,10 +2990,10 @@
       const [r,d]=T0[k]; R+=r; D+=d;
       const l=document.createElement("div"); l.className="ln";
       l.textContent=(k==="pressing"?"🧺 ":k==="boutique"?"🛍️ ":k==="general"?"📋 ":"✂️ ")+t("fLine").replace("{a}", SRC_LBL(k)).replace("{r}", money(r)).replace("{d}", money(d)).replace("{s}", money(r-d));
-      if(r-d<0) l.style.color="var(--err)";
+      l.style.color = SRC_COL(k); l.style.fontWeight="600";
       el.appendChild(l);
     });
-    const tl=document.createElement("div"); tl.style.cssText="margin-top:6px;font-weight:700;font-size:13.5px;color:"+((R-D)<0?"var(--err)":"var(--ok)");
+    const tl=document.createElement("div"); tl.style.cssText="margin-top:8px;font-weight:800;font-size:16px;color:"+((R-D)<0?"var(--err)":"var(--ok)");
     tl.textContent=t("fTotLine").replace("{r}", money(R)).replace("{d}", money(D)).replace("{s}", money(R-D));
     el.appendChild(tl);
     return el;
@@ -2996,10 +3008,10 @@
     const FAR=8.64e15;
     const fb=$("fb-blocks"); fb.innerHTML="";
     const sd=d=>d.toLocaleDateString(loc,{day:"2-digit",month:"2-digit"});
-    fb.appendChild(finBlock(t("fBlkToday").replace("{d}", d0.toLocaleDateString(loc)), d0.getTime(), d0.getTime()+86400000));
-    fb.appendChild(finBlock(t("fBlkWeek").replace("{a}", sd(w0)).replace("{b}", w1.toLocaleDateString(loc)), w0.getTime(), w0.getTime()+7*86400000));
-    fb.appendChild(finBlock(t("fBlkMonth").replace("{m}", now.toLocaleDateString(loc,{month:"long",year:"numeric"})), m0.getTime(), new Date(now.getFullYear(), now.getMonth()+1, 1).getTime()));
-    fb.appendChild(finBlock(t("fBlkYear").replace("{y}", now.getFullYear()), y0.getTime(), new Date(now.getFullYear()+1,0,1).getTime()));
+    fb.appendChild(finBlock(t("fBlkToday").replace("{d}", d0.toLocaleDateString(loc)), d0.getTime(), d0.getTime()+86400000, SRC_COLORS.jour));
+    fb.appendChild(finBlock(t("fBlkWeek").replace("{a}", sd(w0)).replace("{b}", w1.toLocaleDateString(loc)), w0.getTime(), w0.getTime()+7*86400000, SRC_COLORS.semaine));
+    fb.appendChild(finBlock(t("fBlkMonth").replace("{m}", now.toLocaleDateString(loc,{month:"long",year:"numeric"})), m0.getTime(), new Date(now.getFullYear(), now.getMonth()+1, 1).getTime(), SRC_COLORS.mois));
+    fb.appendChild(finBlock(t("fBlkYear").replace("{y}", now.getFullYear()), y0.getTime(), new Date(now.getFullYear()+1,0,1).getTime(), "#fb7185"));
     // tendance 14 jours
     const days=[]; for(let i=13;i>=0;i--){ const d=new Date(d0); d.setDate(d.getDate()-i); days.push({ t:d.getTime(), v:0 }); }
     MOUV.forEach(m=>{ if(m.type!=="recette") return; const ms=Number(m.ms)||0; const k=days.findIndex(x=>ms>=x.t && ms<x.t+86400000); if(k>=0) days[k].v+=Number(m.montant)||0; });
@@ -3014,16 +3026,18 @@
     // qui a payé
     const pFrom = WP_PER==="jour" ? d0.getTime() : WP_PER==="semaine" ? w0.getTime() : m0.getTime();
     const recs=MOUV.filter(m=>m.type==="recette" && (Number(m.ms)||0)>=pFrom && (Number(m.ms)||0)<d0.getTime()+86400000);
-    $("wp-per").querySelectorAll("button").forEach(x=>x.classList.toggle("on", x.getAttribute("data-p")===WP_PER));
+    $("wp-per").querySelectorAll("button").forEach(x=>{ x.style.setProperty("--c", SRC_COL(x.getAttribute("data-p"))); x.classList.toggle("on", x.getAttribute("data-p")===WP_PER); });
     const srcB=$("wp-src"); srcB.innerHTML="";
     ["tous"].concat(finSources().filter(k=>k!=="general")).forEach(k=>{
       const n=k==="tous" ? recs.length : recs.filter(m=>(m.source||"atelier")===k).length;
       const bt=document.createElement("button"); bt.type="button"; bt.textContent=(k==="tous"?t("pzAll"):SRC_LBL(k))+" ("+n+")";
+      bt.style.setProperty("--c", SRC_COL(k));
       bt.classList.toggle("on", k===WP_SRC); bt.addEventListener("click", ()=>{ WP_SRC=k; renderFinances(); }); srcB.appendChild(bt);
     });
     const shown=recs.filter(m=>WP_SRC==="tous" || (m.source||"atelier")===WP_SRC).sort((a,b)=>(Number(b.ms)||0)-(Number(a.ms)||0));
     let sum=0; shown.forEach(m=>{ sum+=Number(m.montant)||0; });
     $("wp-n").textContent=shown.length; $("wp-sum").textContent=money(sum);
+    $("wp-n").style.color=$("wp-sum").style.color=SRC_COL(WP_SRC);
     const box=$("mv-list"); box.innerHTML=""; $("mv-empty").hidden = shown.length>0;
     shown.forEach(m=>box.appendChild(mvRow(m, false)));
     // jour par jour (mois en cours)
@@ -3063,23 +3077,24 @@
   function periodCard(title, v){
     const el=document.createElement("div"); el.className="rec";
     const h=document.createElement("div"); h.className="nm"; h.textContent=title; el.appendChild(h);
-    const parts=finSources().filter(k=>k!=="general").map(k=>SRC_LBL(k)+" : "+money(v[k]));
-    if(v.general) parts.push(SRC_LBL("general")+" : "+money(v.general));
-    const l1=document.createElement("div"); l1.className="ln"; l1.textContent=parts.join(" · "); el.appendChild(l1);
+    const ks=finSources().filter(k=>k!=="general" || v.general);
+    const l1=document.createElement("div"); l1.className="ln";
+    l1.innerHTML=ks.map(k=>'<span class="fpill" style="--c:'+SRC_COL(k)+'">'+escH(SRC_LBL(k)+" : "+money(v[k]))+"</span>").join(""); el.appendChild(l1);
     const rec=v.atelier+v.pressing+v.boutique+v.general;
     const l2=document.createElement("div"); l2.className="ln"; l2.style.fontWeight="700";
     l2.innerHTML=escH(t("fRec"))+" : "+escH(money(rec))+" · "+escH(t("fDep"))+" : "+escH(money(v.dep))+' · <span style="color:'+((rec-v.dep)<0?"var(--err)":"var(--ok)")+'">'+escH(t("fSol"))+" : "+escH(money(rec-v.dep))+"</span>";
     el.appendChild(l2); return el;
   }
   function mvRow(m, isExp){
-    const el=document.createElement("div"); el.className="rec mvrow";
+    const el=document.createElement("div"); el.className="rec mvrow"; el.style.setProperty("--c", SRC_COL(m.source||"atelier"));
     if(DUP_IDS && DUP_IDS.has(m)) el.style.borderColor="var(--err)";
     const g=document.createElement("div"); g.className="grow";
     const nm=document.createElement("div"); nm.className="nm";
     const sv=signed(m);
     nm.textContent=(isExp ? ((m.categorie||String(m.label||"").split(" — ")[0]||"—")+" — ") : SRC_LBL(m.source)+" — ")+money(Math.abs(Number(m.montant)||0));
     nm.style.color = sv>=0 ? "var(--ok)" : "var(--err)";
-    const l1=document.createElement("div"); l1.className="ln"; l1.textContent=(isExp?SRC_LBL(m.source)+" · ":"")+fmtWhen(m.ms).split(" ·")[0];
+    const l1=document.createElement("div"); l1.className="ln";
+    l1.innerHTML='<span class="fpill" style="--c:'+SRC_COL(m.source||"atelier")+'">'+escH(SRC_LBL(m.source))+"</span> "+escH(fmtWhen(m.ms).split(" ·")[0]);
     const l2=document.createElement("div"); l2.className="ln"; l2.textContent=m.label||"";
     g.appendChild(nm); g.appendChild(l1); if(m.label) g.appendChild(l2); el.appendChild(g);
     if(m.id){
