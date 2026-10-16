@@ -223,6 +223,30 @@
   .pt-row .hrs .abs{ color:#6A665F; }
   body.kiosk .head, body.kiosk #tabs, body.kiosk #off-dash, body.kiosk .foot, body.kiosk .pt-admin{ display:none !important; }
   body.kiosk .pt-screen{ margin-top:4vh; }
+  .pt-scan{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; max-width:340px; margin:14px auto 0; padding:16px;
+             border:1px solid var(--gold); border-radius:14px; background:var(--gold); color:#141310; font:600 17px var(--sans); cursor:pointer }
+  .pt-scan svg{ width:22px; height:22px }
+  .pt-cam{ position:fixed; inset:0; z-index:60; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:20px }
+  .pt-cam video{ width:100%; max-width:480px; max-height:60vh; border-radius:14px; background:#111; object-fit:cover }
+  .pt-cam .frame{ color:#ddd; font-size:15px; text-align:center }
+  .pt-cam button{ padding:12px 22px; border-radius:12px; border:1px solid #555; background:none; color:#eee; font:inherit; cursor:pointer }
+  .pt-modes{ display:flex; gap:8px; flex-wrap:wrap; margin-top:6px }
+  .pt-modes button{ flex:1 1 120px; padding:11px 8px; border:1px solid var(--line2); border-radius:10px; background:none; color:var(--txt); font:inherit; font-size:14px; cursor:pointer }
+  .pt-modes button.on{ background:var(--gold); border-color:var(--gold); color:#141310; font-weight:700 }
+  .pt-badges{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; margin-top:10px }
+  .pt-badge{ border:1px solid var(--line2); border-radius:12px; padding:12px 10px; text-align:center; background:#fff; color:#141310 }
+  .pt-badge .bn{ font-weight:700; font-size:15px; margin-bottom:2px }
+  .pt-badge .bs{ font-size:11.5px; color:#555; margin-bottom:8px }
+  .pt-badge img{ width:120px; height:120px; image-rendering:pixelated; display:block; margin:0 auto }
+  .pt-badge .bc{ font-family:monospace; font-size:12px; margin-top:6px; letter-spacing:1px }
+  .pt-badge button{ margin-top:8px; padding:8px 10px; border-radius:8px; border:1px solid #bbb; background:#f3f3f3; color:#141310; font:inherit; font-size:13px; cursor:pointer }
+  @media print{
+    body.printbadges *{ visibility:hidden !important }
+    body.printbadges #pt-badges, body.printbadges #pt-badges *{ visibility:visible !important }
+    body.printbadges #pt-badges{ position:absolute; left:0; top:0; width:100% }
+    body.printbadges .pt-badge button{ display:none !important }
+    body.printbadges .pt-badge{ break-inside:avoid; border:1px dashed #888 }
+  }
   .pt-exit{ display:none; margin:22px auto 0; background:none; border:none; color:#5F5B54; font-size:12px; cursor:pointer; font-family:var(--sans); }
   body.kiosk .pt-exit{ display:block; }
   .otp{ font-family:var(--serif); font-size:34px; color:var(--gold); letter-spacing:8px;
@@ -625,19 +649,38 @@
       <div class="pt-screen">
         <div class="pt-clock" id="pt-clock">--:--</div>
         <div class="pt-date" id="pt-date"></div>
+        <div id="pt-codebox">
         <div class="pt-hint" data-i18n="ptHint">Tapez votre code à 4 chiffres</div>
         <div class="pt-dots" id="pt-dots"><span></span><span></span><span></span><span></span></div>
         <div class="pt-pad" id="pt-pad"></div>
+        </div>
+        <button class="pt-scan" id="pt-scan" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10"/></svg><span data-i18n="ptScan">Scanner mon badge</span></button>
         <div class="pt-res" id="pt-res" role="status" aria-live="polite"></div>
         <button class="pt-exit" id="pt-exit" data-i18n="ptExit">Quitter le mode tablette</button>
       </div>
       <div class="pt-admin">
         <button class="ghost" id="pt-kiosk" data-i18n="ptKiosk">Mode tablette (plein écran)</button>
+        <button class="primary" id="pt-addstaff" type="button" style="margin-top:10px" data-i18n="ptAddStaff">＋ Ajouter un employé</button>
+        <div class="card">
+          <h2 data-i18n="ptModeT">Comment vos employés pointent</h2>
+          <div class="pt-modes" id="pt-modes">
+            <button type="button" data-m="code" data-i18n="ptModeCode">Code à 4 chiffres</button>
+            <button type="button" data-m="badge" data-i18n="ptModeBadge">Badge (code-barres)</button>
+            <button type="button" data-m="both" data-i18n="ptModeBoth">Les deux</button>
+          </div>
+          <p class="sub" style="margin:10px 0 0;font-size:13px;color:var(--muted)" data-i18n="ptModeHint">Avec le badge, l'employé montre sa carte à la caméra du téléphone, ou la passe devant un lecteur de code-barres branché.</p>
+        </div>
+        <div class="card" id="pt-badgecard">
+          <h2 data-i18n="ptBadgesT">Badges des employés</h2>
+          <p style="margin:0;font-size:13px;color:var(--muted)" data-i18n="ptBadgesHint">Créez un badge pour chaque employé, puis imprimez-les et plastifiez-les.</p>
+          <div class="pt-badges" id="pt-badges"></div>
+          <button class="ghost" id="pt-print" type="button" style="margin-top:12px" data-i18n="ptPrint">Imprimer les badges</button>
+        </div>
         <div class="card">
           <h2 data-i18n="ptDay">Présences du jour</h2>
           <input id="pt-day" type="date">
           <div id="pt-list" style="margin-top:8px"></div>
-          <div id="pt-empty" class="empty" data-i18n="ptNoStaff" hidden>Ajoutez d'abord vos employés et leur code dans l'onglet Salariés.</div>
+          <div id="pt-empty" class="empty" data-i18n="ptNoStaff" hidden>Ajoutez d'abord vos employés avec le bouton « Ajouter un employé ».</div>
         </div>
       </div>
       </div>
@@ -1025,7 +1068,16 @@
       stCodeUsed:"Ce code est déjà utilisé par un autre employé.", stCodeNone:"Pas de code de pointage", stCodeSet:"Code de pointage : ••••",
       stCodeBtn:"Changer le code de pointage", stCodeAsk:"Nouveau code à 4 chiffres pour {n} :",
       ptHint:"Tapez votre code à 4 chiffres", ptExit:"Quitter le mode tablette", ptKiosk:"Mode tablette (plein écran)",
-      ptDay:"Présences du jour", ptNoStaff:"Ajoutez d'abord vos employés et leur code dans l'onglet Salariés.",
+      ptScan:"Scanner mon badge", ptAddStaff:"＋ Ajouter un employé", ptModeT:"Comment vos employés pointent",
+      ptModeCode:"Code à 4 chiffres", ptModeBadge:"Badge (code-barres)", ptModeBoth:"Les deux",
+      ptModeHint:"Avec le badge, l'employé montre sa carte à la caméra du téléphone, ou la passe devant un lecteur de code-barres branché.",
+      ptBadgesT:"Badges des employés", ptBadgesHint:"Créez un badge pour chaque employé, puis imprimez-les et plastifiez-les.",
+      ptPrint:"Imprimer les badges", ptBadgeMake:"Créer le badge", ptBadgeNew:"Nouveau badge (l'ancien ne marchera plus)",
+      ptBadgeNewQ:"Remplacer le badge de {n} ? L'ancienne carte ne fonctionnera plus.", ptNoBadge:"Pas encore de badge",
+      ptCamHint:"Placez le badge devant la caméra", ptCamClose:"Fermer", ptCamFail:"Caméra indisponible. Autorisez la caméra ou tapez votre code.",
+      ptBadBadge:"Badge inconnu. Demandez un nouveau badge.", ptSaveFail:"Échec de l'enregistrement : {e}. Vérifiez la connexion ou votre formule.",
+      ptPremiumOnly:"Les salariés et le pointage font partie de la formule Premium.",
+      ptDay:"Présences du jour", ptNoStaff:"Ajoutez d'abord vos employés avec le bouton « Ajouter un employé ».",
       ptIn:"Bonjour {n} !", ptInT:"Arrivée enregistrée à {h}", ptOut:"Au revoir {n} !", ptOutT:"Départ enregistré à {h}",
       ptBad:"Code inconnu. Réessayez.", ptTwice:"{n}, votre arrivée vient d'être enregistrée.", ptIn2:"Arrivée", ptOut2:"Départ",
       ptHere:"présent", ptAbsent:"absent", ptTotal:"Total {h}",
@@ -1204,7 +1256,16 @@
       stCodeUsed:"This code is already used by another employee.", stCodeNone:"No clock-in code", stCodeSet:"Clock-in code: ••••",
       stCodeBtn:"Change clock-in code", stCodeAsk:"New 4-digit code for {n}:",
       ptHint:"Enter your 4-digit code", ptExit:"Exit tablet mode", ptKiosk:"Tablet mode (full screen)",
-      ptDay:"Attendance for the day", ptNoStaff:"First add your employees and their code in the Staff tab.",
+      ptScan:"Scan my badge", ptAddStaff:"＋ Add an employee", ptModeT:"How your staff clock in",
+      ptModeCode:"4-digit code", ptModeBadge:"Badge (barcode)", ptModeBoth:"Both",
+      ptModeHint:"With a badge, the employee shows their card to the phone camera, or passes it in front of a plugged-in barcode reader.",
+      ptBadgesT:"Employee badges", ptBadgesHint:"Create a badge for each employee, then print and laminate them.",
+      ptPrint:"Print the badges", ptBadgeMake:"Create badge", ptBadgeNew:"New badge (the old one stops working)",
+      ptBadgeNewQ:"Replace {n}'s badge? The old card will stop working.", ptNoBadge:"No badge yet",
+      ptCamHint:"Hold the badge in front of the camera", ptCamClose:"Close", ptCamFail:"Camera unavailable. Allow the camera or type your code.",
+      ptBadBadge:"Unknown badge. Ask for a new badge.", ptSaveFail:"Saving failed: {e}. Check your connection or your plan.",
+      ptPremiumOnly:"Staff and time clock are part of the Premium plan.",
+      ptDay:"Attendance for the day", ptNoStaff:"First add your employees with the “Add an employee” button.",
       ptIn:"Welcome {n}!", ptInT:"Arrival recorded at {h}", ptOut:"Goodbye {n}!", ptOutT:"Departure recorded at {h}",
       ptBad:"Unknown code. Try again.", ptTwice:"{n}, your arrival was just recorded.", ptIn2:"In", ptOut2:"Out",
       ptHere:"present", ptAbsent:"absent", ptTotal:"Total {h}",
@@ -1714,6 +1775,7 @@
 
   function renderDashboard(b){
     BOUTIQUE=b;
+    try{ applyPtMode(); }catch(e){}
     $("d-brand").textContent = b.name || "SanaaPro";
     $("d-owner").textContent = b.ownerName||"";
     $("d-name").textContent = b.name||"";
@@ -2284,6 +2346,9 @@
   function ptPunch(code){
     const s=SALARIES.find(y=>String(y.code||"")===code);
     if(!s){ ptShow("bad", escH(t("ptBad"))); return; }
+    ptPunchFor(s);
+  }
+  function ptPunchFor(s){
     const now=Date.now(), day=dayKey(now);
     const open=POINTAGES.filter(p=>p.salId===s.id && p.day===day && !p.departMs).pop();
     if(open){
@@ -2310,6 +2375,116 @@
       setTimeout(()=>{ PT_CODE=""; ptDots(); ptPunch(c); }, 150);
     }
   }
+  // ---- Badges (QR / code-barres) et mode de pointage ----
+  function ptMode(){ const m = BOUTIQUE && BOUTIQUE.ptMode; return (m==="badge"||m==="both") ? m : "code"; }
+  function applyPtMode(){
+    const m = ptMode();
+    if(!$("pt-codebox")) return;
+    $("pt-codebox").hidden = (m==="badge");
+    $("pt-scan").hidden = (m==="code");
+    $("pt-modes").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.m===m));
+  }
+  function newBadge(){
+    const a = new Uint32Array(2); crypto.getRandomValues(a);
+    return "SP" + String(a[0] % 100000000).padStart(8,"0");
+  }
+  function ptPunchBadge(tok){
+    tok = String(tok||"").trim().toUpperCase();
+    const s = SALARIES.find(y=>String(y.badge||"").toUpperCase()===tok);
+    if(!s){
+      if(/^[0-9]{4}$/.test(tok) && ptMode()!=="badge"){ ptPunch(tok); return; }
+      ptShow("bad", escH(t("ptBadBadge"))); return;
+    }
+    ptPunchFor(s);
+  }
+  let QR_LIB = null;
+  function loadScript(src){ return new Promise((res,rej)=>{ const sc=document.createElement("script"); sc.src=src; sc.onload=res; sc.onerror=rej; document.head.appendChild(sc); }); }
+  async function qrLib(){
+    if(window.qrcode) return window.qrcode;
+    await loadScript("https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js");
+    return window.qrcode;
+  }
+  async function qrDataUrl(text){
+    const q = (await qrLib())(0, "M"); q.addData(text); q.make();
+    return q.createDataURL(6, 2);
+  }
+  async function renderBadges(){
+    const box=$("pt-badges"); if(!box) return; box.innerHTML="";
+    for(const s of SALARIES){
+      const c=document.createElement("div"); c.className="pt-badge";
+      const n=document.createElement("div"); n.className="bn"; n.textContent=s.nom||"—"; c.appendChild(n);
+      const sh=document.createElement("div"); sh.className="bs"; sh.textContent=(BOUTIQUE && BOUTIQUE.name)||"SanaaPro"; c.appendChild(sh);
+      if(s.badge){
+        const im=document.createElement("img"); im.alt=s.badge; c.appendChild(im);
+        qrDataUrl(s.badge).then(u=>{ im.src=u; }).catch(()=>{ im.replaceWith(Object.assign(document.createElement("div"),{textContent:"QR ?"})); });
+        const code=document.createElement("div"); code.className="bc"; code.textContent=s.badge; c.appendChild(code);
+      } else {
+        const no=document.createElement("div"); no.className="bs"; no.textContent=t("ptNoBadge"); c.appendChild(no);
+      }
+      const b=document.createElement("button"); b.type="button"; b.textContent = s.badge ? t("ptBadgeNew") : t("ptBadgeMake");
+      b.addEventListener("click", async ()=>{
+        if(s.badge && !confirm(t("ptBadgeNewQ").replace("{n}", s.nom||""))) return;
+        if(s.badge && !await askCode()) return;
+        const tok=newBadge(); const old=s.badge; s.badge=tok; renderBadges();
+        setDoc(doc(db,"boutiques",BID,"salaries",s.id), { badge:tok, updatedAt:serverTimestamp() }, { merge:true })
+          .catch(e=>{ s.badge=old; renderBadges(); alert(t("ptSaveFail").replace("{e}", (e && (e.code||e.message)) || "?")); });
+      });
+      c.appendChild(b);
+      box.appendChild(c);
+    }
+    $("pt-print").hidden = !SALARIES.some(s=>s.badge);
+  }
+  // Caméra : BarcodeDetector (Chrome Android) sinon jsQR
+  let CAM = null;
+  async function openCam(){
+    const wrap=document.createElement("div"); wrap.className="pt-cam";
+    const v=document.createElement("video"); v.setAttribute("playsinline",""); v.muted=true; wrap.appendChild(v);
+    const tx=document.createElement("div"); tx.className="frame"; tx.textContent=t("ptCamHint"); wrap.appendChild(tx);
+    const cl=document.createElement("button"); cl.type="button"; cl.textContent=t("ptCamClose"); wrap.appendChild(cl);
+    document.body.appendChild(wrap);
+    let stream=null, stop=false;
+    const close=()=>{ stop=true; if(stream) stream.getTracks().forEach(tr=>tr.stop()); wrap.remove(); CAM=null; };
+    CAM = close; cl.addEventListener("click", close);
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"user" }, audio:false });
+      v.srcObject = stream; await v.play();
+    }catch(e){ tx.textContent=t("ptCamFail"); return; }
+    let detect;
+    if("BarcodeDetector" in window){
+      try{
+        const bd = new BarcodeDetector({ formats:["qr_code","code_128","code_39","ean_13"] });
+        detect = async ()=>{ const r = await bd.detect(v); return r && r[0] && r[0].rawValue; };
+      }catch(e){}
+    }
+    if(!detect){
+      try{ if(!window.jsQR) await loadScript("https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"); }catch(e){ tx.textContent=t("ptCamFail"); return; }
+      const cv=document.createElement("canvas"), cx=cv.getContext("2d", { willReadFrequently:true });
+      detect = async ()=>{
+        if(!v.videoWidth) return null;
+        cv.width=v.videoWidth; cv.height=v.videoHeight; cx.drawImage(v,0,0);
+        const r = window.jsQR(cx.getImageData(0,0,cv.width,cv.height).data, cv.width, cv.height);
+        return r && r.data;
+      };
+    }
+    const loop = async ()=>{
+      if(stop) return;
+      let val=null; try{ val = await detect(); }catch(e){}
+      if(val){ close(); ptPunchBadge(val); return; }
+      setTimeout(loop, 250);
+    };
+    loop();
+  }
+  // Lecteur de code-barres branché (il « tape » SP12345678 puis Entrée)
+  let SCAN_BUF="", SCAN_T=0;
+  function scanKey(e){
+    const now=Date.now();
+    if(now-SCAN_T > 400) SCAN_BUF="";
+    SCAN_T=now;
+    if(e.key==="Enter"){ if(/^SP[0-9]{8}$/i.test(SCAN_BUF)){ e.preventDefault(); const v=SCAN_BUF; SCAN_BUF=""; ptPunchBadge(v); return true; } SCAN_BUF=""; return false; }
+    if(e.key && e.key.length===1){ SCAN_BUF+=e.key; }
+    return /^S/i.test(SCAN_BUF); // pendant un badge, les chiffres ne vont pas au clavier à code
+  }
+
   (function(){
     const pad=$("pt-pad");
     ["1","2","3","4","5","6","7","8","9","clr","0","del"].forEach(k=>{
@@ -2328,6 +2503,16 @@
     tick(); setInterval(tick, 15000);
     $("pt-day").value=dayKey(Date.now());
     $("pt-day").addEventListener("change", renderPointage);
+    $("pt-scan").addEventListener("click", openCam);
+    $("pt-addstaff").addEventListener("click", ()=>{ setTab("staff"); setTimeout(()=>{ try{ $("st-name").focus(); $("st-name").scrollIntoView({block:"center"}); }catch(e){} }, 80); });
+    $("pt-modes").querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{
+      const m=b.dataset.m; if(BOUTIQUE) BOUTIQUE.ptMode=m; applyPtMode();
+      setDoc(doc(db,"boutiques",BID), { ptMode:m, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+    }));
+    $("pt-print").addEventListener("click", ()=>{
+      document.body.classList.add("printbadges");
+      setTimeout(()=>{ window.print(); setTimeout(()=>document.body.classList.remove("printbadges"), 500); }, 300);
+    });
     $("pt-kiosk").addEventListener("click", ()=>{
       document.body.classList.add("kiosk");
       try{ if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function(){}); }catch(e){}
@@ -2342,11 +2527,14 @@
       if(TAB!=="pointage" || !$("body-pointage") || $("body-pointage").hidden) return;
       const tg=e.target && e.target.tagName;
       if(tg==="INPUT" || tg==="TEXTAREA" || tg==="SELECT") return;
+      if(scanKey(e)) return;
+      if(ptMode()==="badge") return;
       if(/^[0-9]$/.test(e.key)) ptKey(e.key);
       else if(e.key==="Backspace") ptKey("del");
     });
   })();
   function renderPointage(){
+    applyPtMode(); renderBadges();
     const box=$("pt-list"); if(!box) return; box.innerHTML="";
     const day=$("pt-day").value || dayKey(Date.now());
     $("pt-empty").hidden = SALARIES.length>0;
@@ -2756,7 +2944,11 @@
       createdAtMs: Date.now(), updatedAt:serverTimestamp()
     };
     const ref=doc(collection(db,"boutiques",BID,"salaries"));
-    setDoc(ref, data, { merge:true }).catch(function(){});
+    setDoc(ref, data, { merge:true }).catch(function(e){
+      // la règle Firestore a refusé (formule, échéance…) : on le dit au lieu d'afficher un employé fantôme
+      SALARIES = SALARIES.filter(x=>x.id!==ref.id); renderLists();
+      const m2=$("st-msg"); m2.textContent=t("ptSaveFail").replace("{e}", (e && (e.code||e.message)) || "?"); m2.className="msg err show";
+    });
     SALARIES.push(Object.assign({ id:ref.id }, data));
     SALARIES.sort((a,b)=>(a.nom||"").localeCompare(b.nom||""));
     $("st-name").value=""; $("st-phone").value=""; $("st-salary").value=""; $("st-role-other").value=""; $("st-code").value="";
