@@ -247,6 +247,21 @@
     body.printbadges .pt-badge button{ display:none !important }
     body.printbadges .pt-badge{ break-inside:avoid; border:1px dashed #888 }
   }
+  .ftab{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  .ftab th{ text-align:right; color:var(--muted); font-weight:600; font-size:11.5px; letter-spacing:.04em; text-transform:uppercase; padding:6px 4px; border-bottom:1px solid var(--line); }
+  .ftab th:first-child, .ftab td:first-child{ text-align:left; }
+  .ftab td{ text-align:right; padding:8px 4px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  .ftab td.r{ color:var(--ok); } .ftab td.d{ color:var(--err); }
+  .fchips{ display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+  .fchips button{ padding:8px 12px; border-radius:18px; border:1px solid var(--line2); background:none; color:var(--txt); font:inherit; font-size:13px; cursor:pointer; }
+  .fchips button.on{ background:var(--gold); border-color:var(--gold); color:#141310; font-weight:700; }
+  .mvrow{ display:flex; gap:10px; align-items:flex-start; }
+  .mvrow .grow{ flex:1; min-width:0; }
+  .mvrow .x{ border:1px solid var(--line2); background:none; color:var(--muted); border-radius:8px; padding:6px 9px; cursor:pointer; font-size:13px; }
+  .pay-line{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); }
+  .pay-line .nm{ font-weight:600; } .pay-line .sub{ font-size:12.5px; color:var(--muted); }
+  .pay-line button{ padding:8px 12px; border-radius:9px; border:1px solid var(--gold); background:none; color:var(--gold); font:inherit; font-size:13px; cursor:pointer; white-space:nowrap; }
+  .pay-line .ok{ color:var(--ok); font-size:13px; font-weight:700; white-space:nowrap; }
   details.hist{ margin-top:12px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:0 16px; }
   details.hist summary{ cursor:pointer; padding:14px 0; color:var(--gold); font-weight:700; font-size:14.5px; list-style:none; }
   details.hist summary::-webkit-details-marker{ display:none; }
@@ -716,15 +731,77 @@
         <div class="row" id="fi-row-atelier"><span class="k" data-i18n="tabAtelier">Atelier</span><span class="v" id="fi-atelier">—</span></div>
         <div class="row" id="fi-row-pressing"><span class="k" data-i18n="tabPressing">Pressing</span><span class="v" id="fi-pressing">—</span></div>
         <div class="row" id="fi-row-boutique"><span class="k" data-i18n="tabBoutique">Boutique</span><span class="v" id="fi-boutique">—</span></div>
+        <div class="row" id="fi-row-general"><span class="k" data-i18n="fGeneral">Général (charges, salaires)</span><span class="v" id="fi-general">—</span></div>
         <div class="mline" style="margin-top:8px;border-top:1px solid var(--line);padding-top:12px">
           <span class="k" data-i18n="income">Recettes</span><span class="v" id="fi-rec" style="color:var(--ok)">0</span>
         </div>
         <div class="mline"><span class="k" data-i18n="expenses">Dépenses</span><span class="v" id="fi-dep" style="color:var(--err)">0</span></div>
         <div class="mline"><span class="k" data-i18n="netBalance">Solde</span><span class="v" id="fi-sol">0</span></div>
       </div>
-      <div class="secttl" data-i18n="lastMoves">Derniers mouvements</div>
-      <div id="mv-list"></div>
-      <div id="mv-empty" class="empty" data-i18n="noMoves" hidden>Aucun mouvement sur cette période.</div>
+      <div class="card">
+        <h2 data-i18n="fAddExp">Ajouter une dépense</h2>
+        <label data-i18n="fActivity">Activité</label>
+        <select id="fx-src"></select>
+        <label data-i18n="fCategory">Catégorie</label>
+        <input id="fx-cat" type="text" list="fx-cats" data-i18n-ph="fCatPh" placeholder="Ex. Électricité, fournitures, transport…">
+        <datalist id="fx-cats"></datalist>
+        <div class="mgrid">
+          <div><label data-i18n="fAmount">Montant</label><input id="fx-amt" type="number" step="1" inputmode="decimal" placeholder="0"></div>
+          <div><label data-i18n="fDate">Date</label><input id="fx-date" type="date"></div>
+        </div>
+        <div class="fchips" id="fx-when">
+          <button type="button" data-d="0" data-i18n="fToday">Aujourd'hui</button>
+          <button type="button" data-d="1" data-i18n="fYesterday">Hier</button>
+        </div>
+        <label data-i18n="notesOpt">Notes (optionnel)</label>
+        <input id="fx-desc" type="text" data-i18n-ph="expDescPh" placeholder="Description (optionnel)">
+        <button class="primary" id="fx-save" type="button" data-i18n="saveExpense">Enregistrer la dépense</button>
+        <div class="msg" id="fx-msg"></div>
+      </div>
+
+      <div class="card" id="fc-card">
+        <h2 data-i18n="fFixedT">Charges fixes du mois</h2>
+        <p style="margin:0 0 4px;font-size:13px;color:var(--muted)" data-i18n="fFixedHint">Loyer, électricité, assurance… Touchez « Payer » quand c'est réglé : la dépense est enregistrée.</p>
+        <div id="fc-list"></div>
+        <details class="hist" style="margin-top:10px">
+          <summary data-i18n="fFixedAdd">＋ Ajouter une charge fixe</summary>
+          <label data-i18n="fFixedName">Nom</label><input id="fc-nom" type="text" data-i18n-ph="fFixedNamePh" placeholder="Ex. Loyer atelier">
+          <label data-i18n="fFixedAmt">Montant par mois</label><input id="fc-amt" type="number" step="1" inputmode="decimal" placeholder="0">
+          <label data-i18n="fActivity">Activité</label><select id="fc-src"></select>
+          <button class="primary" id="fc-save" type="button" data-i18n="fFixedSave">Enregistrer la charge</button>
+        </details>
+      </div>
+
+      <div class="card" id="fs-card">
+        <h2 data-i18n="fSalT">Salaires du mois</h2>
+        <div id="fs-list"></div>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="fByCat">Dépenses par catégorie</h2>
+        <div id="fcat-list"></div>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="fWhoPaid">Qui a payé — nom par nom</h2>
+        <div class="fchips" id="mv-filter">
+          <button type="button" data-f="recette" data-i18n="income">Recettes</button>
+          <button type="button" data-f="depense" data-i18n="expenses">Dépenses</button>
+          <button type="button" data-f="tous" data-i18n="pzAll">Tous</button>
+        </div>
+        <div id="mv-list"></div>
+        <div id="mv-empty" class="empty" data-i18n="noMoves" hidden>Aucun mouvement sur cette période.</div>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="fDaily">Jour par jour — ce mois</h2>
+        <div id="fday"></div>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="fMonthly">L'année mois par mois</h2>
+        <div id="fmonth"></div>
+      </div>
     </div>
 
     <div id="pane-mesures" hidden>
@@ -1199,6 +1276,17 @@
       stCodeUsed:"Ce code est déjà utilisé par un autre employé.", stCodeNone:"Pas de code de pointage", stCodeSet:"Code de pointage : ••••",
       stCodeBtn:"Changer le code de pointage", stCodeAsk:"Nouveau code à 4 chiffres pour {n} :",
       ptHint:"Tapez votre code à 4 chiffres", ptExit:"Quitter le mode tablette", ptKiosk:"Mode tablette (plein écran)",
+      fGeneral:"Général (charges, salaires)", fAddExp:"Ajouter une dépense", fActivity:"Activité", fCategory:"Catégorie",
+      fCatPh:"Ex. Électricité, fournitures, transport…", fAmount:"Montant", fDate:"Date", fToday:"Aujourd'hui", fYesterday:"Hier",
+      fFixedT:"Charges fixes du mois", fFixedHint:"Loyer, électricité, assurance… Touchez « Payer » quand c'est réglé : la dépense est enregistrée.",
+      fFixedAdd:"＋ Ajouter une charge fixe", fFixedName:"Nom", fFixedNamePh:"Ex. Loyer atelier", fFixedAmt:"Montant par mois", fFixedSave:"Enregistrer la charge",
+      fFixedNone:"Aucune charge fixe. Ajoutez votre loyer, l'électricité…", fPay:"Payer", fPaidOn:"Payé le {d}", fPayAsk:"Montant payé pour {n} ({m}) :",
+      fRemoveQ:"Retirer la charge fixe « {n} » ? Les paiements déjà faits restent dans les Finances.", fRemove:"Retirer",
+      fSalT:"Salaires du mois", fSalNone:"Aucun salarié enregistré.", fSalLabel:"Salaires", fTotalMonth:"Total du mois : {a} payés sur {b}",
+      fByCat:"Dépenses par catégorie", fNoExp:"Aucune dépense sur cette période.", fWhoPaid:"Qui a payé — nom par nom",
+      fDaily:"Jour par jour — ce mois", fMonthly:"L'année mois par mois", fDay:"Jour", fMonth:"Mois", fRec:"Recettes", fDep:"Dépenses", fSol:"Solde",
+      fDelQ:"Supprimer ce mouvement ({v}) ?", fNoData:"Rien encore.",
+      catSalaires:"Salaires", catLoyer:"Loyer", catElec:"Électricité", catTransport:"Transport", catFourn:"Fournitures", catRepas:"Repas", catEau:"Eau", catInternet:"Internet / crédit",
       advanceOpt:"Avance payée aujourd'hui (optionnel)", advanceLabel:"Avance",
       qAddArt:"＋ Ajouter un article", qFixPaid:"Corriger le montant payé", qArtName:"Nom de l'article ajouté :", qArtPrice:"Prix de cet article :",
       qArtDone:"Article ajouté. Nouveau total : {v}", qFixAsk:"Montant TOTAL réellement payé par {n} (actuellement {v}) :", qFixDone:"Montant payé corrigé : {v}", qFixLabel:"Correction paiement",
@@ -1422,6 +1510,17 @@
       stCodeUsed:"This code is already used by another employee.", stCodeNone:"No clock-in code", stCodeSet:"Clock-in code: ••••",
       stCodeBtn:"Change clock-in code", stCodeAsk:"New 4-digit code for {n}:",
       ptHint:"Enter your 4-digit code", ptExit:"Exit tablet mode", ptKiosk:"Tablet mode (full screen)",
+      fGeneral:"General (bills, wages)", fAddExp:"Add an expense", fActivity:"Activity", fCategory:"Category",
+      fCatPh:"E.g. electricity, supplies, transport…", fAmount:"Amount", fDate:"Date", fToday:"Today", fYesterday:"Yesterday",
+      fFixedT:"Fixed costs this month", fFixedHint:"Rent, electricity, insurance… Tap “Pay” when settled: the expense is recorded.",
+      fFixedAdd:"＋ Add a fixed cost", fFixedName:"Name", fFixedNamePh:"E.g. Workshop rent", fFixedAmt:"Amount per month", fFixedSave:"Save the cost",
+      fFixedNone:"No fixed costs yet. Add your rent, electricity…", fPay:"Pay", fPaidOn:"Paid on {d}", fPayAsk:"Amount paid for {n} ({m}):",
+      fRemoveQ:"Remove the fixed cost “{n}”? Payments already made stay in Finances.", fRemove:"Remove",
+      fSalT:"Wages this month", fSalNone:"No employees saved.", fSalLabel:"Wages", fTotalMonth:"Month total: {a} paid of {b}",
+      fByCat:"Expenses by category", fNoExp:"No expenses in this period.", fWhoPaid:"Who paid — name by name",
+      fDaily:"Day by day — this month", fMonthly:"The year month by month", fDay:"Day", fMonth:"Month", fRec:"Income", fDep:"Expenses", fSol:"Balance",
+      fDelQ:"Delete this entry ({v})?", fNoData:"Nothing yet.",
+      catSalaires:"Wages", catLoyer:"Rent", catElec:"Electricity", catTransport:"Transport", catFourn:"Supplies", catRepas:"Meals", catEau:"Water", catInternet:"Internet / airtime",
       advanceOpt:"Deposit paid today (optional)", advanceLabel:"Deposit",
       qAddArt:"＋ Add an item", qFixPaid:"Correct the amount paid", qArtName:"Name of the added item:", qArtPrice:"Price of this item:",
       qArtDone:"Item added. New total: {v}", qFixAsk:"TOTAL amount actually paid by {n} (currently {v}):", qFixDone:"Amount paid corrected: {v}", qFixLabel:"Payment correction",
@@ -2438,43 +2537,203 @@
     });
   }
 
+  // =================== FINANCES ===================
+  let MV_FILTER="recette";
+  const SRC_LBL = src => t(src==="boutique" ? "tabBoutique" : src==="pressing" ? "tabPressing" : src==="general" ? "fGeneral" : "tabAtelier");
+  const monthKey = ms => { const d=new Date(ms); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); };
+  const MONTHS_FR=["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+  const MONTHS_EN=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const monthName = i => (LANG_UI==="en" ? MONTHS_EN : MONTHS_FR)[i];
+  function finSources(){
+    const out=[]; if(hasAct("couture")) out.push("atelier"); if(hasAct("pressing")) out.push("pressing"); if(hasAct("boutique")) out.push("boutique"); out.push("general");
+    return out;
+  }
+  function fillSrcSelect(id){
+    const sel=$(id); if(!sel) return; const cur0=sel.value; sel.innerHTML="";
+    finSources().forEach(k=>{ const o=document.createElement("option"); o.value=k; o.textContent=SRC_LBL(k); sel.appendChild(o); });
+    if(cur0 && finSources().indexOf(cur0)!==-1) sel.value=cur0;
+    else if(id==="fc-src") sel.value="general";
+  }
+  function signed(m){ const v=Number(m.montant)||0; return m.type==="recette" ? v : -v; }
   function renderFinances(){
     const from = periodStart(PERIODE);
-    let recA=0, depA=0, recB=0, depB=0, recP=0, depP=0;
-    const rows=[];
+    const T0={ atelier:[0,0], pressing:[0,0], boutique:[0,0], general:[0,0] };
+    const rows=[], cats={};
     MOUV.forEach(m=>{
       if((Number(m.ms)||0) < from) return;
-      const v=Number(m.montant)||0;
-      if(m.source==="boutique"){ if(m.type==="recette") recB+=v; else depB+=v; }
-      else if(m.source==="pressing"){ if(m.type==="recette") recP+=v; else depP+=v; }
-      else { if(m.type==="recette") recA+=v; else depA+=v; }
+      const v=Number(m.montant)||0, src=T0[m.source] ? m.source : "atelier";
+      if(m.type==="recette") T0[src][0]+=v; else { T0[src][1]+=v; const c=(m.categorie||String(m.label||"").split(" — ")[0]||"—").trim(); cats[c]=(cats[c]||0)+v; }
       rows.push(m);
     });
-    const rec=recA+recB+recP, dep=depA+depB+depP;
-    $("fi-pressing").textContent = money(recP)+" / −"+money(depP);
+    const rec=T0.atelier[0]+T0.pressing[0]+T0.boutique[0]+T0.general[0];
+    const dep=T0.atelier[1]+T0.pressing[1]+T0.boutique[1]+T0.general[1];
     $("fi-title").textContent = t("balance")+" — "+t("p"+PERIODE.charAt(0).toUpperCase()+PERIODE.slice(1));
-    $("fi-atelier").textContent  = money(recA)+" / −"+money(depA);
-    $("fi-boutique").textContent = money(recB)+" / −"+money(depB);
+    $("fi-atelier").textContent  = money(T0.atelier[0])+" / −"+money(T0.atelier[1]);
+    $("fi-pressing").textContent = money(T0.pressing[0])+" / −"+money(T0.pressing[1]);
+    $("fi-boutique").textContent = money(T0.boutique[0])+" / −"+money(T0.boutique[1]);
+    $("fi-general").textContent  = money(T0.general[0])+" / −"+money(T0.general[1]);
+    $("fi-row-general").style.display = (T0.general[0]||T0.general[1]) ? "" : "none";
     $("fi-rec").textContent = money(rec);
     $("fi-dep").textContent = money(dep);
     $("fi-sol").textContent = money(rec-dep);
     $("fi-sol").style.color = (rec-dep) < 0 ? "var(--err)" : "var(--ok)";
-
+    fillSrcSelect("fx-src"); fillSrcSelect("fc-src");
+    // catégories proposées
+    const dl=$("fx-cats"); if(dl && !dl.children.length){
+      ["catLoyer","catElec","catEau","catTransport","catFourn","catRepas","catInternet","catSalaires"].forEach(k=>{ const o=document.createElement("option"); o.value=t(k); dl.appendChild(o); });
+    }
+    // dépenses par catégorie
+    const cb=$("fcat-list"); cb.innerHTML="";
+    const ck=Object.keys(cats).sort((a,b)=>cats[b]-cats[a]);
+    if(!ck.length){ const e=document.createElement("div"); e.className="empty"; e.style.padding="10px 0"; e.textContent=t("fNoExp"); cb.appendChild(e); }
+    ck.forEach(k=>{
+      const r=document.createElement("div"); r.className="mline";
+      const a1=document.createElement("span"); a1.className="k"; a1.textContent=k;
+      const a2=document.createElement("span"); a2.className="v"; a2.style.color="var(--err)"; a2.textContent=money(cats[k]);
+      r.appendChild(a1); r.appendChild(a2); cb.appendChild(r);
+    });
+    // qui a payé — nom par nom
+    $("mv-filter").querySelectorAll("button").forEach(x=>x.classList.toggle("on", x.getAttribute("data-f")===MV_FILTER));
     const box=$("mv-list"); box.innerHTML="";
-    $("mv-empty").hidden = rows.length>0;
-    rows.slice(0,12).forEach(m=>{
-      const el=document.createElement("div"); el.className="rec";
+    const shown=rows.filter(m=>MV_FILTER==="tous" || m.type===MV_FILTER).sort((a,b)=>(Number(b.ms)||0)-(Number(a.ms)||0));
+    $("mv-empty").hidden = shown.length>0;
+    shown.slice(0,300).forEach(m=>{
+      const el=document.createElement("div"); el.className="rec mvrow";
+      const g=document.createElement("div"); g.className="grow";
       const nm=document.createElement("div"); nm.className="nm";
-      const plus = (m.type==="recette") === ((Number(m.montant)||0) >= 0);
-      nm.textContent = (plus ? "+ " : "− ") + money(Math.abs(Number(m.montant)||0));
-      nm.style.color = plus ? "var(--ok)" : "var(--err)";
-      const l1=document.createElement("div"); l1.className="ln";
-      l1.textContent = (m.label||"—") + " · " + t(m.source==="boutique" ? "tabBoutique" : (m.source==="pressing" ? "tabPressing" : "tabAtelier"));
-      const l2=document.createElement("div"); l2.className="ln"; l2.textContent = fmtWhen(m.ms);
-      el.appendChild(nm); el.appendChild(l1); el.appendChild(l2);
+      const sv=signed(m);
+      nm.textContent = (sv>=0 ? "+ " : "− ") + money(Math.abs(sv));
+      nm.style.color = sv>=0 ? "var(--ok)" : "var(--err)";
+      const l1=document.createElement("div"); l1.className="ln"; l1.textContent=(m.label||"—")+" · "+SRC_LBL(m.source);
+      const l2=document.createElement("div"); l2.className="ln"; l2.textContent=fmtWhen(m.ms);
+      g.appendChild(nm); g.appendChild(l1); g.appendChild(l2); el.appendChild(g);
+      if(m.id){
+        const x=document.createElement("button"); x.className="x"; x.type="button"; x.textContent="✕";
+        x.addEventListener("click", async ()=>{
+          if(!confirm(t("fDelQ").replace("{v}", (sv>=0?"+":"−")+money(Math.abs(sv))+" · "+(m.label||"")))) return;
+          if(!await askCode()) return;
+          MOUV=MOUV.filter(y=>y!==m); renderFinances();
+          deleteDoc(doc(db,"boutiques",BID,"mouvements",m.id)).catch(e=>{ MOUV.push(m); MOUV.sort((a,b)=>(Number(b.ms)||0)-(Number(a.ms)||0)); renderFinances(); alert(t("ptSaveFail").replace("{e}", (e&&(e.code||e.message))||"?")); });
+        });
+        el.appendChild(x);
+      }
       box.appendChild(el);
     });
+    // jour par jour (mois en cours)
+    const now=new Date(), mStart=new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    const days={};
+    MOUV.forEach(m=>{ const ms=Number(m.ms)||0; if(ms<mStart) return; const d=new Date(ms).getDate(); days[d]=days[d]||[0,0]; if(m.type==="recette") days[d][0]+=Number(m.montant)||0; else days[d][1]+=Number(m.montant)||0; });
+    $("fday").innerHTML=""; $("fday").appendChild(ftable(t("fDay"), Object.keys(days).map(Number).sort((a,b)=>b-a).map(d=>[String(d).padStart(2,"0")+" "+monthName(now.getMonth()), days[d][0], days[d][1]])));
+    // année mois par mois
+    const yStart=new Date(now.getFullYear(),0,1).getTime(), months={};
+    MOUV.forEach(m=>{ const ms=Number(m.ms)||0; if(ms<yStart) return; const k=new Date(ms).getMonth(); months[k]=months[k]||[0,0]; if(m.type==="recette") months[k][0]+=Number(m.montant)||0; else months[k][1]+=Number(m.montant)||0; });
+    $("fmonth").innerHTML=""; $("fmonth").appendChild(ftable(t("fMonth"), Object.keys(months).map(Number).sort((a,b)=>b-a).map(k=>[monthName(k)+" "+now.getFullYear(), months[k][0], months[k][1]])));
+    renderFixed(); renderWages();
   }
+  function ftable(first, data){
+    if(!data.length){ const e=document.createElement("div"); e.className="empty"; e.style.padding="10px 0"; e.textContent=t("fNoData"); return e; }
+    const tb=document.createElement("table"); tb.className="ftab";
+    const h=document.createElement("tr"); [first,t("fRec"),t("fDep"),t("fSol")].forEach(x=>{ const th=document.createElement("th"); th.textContent=x; h.appendChild(th); }); tb.appendChild(h);
+    data.forEach(r=>{
+      const tr=document.createElement("tr");
+      const c0=document.createElement("td"); c0.textContent=r[0];
+      const c1=document.createElement("td"); c1.className="r"; c1.textContent=money(r[1]);
+      const c2=document.createElement("td"); c2.className="d"; c2.textContent=money(r[2]);
+      const c3=document.createElement("td"); c3.textContent=money(r[1]-r[2]); c3.style.color=(r[1]-r[2])<0?"var(--err)":"var(--ok)";
+      tr.appendChild(c0); tr.appendChild(c1); tr.appendChild(c2); tr.appendChild(c3); tb.appendChild(tr);
+    });
+    return tb;
+  }
+  // ---- charges fixes (stockées sur le doc boutique) et salaires : payés mois par mois
+  function paidThisMonth(key, val){
+    const mk=monthKey(Date.now());
+    return MOUV.find(m=>m.type==="depense" && m[key]===val && m.mois===mk) || null;
+  }
+  function payLine(box, name, sub, paid, onPay){
+    const r=document.createElement("div"); r.className="pay-line";
+    const l=document.createElement("div");
+    const a=document.createElement("div"); a.className="nm"; a.textContent=name;
+    const b=document.createElement("div"); b.className="sub"; b.textContent=sub;
+    l.appendChild(a); l.appendChild(b); r.appendChild(l);
+    if(paid){ const o=document.createElement("span"); o.className="ok"; o.textContent="✓ "+t("fPaidOn").replace("{d}", new Date(paid.ms).toLocaleDateString(LANG_UI==="en"?"en-GB":"fr-FR",{day:"numeric",month:"short"})); r.appendChild(o); }
+    else { const bt=document.createElement("button"); bt.type="button"; bt.textContent=t("fPay"); bt.addEventListener("click", onPay); r.appendChild(bt); }
+    box.appendChild(r); return r;
+  }
+  function renderFixed(){
+    const box=$("fc-list"); if(!box) return; box.innerHTML="";
+    const list=(BOUTIQUE && Array.isArray(BOUTIQUE.chargesFixes)) ? BOUTIQUE.chargesFixes : [];
+    if(!list.length){ const e=document.createElement("div"); e.className="empty"; e.style.padding="10px 0"; e.textContent=t("fFixedNone"); box.appendChild(e); return; }
+    const mk=monthKey(Date.now()), mlabel=monthName(new Date().getMonth());
+    list.forEach(c=>{
+      const r=payLine(box, c.nom, money(c.montant)+" · "+SRC_LBL(c.source||"general"), paidThisMonth("chargeId", c.id), ()=>{
+        const v=prompt(t("fPayAsk").replace("{n}", c.nom).replace("{m}", mlabel), String(c.montant||0));
+        if(v===null) return; const amt=parseFloat(String(v).replace(",", "."));
+        if(isNaN(amt) || amt<=0){ alert(t("amountRequired")); return; }
+        addMouv("depense", c.source||"general", amt, c.nom+" — "+mlabel, { categorie:c.nom, chargeId:c.id, mois:mk });
+        renderFinances();
+      });
+      const x=document.createElement("button"); x.type="button"; x.className="x"; x.textContent="✕"; x.title=t("fRemove");
+      x.style.cssText="border:1px solid var(--line2);background:none;color:var(--muted);border-radius:8px;padding:6px 9px;margin-left:6px;cursor:pointer";
+      x.addEventListener("click", async ()=>{
+        if(!confirm(t("fRemoveQ").replace("{n}", c.nom))) return;
+        if(!await askCode()) return;
+        const nl=list.filter(y=>y.id!==c.id); BOUTIQUE.chargesFixes=nl; renderFixed();
+        setDoc(doc(db,"boutiques",BID), { chargesFixes:nl, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+      });
+      r.appendChild(x);
+    });
+  }
+  function renderWages(){
+    const box=$("fs-list"); if(!box) return; box.innerHTML="";
+    if(!SALARIES.length){ const e=document.createElement("div"); e.className="empty"; e.style.padding="10px 0"; e.textContent=t("fSalNone"); box.appendChild(e); return; }
+    const mk=monthKey(Date.now()), mlabel=monthName(new Date().getMonth());
+    let tot=0, paidTot=0;
+    SALARIES.forEach(sx=>{
+      tot+=Number(sx.salaire)||0;
+      const p=paidThisMonth("salId", sx.id); if(p) paidTot+=Number(p.montant)||0;
+      payLine(box, sx.nom||"—", money(sx.salaire)+" · "+roleLabel(sx), p, async ()=>{
+        if(!await askCode()) return;
+        const v=prompt(t("fPayAsk").replace("{n}", sx.nom||"").replace("{m}", mlabel), String(Number(sx.salaire)||0));
+        if(v===null) return; const amt=parseFloat(String(v).replace(",", "."));
+        if(isNaN(amt) || amt<=0){ alert(t("amountRequired")); return; }
+        addMouv("depense", "general", amt, t("fSalLabel")+" — "+(sx.nom||"")+" — "+mlabel, { categorie:t("catSalaires"), salId:sx.id, mois:mk });
+        renderFinances();
+      });
+    });
+    const f=document.createElement("div"); f.className="sub"; f.style.cssText="margin-top:10px;font-size:13px;color:var(--muted)";
+    f.textContent=t("fTotalMonth").replace("{a}", money(paidTot)).replace("{b}", money(tot)); box.appendChild(f);
+  }
+  $("mv-filter").querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{ MV_FILTER=b.getAttribute("data-f"); renderFinances(); }));
+  function dayISO(offset){ const d=new Date(); d.setDate(d.getDate()-offset); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+  $("fx-when").querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{ $("fx-date").value=dayISO(Number(b.getAttribute("data-d"))); paintWhen(); }));
+  function paintWhen(){ const v=$("fx-date").value; $("fx-when").querySelectorAll("button").forEach(b=>b.classList.toggle("on", v===dayISO(Number(b.getAttribute("data-d"))))); }
+  $("fx-date").addEventListener("change", paintWhen);
+  $("fx-save").addEventListener("click", ()=>{
+    const msg=$("fx-msg");
+    const cat=$("fx-cat").value.trim(), v=$("fx-amt").value.trim(), amt=parseFloat(v);
+    if(!cat || v==="" || isNaN(amt) || amt<=0){ msg.textContent=t("expenseRequired"); msg.className="msg err show"; return; }
+    const d=$("fx-date").value;
+    const today=dayISO(0);
+    const when = (/^\d{4}-\d{2}-\d{2}$/.test(d) && d!==today) ? new Date(d+"T12:00:00").getTime() : Date.now();
+    const desc=$("fx-desc").value.trim();
+    addMouv("depense", $("fx-src").value||"general", amt, desc ? (cat+" — "+desc) : cat, { categorie:cat, ms:when });
+    MOUV.sort((a,b)=>(Number(b.ms)||0)-(Number(a.ms)||0));
+    $("fx-cat").value=""; $("fx-amt").value=""; $("fx-desc").value=""; $("fx-date").value=today; paintWhen();
+    msg.textContent=t("expenseSaved")+" "+money(amt); msg.className="msg ok show";
+    setTimeout(()=>msg.classList.remove("show"), 4000);
+    renderLists();
+  });
+  $("fx-date").value=dayISO(0); paintWhen();
+  $("fc-save").addEventListener("click", async ()=>{
+    const nom=$("fc-nom").value.trim(), amt=parseFloat($("fc-amt").value);
+    if(!nom || isNaN(amt) || amt<=0){ alert(t("expenseRequired")); return; }
+    if(!await askCode()) return;
+    const list=(BOUTIQUE && Array.isArray(BOUTIQUE.chargesFixes)) ? BOUTIQUE.chargesFixes.slice() : [];
+    list.push({ id:"cf"+Date.now().toString(36), nom, montant:amt, source:$("fc-src").value||"general" });
+    if(BOUTIQUE) BOUTIQUE.chargesFixes=list;
+    setDoc(doc(db,"boutiques",BID), { chargesFixes:list, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+    $("fc-nom").value=""; $("fc-amt").value=""; renderFixed();
+  });
 
   function roleLabel(x){ return x.roleKey ? t(x.roleKey) : (x.poste || "—"); }
 
