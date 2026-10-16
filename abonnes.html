@@ -38,6 +38,14 @@
   button.primary:disabled{ opacity:.45; cursor:default; }
   .logout{ margin-top:12px; background:none; border:1px solid var(--line2); color:var(--muted);
     border-radius:20px; padding:7px 18px; font-size:13px; cursor:pointer; font-family:var(--sans); }
+  .pwrap{ position:relative; }
+  .pwrap input{ padding-right:52px; }
+  .eye{ position:absolute; right:4px; top:50%; transform:translateY(-50%); background:none; border:none;
+    font-size:19px; line-height:1; padding:10px 12px; cursor:pointer; opacity:.45; filter:grayscale(1); }
+  .eye.on{ opacity:1; filter:none; }
+  .flink{ display:block; width:100%; margin-top:12px; background:none; border:none; color:var(--gold);
+    font-size:13.5px; text-decoration:underline; cursor:pointer; padding:6px 0; text-align:center; font-family:inherit; }
+  .swbtn{ margin-top:18px; padding:12px 22px; border:1px solid var(--gold); border-radius:10px; background:none; color:var(--gold); font-weight:700; font-size:14px; cursor:pointer; font-family:inherit; }
   .msg{ margin-top:14px; font-size:13px; padding:12px 14px; border-radius:9px; display:none; line-height:1.5; }
   .msg.show{ display:block; }
   .msg.err{ background:var(--errbg); color:var(--err); }
@@ -102,9 +110,14 @@
       <label for="email">Email admin</label>
       <input id="email" type="email" placeholder="vous@email.com" autocomplete="email">
       <label for="pass">Mot de passe</label>
-      <input id="pass" type="password" placeholder="Votre mot de passe" autocomplete="current-password">
+      <div class="pwrap">
+        <input id="pass" type="password" placeholder="Votre mot de passe" autocomplete="current-password">
+        <button class="eye" id="eye-btn" type="button" aria-label="Afficher le mot de passe">👁</button>
+      </div>
       <button class="primary" id="login-btn">Se connecter</button>
       <div class="msg err" id="login-msg"></div>
+      <button class="flink" id="forgot-btn" type="button">Mot de passe oublié ? Recevoir un lien par email</button>
+      <a class="flink" href="https://sanaapro.github.io/inscription/recuperer-compte.html">Email oublié ? Retrouver mon compte avec mon numéro</a>
     </div>
     <div class="note">
       Cette page n'accède qu'aux licences.<br>
@@ -142,7 +155,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { initializeFirestore, collection, getDocs, doc, setDoc, Timestamp, query, where }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -156,7 +169,9 @@
     appId: "1:451762519937:web:0507928bc9f6ef0c937280"
   };
 
-  const app = initializeApp(firebaseConfig);
+  // Instance nommée : la connexion admin est rangée à part et ne touche plus
+  // la connexion de la boutique ouverte dans SanaaPro sur le même téléphone.
+  const app = initializeApp(firebaseConfig, "sanaapro-admin");
   const auth = getAuth(app);
   const db = initializeFirestore(app, { experimentalForceLongPolling: true });
 
@@ -192,9 +207,29 @@
     setTimeout(()=>{ m.classList.remove("show"); }, 6000);
   }
 
+  $("eye-btn").addEventListener("click", ()=>{
+    const p=$("pass"), b=$("eye-btn"), on = p.type==="password";
+    p.type = on ? "text" : "password"; b.classList.toggle("on", on); p.focus();
+  });
+  $("forgot-btn").addEventListener("click", async ()=>{
+    const email=$("email").value.trim(), msg=$("login-msg");
+    if(!email){ msg.className="msg err show"; msg.textContent="Tape d'abord ton email admin dans la case Email, puis touche ce lien."; return; }
+    $("forgot-btn").disabled=true;
+    try{
+      await sendPasswordResetEmail(auth, email);
+      msg.className="msg ok show";
+      msg.textContent="Lien envoyé à "+email+". Ouvre ta boîte mail (regarde aussi dans les spams), choisis un nouveau mot de passe, puis reviens ici.";
+    }catch(e){
+      msg.className="msg err show";
+      msg.textContent = (e && e.code==="auth/invalid-email") ? "Email invalide." :
+        (e && e.code==="auth/too-many-requests") ? "Trop de demandes. Patiente quelques minutes." :
+        "Envoi impossible. Vérifie l'email et ta connexion.";
+    }
+    $("forgot-btn").disabled=false;
+  });
   $("login-btn").addEventListener("click", async ()=>{
     const email=$("email").value.trim(), pass=$("pass").value, msg=$("login-msg");
-    msg.classList.remove("show");
+    msg.className="msg err";
     if(!email || !pass){ msg.textContent="Renseigne ton email et ton mot de passe."; msg.classList.add("show"); return; }
     $("login-btn").disabled=true;
     try{ await signInWithEmailAndPassword(auth, email, pass); }
@@ -252,10 +287,13 @@
           "Compte connecté :<br><b style=\"color:var(--gold)\">" + mail + "</b><br><br>" +
           "Son identifiant :<br><b style=\"color:var(--gold);word-break:break-all;font-size:13px\">" + uid + "</b><br><br>" +
           "Le document <b>/admins/" + uid + "</b> doit exister dans Firestore. " +
-          "Si l'identifiant affiché ici est différent de celui que tu as créé, c'est la cause du refus.";
+          "Si ce n'est pas ton compte administrateur, touche le bouton ci-dessous.";
       } else {
         $("loading").textContent = "Impossible de lire les abonnements. Réessaie avec une meilleure connexion.";
       }
+      const sw=document.createElement("button"); sw.className="swbtn"; sw.textContent="Changer de compte";
+      sw.addEventListener("click", ()=>signOut(auth));
+      $("loading").appendChild(document.createElement("br")); $("loading").appendChild(sw);
       show("loading");
     }
   }
