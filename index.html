@@ -277,6 +277,14 @@
   /* Finances en couleurs : chaque rayon et chaque période a sa couleur, textes plus grands */
   #pane-finances .fchips button{ font-size:15px; padding:10px 15px; border-width:2px; border-color:var(--c,var(--line2)); color:var(--c,var(--txt)); font-weight:600; }
   #pane-finances .fchips button.on{ background:var(--c,var(--gold)); border-color:var(--c,var(--gold)); color:#141310; font-weight:800; }
+  #wp-per{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  #wp-per button{ border-radius:10px; text-align:center; padding:11px 4px; }
+  #wp-src{ display:grid; grid-template-columns:repeat(var(--n,4),1fr); gap:8px; }
+  #wp-src button{ border-radius:12px; text-align:center; padding:10px 4px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-height:64px; line-height:1.2; }
+  #wp-src button .ic{ font-size:20px; }
+  #pane-finances #wp-per button, #pane-finances #wp-src button{ min-width:0; font-size:14px; padding:10px 2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #pane-finances #wp-per button{ white-space:normal; line-height:1.2; }
+  #pane-finances #wp-src button span{ max-width:100%; overflow:hidden; text-overflow:ellipsis; }
   #pane-finances .rec .ln{ font-size:15px; line-height:1.45; }
   #pane-finances .rec .nm{ font-size:17px; }
   #pane-finances .mvrow{ border-left:5px solid var(--c,var(--line2)); }
@@ -3018,19 +3026,28 @@
     const mx=Math.max(1, ...days.map(x=>x.v));
     const tr=$("ftrend"); tr.innerHTML="";
     const big=document.createElement("div"); big.innerHTML='<span style="font:700 26px Georgia,serif;color:var(--ok)">'+escH(money(days[13].v))+'</span> <span style="color:var(--muted);font-size:13px">'+escH(t("fTodayAmt"))+'</span>'; tr.appendChild(big);
-    const bars=document.createElement("div"); bars.style.cssText="display:flex;align-items:flex-end;gap:4px;height:90px;margin-top:10px";
-    days.forEach(x=>{ const b0=document.createElement("div"); b0.title=new Date(x.t).toLocaleDateString(loc)+" · "+money(x.v); b0.style.cssText="flex:1;border-radius:4px 4px 0 0;background:"+(x.v?"var(--ok)":"var(--line2)")+";height:"+Math.max(3, Math.round(86*x.v/mx))+"px"; bars.appendChild(b0); });
-    tr.appendChild(bars);
-    const ax=document.createElement("div"); ax.style.cssText="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px";
+    const W=300, H=110, px=i=>6+i*(W-12)/13, py=v=>H-8-(H-22)*v/mx;
+    const pts=days.map((x,i)=>px(i).toFixed(1)+","+py(x.v).toFixed(1)).join(" ");
+    let svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:130px;margin-top:10px;display:block">'
+      +'<line x1="6" x2="'+(W-6)+'" y1="'+py(mx).toFixed(1)+'" y2="'+py(mx).toFixed(1)+'" stroke="var(--line2)" stroke-dasharray="3 4"/>'
+      +'<text x="'+(W-6)+'" y="'+(py(mx)-4).toFixed(1)+'" fill="var(--muted)" font-size="10" text-anchor="end">'+escH(money(mx))+'</text>'
+      +'<polygon points="6,'+(H-8)+' '+pts+' '+(W-6)+','+(H-8)+'" fill="var(--ok)" opacity=".15"/>'
+      +'<polyline points="'+pts+'" fill="none" stroke="var(--ok)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>';
+    days.forEach((x,i)=>{ svg+='<circle cx="'+px(i).toFixed(1)+'" cy="'+py(x.v).toFixed(1)+'" r="'+(x.v?4:2.5)+'" fill="var(--ok)"><title>'+escH(new Date(x.t).toLocaleDateString(loc)+" · "+money(x.v))+'</title></circle>'; });
+    svg+='</svg>';
+    const bars=document.createElement("div"); bars.innerHTML=svg; tr.appendChild(bars);
+    const ax=document.createElement("div"); ax.style.cssText="display:flex;justify-content:space-between;font-size:15px;color:var(--txt);margin-top:4px";
     ax.innerHTML="<span>"+escH(sd(new Date(days[0].t)))+"</span><span>"+escH(sd(new Date(days[13].t)))+"</span>"; tr.appendChild(ax);
     // qui a payé
     const pFrom = WP_PER==="jour" ? d0.getTime() : WP_PER==="semaine" ? w0.getTime() : m0.getTime();
     const recs=MOUV.filter(m=>m.type==="recette" && (Number(m.ms)||0)>=pFrom && (Number(m.ms)||0)<d0.getTime()+86400000);
     $("wp-per").querySelectorAll("button").forEach(x=>{ x.style.setProperty("--c", SRC_COL(x.getAttribute("data-p"))); x.classList.toggle("on", x.getAttribute("data-p")===WP_PER); });
     const srcB=$("wp-src"); srcB.innerHTML="";
+    srcB.style.setProperty("--n", 1+finSources().filter(k=>k!=="general").length);
     ["tous"].concat(finSources().filter(k=>k!=="general")).forEach(k=>{
       const n=k==="tous" ? recs.length : recs.filter(m=>(m.source||"atelier")===k).length;
-      const bt=document.createElement("button"); bt.type="button"; bt.textContent=(k==="tous"?t("pzAll"):SRC_LBL(k))+" ("+n+")";
+      const bt=document.createElement("button"); bt.type="button";
+      bt.innerHTML=(k==="tous"?"":'<span class="ic">'+(k==="pressing"?"🧺":k==="boutique"?"🛍️":"✂️")+"</span>")+"<span>"+escH(k==="tous"?t("pzAll"):SRC_LBL(k))+"</span><span>("+n+")</span>";
       bt.style.setProperty("--c", SRC_COL(k));
       bt.classList.toggle("on", k===WP_SRC); bt.addEventListener("click", ()=>{ WP_SRC=k; renderFinances(); }); srcB.appendChild(bt);
     });
