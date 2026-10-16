@@ -292,6 +292,11 @@
       } else {
         $("loading").textContent = "Impossible de lire les abonnements. Réessaie avec une meilleure connexion.";
       }
+      if(denied && auth.currentUser){
+        const cp=document.createElement("button"); cp.className="swbtn"; cp.textContent="📋 Copier cet identifiant";
+        cp.addEventListener("click", ()=>{ const u=auth.currentUser.uid; (navigator.clipboard ? navigator.clipboard.writeText(u) : Promise.reject()).then(()=>{ cp.textContent="✅ Identifiant copié"; }).catch(()=>{ prompt("Identifiant :", u); }); });
+        $("loading").appendChild(document.createElement("br")); $("loading").appendChild(cp);
+      }
       const sw=document.createElement("button"); sw.className="swbtn"; sw.textContent="Changer de compte";
       sw.addEventListener("click", ()=>signOut(auth));
       $("loading").appendChild(document.createElement("br")); $("loading").appendChild(sw);
