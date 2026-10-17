@@ -70,6 +70,7 @@
   .newtag{ display:inline-block; background:var(--gold); color:#141310; font-size:10px; font-weight:700;
     letter-spacing:1px; padding:3px 9px; border-radius:20px; margin-left:8px; vertical-align:middle; }
   .tier{ display:flex; gap:8px; margin-top:12px; }
+  .delbtn{ margin-top:12px; width:100%; padding:10px; border:1px solid #c0504d; border-radius:10px; background:none; color:#e57373; font-weight:700; font-size:14px; cursor:pointer; font-family:inherit; }
   .tier button{ flex:1; padding:10px 4px; border:1px solid var(--line2); border-radius:9px; background:transparent;
     color:var(--muted); font-size:13px; font-weight:700; cursor:pointer; font-family:var(--sans); }
   .tier button.on{ background:var(--gold); color:#141310; border-color:var(--gold); }
@@ -159,7 +160,7 @@
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail,
            GoogleAuthProvider, signInWithPopup, signInWithRedirect }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { initializeFirestore, collection, getDocs, doc, setDoc, Timestamp, query, where }
+  import { initializeFirestore, collection, getDocs, doc, setDoc, deleteDoc, Timestamp, query, where }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -378,6 +379,27 @@
         q.appendChild(b);
       });
       el.appendChild(q);
+
+      // Supprimer une boutique (test, abandonnée) — confirmation par le nom
+      const del=document.createElement("button"); del.type="button"; del.className="delbtn"; del.textContent="🗑 Supprimer cette boutique";
+      del.addEventListener("click", async ()=>{
+        const typed=prompt("Supprimer définitivement « "+s.name+" » ?\nElle disparaîtra de la liste et ne pourra plus utiliser SanaaPro.\n\nPour confirmer, écrivez son nom exactement :");
+        if(typed===null) return;
+        const norm=x=>String(x||"").trim().toLowerCase().replace(/\s+/g," ");
+        if(norm(typed)!==norm(s.name)){ flash("Nom différent : rien n'a été supprimé.", "err"); return; }
+        del.disabled=true; del.textContent="Suppression…";
+        try{
+          await deleteDoc(doc(db,"boutiques",s.id));
+          try{ await deleteDoc(doc(db,"users",s.id)); }catch(e){}
+          if(s.slug && s.slug!=="—"){ try{ await deleteDoc(doc(db,"slugs",s.slug)); }catch(e){} }
+          SHOPS=SHOPS.filter(x=>x!==s); render();
+          flash("« "+s.name+" » a été supprimée.", "ok");
+        }catch(e){
+          del.disabled=false; del.textContent="🗑 Supprimer cette boutique";
+          flash("Suppression impossible ("+((e&&e.code)||"?")+").", "err");
+        }
+      });
+      el.appendChild(del);
       box.appendChild(el);
     });
     $("price-note").textContent = "Standard "+PRICE_STD+" "+CUR+"/mois · Premium "+PRICE_PREM+" "+CUR+"/mois";
