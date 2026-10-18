@@ -4498,7 +4498,7 @@
       +'<div class="sub">'+escH(L.period)+' : '+escH(new Date(from).toLocaleDateString(loc))+' – '+escH(new Date(to-1).toLocaleDateString(loc))+'</div>'
       +'<div class="sub">'+escH(L.gen)+' : '+escH(now.toLocaleDateString(loc))+'</div></div></div>';
     h+='<div class="kpis">'
-      +[[L.rec,fmt(R)],[L.dep,fmt(D)],[L.net,fmt(R-D)],[L.avg,fmt(act?R/Math.max(1,act):0)],[L.orders,String(O)],[L.clients,String(cmdCli.size)],[L.active,act+" / "+n]]
+      +[[L.rec,fmt(R)],[L.dep,fmt(D)],[L.net,fmt(R-D)],[L.avg,fmt(R/Math.max(1,months.filter(x=>x.r>0).length))],[L.orders,String(O)],[L.clients,String(cmdCli.size)],[L.active,act+" / "+n]]
         .map(k=>'<div class="kpi"><div class="v">'+escH(k[1])+'</div><div class="l">'+escH(k[0])+'</div></div>').join("")+'</div>';
     h+='<table><thead><tr><th>'+escH(L.month)+'</th><th>'+escH(L.mRec)+'</th><th>'+escH(L.mDep)+'</th><th>'+escH(L.mNet)+'</th><th>'+escH(L.mOrd)+'</th></tr></thead><tbody>'
       +months.map(x=>{ const nm=x.lab.charAt(0).toUpperCase()+x.lab.slice(1); return '<tr><td>'+escH(nm)+'</td><td>'+escH(fmt(x.r))+'</td><td>'+escH(fmt(x.d))+'</td><td>'+escH(fmt(x.r-x.d))+'</td><td>'+x.o+'</td></tr>'; }).join("")
