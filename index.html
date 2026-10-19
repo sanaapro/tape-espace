@@ -1542,7 +1542,7 @@
       impSecClients:"clients", impSecAtelier:"commandes atelier", impSecPressing:"tickets pressing", impSecStaff:"employés",
       relTitle:"📄 Relevé d'activité", relHint:"Un document imprimable qui prouve l'activité de votre entreprise, mois par mois : à présenter à une banque, une microfinance ou la Chambre de commerce.", relPeriod:"Période", relLang:"Langue du document", relGo:"Générer le relevé",
       delTitle:"🗑 Supprimer mon compte", delHint:"Efface définitivement cette boutique : commandes, tickets, clients, mesures, finances, employés, stock et le compte de connexion. Impossible de revenir en arrière.", delOpen:"Supprimer ce compte…", delPass:"Votre mot de passe de connexion", delGo:"Supprimer définitivement", delTypeName:"Pour confirmer, écrivez le nom de la boutique : {n}", delNameBad:"Le nom ne correspond pas. Rien n'a été supprimé.", delPassBad:"Mot de passe incorrect. Rien n'a été supprimé.", delSure:"Dernière confirmation : supprimer « {n} » et TOUTES ses données pour toujours ?", delRunning:"Suppression en cours… ne fermez pas l'application.", delDone:"Le compte « {n} » a été supprimé. Au revoir.", delFail:"La suppression n'a pas pu se terminer ({e}). Réessayez avec une bonne connexion.",
-      impSkipped:"{n} élément(s) déjà présent(s) dans SanaaPro laissé(s) tel(s) quel(s).", impSecMoves:"historique des finances", impMoves:"+ {n} mouvements de l'historique des finances.",
+      impSkipped:"{n} élément(s) déjà présent(s) dans SanaaPro laissé(s) tel(s) quel(s).", impSecDates:"dates des recettes", impDates:"{n} date(s) de recettes corrigée(s).", impSecMoves:"historique des finances", impMoves:"+ {n} mouvements de l'historique des finances.",
       impRun:"Import en cours… {i}/{n}", impDone:"Import terminé : {ok} tickets enregistrés.", impSomeFail:"{ko} partie(s) refusée(s) : {e}.",
       tabPressing:"Pressing", pzInProgress:"En cours", pzReadyN:"Prêts", pzPicked:"Récupérés", pzAll:"Tous",
       pzNew:"Nouveau dépôt", pzClient:"Nom du client", pzClientPh:"Nom complet", pzTotal:"Total",
@@ -1821,7 +1821,7 @@
       impSecClients:"customers", impSecAtelier:"tailoring orders", impSecPressing:"dry-cleaning tickets", impSecStaff:"employees",
       relTitle:"📄 Business activity statement", relHint:"A printable document proving your business activity month by month — for a bank, a microfinance institution or the Chamber of Commerce.", relPeriod:"Period", relLang:"Document language", relGo:"Generate the statement",
       delTitle:"🗑 Delete my account", delHint:"Permanently erases this shop: orders, tickets, clients, measurements, finances, staff, stock and the login account. This cannot be undone.", delOpen:"Delete this account…", delPass:"Your login password", delGo:"Delete permanently", delTypeName:"To confirm, type the shop name: {n}", delNameBad:"The name does not match. Nothing was deleted.", delPassBad:"Wrong password. Nothing was deleted.", delSure:"Final confirmation: delete “{n}” and ALL its data forever?", delRunning:"Deleting… do not close the app.", delDone:"The account “{n}” has been deleted. Goodbye.", delFail:"Deletion could not finish ({e}). Try again with a good connection.",
-      impSkipped:"{n} item(s) already in SanaaPro left unchanged.", impSecMoves:"finance history", impMoves:"+ {n} entries of finance history.",
+      impSkipped:"{n} item(s) already in SanaaPro left unchanged.", impSecDates:"income dates", impDates:"{n} income date(s) corrected.", impSecMoves:"finance history", impMoves:"+ {n} entries of finance history.",
       impRun:"Importing… {i}/{n}", impDone:"Import finished: {ok} tickets saved.", impSomeFail:"{ko} part(s) refused: {e}.",
       tabPressing:"Dry cleaning", pzInProgress:"In progress", pzReadyN:"Ready", pzPicked:"Collected", pzAll:"All",
       pzNew:"New drop-off", pzClient:"Customer name", pzClientPh:"Full name", pzTotal:"Total",
@@ -4618,8 +4618,19 @@
     // Ce qui existe déjà dans SanaaPro n'est jamais écrasé : depuis le transfert,
     // c'est SanaaPro qui fait foi (un paiement noté ici ne doit pas être effacé).
     const have=new Set([].concat(COMMANDES, PRESS, CLIENTES, SALARIES, MOUV).map(x=>x && x.id).filter(Boolean));
+    // Exception (19/10) : un mouvement venu d'un import précédent (importe:true)
+    // reçoit la date juste du nouveau fichier. Les premiers fichiers dataient
+    // certaines recettes du jour de la saisie au lieu du jour du paiement, ce qui
+    // faisait un faux pic de recettes. Seule la date est corrigée, rien d'autre.
+    const byId={}; MOUV.forEach(x=>{ if(x && x.id) byId[x.id]=x; });
+    const fixDates=[];
+    steps.forEach(st=>{ if(st[0]!=="impSecMoves") return; st[1].forEach(o=>{
+      const cur=byId[o[0].id], nms=Number(o[1].ms)||0;
+      if(cur && cur.importe && nms && Number(cur.ms)!==nms) fixDates.push([ o[0], { ms:nms } ]);
+    }); });
     let skipped=0;
     steps.forEach(st=>{ const before=st[1].length; st[1]=st[1].filter(o=>!have.has(o[0].id)); skipped+=before-st[1].length; });
+    if(fixDates.length){ steps.push(["impSecDates", fixDates]); skipped=Math.max(0, skipped-fixDates.length); }
     const done={}, errs=[];
     for(const [lab, ops] of steps){
       done[lab]=0;
@@ -4632,6 +4643,7 @@
     m.textContent=t("impDone2").replace("{a}",done.impSecAtelier).replace("{p}",done.impSecPressing)
       .replace("{c}",done.impSecClients).replace("{s}",done.impSecStaff)
       + (done.impSecMoves ? " "+t("impMoves").replace("{n}", done.impSecMoves) : "")
+      + (done.impSecDates ? " "+t("impDates").replace("{n}", done.impSecDates) : "")
       + (skipped ? " "+t("impSkipped").replace("{n}", skipped) : "")
       + (errs.length ? " "+t("impSomeFail").replace("{ko}",errs.length).replace("{e}",errs.join(" · ")) : "");
     m.className="msg "+(errs.length?"err":"ok")+" show";
