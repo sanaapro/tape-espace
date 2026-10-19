@@ -4419,7 +4419,10 @@
     const local=COMMANDES.find(x=>x.id===ORDID); if(local) local.paye=nv;
     setDoc(doc(db,"boutiques",BID,"commandes",ORDID), { paye:nv, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
     // l'écart part dans les Finances (positif ou négatif) pour que la caisse reste juste
-    addMouv("recette","atelier", nv-old, t("qFixLabel")+" "+fmtNum(ORD.numero)+" — "+(ORD.clienteName||""), { commandeId:ORDID });
+    // Commande importée de l'ancienne gestion : son « payé » n'est jamais entré
+    // dans les Finances de SanaaPro (l'historique des recettes arrive à part),
+    // donc corriger une faute de frappe ne doit pas créer de recette négative.
+    if(!ORD.importe) addMouv("recette","atelier", nv-old, t("qFixLabel")+" "+fmtNum(ORD.numero)+" — "+(ORD.clienteName||""), { commandeId:ORDID });
     syncSuivi(ORD, ORDID); renderCmd(ORD, ORDID); renderLists();
     const m=$("p-msg"); m.textContent=t("qFixDone").replace("{v}", money(nv)); m.className="msg ok show";
     setTimeout(()=>m.classList.remove("show"), 4000);
@@ -4925,7 +4928,7 @@
         if(isNaN(nv) || nv<0){ alert(t("amountRequired")); return; }
         o.prix=np; o.paye=nv;
         setDoc(doc(db,"boutiques",BID,"commandes",o.id), { prix:np, paye:nv, updatedAt:serverTimestamp() }, { merge:true }).catch(pzFail);
-        if(nv!==old) addMouv("recette","pressing", nv-old, t("qFixLabel")+" "+fmtNum(o.numero)+" — "+(o.clienteName||""), { commandeId:o.id });
+        if(nv!==old && !o.importe) addMouv("recette","pressing", nv-old, t("qFixLabel")+" "+fmtNum(o.numero)+" — "+(o.clienteName||""), { commandeId:o.id });
         renderLists();
       });
       acts.appendChild(fx);
