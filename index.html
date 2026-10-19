@@ -747,6 +747,11 @@
         <input id="b-wave" type="tel" placeholder="+220 …">
         <label data-i18n="waveLinkLabel">Lien de paiement Wave (facultatif)</label>
         <input id="b-wavelink" type="url" inputmode="url" placeholder="https://pay.wave.com/…">
+        <label data-i18n="bankLabel">Virement bancaire (facultatif)</label>
+        <input id="b-bank" type="text" data-i18n-ph="bankPh" placeholder="Banque — ex. GT Bank">
+        <input id="b-bankname" type="text" data-i18n-ph="bankNamePh" placeholder="Nom du compte" style="margin-top:6px">
+        <input id="b-bankno" type="text" inputmode="numeric" data-i18n-ph="bankNoPh" placeholder="Numéro de compte" style="margin-top:6px">
+        <p style="margin:4px 0 8px;font-size:12.5px;color:var(--muted)" data-i18n="bankHint">Ces coordonnées s'ajoutent aux messages de paiement envoyés aux clientes, à côté de Wave.</p>
         <p style="margin:4px 0 0;font-size:12.5px;color:var(--muted)" data-i18n="waveLinkHint">Si vous avez un compte Wave Business, collez ici votre lien de paiement : la cliente tombera directement sur votre page de paiement Wave.</p>
         <label data-i18n="currency">Monnaie affichée</label>
         <input id="b-devise" type="text" maxlength="6" data-i18n-ph="currencyPh" placeholder="D, CFA, ₦…">
@@ -1349,21 +1354,36 @@
     ["epaule","Épaule","Shoulder"],
     ["carrure","Carrure dos","Back width"],
     ["longCorsage","Longueur corsage","Bodice length"],
+    ["longHaut","Longueur haut","Top length"],
+    ["longTaille","Longueur de taille","Waist length"],
+    ["pince","Longueur de pince","Dart length"],
     ["longManche","Longueur manche","Sleeve length"],
+    ["mancheCourte","Manche courte","Short sleeve"],
     ["tourManche","Tour de manche","Sleeve width"],
+    ["poignet","Tour de poignet","Wrist"],
+    ["cou","Tour de cou","Neck"],
     ["longRobe","Longueur robe","Dress length"],
     ["longJupe","Longueur jupe","Skirt length"],
-    ["longPantalon","Longueur pantalon","Trouser length"],
+    ["longBoubou","Longueur boubou","Boubou length"],
+    ["longVeste","Longueur veste","Jacket length"],
+    ["ceinture","Ceinture","Belt"],
     ["cuisse","Tour de cuisse","Thigh"],
-    ["cou","Tour de cou","Neck"],
-    ["poignet","Tour de poignet","Wrist"]
+    ["genou","Tour de genou","Knee"],
+    ["mollet","Tour de mollet","Calf"],
+    ["basPantalon","Bas du pantalon","Trouser hem"],
+    ["longPantalon","Longueur pantalon","Trouser length"],
+    ["montant","Montant (fourche)","Crotch depth"],
+    ["entrejambe","Entrejambe","Inseam"],
+    ["tourTete","Tour de tête","Head"]
   ];
 
   const MESURES_H = [
     ["cou","Tour de cou","Neck"],
     ["epaule","Épaule","Shoulder"],
+    ["carrure","Carrure dos","Back width"],
     ["poitrine","Tour poitrine","Chest"],
     ["longManche","Long. manche","Sleeve length"],
+    ["mancheCourte","Manche courte","Short sleeve"],
     ["tourManche","Tour manche","Sleeve width"],
     ["poignet","Poignet","Wrist"],
     ["taille","Tour de taille","Waist"],
@@ -1372,13 +1392,28 @@
     ["bassin","Tour bassin","Hips"],
     ["cuisse","Tour de cuisse","Thigh"],
     ["genou","Tour de genou","Knee"],
+    ["mollet","Tour de mollet","Calf"],
     ["basPantalon","Bas du pantalon","Trouser hem"],
     ["longPantalon","Longueur pantalon","Trouser length"],
+    ["montant","Montant (fourche)","Crotch depth"],
+    ["entrejambe","Entrejambe","Inseam"],
+    ["pince","Longueur de pince","Dart length"],
+    ["longHaut","Long. haut","Top length"],
     ["longChemise","Longueur chemise","Shirt length"],
-    ["longBoubou","Longueur boubou","Boubou length"]
+    ["longVeste","Longueur veste","Jacket length"],
+    ["longBoubou","Longueur boubou","Boubou length"],
+    ["tourTete","Tour de tête","Head"]
   ];
 
   const mesuresFor = g => (g === "homme") ? MESURES_H : MESURES_F;
+  // Liste à afficher pour une fiche : celle du genre, plus toute mesure déjà
+  // enregistrée qui n'y figure pas (ex. longueur chemise chez une dame).
+  function mesuresShown(genre, m){
+    const base=mesuresFor(genre), have=new Set(base.map(x=>x[0]));
+    const extra=MESURES_F.concat(MESURES_H).filter(x=>{ if(have.has(x[0])) return false; have.add(x[0]); const v=m&&m[x[0]]; return v!==undefined && v!==null && v!==""; });
+    Object.keys(m||{}).forEach(k=>{ const v=m[k]; if(!have.has(k) && v!==undefined && v!==null && v!==""){ have.add(k); extra.push([k,k,k]); } });
+    return base.concat(extra);
+  }
 
   const T = {
     fr:{
@@ -1402,7 +1437,7 @@
       vtBatchCut:"La formule Standard est limitée à 5 modèles : les photos restantes sont en attente.",
       vtBatchStop:"Arrêt à la photo {i} : {e}. Les modèles restants sont toujours là, réessayez.",
       vtConfirmDel:"Retirer ce modèle du catalogue ?", vtFrom:"dès",
-      waveLabel:"Numéro Wave (paiement des clientes)", waveLinkLabel:"Lien de paiement Wave (facultatif)", waveLinkHint:"Si vous avez un compte Wave Business, collez ici votre lien de paiement : la cliente tombera directement sur votre page de paiement Wave.",
+      bankLabel:"Virement bancaire (facultatif)", bankPh:"Banque — ex. GT Bank", bankNamePh:"Nom du compte", bankNoPh:"Numéro de compte", bankHint:"Ces coordonnées s'ajoutent aux messages de paiement envoyés aux clientes, à côté de Wave.", waveLabel:"Numéro Wave (paiement des clientes)", waveLinkLabel:"Lien de paiement Wave (facultatif)", waveLinkHint:"Si vous avez un compte Wave Business, collez ici votre lien de paiement : la cliente tombera directement sur votre page de paiement Wave.",
       vtLimit:"La formule Standard permet {n} modèles dans le catalogue. Passez au Premium pour en publier sans limite, ou supprimez un modèle.",
       vtLimitAsk:"Passer au Premium sur WhatsApp ?",
       vtShareT:"Envoyer ma vitrine aux clientes", vtShareBtn:"Partager sur WhatsApp", vtCopy:"Copier le lien",
@@ -1542,7 +1577,7 @@
       impSecClients:"clients", impSecAtelier:"commandes atelier", impSecPressing:"tickets pressing", impSecStaff:"employés",
       relTitle:"📄 Relevé d'activité", relHint:"Un document imprimable qui prouve l'activité de votre entreprise, mois par mois : à présenter à une banque, une microfinance ou la Chambre de commerce.", relPeriod:"Période", relLang:"Langue du document", relGo:"Générer le relevé",
       delTitle:"🗑 Supprimer mon compte", delHint:"Efface définitivement cette boutique : commandes, tickets, clients, mesures, finances, employés, stock et le compte de connexion. Impossible de revenir en arrière.", delOpen:"Supprimer ce compte…", delPass:"Votre mot de passe de connexion", delGo:"Supprimer définitivement", delTypeName:"Pour confirmer, écrivez le nom de la boutique : {n}", delNameBad:"Le nom ne correspond pas. Rien n'a été supprimé.", delPassBad:"Mot de passe incorrect. Rien n'a été supprimé.", delSure:"Dernière confirmation : supprimer « {n} » et TOUTES ses données pour toujours ?", delRunning:"Suppression en cours… ne fermez pas l'application.", delDone:"Le compte « {n} » a été supprimé. Au revoir.", delFail:"La suppression n'a pas pu se terminer ({e}). Réessayez avec une bonne connexion.",
-      impSkipped:"{n} élément(s) déjà présent(s) dans SanaaPro laissé(s) tel(s) quel(s).", impSecDates:"dates des recettes", impDates:"{n} date(s) de recettes corrigée(s).", impSecMoves:"historique des finances", impMoves:"+ {n} mouvements de l'historique des finances.",
+      impSkipped:"{n} élément(s) déjà présent(s) dans SanaaPro laissé(s) tel(s) quel(s).", impSecMes:"mesures manquantes", impMes:"{n} fiche(s) client complétée(s) avec les mesures manquantes.", impSecDates:"dates des recettes", impDates:"{n} date(s) de recettes corrigée(s).", impSecMoves:"historique des finances", impMoves:"+ {n} mouvements de l'historique des finances.",
       impRun:"Import en cours… {i}/{n}", impDone:"Import terminé : {ok} tickets enregistrés.", impSomeFail:"{ko} partie(s) refusée(s) : {e}.",
       tabPressing:"Pressing", pzInProgress:"En cours", pzReadyN:"Prêts", pzPicked:"Récupérés", pzAll:"Tous",
       pzNew:"Nouveau dépôt", pzClient:"Nom du client", pzClientPh:"Nom complet", pzTotal:"Total",
@@ -1650,7 +1685,7 @@
       noShopPhone:"Aucun numéro WhatsApp enregistré pour la boutique.",
       waFoot:"Merci de votre confiance.",
       lineTrack:"Suivez votre commande ici : {v}",
-      lineWave:"Payer avec Wave : {v}", lineWaveNum:"Paiement Wave au {v}", lineWaveShot:"Après le paiement, envoyez-nous la capture d'écran.",
+      lineBank:"Ou par virement {b} — compte : {t}, n° {n}", lineWave:"Payer avec Wave : {v}", lineWaveNum:"Paiement Wave au {v}", lineWaveShot:"Après le paiement, envoyez-nous la capture d'écran.",
       waveShare:"Bonjour, voici le lien pour régler votre acompte par Wave à l'atelier {boutique} :\n{v}",
       mRecu:"Bonjour {nom}, nous avons bien reçu votre {recu} à l'atelier {boutique}.",
       mCoupe:"Bonjour {nom}, la coupe de votre {article} commence à l'atelier {boutique}.",
@@ -1681,7 +1716,7 @@
       vtBatchCut:"The Standard plan is limited to 5 designs: the remaining photos are waiting.",
       vtBatchStop:"Stopped at photo {i}: {e}. The remaining designs are still here, try again.",
       vtConfirmDel:"Remove this design from the catalogue?", vtFrom:"from",
-      waveLabel:"Wave number (client payments)", waveLinkLabel:"Wave payment link (optional)", waveLinkHint:"If you have a Wave Business account, paste your payment link here: clients will land directly on your Wave payment page.",
+      bankLabel:"Bank transfer (optional)", bankPh:"Bank — e.g. GT Bank", bankNamePh:"Account name", bankNoPh:"Account number", bankHint:"These details are added to the payment messages sent to clients, next to Wave.", waveLabel:"Wave number (client payments)", waveLinkLabel:"Wave payment link (optional)", waveLinkHint:"If you have a Wave Business account, paste your payment link here: clients will land directly on your Wave payment page.",
       vtLimit:"The Standard plan allows {n} designs in the catalogue. Upgrade to Premium to publish without limit, or remove a design.",
       vtLimitAsk:"Upgrade to Premium on WhatsApp?",
       vtShareT:"Send my showcase to clients", vtShareBtn:"Share on WhatsApp", vtCopy:"Copy the link",
@@ -1821,7 +1856,7 @@
       impSecClients:"customers", impSecAtelier:"tailoring orders", impSecPressing:"dry-cleaning tickets", impSecStaff:"employees",
       relTitle:"📄 Business activity statement", relHint:"A printable document proving your business activity month by month — for a bank, a microfinance institution or the Chamber of Commerce.", relPeriod:"Period", relLang:"Document language", relGo:"Generate the statement",
       delTitle:"🗑 Delete my account", delHint:"Permanently erases this shop: orders, tickets, clients, measurements, finances, staff, stock and the login account. This cannot be undone.", delOpen:"Delete this account…", delPass:"Your login password", delGo:"Delete permanently", delTypeName:"To confirm, type the shop name: {n}", delNameBad:"The name does not match. Nothing was deleted.", delPassBad:"Wrong password. Nothing was deleted.", delSure:"Final confirmation: delete “{n}” and ALL its data forever?", delRunning:"Deleting… do not close the app.", delDone:"The account “{n}” has been deleted. Goodbye.", delFail:"Deletion could not finish ({e}). Try again with a good connection.",
-      impSkipped:"{n} item(s) already in SanaaPro left unchanged.", impSecDates:"income dates", impDates:"{n} income date(s) corrected.", impSecMoves:"finance history", impMoves:"+ {n} entries of finance history.",
+      impSkipped:"{n} item(s) already in SanaaPro left unchanged.", impSecMes:"missing measurements", impMes:"{n} customer file(s) completed with missing measurements.", impSecDates:"income dates", impDates:"{n} income date(s) corrected.", impSecMoves:"finance history", impMoves:"+ {n} entries of finance history.",
       impRun:"Importing… {i}/{n}", impDone:"Import finished: {ok} tickets saved.", impSomeFail:"{ko} part(s) refused: {e}.",
       tabPressing:"Dry cleaning", pzInProgress:"In progress", pzReadyN:"Ready", pzPicked:"Collected", pzAll:"All",
       pzNew:"New drop-off", pzClient:"Customer name", pzClientPh:"Full name", pzTotal:"Total",
@@ -1929,7 +1964,7 @@
       noShopPhone:"No WhatsApp number saved for the shop.",
       waFoot:"Thank you for your trust.",
       lineTrack:"Track your order here: {v}",
-      lineWave:"Pay with Wave: {v}", lineWaveNum:"Wave payment to {v}", lineWaveShot:"After paying, please send us the screenshot.",
+      lineBank:"Or by bank transfer to {b} — account: {t}, no. {n}", lineWave:"Pay with Wave: {v}", lineWaveNum:"Wave payment to {v}", lineWaveShot:"After paying, please send us the screenshot.",
       waveShare:"Hello, here is the link to pay your deposit with Wave at {boutique}:\n{v}",
       mRecu:"Hello {nom}, we have received your {recu} at {boutique}.",
       mCoupe:"Hello {nom}, cutting has started on your {article} at {boutique}.",
@@ -2286,7 +2321,7 @@
   }
   function mesuresText(c){
     const m=c.mesures||{}, lines=[];
-    mesuresFor(c.genre).forEach(mm=>{
+    mesuresShown(c.genre, m).forEach(mm=>{
       const v=m[mm[0]];
       if(v!==undefined && v!==null && v!=="") lines.push(mlabel(mm, LANG_MSG)+" : "+v+" cm");
     });
@@ -2377,6 +2412,10 @@
     if(act !== $("b-wa"))     $("b-wa").value     = b.whatsapp||"";
     if(act !== $("b-wave"))   $("b-wave").value   = b.wave||"";
     if(act !== $("b-wavelink")) $("b-wavelink").value = b.waveLink||"";
+    const bk=b.banque||{};
+    if(act !== $("b-bank"))     $("b-bank").value     = bk.nom||"";
+    if(act !== $("b-bankname")) $("b-bankname").value = bk.titulaire||"";
+    if(act !== $("b-bankno"))   $("b-bankno").value   = bk.numero||"";
     if(act !== $("b-devise")) $("b-devise").value = b.devise||CUR;
     if(document.activeElement !== $("b-code")){
       $("b-code").value = "";
@@ -4443,12 +4482,26 @@
     }catch(e){ m.textContent=t("impBad"); m.className="msg err show"; }
   });
   async function impCommit(ops, label){
-    // lots de 400 écritures maximum par envoi
-    for(let i=0;i<ops.length;i+=400){
-      const b=writeBatch(db);
-      ops.slice(i,i+400).forEach(o=>b.set(o[0], o[1], { merge:true }));
-      await Promise.race([ b.commit(), timeout(90000) ]);
+    // Petits lots (100) : sur une connexion lente un gros lot dépasse le délai
+    // et tout l'historique était refusé. Chaque lot a droit à un 2e essai ;
+    // un lot en échec n'arrête pas les suivants. Renvoie le nombre écrit.
+    let ok=0, lastErr=null;
+    const m=$("imp-msg");
+    for(let i=0;i<ops.length;i+=100){
+      const part=ops.slice(i,i+100);
+      let done=false;
+      for(let essai=0; essai<2 && !done; essai++){
+        try{
+          const b=writeBatch(db);
+          part.forEach(o=>b.set(o[0], o[1], { merge:true }));
+          await Promise.race([ b.commit(), timeout(120000) ]);
+          done=true; ok+=part.length;
+        }catch(e){ lastErr=e; }
+      }
+      if(m) m.textContent=t("impStep").replace("{x}", t(label))+" "+Math.min(i+100,ops.length)+"/"+ops.length;
     }
+    if(ok<ops.length){ const e=new Error((ops.length-ok)+"/"+ops.length+" — "+((lastErr && (lastErr.code||lastErr.message))||"?")); e.ok=ok; throw e; }
+    return ok;
   }
   // =================== RELEVÉ D'ACTIVITÉ ===================
   let REL_N=6, REL_L="en";
@@ -4623,6 +4676,16 @@
     // certaines recettes du jour de la saisie au lieu du jour du paiement, ce qui
     // faisait un faux pic de recettes. Seule la date est corrigée, rien d'autre.
     const byId={}; MOUV.forEach(x=>{ if(x && x.id) byId[x.id]=x; });
+    // Fiches clients déjà importées : on ajoute seulement les mesures qui
+    // manquent (une mesure tapée dans SanaaPro n'est jamais écrasée).
+    const cliById={}; CLIENTES.forEach(x=>{ if(x && x.id) cliById[x.id]=x; });
+    const fixMes=[];
+    steps.forEach(st=>{ if(st[0]!=="impSecClients") return; st[1].forEach(o=>{
+      const cur=cliById[o[0].id]; if(!cur) return;
+      const have=cur.mesures||{}, add={};
+      Object.keys(o[1].mesures||{}).forEach(k=>{ const v=o[1].mesures[k]; if(v!==undefined && v!=="" && (have[k]===undefined || have[k]===null || have[k]==="")) add[k]=v; });
+      if(Object.keys(add).length){ fixMes.push([ o[0], { mesures:add } ]); cur.mesures=Object.assign({}, have, add); }
+    }); });
     const fixDates=[];
     steps.forEach(st=>{ if(st[0]!=="impSecMoves") return; st[1].forEach(o=>{
       const cur=byId[o[0].id], nms=Number(o[1].ms)||0;
@@ -4631,19 +4694,21 @@
     let skipped=0;
     steps.forEach(st=>{ const before=st[1].length; st[1]=st[1].filter(o=>!have.has(o[0].id)); skipped+=before-st[1].length; });
     if(fixDates.length){ steps.push(["impSecDates", fixDates]); skipped=Math.max(0, skipped-fixDates.length); }
+    if(fixMes.length){ steps.push(["impSecMes", fixMes]); skipped=Math.max(0, skipped-fixMes.length); }
     const done={}, errs=[];
     for(const [lab, ops] of steps){
       done[lab]=0;
       if(!ops.length) continue;
       m.textContent=t("impStep").replace("{x}", t(lab)); m.className="msg ok show";
-      try{ await impCommit(ops, lab); done[lab]=ops.length; }
-      catch(e){ errs.push(t(lab)+" : "+((e && (e.code||e.message)) || "?")); }
+      try{ done[lab]=await impCommit(ops, lab); }
+      catch(e){ done[lab]=(e && e.ok)||0; errs.push(t(lab)+" : "+((e && (e.code||e.message)) || "?")); }
     }
     try{ await loadAll(); }catch(e){}
     m.textContent=t("impDone2").replace("{a}",done.impSecAtelier).replace("{p}",done.impSecPressing)
       .replace("{c}",done.impSecClients).replace("{s}",done.impSecStaff)
       + (done.impSecMoves ? " "+t("impMoves").replace("{n}", done.impSecMoves) : "")
       + (done.impSecDates ? " "+t("impDates").replace("{n}", done.impSecDates) : "")
+      + (done.impSecMes ? " "+t("impMes").replace("{n}", done.impSecMes) : "")
       + (skipped ? " "+t("impSkipped").replace("{n}", skipped) : "")
       + (errs.length ? " "+t("impSomeFail").replace("{ko}",errs.length).replace("{e}",errs.join(" · ")) : "");
     m.className="msg "+(errs.length?"err":"ok")+" show";
@@ -5009,8 +5074,11 @@
   function waveLines(){
     const link=(BOUTIQUE && BOUTIQUE.waveLink) || "";
     const num=String((BOUTIQUE && BOUTIQUE.wave) || "").trim();
-    if(link) return "\n" + tm("lineWave").replace("{v}", link) + "\n" + tm("lineWaveShot");
-    if(num)  return "\n" + tm("lineWaveNum").replace("{v}", num) + "\n" + tm("lineWaveShot");
+    const bk=(BOUTIQUE && BOUTIQUE.banque) || {};
+    const bank = (bk.numero) ? "\n" + tm("lineBank").replace("{b}", bk.nom||"").replace("{t}", bk.titulaire||"").replace("{n}", bk.numero) : "";
+    if(link) return "\n" + tm("lineWave").replace("{v}", link) + bank + "\n" + tm("lineWaveShot");
+    if(num)  return "\n" + tm("lineWaveNum").replace("{v}", num) + bank + "\n" + tm("lineWaveShot");
+    if(bank) return bank + "\n" + tm("lineWaveShot");
     return "";
   }
   function clientMessage(o){
@@ -5249,7 +5317,7 @@
     if(c.notes){ $("f-notes").textContent=c.notes; $("f-notes-row").hidden=false; } else $("f-notes-row").hidden=true;
     $("f-wa-shop").hidden = !(BOUTIQUE && BOUTIQUE.whatsapp);
     const m=c.mesures||{}, box=$("f-mesures"); box.innerHTML=""; let any=false;
-    mesuresFor(c.genre).forEach(mm=>{
+    mesuresShown(c.genre, m).forEach(mm=>{
       const k=mm[0];
       if(m[k]!==undefined && m[k]!==null && m[k]!==""){
         any=true;
@@ -5291,7 +5359,7 @@
 
   function buildGrid(boxId, prefix, m, genre){
     const box=$(boxId); box.innerHTML="";
-    mesuresFor(genre).forEach(mm=>{
+    mesuresShown(genre, m).forEach(mm=>{
       const k=mm[0];
       const wrap=document.createElement("div");
       const lab=document.createElement("label"); lab.textContent=mlabel(mm, LANG_UI); lab.setAttribute("for",prefix+k);
@@ -5303,11 +5371,13 @@
   }
   function readGrid(prefix, genre){
     const out={};
-    mesuresFor(genre).forEach(mm=>{
+    const box=document.getElementById(prefix==="cm-"?"cf-mesures":"in-mesures");
+    const keys=box ? Array.from(box.querySelectorAll("input")).map(i=>i.id.slice(prefix.length)) : mesuresFor(genre).map(x=>x[0]);
+    keys.map(k=>[k]).forEach(mm=>{
       const el=$(prefix+mm[0]);
       if(!el) return;
       const v=el.value.trim();
-      if(v!=="" && !isNaN(parseFloat(v))) out[mm[0]]=parseFloat(v);
+      if(v!=="" && !isNaN(parseFloat(v.replace(",",".")))) out[mm[0]]=parseFloat(v.replace(",","."));
     });
     return out;
   }
@@ -5377,6 +5447,7 @@
       whatsapp:$("b-wa").value.trim(),
       wave:$("b-wave").value.trim(),
       waveLink:okWaveLink($("b-wavelink").value),
+      banque:{ nom:$("b-bank").value.trim(), titulaire:$("b-bankname").value.trim(), numero:$("b-bankno").value.trim() },
       devise:($("b-devise").value.trim() || CUR),
       updatedAt:serverTimestamp()
     };
@@ -5388,6 +5459,7 @@
       BOUTIQUE.devise=data.devise;
       BOUTIQUE.wave=data.wave;
       BOUTIQUE.waveLink=data.waveLink||"";
+      BOUTIQUE.banque=data.banque;
     }
     setDoc(doc(db,"boutiques",BID), data, { merge:true }).catch(function(){});
     // les modèles déjà publiés reprennent le nom, le WhatsApp, le numéro Wave et la monnaie
