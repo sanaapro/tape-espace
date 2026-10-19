@@ -1186,6 +1186,7 @@
       <div class="msg" id="p-msg"></div>
       <div class="qacts">
         <button type="button" id="q-addart" data-i18n="qAddArt">＋ Ajouter un article</button>
+        <button type="button" id="q-fixprice" data-i18n="qFixPrice">✏️ Corriger le prix</button>
         <button type="button" id="q-fixpaid" data-i18n="qFixPaid">Corriger le montant payé</button>
         <button type="button" id="q-solde" data-i18n="qSolde">💰 Solde payé</button>
         <button type="button" id="q-receipt" data-i18n="qReceipt">🧾 Renvoyer le reçu</button>
@@ -1570,7 +1571,7 @@
       fDelQ:"Supprimer ce mouvement ({v}) ?", fNoData:"Rien encore.",
       catSalaires:"Salaires", catLoyer:"Loyer", catElec:"Électricité", catTransport:"Transport", catFourn:"Fournitures", catRepas:"Repas", catEau:"Eau", catInternet:"Internet / crédit",
       advanceOpt:"Avance payée aujourd'hui (optionnel)", advanceLabel:"Avance",
-      qAddArt:"＋ Ajouter un article", qFixPaid:"Corriger le montant payé", qArtName:"Nom de l'article ajouté :", qArtPrice:"Prix de cet article :",
+      qAddArt:"＋ Ajouter un article", qFixPrice:"✏️ Corriger le prix", qFixPaid:"Corriger le montant payé", qArtName:"Nom de l'article ajouté :", qArtPrice:"Prix de cet article :",
       qArtDone:"Article ajouté. Nouveau total : {v}", qFixAsk:"Montant TOTAL réellement payé par {n} (actuellement {v}) :", qFixDone:"Montant payé corrigé : {v}", qFixLabel:"Correction paiement",
       pzFix:"Corriger", pzFixPrice:"Prix total du ticket (actuellement {v}) :",
       histTitle:"＋ Client historique (avant l'application)", histHint:"Pour une cliente servie avant d'utiliser l'application : on enregistre ce qu'elle a payé et ce qu'elle doit encore.",
@@ -1849,7 +1850,7 @@
       fDelQ:"Delete this entry ({v})?", fNoData:"Nothing yet.",
       catSalaires:"Wages", catLoyer:"Rent", catElec:"Electricity", catTransport:"Transport", catFourn:"Supplies", catRepas:"Meals", catEau:"Water", catInternet:"Internet / airtime",
       advanceOpt:"Deposit paid today (optional)", advanceLabel:"Deposit",
-      qAddArt:"＋ Add an item", qFixPaid:"Correct the amount paid", qArtName:"Name of the added item:", qArtPrice:"Price of this item:",
+      qAddArt:"＋ Add an item", qFixPrice:"✏️ Correct the price", qFixPaid:"Correct the amount paid", qArtName:"Name of the added item:", qArtPrice:"Price of this item:",
       qArtDone:"Item added. New total: {v}", qFixAsk:"TOTAL amount actually paid by {n} (currently {v}):", qFixDone:"Amount paid corrected: {v}", qFixLabel:"Payment correction",
       pzFix:"Correct", pzFixPrice:"Total ticket price (currently {v}):",
       histTitle:"＋ Past customer (before the app)", histHint:"For a customer served before you used the app: record what she paid and what she still owes.",
@@ -4403,6 +4404,8 @@
     const m=$("p-msg"); m.textContent=t("qArtDone").replace("{v}", money(prix)); m.className="msg ok show";
     setTimeout(()=>m.classList.remove("show"), 4000);
   });
+  // Raccourci visible : ouvre « Modifier la commande », où le prix de chaque article se corrige
+  $("q-fixprice").addEventListener("click", ()=>{ if(ORD && ORDID) $("c-edit").click(); });
   $("q-fixpaid").addEventListener("click", async ()=>{
     if(!ORD || !ORDID) return;
     if(!await askCode()) return;
