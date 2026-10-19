@@ -748,9 +748,16 @@
         <label data-i18n="waveLinkLabel">Lien de paiement Wave (facultatif)</label>
         <input id="b-wavelink" type="url" inputmode="url" placeholder="https://pay.wave.com/…">
         <label data-i18n="bankLabel">Virement bancaire (facultatif)</label>
-        <input id="b-bank" type="text" data-i18n-ph="bankPh" placeholder="Banque — ex. GT Bank">
+        <select id="b-bank" class="banksel"><option value="">— Choisir la banque —</option><option>GT Bank</option><option>Ecobank</option><option>Trust Bank</option><option>Access Bank</option><option>Standard Chartered</option><option>Zenith Bank</option><option>First Bank</option><option value="autre">Autre banque…</option></select>
+        <input id="b-bank-autre" type="text" data-i18n-ph="bankOtherPh" placeholder="Nom de la banque" style="margin-top:6px" hidden>
         <input id="b-bankname" type="text" data-i18n-ph="bankNamePh" placeholder="Nom du compte" style="margin-top:6px">
         <input id="b-bankno" type="text" inputmode="numeric" data-i18n-ph="bankNoPh" placeholder="Numéro de compte" style="margin-top:6px">
+        <details id="b-bank2-box" style="margin-top:8px"><summary data-i18n="bank2Title" style="cursor:pointer;color:var(--gold)">＋ Ajouter un deuxième compte bancaire</summary>
+        <select id="b-bank2" class="banksel" style="margin-top:6px"><option value="">— Choisir la banque —</option><option>GT Bank</option><option>Ecobank</option><option>Trust Bank</option><option>Access Bank</option><option>Standard Chartered</option><option>Zenith Bank</option><option>First Bank</option><option value="autre">Autre banque…</option></select>
+        <input id="b-bank2-autre" type="text" data-i18n-ph="bankOtherPh" placeholder="Nom de la banque" style="margin-top:6px" hidden>
+        <input id="b-bank2name" type="text" data-i18n-ph="bankNamePh" placeholder="Nom du compte" style="margin-top:6px">
+        <input id="b-bank2no" type="text" inputmode="numeric" data-i18n-ph="bankNoPh" placeholder="Numéro de compte" style="margin-top:6px">
+        </details>
         <p style="margin:4px 0 8px;font-size:12.5px;color:var(--muted)" data-i18n="bankHint">Ces coordonnées s'ajoutent aux messages de paiement envoyés aux clientes, à côté de Wave.</p>
         <p style="margin:4px 0 0;font-size:12.5px;color:var(--muted)" data-i18n="waveLinkHint">Si vous avez un compte Wave Business, collez ici votre lien de paiement : la cliente tombera directement sur votre page de paiement Wave.</p>
         <label data-i18n="currency">Monnaie affichée</label>
@@ -1437,7 +1444,7 @@
       vtBatchCut:"La formule Standard est limitée à 5 modèles : les photos restantes sont en attente.",
       vtBatchStop:"Arrêt à la photo {i} : {e}. Les modèles restants sont toujours là, réessayez.",
       vtConfirmDel:"Retirer ce modèle du catalogue ?", vtFrom:"dès",
-      bankLabel:"Virement bancaire (facultatif)", bankPh:"Banque — ex. GT Bank", bankNamePh:"Nom du compte", bankNoPh:"Numéro de compte", bankHint:"Ces coordonnées s'ajoutent aux messages de paiement envoyés aux clientes, à côté de Wave.", waveLabel:"Numéro Wave (paiement des clientes)", waveLinkLabel:"Lien de paiement Wave (facultatif)", waveLinkHint:"Si vous avez un compte Wave Business, collez ici votre lien de paiement : la cliente tombera directement sur votre page de paiement Wave.",
+      bankOtherPh:"Nom de la banque", bank2Title:"＋ Ajouter un deuxième compte bancaire", bankLabel:"Virement bancaire (facultatif)", bankPh:"Banque — ex. GT Bank", bankNamePh:"Nom du compte", bankNoPh:"Numéro de compte", bankHint:"Ces coordonnées s'ajoutent aux messages de paiement envoyés aux clientes, à côté de Wave.", waveLabel:"Numéro Wave (paiement des clientes)", waveLinkLabel:"Lien de paiement Wave (facultatif)", waveLinkHint:"Si vous avez un compte Wave Business, collez ici votre lien de paiement : la cliente tombera directement sur votre page de paiement Wave.",
       vtLimit:"La formule Standard permet {n} modèles dans le catalogue. Passez au Premium pour en publier sans limite, ou supprimez un modèle.",
       vtLimitAsk:"Passer au Premium sur WhatsApp ?",
       vtShareT:"Envoyer ma vitrine aux clientes", vtShareBtn:"Partager sur WhatsApp", vtCopy:"Copier le lien",
@@ -1716,7 +1723,7 @@
       vtBatchCut:"The Standard plan is limited to 5 designs: the remaining photos are waiting.",
       vtBatchStop:"Stopped at photo {i}: {e}. The remaining designs are still here, try again.",
       vtConfirmDel:"Remove this design from the catalogue?", vtFrom:"from",
-      bankLabel:"Bank transfer (optional)", bankPh:"Bank — e.g. GT Bank", bankNamePh:"Account name", bankNoPh:"Account number", bankHint:"These details are added to the payment messages sent to clients, next to Wave.", waveLabel:"Wave number (client payments)", waveLinkLabel:"Wave payment link (optional)", waveLinkHint:"If you have a Wave Business account, paste your payment link here: clients will land directly on your Wave payment page.",
+      bankOtherPh:"Bank name", bank2Title:"＋ Add a second bank account", bankLabel:"Bank transfer (optional)", bankPh:"Bank — e.g. GT Bank", bankNamePh:"Account name", bankNoPh:"Account number", bankHint:"These details are added to the payment messages sent to clients, next to Wave.", waveLabel:"Wave number (client payments)", waveLinkLabel:"Wave payment link (optional)", waveLinkHint:"If you have a Wave Business account, paste your payment link here: clients will land directly on your Wave payment page.",
       vtLimit:"The Standard plan allows {n} designs in the catalogue. Upgrade to Premium to publish without limit, or remove a design.",
       vtLimitAsk:"Upgrade to Premium on WhatsApp?",
       vtShareT:"Send my showcase to clients", vtShareBtn:"Share on WhatsApp", vtCopy:"Copy the link",
@@ -2412,10 +2419,17 @@
     if(act !== $("b-wa"))     $("b-wa").value     = b.whatsapp||"";
     if(act !== $("b-wave"))   $("b-wave").value   = b.wave||"";
     if(act !== $("b-wavelink")) $("b-wavelink").value = b.waveLink||"";
-    const bk=b.banque||{};
-    if(act !== $("b-bank"))     $("b-bank").value     = bk.nom||"";
-    if(act !== $("b-bankname")) $("b-bankname").value = bk.titulaire||"";
-    if(act !== $("b-bankno"))   $("b-bankno").value   = bk.numero||"";
+    [["b-bank","banque"],["b-bank2","banque2"]].forEach(([id,key])=>{
+      const bk=b[key]||{}, sel=$(id), other=$(id+"-autre");
+      if(act!==sel && act!==other){
+        const known=Array.from(sel.options).some(o=>o.value && o.value!=="autre" && o.value===bk.nom);
+        sel.value = !bk.nom ? "" : (known ? bk.nom : "autre");
+        other.value = known ? "" : (bk.nom||""); other.hidden = sel.value!=="autre";
+      }
+      if(act !== $(id+"name")) $(id+"name").value = bk.titulaire||"";
+      if(act !== $(id+"no"))   $(id+"no").value   = bk.numero||"";
+    });
+    if(b.banque2 && b.banque2.numero) $("b-bank2-box").open=true;
     if(act !== $("b-devise")) $("b-devise").value = b.devise||CUR;
     if(document.activeElement !== $("b-code")){
       $("b-code").value = "";
@@ -5074,8 +5088,8 @@
   function waveLines(){
     const link=(BOUTIQUE && BOUTIQUE.waveLink) || "";
     const num=String((BOUTIQUE && BOUTIQUE.wave) || "").trim();
-    const bk=(BOUTIQUE && BOUTIQUE.banque) || {};
-    const bank = (bk.numero) ? "\n" + tm("lineBank").replace("{b}", bk.nom||"").replace("{t}", bk.titulaire||"").replace("{n}", bk.numero) : "";
+    const bank = ["banque","banque2"].map(k=>(BOUTIQUE && BOUTIQUE[k]) || {}).filter(bk=>bk.numero)
+      .map(bk=>"\n" + tm("lineBank").replace("{b}", bk.nom||"").replace("{t}", bk.titulaire||"").replace("{n}", bk.numero)).join("");
     if(link) return "\n" + tm("lineWave").replace("{v}", link) + bank + "\n" + tm("lineWaveShot");
     if(num)  return "\n" + tm("lineWaveNum").replace("{v}", num) + bank + "\n" + tm("lineWaveShot");
     if(bank) return bank + "\n" + tm("lineWaveShot");
@@ -5436,6 +5450,11 @@
     renderLists(); show("dash"); setTab("mesures");
   });
 
+  function readBank(id){
+    const sel=$(id).value, nom = sel==="autre" ? $(id+"-autre").value.trim() : sel;
+    return { nom, titulaire:$(id+"name").value.trim(), numero:$(id+"no").value.trim() };
+  }
+  ["b-bank","b-bank2"].forEach(id=>$(id).addEventListener("change", ()=>{ $(id+"-autre").hidden = $(id).value!=="autre"; }));
   $("b-save").addEventListener("click", async ()=>{
     const msg=$("b-msg");
     const name=$("b-name").value.trim();
@@ -5447,7 +5466,7 @@
       whatsapp:$("b-wa").value.trim(),
       wave:$("b-wave").value.trim(),
       waveLink:okWaveLink($("b-wavelink").value),
-      banque:{ nom:$("b-bank").value.trim(), titulaire:$("b-bankname").value.trim(), numero:$("b-bankno").value.trim() },
+      banque:readBank("b-bank"), banque2:readBank("b-bank2"),
       devise:($("b-devise").value.trim() || CUR),
       updatedAt:serverTimestamp()
     };
@@ -5459,7 +5478,7 @@
       BOUTIQUE.devise=data.devise;
       BOUTIQUE.wave=data.wave;
       BOUTIQUE.waveLink=data.waveLink||"";
-      BOUTIQUE.banque=data.banque;
+      BOUTIQUE.banque=data.banque; BOUTIQUE.banque2=data.banque2;
     }
     setDoc(doc(db,"boutiques",BID), data, { merge:true }).catch(function(){});
     // les modèles déjà publiés reprennent le nom, le WhatsApp, le numéro Wave et la monnaie
