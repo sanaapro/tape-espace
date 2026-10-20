@@ -1229,7 +1229,9 @@
       <select id="cf-cliente"></select>
       <div id="cf-new" hidden>
         <label data-i18n="newClientNameLabel">Nom du nouveau client</label>
-        <input id="cf-new-name" type="text" data-i18n-ph="newClientNamePh" placeholder="Ex. Awa Diallo">
+        <input id="cf-new-name" type="text" list="cf-new-list" autocomplete="off" data-i18n-ph="newClientNamePh" placeholder="Ex. Awa Diallo">
+        <datalist id="cf-new-list"></datalist>
+        <p style="margin:4px 0 0;font-size:12.5px;color:var(--muted)" data-i18n="cfFindHint">Tapez le nom : si la cliente existe déjà, ses mesures s'affichent toutes seules.</p>
         <label data-i18n="phoneWa">Téléphone / WhatsApp</label>
         <input id="cf-new-phone" type="tel" data-i18n-ph="newPhonePh" placeholder="+220 …">
       </div>
@@ -1476,7 +1478,7 @@
       standard:"Standard", premium:"Premium",
       typeLabel:"Type de commande", typeHint:"Type de commande (à choisir avant de remplir)", tConfection:"Confection", tRetouche:"Retouche", tPap:"Prêt-à-porter",
       genreLabel:"Genre du client", gFemme:"Femme", gHomme:"Homme",
-      newClientOpt:"+ Nouvelle cliente", newClientNameLabel:"Nom du nouveau client",
+      newClientOpt:"+ Nouvelle cliente", cfFindHint:"Tapez le nom : si la cliente existe déjà, ses mesures s'affichent toutes seules.", cfFound:"Cliente trouvée : {n} — ses mesures sont affichées.", newClientNameLabel:"Nom du nouveau client",
       newClientNamePh:"Ex. Awa Diallo", newPhonePh:"+220 …",
       rcvGarment:"vêtement",
       autoNotify:"Notification WhatsApp automatique",
@@ -1755,7 +1757,7 @@
       standard:"Standard", premium:"Premium",
       typeLabel:"Order type", typeHint:"Order type (choose before filling in)", tConfection:"Tailoring", tRetouche:"Alteration", tPap:"Ready-to-wear",
       genreLabel:"Client gender", gFemme:"Woman", gHomme:"Man",
-      newClientOpt:"+ New client", newClientNameLabel:"New client name",
+      newClientOpt:"+ New client", cfFindHint:"Type the name: if the client already exists, her measurements appear automatically.", cfFound:"Client found: {n} — measurements shown.", newClientNameLabel:"New client name",
       newClientNamePh:"e.g. Awa Diallo", newPhonePh:"+220 …",
       rcvGarment:"garment",
       autoNotify:"Automatic WhatsApp notification",
@@ -5201,8 +5203,26 @@
       op.value=c.id; op.textContent=c.name||t("noName"); sel.appendChild(op);
     });
     if(keep && Array.prototype.some.call(sel.options, o=>o.value===keep)) sel.value=keep;
+    // suggestions : TOUTES les fiches (homme et femme) pour retrouver une cliente en tapant son nom
+    const dl=$("cf-new-list");
+    if(dl){ dl.innerHTML=""; CLIENTES.forEach(c=>{ if(!c.name) return; const o=document.createElement("option"); o.value=c.name; if(c.phone) o.label=c.phone; dl.appendChild(o); }); }
     toggleNewCliente();
   }
+  const normNom = s => String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();
+  function clienteParNom(nom){
+    const k=normNom(nom); if(!k) return null;
+    const l=CLIENTES.filter(c=>normNom(c.name)===k);
+    return l.length ? l[0] : null;
+  }
+  // Nom tapé = cliente existante → on bascule sur sa fiche (genre + mesures remplies)
+  function choisirClienteExistante(c){
+    GENRE_CF = c.genre==="homme" ? "homme" : "femme";
+    paintSegs(); fillClienteSelect();
+    $("cf-cliente").value=c.id; toggleNewCliente();
+    $("cf-new-name").value=""; $("cf-new-phone").value="";
+    const m=$("cf-msg"); if(m){ m.textContent=t("cfFound").replace("{n}", c.name||""); m.className="msg ok show"; setTimeout(()=>m.classList.remove("show"), 3500); }
+  }
+  $("cf-new-name").addEventListener("input", ()=>{ const c=clienteParNom($("cf-new-name").value); if(c) choisirClienteExistante(c); });
   function toggleNewCliente(){
     const v=$("cf-cliente").value;
     $("cf-new").hidden = (v !== "__new");
@@ -5261,6 +5281,10 @@
     $("cf-prix").value = ARTS.some(a=>a.prix!=="" && a.prix!=null) ? String(sumArts) : "";
 
     let c;
+    if(cid === "__new" && clienteParNom($("cf-new-name").value)){
+      // même nom qu'une fiche existante : on la réutilise au lieu de créer un doublon vide
+      const ex=clienteParNom($("cf-new-name").value); cid=ex.id;
+    }
     if(cid === "__new"){
       const nn=$("cf-new-name").value.trim();
       if(!nn){ msg.textContent=t("nameRequired"); msg.classList.add("show"); window.scrollTo(0,0); return; }
