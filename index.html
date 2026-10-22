@@ -1359,6 +1359,7 @@
       <p style="margin:0 0 8px;font-size:13px;color:var(--muted)" data-i18n="nbHint">Photographiez la page de l'ancien cahier : elle reste dans la fiche, plus besoin de tout retaper.</p>
       <div class="ph-grid" id="in-nb"></div>
       <div class="ph-btns"><label><input type="file" id="in-nb-file" accept="image/*" capture="environment"><span data-i18n="nbBtn">📷 Photographier la page du cahier</span></label></div>
+      <div class="dict-st" id="in-nb-st"></div>
     </div>
     <div class="card">
       <h2 data-i18n="measures">Mesures (cm)</h2>
@@ -1663,7 +1664,7 @@
       pmRecupere:"Merci {nom} d'avoir choisi {boutique}. À très bientôt !",
       pmTicket:"Ticket n° {v}", pmItems:"Articles : {v}", pmTotal:"Total : {v}", pmAdvance:"Avance : {v}",
       scTicket:"Scanner un ticket client", qTicket:"🔳 Ticket avec QR code", tkOrder:"Commande n°", tkHint:"Scannez pour suivre votre commande", tkClient:"Client", tkItem:"Article", tkDate:"Date prévue", tkTotal:"Total", tkPaid:"Payé", tkLeft:"Reste à payer", tkPrint:"🖨️ Imprimer", tkShare:"📤 Partager", tkCopied:"Lien de suivi copié.", tkNoLink:"Impossible de créer le ticket : abonnement expiré ou commande non enregistrée.", tkQrFail:"QR indisponible (pas de réseau ?)", scNotFound:"Ticket introuvable dans cette boutique. Vérifiez qu'il vient bien de votre atelier.", scCount:"{n} article(s) en cours", scTotal:"Reste à payer en tout", scAgain:"Scanner un autre ticket",
-      nbTitle:"Page du cahier", nbHint:"Photographiez la page de l'ancien cahier : elle reste dans la fiche, plus besoin de tout retaper.", nbBtn:"📷 Photographier la page du cahier", nbNone:"Aucune page de cahier.", nbTag:"Cahier", dictBtn:"🎤 Dicter les mesures", dictStop:"⏹ Arrêter la dictée", dictGo:"Je vous écoute… dites par exemple « épaule 42, poitrine 96 ».", dictHeard:"Entendu : « {t} » · {n} case(s) remplie(s). Vérifiez avant d'enregistrer.", dictNo:"La dictée n'est pas disponible sur ce téléphone (utilisez Chrome).", dictDenied:"Autorisez le micro pour SanaaPro dans les réglages du navigateur.", dictNet:"La dictée a besoin d'Internet. Réessayez quand le réseau revient.", dictErr:"La dictée s'est arrêtée. Touchez à nouveau le micro.",
+      nbTitle:"Page du cahier", nbHint:"Photographiez la page de l'ancien cahier : les mesures se remplissent toutes seules et la page reste dans la fiche.", aiReading:"📖 Lecture du cahier en cours…", aiWaking:"📖 Lecture en cours… le lecteur se réveille, cela peut prendre jusqu'à une minute.", aiDone:"✅ {n} mesure(s) lue(s) dans le cahier. Vérifiez les cases vertes avant d'enregistrer.", aiMany:"Plusieurs personnes sur la page : seule la première a été lue.", aiNone:"Aucune mesure lisible sur cette photo. Reprenez-la plus près, bien éclairée, ou dictez les mesures.", aiFail:"La lecture n'a pas abouti. La photo est gardée ; vous pouvez dicter les mesures.", aiOffline:"Pas de réseau : la photo est gardée, la lecture automatique demande Internet.", aiLimit:"Limite de lectures du jour atteinte. Dictez les mesures ou réessayez demain.", aiNoKey:"Le lecteur de cahier n'est pas encore activé.", aiAuth:"Reconnectez-vous pour utiliser la lecture du cahier.", nbBtn:"📷 Photographier la page du cahier", nbNone:"Aucune page de cahier.", nbTag:"Cahier", dictBtn:"🎤 Dicter les mesures", dictStop:"⏹ Arrêter la dictée", dictGo:"Je vous écoute… dites par exemple « épaule 42, poitrine 96 ».", dictHeard:"Entendu : « {t} » · {n} case(s) remplie(s). Vérifiez avant d'enregistrer.", dictNo:"La dictée n'est pas disponible sur ce téléphone (utilisez Chrome).", dictDenied:"Autorisez le micro pour SanaaPro dans les réglages du navigateur.", dictNet:"La dictée a besoin d'Internet. Réessayez quand le réseau revient.", dictErr:"La dictée s'est arrêtée. Touchez à nouveau le micro.",
       ptScan:"Scanner mon badge", ptAddStaff:"＋ Ajouter un employé", ptModeT:"Comment vos employés pointent",
       ptModeCode:"Code à 4 chiffres", ptModeBadge:"Badge (code-barres)", ptModeBoth:"Les deux",
       ptModeHint:"Avec le badge, l'employé montre sa carte à la caméra du téléphone, ou la passe devant un lecteur de code-barres branché.",
@@ -1944,7 +1945,7 @@
       pmRecupere:"Thank you {nom} for choosing {boutique}. See you soon!",
       pmTicket:"Ticket no. {v}", pmItems:"Items: {v}", pmTotal:"Total: {v}", pmAdvance:"Deposit: {v}",
       scTicket:"Scan a customer ticket", qTicket:"🔳 Ticket with QR code", tkOrder:"Order no.", tkHint:"Scan to follow your order", tkClient:"Customer", tkItem:"Item", tkDate:"Due date", tkTotal:"Total", tkPaid:"Paid", tkLeft:"Balance due", tkPrint:"🖨️ Print", tkShare:"📤 Share", tkCopied:"Tracking link copied.", tkNoLink:"Cannot create the ticket: subscription expired or order not saved.", tkQrFail:"QR unavailable (no network?)", scNotFound:"Ticket not found in this shop. Check it comes from your workshop.", scCount:"{n} item(s) in progress", scTotal:"Total balance due", scAgain:"Scan another ticket",
-      nbTitle:"Notebook page", nbHint:"Take a photo of the old notebook page: it stays in the customer file, no need to retype everything.", nbBtn:"📷 Photograph the notebook page", nbNone:"No notebook page.", nbTag:"Notebook", dictBtn:"🎤 Dictate measurements", dictStop:"⏹ Stop dictation", dictGo:"Listening… say for example \"shoulder 42, chest 96\".", dictHeard:"Heard: \"{t}\" · {n} field(s) filled. Check before saving.", dictNo:"Dictation isn't available on this phone (use Chrome).", dictDenied:"Allow the microphone for SanaaPro in the browser settings.", dictNet:"Dictation needs internet. Try again when the network is back.", dictErr:"Dictation stopped. Tap the microphone again.",
+      nbTitle:"Notebook page", nbHint:"Take a photo of the old notebook page: the measurements fill in by themselves and the page stays in the file.", aiReading:"📖 Reading the notebook…", aiWaking:"📖 Still reading… the reader is waking up, this can take up to a minute.", aiDone:"✅ {n} measurement(s) read from the notebook. Check the green fields before saving.", aiMany:"Several people on the page: only the first one was read.", aiNone:"No readable measurement in this photo. Retake it closer and well lit, or dictate.", aiFail:"Reading didn't work. The photo is kept; you can dictate the measurements.", aiOffline:"No network: the photo is kept, automatic reading needs internet.", aiLimit:"Daily reading limit reached. Dictate or try again tomorrow.", aiNoKey:"The notebook reader isn't switched on yet.", aiAuth:"Sign in again to use notebook reading.", nbBtn:"📷 Photograph the notebook page", nbNone:"No notebook page.", nbTag:"Notebook", dictBtn:"🎤 Dictate measurements", dictStop:"⏹ Stop dictation", dictGo:"Listening… say for example \"shoulder 42, chest 96\".", dictHeard:"Heard: \"{t}\" · {n} field(s) filled. Check before saving.", dictNo:"Dictation isn't available on this phone (use Chrome).", dictDenied:"Allow the microphone for SanaaPro in the browser settings.", dictNet:"Dictation needs internet. Try again when the network is back.", dictErr:"Dictation stopped. Tap the microphone again.",
       ptScan:"Scan my badge", ptAddStaff:"＋ Add an employee", ptModeT:"How your staff clock in",
       ptModeCode:"4-digit code", ptModeBadge:"Badge (barcode)", ptModeBoth:"Both",
       ptModeHint:"With a badge, the employee shows their card to the phone camera, or passes it in front of a plugged-in barcode reader.",
@@ -5645,9 +5646,39 @@
     await savePhotos(nbKey(currentCliente), list, $("f-nb-msg")); drawNb("f-nb", currentCliente);
   });
   $("in-nb-file").addEventListener("change", async e=>{
+    const before=IN_NB.length;
     await addPhotos(e.target.files, "cahier", IN_NB); e.target.value="";
     drawNb("in-nb", editingId, IN_NB);
+    if(IN_NB.length>before) lireCahier(IN_NB[IN_NB.length-1].data);
   });
+
+  // =================== LECTURE AUTOMATIQUE DU CAHIER (serveur + IA) ===================
+  const LECTEUR_URL = "https://sanaapro-lecteur.onrender.com";
+  function wakeLecteur(){ try{ fetch(LECTEUR_URL+"/", { cache:"no-store" }).catch(function(){}); }catch(e){} }
+  async function lireCahier(img){
+    const st=$("in-nb-st"); st.style.color="";
+    if(!navigator.onLine){ st.textContent=t("aiOffline"); return; }
+    const inputs=Array.from($("in-mesures").querySelectorAll("input"));
+    const champs=inputs.map(i=>{ const lb=$("in-mesures").querySelector('label[for="'+i.id+'"]'); return [i.id.replace(/^m-/,""), lb?lb.textContent:i.id]; });
+    st.textContent=t("aiReading");
+    const slow=setTimeout(()=>{ st.textContent=t("aiWaking"); }, 9000);
+    const ac=new AbortController(); const kill=setTimeout(()=>ac.abort(), 110000);
+    try{
+      const tok = auth.currentUser ? await auth.currentUser.getIdToken() : "";
+      const r = await fetch(LECTEUR_URL+"/lire", { method:"POST", signal:ac.signal,
+        headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+tok },
+        body: JSON.stringify({ image:img, genre:GENRE_FORM, champs }) });
+      const j = await r.json().catch(()=>({}));
+      if(!r.ok){ st.textContent = t(r.status===429?"aiLimit":(r.status===503?"aiNoKey":(r.status===401?"aiAuth":"aiFail"))); st.style.color="var(--warn)"; return; }
+      let n=0;
+      Object.keys(j.mesures||{}).forEach(k=>{ const el=$("m-"+k); if(el){ el.value=j.mesures[k]; el.classList.add("dict-hit"); n++; } });
+      if(j.nom && !$("in-name").value.trim()) $("in-name").value=j.nom;
+      if(j.telephone && !$("in-phone").value.trim()) $("in-phone").value=j.telephone;
+      st.textContent = n ? t("aiDone").replace("{n}", n)+(j.plusieurs?" "+t("aiMany"):"") : t("aiNone");
+      st.style.color = n ? "var(--ok)" : "var(--warn)";
+    }catch(e){ st.textContent=t("aiFail"); st.style.color="var(--warn)"; }
+    finally{ clearTimeout(slow); clearTimeout(kill); }
+  }
 
   // =================== DICTÉE DES MESURES (reconnaissance vocale du téléphone) ===================
   const normV = s => String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9,.\s]/g," ").replace(/\s+/g," ").trim();
@@ -5718,7 +5749,7 @@
   function openForm(id){
     $("form-msg").classList.remove("show");
     editingId = id || null;
-    stopDict(); IN_NB=[]; $("in-dict-st").textContent="";
+    stopDict(); IN_NB=[]; $("in-dict-st").textContent=""; $("in-nb-st").textContent=""; wakeLecteur();
     drawNb("in-nb", editingId, IN_NB);
     if(!editingId){
       $("form-title").textContent=t("newClientTitle");
