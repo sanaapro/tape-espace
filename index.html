@@ -1280,9 +1280,9 @@
         <input id="cf-new-name" type="text" list="cf-new-list" autocomplete="off" data-i18n-ph="newClientNamePh" placeholder="Ex. Awa Diallo">
         <datalist id="cf-new-list"></datalist>
         <p style="margin:4px 0 0;font-size:12.5px;color:var(--muted)" data-i18n="cfFindHint">Tapez le nom : si la cliente existe déjà, ses mesures s'affichent toutes seules.</p>
-        <label data-i18n="phoneWa">Téléphone / WhatsApp</label>
-        <input id="cf-new-phone" type="tel" data-i18n-ph="newPhonePh" placeholder="+220 …">
       </div>
+      <label data-i18n="phoneWa">Téléphone / WhatsApp</label>
+      <input id="cf-new-phone" type="tel" data-i18n-ph="newPhonePh" placeholder="+220 …">
       <label data-i18n="receivedLabel">Reçu de la cliente</label>
       <select id="cf-recu">
         <option value="tissu" data-i18n="rcvFabric">tissu</option>
@@ -5414,7 +5414,7 @@
     GENRE_CF = c.genre==="homme" ? "homme" : "femme";
     paintSegs(); fillClienteSelect();
     $("cf-cliente").value=c.id; toggleNewCliente();
-    $("cf-new-name").value=""; $("cf-new-phone").value="";
+    $("cf-new-name").value="";
     const m=$("cf-msg"); if(m){ m.textContent=t("cfFound").replace("{n}", c.name||""); m.className="msg ok show"; setTimeout(()=>m.classList.remove("show"), 3500); }
   }
   $("cf-new-name").addEventListener("input", ()=>{ const c=clienteParNom($("cf-new-name").value); if(c) choisirClienteExistante(c); });
@@ -5422,6 +5422,7 @@
     const v=$("cf-cliente").value;
     $("cf-new").hidden = (v !== "__new");
     const c = (v && v!=="__new") ? CLIENTES.find(x=>x.id===v) : null;
+    $("cf-new-phone").value = c ? (c.phone||"") : "";
     buildCmdGrid(c ? (c.mesures||{}) : {});
   }
 
@@ -5494,6 +5495,11 @@
       cid = cref.id;
     } else {
       c = CLIENTES.find(x=>x.id===cid) || { name:"", phone:"" };
+      const tel = $("cf-new-phone").value.trim();
+      if(c.id && tel && tel !== (c.phone||"")){
+        setDoc(doc(db,"boutiques",BID,"clientes",cid), { phone:tel, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+        c.phone = tel;
+      }
       const mes = readGrid("cm-", GENRE_CF);
       if(Object.keys(mes).length){
         setDoc(doc(db,"boutiques",BID,"clientes",cid),
