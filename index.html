@@ -4975,6 +4975,7 @@
     setTimeout(()=>{ msg.classList.remove("show"); }, 4000);
     PZ_FILTER="encours"; renderLists();
     if(o.clientePhone && autoNotifyOn()) pzSend(o);
+    setTimeout(()=>showTicket(o), 150);
   });
   function pzMatch(o){
     const st=o.statut||"recu";
@@ -5465,6 +5466,7 @@
     }
     setDoc(ref, data, { merge:true }).catch(function(){});
     const id = editingOrd || ref.id;
+    const NEWORD = !editingOrd;
     if(AVANCE>0) addMouv("recette","atelier",AVANCE, t("advanceLabel")+" "+fmtNum(data.numero)+" — "+(data.clienteName||""), { commandeId:id });
     const existing = COMMANDES.find(x=>x.id===id);
     if(existing) Object.assign(existing, data);
@@ -5475,6 +5477,7 @@
     renderLists();
     renderCmd(COMMANDES.find(x=>x.id===id), id);
     show("cmd");
+    if(NEWORD){ const no=COMMANDES.find(x=>x.id===id); if(no) setTimeout(()=>showTicket(no), 150); }
   });
 
   $("c-del").addEventListener("click", async ()=>{
