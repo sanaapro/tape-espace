@@ -277,6 +277,34 @@
     body.printbadges .pt-badge button{ display:none !important }
     body.printbadges .pt-badge{ break-inside:avoid; border:1px dashed #888 }
   }
+  .sc-btn{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; margin-top:10px; padding:13px; border-radius:12px; border:1px solid var(--gold); background:none; color:var(--gold); font:inherit; font-weight:700; cursor:pointer }
+  .sc-btn svg{ width:20px; height:20px }
+  .tk-ov, .sc-ov{ position:fixed; inset:0; z-index:58; background:rgba(0,0,0,.78); display:flex; align-items:flex-start; justify-content:center; padding:18px 14px; overflow:auto }
+  .tk-doc{ background:#fff; color:#111; width:100%; max-width:300px; border-radius:12px; padding:16px 14px; text-align:center; font-family:var(--sans) }
+  .tk-doc .sh{ font-family:var(--serif); font-weight:700; font-size:17px }
+  .tk-doc .nb{ font-size:13px; color:#444; margin-top:2px }
+  .tk-doc img{ width:190px; height:190px; image-rendering:pixelated; display:block; margin:10px auto 4px }
+  .tk-doc .hint{ font-size:11.5px; color:#444; margin-bottom:8px }
+  .tk-doc .rw{ display:flex; justify-content:space-between; gap:10px; font-size:13px; border-top:1px dashed #aaa; padding:5px 0; text-align:left }
+  .tk-doc .rw b{ text-align:right }
+  .tk-bar{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:14px auto 0; max-width:300px }
+  .tk-bar button{ flex:1 1 40%; padding:12px; border-radius:12px; border:1px solid var(--gold); background:var(--panel); color:var(--gold); font:inherit; font-weight:700; cursor:pointer }
+  .sc-doc{ background:var(--panel); border:1px solid var(--line2); color:var(--txt); width:100%; max-width:440px; border-radius:16px; padding:16px }
+  .sc-doc h3{ font-family:var(--serif); color:var(--gold); margin:0 0 2px; font-size:19px }
+  .sc-doc .sub{ color:var(--muted); font-size:13px; margin-bottom:10px }
+  .sc-it{ border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-top:8px; cursor:pointer; background:var(--panel2) }
+  .sc-it.hit{ border-color:var(--gold) }
+  .sc-it .a{ display:flex; justify-content:space-between; gap:8px; font-weight:700 }
+  .sc-it .b{ font-size:13px; color:var(--muted); margin-top:3px }
+  .sc-tot{ display:flex; justify-content:space-between; margin-top:12px; padding-top:10px; border-top:1px solid var(--line2); font-weight:700 }
+  @media print{
+    body.printticket *{ visibility:hidden !important }
+    body.printticket .tk-doc, body.printticket .tk-doc *{ visibility:visible !important }
+    body.printticket .tk-ov{ position:absolute; inset:auto; left:0; top:0; background:#fff; padding:0; overflow:visible }
+    body.printticket .tk-doc{ width:54mm; max-width:54mm; border-radius:0; padding:0 }
+    body.printticket .tk-doc img{ width:38mm; height:38mm }
+    body.printticket .tk-bar{ display:none !important }
+  }
   .ph-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(86px,1fr)); gap:8px; margin-top:8px; }
   .ph-item{ position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--line2); aspect-ratio:1; background:#111; }
   .ph-item img{ width:100%; height:100%; object-fit:cover; display:block; cursor:zoom-in; }
@@ -544,6 +572,7 @@
         <h2 data-i18n="search">Recherche globale</h2>
         <input id="q" type="search" data-i18n-ph="searchPh" placeholder="Nom, téléphone ou modèle">
         <div id="q-res"></div>
+        <button type="button" class="sc-btn" id="scan-ticket"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10"/></svg><span data-i18n="scTicket">Scanner un ticket client</span></button>
       </div>
 
       <div class="stats3">
@@ -705,6 +734,7 @@
         <div class="msg" id="dp-msg"></div>
       </div>
       <input id="q-pz" type="search" data-i18n-ph="pzSearchPh" placeholder="Nom, téléphone ou n° de ticket…" style="margin-top:14px">
+      <button type="button" class="sc-btn" id="scan-ticket-pz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10"/></svg><span data-i18n="scTicket">Scanner un ticket client</span></button>
       <div class="chips" id="pz-filter" style="margin-top:10px">
         <button data-f="encours" data-i18n="pzInProgress">En cours</button>
         <button data-f="pret" data-i18n="pzReadyN">Prêts</button>
@@ -1164,7 +1194,7 @@
       <h2 data-i18n="phTitle">Photos du tissu et du modèle</h2>
       <div class="ph-grid" id="c-ph"></div>
       <div class="ph-btns">
-        <label><input type="file" id="c-ph-tissu" accept="image/*" multiple><span data-i18n="phFabric">📷 Photo du tissu</span></label>
+        <label><input type="file" id="c-ph-tissu" accept="image/*" capture="environment"><span data-i18n="phFabric">📷 Photo du tissu</span></label>
         <label><input type="file" id="c-ph-modele" accept="image/*" multiple><span data-i18n="phModel">🖼️ Modèle (galerie)</span></label>
       </div>
       <div class="msg" id="c-ph-msg"></div>
@@ -1193,6 +1223,7 @@
         <button type="button" id="q-resched" data-i18n="qResched">📅 Reporter la livraison</button>
         <button type="button" id="q-track" data-i18n="qTrack">🔗 Envoyer le lien de suivi</button>
         <button type="button" id="q-copy" data-i18n="qCopy">📋 Copier le lien de suivi</button>
+        <button type="button" id="q-ticket" data-i18n="qTicket">🔳 Ticket avec QR code</button>
       </div>
     </div>
     <div class="card">
@@ -1264,7 +1295,7 @@
       <textarea id="cf-notes" rows="2" data-i18n-ph="orderNotesPh" placeholder="Couleur, broderie, remarques…"></textarea>
       <label data-i18n="phTitle">Photos du tissu et du modèle</label>
       <div class="ph-btns">
-        <label><input type="file" id="cf-ph-tissu" accept="image/*" multiple><span data-i18n="phFabric">📷 Photo du tissu</span></label>
+        <label><input type="file" id="cf-ph-tissu" accept="image/*" capture="environment"><span data-i18n="phFabric">📷 Photo du tissu</span></label>
         <label><input type="file" id="cf-ph-modele" accept="image/*" multiple><span data-i18n="phModel">🖼️ Modèle (galerie)</span></label>
       </div>
       <div class="ph-grid" id="cf-ph"></div>
@@ -1612,6 +1643,7 @@
       pmPret:"Bonjour {nom}, vos vêtements sont prêts. Vous pouvez passer les récupérer chez {boutique}.",
       pmRecupere:"Merci {nom} d'avoir choisi {boutique}. À très bientôt !",
       pmTicket:"Ticket n° {v}", pmItems:"Articles : {v}", pmTotal:"Total : {v}", pmAdvance:"Avance : {v}",
+      scTicket:"Scanner un ticket client", qTicket:"🔳 Ticket avec QR code", tkOrder:"Commande n°", tkHint:"Scannez pour suivre votre commande", tkClient:"Client", tkItem:"Article", tkDate:"Date prévue", tkTotal:"Total", tkPaid:"Payé", tkLeft:"Reste à payer", tkPrint:"🖨️ Imprimer", tkShare:"📤 Partager", tkCopied:"Lien de suivi copié.", tkNoLink:"Impossible de créer le ticket : abonnement expiré ou commande non enregistrée.", tkQrFail:"QR indisponible (pas de réseau ?)", scNotFound:"Ticket introuvable dans cette boutique. Vérifiez qu'il vient bien de votre atelier.", scCount:"{n} article(s) en cours", scTotal:"Reste à payer en tout", scAgain:"Scanner un autre ticket",
       ptScan:"Scanner mon badge", ptAddStaff:"＋ Ajouter un employé", ptModeT:"Comment vos employés pointent",
       ptModeCode:"Code à 4 chiffres", ptModeBadge:"Badge (code-barres)", ptModeBoth:"Les deux",
       ptModeHint:"Avec le badge, l'employé montre sa carte à la caméra du téléphone, ou la passe devant un lecteur de code-barres branché.",
@@ -1891,6 +1923,7 @@
       pmPret:"Hello {nom}, your clothes are ready. You can collect them at {boutique}.",
       pmRecupere:"Thank you {nom} for choosing {boutique}. See you soon!",
       pmTicket:"Ticket no. {v}", pmItems:"Items: {v}", pmTotal:"Total: {v}", pmAdvance:"Deposit: {v}",
+      scTicket:"Scan a customer ticket", qTicket:"🔳 Ticket with QR code", tkOrder:"Order no.", tkHint:"Scan to follow your order", tkClient:"Customer", tkItem:"Item", tkDate:"Due date", tkTotal:"Total", tkPaid:"Paid", tkLeft:"Balance due", tkPrint:"🖨️ Print", tkShare:"📤 Share", tkCopied:"Tracking link copied.", tkNoLink:"Cannot create the ticket: subscription expired or order not saved.", tkQrFail:"QR unavailable (no network?)", scNotFound:"Ticket not found in this shop. Check it comes from your workshop.", scCount:"{n} item(s) in progress", scTotal:"Total balance due", scAgain:"Scan another ticket",
       ptScan:"Scan my badge", ptAddStaff:"＋ Add an employee", ptModeT:"How your staff clock in",
       ptModeCode:"4-digit code", ptModeBadge:"Badge (barcode)", ptModeBoth:"Both",
       ptModeHint:"With a badge, the employee shows their card to the phone camera, or passes it in front of a plugged-in barcode reader.",
@@ -3566,7 +3599,9 @@
   }
   // Caméra : BarcodeDetector (Chrome Android) sinon jsQR
   let CAM = null;
-  async function openCam(){
+  async function openCam(onVal, facing){
+    if(typeof onVal!=="function") onVal = ptPunchBadge;
+    if(CAM) CAM();
     const wrap=document.createElement("div"); wrap.className="pt-cam";
     const v=document.createElement("video"); v.setAttribute("playsinline",""); v.muted=true; wrap.appendChild(v);
     const tx=document.createElement("div"); tx.className="frame"; tx.textContent=t("ptCamHint"); wrap.appendChild(tx);
@@ -3576,7 +3611,7 @@
     const close=()=>{ stop=true; if(stream) stream.getTracks().forEach(tr=>tr.stop()); wrap.remove(); CAM=null; };
     CAM = close; cl.addEventListener("click", close);
     try{
-      stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"user" }, audio:false });
+      stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal: facing || "user" } }, audio:false });
       v.srcObject = stream; await v.play();
     }catch(e){ tx.textContent=t("ptCamFail"); return; }
     let detect;
@@ -3599,7 +3634,7 @@
     const loop = async ()=>{
       if(stop) return;
       let val=null; try{ val = await detect(); }catch(e){}
-      if(val){ close(); ptPunchBadge(val); return; }
+      if(val){ close(); onVal(val); return; }
       setTimeout(loop, 250);
     };
     loop();
@@ -3633,7 +3668,7 @@
     tick(); setInterval(tick, 15000);
     $("pt-day").value=dayKey(Date.now());
     $("pt-day").addEventListener("change", renderPointage);
-    $("pt-scan").addEventListener("click", openCam);
+    $("pt-scan").addEventListener("click", ()=>openCam(ptPunchBadge, "user"));
     $("pt-addstaff").addEventListener("click", ()=>{ setTab("staff"); setTimeout(()=>{ try{ $("st-name").focus(); $("st-name").scrollIntoView({block:"center"}); }catch(e){} }, 80); });
     $("pt-modes").querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{
       const m=b.dataset.m; if(BOUTIQUE) BOUTIQUE.ptMode=m; applyPtMode();
@@ -4198,6 +4233,101 @@
     $("sr-due").textContent=money(due); $("sr-adv").textContent=money(adv); $("sr-left").textContent=money(left);
   }
   $("sr-month").addEventListener("change", renderWageRecap);
+
+  // =================== TICKET QR + SCAN DU TICKET CLIENT ===================
+  // Un seul QR par commande : il contient le lien de suivi. La cliente le scanne → page de suivi ;
+  // l'atelier le scanne dans l'app → toute la fiche de la cliente s'ouvre.
+  const isPz = o => o && o.kind==="pressing";
+  const stLbl = o => isPz(o) ? pzStepLabel(o.statut||"recu") : t("st"+String(o.statut||"recu").charAt(0).toUpperCase()+String(o.statut||"recu").slice(1));
+  const isDone = o => isPz(o) ? (o.statut==="recupere") : (o.statut==="livre");
+  async function showTicket(o){
+    if(!o || !o.id){ if(o===ORD && ORDID) o.id=ORDID; else return; }
+    syncSuivi(o, o.id);
+    const url = suiviUrl(o);
+    if(!url){ alert(t("tkNoLink")); return; }
+    const ov=document.createElement("div"); ov.className="tk-ov";
+    const d=document.createElement("div"); d.className="tk-doc";
+    const row=(k,v)=>{ const r=document.createElement("div"); r.className="rw"; const a=document.createElement("span"); a.textContent=k; const b=document.createElement("b"); b.textContent=v; r.appendChild(a); r.appendChild(b); d.appendChild(r); };
+    const sh=document.createElement("div"); sh.className="sh"; sh.textContent=(BOUTIQUE&&BOUTIQUE.name)||"SanaaPro"; d.appendChild(sh);
+    const nb=document.createElement("div"); nb.className="nb"; nb.textContent=(isPz(o)?t("pzTicket"):t("tkOrder"))+" "+fmtNum(o.numero); d.appendChild(nb);
+    const im=document.createElement("img"); im.alt="QR"; d.appendChild(im);
+    const hn=document.createElement("div"); hn.className="hint"; hn.textContent=t("tkHint"); d.appendChild(hn);
+    row(t("tkClient"), o.clienteName||"—");
+    row(t("tkItem"), String((isPz(o)?o.resume:o.article)||"—").slice(0,60));
+    const dl=o.livraison||o.retrait; if(dl) row(t("tkDate"), fmtDate(dl, LANG_UI));
+    if(o.prix||o.prix===0) row(t("tkTotal"), money(o.prix));
+    row(t("tkPaid"), money(Number(o.paye)||0));
+    row(t("tkLeft"), money(resteDe(o)));
+    ov.appendChild(d);
+    const bar=document.createElement("div"); bar.className="tk-bar";
+    const mk=(lbl,fn)=>{ const b=document.createElement("button"); b.type="button"; b.textContent=lbl; b.addEventListener("click", fn); bar.appendChild(b); };
+    let png="";
+    mk(t("tkPrint"), ()=>{ document.body.classList.add("printticket"); setTimeout(()=>{ window.print(); setTimeout(()=>document.body.classList.remove("printticket"), 500); }, 200); });
+    mk(t("tkShare"), async ()=>{
+      const txt = trackMsg(o);
+      try{
+        if(png && navigator.canShare){
+          const blob = await (await fetch(png)).blob();
+          const f = new File([blob], "ticket-"+(o.numero||"")+".png", { type:"image/png" });
+          if(navigator.canShare({ files:[f] })){ await navigator.share({ files:[f], text:txt }); return; }
+        }
+      }catch(e){ if(e && e.name==="AbortError") return; }
+      const num=waNumber(o.clientePhone); if(num) openWa(num, txt); else if(await copyText(url)) alert(t("tkCopied"));
+    });
+    mk(t("ptCamClose"), ()=>ov.remove());
+    ov.appendChild(bar);
+    ov.addEventListener("click", e=>{ if(e.target===ov) ov.remove(); });
+    document.body.appendChild(ov);
+    try{ png = await qrDataUrl(url); im.src = png; }catch(e){ im.replaceWith(Object.assign(document.createElement("div"),{ textContent:t("tkQrFail") })); }
+  }
+  function tokenFrom(val){
+    const v=String(val||"").trim();
+    const m=v.match(/[?&]t=([a-z0-9]+)/i); if(m) return m[1].toLowerCase();
+    return /^[a-z0-9]{12,32}$/i.test(v) ? v.toLowerCase() : "";
+  }
+  function memeCliente(a, b){
+    if(a.clienteId && b.clienteId) return a.clienteId===b.clienteId;
+    const pa=waNumber(a.clientePhone), pb=waNumber(b.clientePhone);
+    if(pa && pb) return pa===pb;
+    return !!normNom(a.clienteName) && normNom(a.clienteName)===normNom(b.clienteName);
+  }
+  function onTicketScan(val){
+    const tok=tokenFrom(val);
+    const all=COMMANDES.concat(PRESS);
+    const o = tok && all.find(x=>x.suiviToken===tok);
+    if(!o){ alert(t("scNotFound")); return; }
+    const items = all.filter(x=> x===o || (memeCliente(x,o) && !isDone(x)));
+    items.sort((a,b)=> (a===o?-1:b===o?1:0));
+    const ov=document.createElement("div"); ov.className="sc-ov";
+    const d=document.createElement("div"); d.className="sc-doc";
+    const h=document.createElement("h3"); h.textContent=o.clienteName||t("noName"); d.appendChild(h);
+    const sb=document.createElement("div"); sb.className="sub"; sb.textContent=(o.clientePhone||"")+(o.clientePhone?" · ":"")+t("scCount").replace("{n}", items.length); d.appendChild(sb);
+    let tot=0;
+    items.forEach(x=>{
+      const re=resteDe(x); tot+=re;
+      const it=document.createElement("div"); it.className="sc-it"+(x===o?" hit":"");
+      const a=document.createElement("div"); a.className="a";
+      const l=document.createElement("span"); l.textContent=(isPz(x)?"🧺 ":"✂️ ")+fmtNum(x.numero)+" · "+stLbl(x);
+      const r=document.createElement("span"); r.textContent = re>0 ? t("pzDueShort").replace("{v}", money(re)) : t("pzPaidAll"); r.style.color = re>0 ? "var(--warn)" : "var(--ok)";
+      a.appendChild(l); a.appendChild(r); it.appendChild(a);
+      const b=document.createElement("div"); b.className="b"; b.textContent=String((isPz(x)?x.resume:x.article)||"—").slice(0,80)+((x.livraison||x.retrait)?" · "+fmtDate(x.livraison||x.retrait, LANG_UI):""); it.appendChild(b);
+      it.addEventListener("click", ()=>{ ov.remove(); if(isPz(x)){ show("dash"); setTab("pressing"); PZ_FILTER="tous"; $("q-pz").value=fmtNum(x.numero); renderPressing(); } else openCmd(x.id); });
+      d.appendChild(it);
+    });
+    const tt_=document.createElement("div"); tt_.className="sc-tot";
+    const k=document.createElement("span"); k.textContent=t("scTotal"); const v=document.createElement("span"); v.textContent=money(tot); v.style.color = tot>0 ? "var(--warn)" : "var(--ok)";
+    tt_.appendChild(k); tt_.appendChild(v); d.appendChild(tt_);
+    ov.appendChild(d);
+    const bar=document.createElement("div"); bar.className="tk-bar";
+    const again=document.createElement("button"); again.type="button"; again.textContent=t("scAgain"); again.addEventListener("click", ()=>{ ov.remove(); openCam(onTicketScan, "environment"); });
+    const cl=document.createElement("button"); cl.type="button"; cl.textContent=t("ptCamClose"); cl.addEventListener("click", ()=>ov.remove());
+    bar.appendChild(again); bar.appendChild(cl); ov.appendChild(bar);
+    ov.addEventListener("click", e=>{ if(e.target===ov) ov.remove(); });
+    document.body.appendChild(ov);
+  }
+  $("scan-ticket").addEventListener("click", ()=>openCam(onTicketScan, "environment"));
+  $("scan-ticket-pz").addEventListener("click", ()=>openCam(onTicketScan, "environment"));
+  $("q-ticket").addEventListener("click", ()=>{ if(ORD && ORDID){ ORD.id = ORD.id || ORDID; showTicket(ORD); } });
 
   // =================== LIEN DE SUIVI POUR LE CLIENT ===================
   function trackMsg(o){
@@ -4918,6 +5048,8 @@
         const tb=document.createElement("button"); tb.type="button"; tb.textContent=t("pzTrack");
         tb.addEventListener("click", ()=>{ syncSuivi(o, o.id); openWa(waNumber(o.clientePhone), trackMsg(o)); }); acts.appendChild(tb);
       }
+      const tk=document.createElement("button"); tk.type="button"; tk.textContent=t("qTicket");
+      tk.addEventListener("click", ()=>showTicket(o)); acts.appendChild(tk);
       const fx=document.createElement("button"); fx.type="button"; fx.textContent=t("pzFix");
       fx.addEventListener("click", async ()=>{
         if(!await askCode()) return;
