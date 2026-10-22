@@ -910,6 +910,7 @@
       <div hidden>
         <div id="fi-row-atelier"></div><div id="fi-row-pressing"></div><div id="fi-row-boutique"></div><div id="fi-row-general"></div>
       </div>
+      <div class="card" id="coffre-card" style="border-color:var(--gold)"></div>
       <div class="card">
         <h2 data-i18n="fBilanT">Bilan — Recettes, Dépenses, Solde</h2>
         <div id="fb-blocks"></div>
@@ -3204,7 +3205,67 @@
     return el;
   }
   let WP_PER="semaine", WP_SRC="tous", EXP_N=20, REC_N=20, DUP_IDS=null;
+  // =================== COFFRE : une part de chaque recette mise de côté ===================
+  // Réglages sur le doc boutique : coffrePct (défaut 25), coffreDepuis (ms), coffreObjectif (par an),
+  // coffreVers : [{ ms, montant }] = versements réellement faits sur le coffre Wave.
+  function renderCoffre(){
+    const box=$("coffre-card"); if(!box || !BOUTIQUE || !BID) return;
+    const L=(fr,en)=>LANG_UI==="en"?en:fr;
+    if(!BOUTIQUE.coffreDepuis){
+      const d=new Date(); d.setHours(0,0,0,0); BOUTIQUE.coffreDepuis=d.getTime();
+      setDoc(doc(db,"boutiques",BID), { coffreDepuis:BOUTIQUE.coffreDepuis }, { merge:true }).catch(function(){});
+    }
+    const pct=Math.min(100, Math.max(0, Number(BOUTIQUE.coffrePct!=null?BOUTIQUE.coffrePct:25)||0));
+    const depuis=Number(BOUTIQUE.coffreDepuis)||0, obj=Number(BOUTIQUE.coffreObjectif)||0;
+    const vers=Array.isArray(BOUTIQUE.coffreVers)?BOUTIQUE.coffreVers:[];
+    const d0=new Date(); d0.setHours(0,0,0,0); const y0=new Date(d0.getFullYear(),0,1).getTime();
+    let recJour=0, recTot=0;
+    MOUV.forEach(m=>{ if(m.type!=="recette") return; const ms=Number(m.ms)||0, v=Number(m.montant)||0;
+      if(ms>=depuis){ recTot+=v; if(ms>=d0.getTime()) recJour+=v; } });
+    const du=Math.round(recTot*pct/100), duJour=Math.round(recJour*pct/100);
+    const verse=vers.reduce((a,v)=>a+(Number(v.montant)||0),0);
+    const verseAn=vers.filter(v=>(Number(v.ms)||0)>=y0).reduce((a,v)=>a+(Number(v.montant)||0),0);
+    const reste=Math.max(0, du-verse);
+    const big=(n,c)=>'<span style="font:700 26px Georgia,serif;color:'+c+'">'+escH(money(n))+'</span>';
+    let h='<h2>🔒 '+escH(L("Coffre","Savings vault"))+' — '+pct+' % '+escH(L("de chaque recette","of every receipt"))+'</h2>'
+      +'<div class="stats3" style="grid-template-columns:1fr 1fr">'
+      +'<div class="stat"><div class="n" style="color:var(--gold)">'+escH(money(duJour))+'</div><div class="l">'+escH(L("À mettre aujourd'hui","To put away today"))+'<br>('+escH(pct+" % × "+money(recJour))+')</div></div>'
+      +'<div class="stat"><div class="n" style="color:'+(reste?"var(--warn)":"var(--ok)")+'">'+escH(money(reste))+'</div><div class="l">'+escH(L("Reste à verser","Still to deposit"))+'</div></div>'
+      +'</div>'
+      +'<div class="mline"><span class="k">'+escH(L("Dû depuis le ","Due since "))+escH(new Date(depuis).toLocaleDateString(LANG_UI==="en"?"en-GB":"fr-FR"))+'</span><span class="v">'+escH(money(du))+'</span></div>'
+      +'<div class="mline"><span class="k">'+escH(L("Déjà versé au coffre","Already deposited"))+'</span><span class="v" style="color:var(--ok)">'+escH(money(verse))+'</span></div>';
+    if(obj>0){
+      const p=Math.min(100, Math.round(verseAn*100/obj));
+      h+='<div style="margin-top:12px;font-size:14px">'+escH(L("Objectif de l'année","This year's goal"))+' : '+big(verseAn,"var(--ok)")+' / '+escH(money(obj))+' ('+p+' %)</div>'
+        +'<div style="height:12px;border-radius:8px;background:var(--line);margin-top:6px;overflow:hidden"><div style="height:100%;width:'+p+'%;background:var(--ok)"></div></div>';
+    }
+    h+='<button class="primary" type="button" id="cof-vers" style="margin-top:14px">✅ '+escH(L("J'ai versé dans le coffre Wave","I deposited in my Wave vault"))+'</button>'
+      +'<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--muted);font-size:14px">⚙️ '+escH(L("Réglages du coffre","Vault settings"))+'</summary>'
+      +'<div class="mgrid" style="margin-top:8px"><div><label>'+escH(L("Part de chaque recette (%)","Share of each receipt (%)"))+'</label><input id="cof-pct" type="number" min="0" max="100" value="'+pct+'"></div>'
+      +'<div><label>'+escH(L("Objectif par an","Yearly goal"))+'</label><input id="cof-obj" type="number" min="0" value="'+(obj||"")+'"></div></div>'
+      +'<button class="ghost" type="button" id="cof-save" style="margin-top:8px">'+escH(L("Enregistrer","Save"))+'</button></details>';
+    if(vers.length){
+      h+='<div style="margin-top:10px;font-size:13px;color:var(--muted)">'+escH(L("Derniers versements","Last deposits"))+'</div>';
+      vers.slice().sort((a,b)=>(b.ms||0)-(a.ms||0)).slice(0,5).forEach(v=>{ h+='<div class="mline"><span class="k">'+escH(new Date(v.ms).toLocaleDateString(LANG_UI==="en"?"en-GB":"fr-FR"))+'</span><span class="v">'+escH(money(v.montant))+'</span></div>'; });
+    }
+    box.innerHTML=h;
+    $("cof-vers").addEventListener("click", ()=>{
+      const r=prompt(L("Montant versé dans le coffre Wave :","Amount deposited in the Wave vault:"), String(reste||duJour||""));
+      const v=parseFloat(String(r||"").replace(/\s/g,"").replace(",","."));
+      if(!(v>0)) return;
+      BOUTIQUE.coffreVers=vers.concat([{ ms:Date.now(), montant:Math.round(v) }]);
+      setDoc(doc(db,"boutiques",BID), { coffreVers:BOUTIQUE.coffreVers }, { merge:true }).catch(function(){});
+      renderCoffre();
+    });
+    $("cof-save").addEventListener("click", ()=>{
+      const np=Math.min(100, Math.max(0, parseFloat($("cof-pct").value)||0)), no=Math.max(0, parseFloat($("cof-obj").value)||0);
+      BOUTIQUE.coffrePct=np; BOUTIQUE.coffreObjectif=no;
+      setDoc(doc(db,"boutiques",BID), { coffrePct:np, coffreObjectif:no }, { merge:true }).catch(function(){});
+      renderCoffre();
+    });
+  }
   function renderFinances(){
+    try{ renderCoffre(); }catch(e){}
     const now=new Date(), loc=LANG_UI==="en"?"en-GB":"fr-FR";
     const d0=new Date(now); d0.setHours(0,0,0,0);
     const w0=new Date(d0); w0.setDate(w0.getDate()-((w0.getDay()+6)%7));
