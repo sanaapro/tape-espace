@@ -3239,7 +3239,7 @@
     const proj=(p)=>'<div class="stats3" style="grid-template-columns:1fr 1fr;margin-top:10px">'
       +'<div class="stat"><div class="n" style="color:var(--gold)" id="cof-pm">'+escH(money(mens*p/100))+'</div><div class="l">'+escH(L("économisés par mois","saved per month"))+'</div></div>'
       +'<div class="stat"><div class="n" style="color:var(--ok)" id="cof-pa">'+escH(money(mens*p/100*12))+'</div><div class="l">'+escH(L("économisés par an","saved per year"))+'</div></div></div>'
-      +'<p style="margin:6px 0 0;font-size:12.5px;color:var(--muted)">'+escH(L("Calcul fait sur vos recettes réelles (moyenne ","Based on your real takings (average "))+escH(money(mens))+escH(L(" par mois)."," per month)."))+'</p>';
+      +'<p style="margin:6px 0 0;font-size:12.5px;color:var(--muted)">'+escH(L("Estimation d'après vos recettes passées (moyenne ","Estimate from your past takings (average "))+escH(money(mens))+escH(L(" par mois). Le coffre commence le jour de l'activation : les recettes d'avant ne comptent pas."," per month). The vault starts the day you turn it on: earlier takings don't count."))+'</p>';
     const wire=(onPick)=>{ box.querySelectorAll("#cof-chips button").forEach(b=>b.addEventListener("click", ()=>{
         const p=Number(b.getAttribute("data-p")); box.querySelectorAll("#cof-chips button").forEach(x=>x.classList.toggle("on", x===b));
         const c=$("cof-custom"); if(c) c.value=p; onPick(p); })); };
