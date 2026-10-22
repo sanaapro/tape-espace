@@ -76,9 +76,9 @@ Réponds UNIQUEMENT en JSON : {"nom":"","telephone":"","plusieurs":false,"mesure
 async function lire(b64, mime, champs, genre){
   let lastErr = "no_model";
   for(const model of MODELS){
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
     const r = await fetch(url, {
-      method: "POST", headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": KEY },
       body: JSON.stringify({
         contents: [{ role: "user", parts: [{ text: prompt(champs, genre) }, { inline_data: { mime_type: mime, data: b64 } }] }],
         generationConfig: { temperature: 0, responseMimeType: "application/json" }
@@ -135,4 +135,20 @@ http.createServer(async (req, res) => {
     console.log("erreur", e.message);
     send(res, 502, { error: "read" });
   }
-}).listen(PORT, () => console.log("lecteur de cahier prêt sur", PORT, "modèles:", MODELS.join(", ")));
+}).listen(PORT, () => { console.log("lecteur de cahier prêt sur", PORT, "modèles:", MODELS.join(", ")); selfTest(); });
+
+// Au démarrage : vérifie que la clé fonctionne et quel modèle répond (visible dans les journaux Render)
+async function selfTest(){
+  if(!KEY){ console.log("AUTOTEST : pas de clé GEMINI_API_KEY"); return; }
+  for(const model of MODELS){
+    try{
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+        method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": KEY },
+        body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Réponds seulement OK" }] }] })
+      });
+      const t = await r.text();
+      console.log("AUTOTEST", model, r.status, r.ok ? "CLÉ OK" : t.slice(0, 200).replace(/\s+/g, " "));
+      if(r.ok) return;
+    }catch(e){ console.log("AUTOTEST", model, "erreur", e.message); }
+  }
+}
