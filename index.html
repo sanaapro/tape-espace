@@ -2348,7 +2348,7 @@
     let d=(raw||"").replace(/\D/g,"");
     if(d.indexOf("00")===0) d=d.slice(2);
     if(!d) return "";
-    if(d.length<=8 && d.indexOf(DEFAULT_CC)!==0) d=DEFAULT_CC+d;
+    if(d.length<=9 && d.indexOf(DEFAULT_CC)!==0) d=DEFAULT_CC+d;
     return d;
   }
   const fmtNum = n => n ? String(n).padStart(3,"0") : "—";
