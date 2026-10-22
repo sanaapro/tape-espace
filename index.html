@@ -306,6 +306,11 @@
     body.printticket .tk-bar{ display:none !important }
   }
   .ph-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(86px,1fr)); gap:8px; margin-top:8px; }
+  .dict-bar{ margin:0 0 10px }
+  .dict-btn{ width:100%; padding:12px; border-radius:12px; border:1px solid var(--gold); background:none; color:var(--gold); font:inherit; font-weight:700; cursor:pointer }
+  .dict-btn.on{ background:var(--gold); color:#0E0E0F }
+  .dict-st{ font-size:13px; color:var(--muted); margin-top:6px; min-height:0 }
+  .mgrid input.dict-hit{ border-color:var(--ok) !important; box-shadow:0 0 0 1px var(--ok) }
   .ph-item{ position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--line2); aspect-ratio:1; background:#111; }
   .ph-item img{ width:100%; height:100%; object-fit:cover; display:block; cursor:zoom-in; }
   .ph-item .tag{ position:absolute; left:4px; bottom:4px; background:rgba(0,0,0,.65); color:#fff; font-size:10.5px; padding:2px 6px; border-radius:6px; }
@@ -1303,6 +1308,7 @@
     <div class="card">
       <h2 data-i18n="measures">Mesures (cm)</h2>
       <p style="margin:0 0 8px;font-size:13px;color:var(--muted)" data-i18n="measuresHint">Elles rejoignent automatiquement la fiche de la cliente.</p>
+      <div class="dict-bar"><button type="button" class="dict-btn" id="cf-dict" data-i18n="dictBtn">🎤 Dicter les mesures</button><div class="dict-st" id="cf-dict-st"></div></div>
       <div class="mgrid" id="cf-mesures"></div>
     </div>
     <button class="primary" id="cf-save" data-i18n="saveOrder">Enregistrer la commande</button>
@@ -1320,6 +1326,12 @@
     <div class="card">
       <h2 data-i18n="measures">Mesures (cm)</h2>
       <div id="f-mesures"></div>
+    </div>
+    <div class="card">
+      <h2 data-i18n="nbTitle">Page du cahier</h2>
+      <div class="ph-grid" id="f-nb"></div>
+      <div class="ph-btns"><label><input type="file" id="f-nb-file" accept="image/*" capture="environment"><span data-i18n="nbBtn">📷 Photographier la page du cahier</span></label></div>
+      <div class="msg" id="f-nb-msg"></div>
     </div>
     <button class="wa" id="f-wa-shop" data-i18n="measuresToShop">Envoyer ces mesures à la boutique</button>
     <button class="ghost" id="f-edit" data-i18n="editClient">Modifier la fiche</button>
@@ -1343,7 +1355,14 @@
       <textarea id="in-notes" rows="2" data-i18n-ph="notesPh" placeholder="Préférences, tissu, remarques…"></textarea>
     </div>
     <div class="card">
+      <h2 data-i18n="nbTitle">Page du cahier</h2>
+      <p style="margin:0 0 8px;font-size:13px;color:var(--muted)" data-i18n="nbHint">Photographiez la page de l'ancien cahier : elle reste dans la fiche, plus besoin de tout retaper.</p>
+      <div class="ph-grid" id="in-nb"></div>
+      <div class="ph-btns"><label><input type="file" id="in-nb-file" accept="image/*" capture="environment"><span data-i18n="nbBtn">📷 Photographier la page du cahier</span></label></div>
+    </div>
+    <div class="card">
       <h2 data-i18n="measures">Mesures (cm)</h2>
+      <div class="dict-bar"><button type="button" class="dict-btn" id="in-dict" data-i18n="dictBtn">🎤 Dicter les mesures</button><div class="dict-st" id="in-dict-st"></div></div>
       <div class="mgrid" id="in-mesures"></div>
     </div>
     <button class="primary" id="form-save" data-i18n="save">Enregistrer</button>
@@ -1644,6 +1663,7 @@
       pmRecupere:"Merci {nom} d'avoir choisi {boutique}. À très bientôt !",
       pmTicket:"Ticket n° {v}", pmItems:"Articles : {v}", pmTotal:"Total : {v}", pmAdvance:"Avance : {v}",
       scTicket:"Scanner un ticket client", qTicket:"🔳 Ticket avec QR code", tkOrder:"Commande n°", tkHint:"Scannez pour suivre votre commande", tkClient:"Client", tkItem:"Article", tkDate:"Date prévue", tkTotal:"Total", tkPaid:"Payé", tkLeft:"Reste à payer", tkPrint:"🖨️ Imprimer", tkShare:"📤 Partager", tkCopied:"Lien de suivi copié.", tkNoLink:"Impossible de créer le ticket : abonnement expiré ou commande non enregistrée.", tkQrFail:"QR indisponible (pas de réseau ?)", scNotFound:"Ticket introuvable dans cette boutique. Vérifiez qu'il vient bien de votre atelier.", scCount:"{n} article(s) en cours", scTotal:"Reste à payer en tout", scAgain:"Scanner un autre ticket",
+      nbTitle:"Page du cahier", nbHint:"Photographiez la page de l'ancien cahier : elle reste dans la fiche, plus besoin de tout retaper.", nbBtn:"📷 Photographier la page du cahier", nbNone:"Aucune page de cahier.", nbTag:"Cahier", dictBtn:"🎤 Dicter les mesures", dictStop:"⏹ Arrêter la dictée", dictGo:"Je vous écoute… dites par exemple « épaule 42, poitrine 96 ».", dictHeard:"Entendu : « {t} » · {n} case(s) remplie(s). Vérifiez avant d'enregistrer.", dictNo:"La dictée n'est pas disponible sur ce téléphone (utilisez Chrome).", dictDenied:"Autorisez le micro pour SanaaPro dans les réglages du navigateur.", dictNet:"La dictée a besoin d'Internet. Réessayez quand le réseau revient.", dictErr:"La dictée s'est arrêtée. Touchez à nouveau le micro.",
       ptScan:"Scanner mon badge", ptAddStaff:"＋ Ajouter un employé", ptModeT:"Comment vos employés pointent",
       ptModeCode:"Code à 4 chiffres", ptModeBadge:"Badge (code-barres)", ptModeBoth:"Les deux",
       ptModeHint:"Avec le badge, l'employé montre sa carte à la caméra du téléphone, ou la passe devant un lecteur de code-barres branché.",
@@ -1924,6 +1944,7 @@
       pmRecupere:"Thank you {nom} for choosing {boutique}. See you soon!",
       pmTicket:"Ticket no. {v}", pmItems:"Items: {v}", pmTotal:"Total: {v}", pmAdvance:"Deposit: {v}",
       scTicket:"Scan a customer ticket", qTicket:"🔳 Ticket with QR code", tkOrder:"Order no.", tkHint:"Scan to follow your order", tkClient:"Customer", tkItem:"Item", tkDate:"Due date", tkTotal:"Total", tkPaid:"Paid", tkLeft:"Balance due", tkPrint:"🖨️ Print", tkShare:"📤 Share", tkCopied:"Tracking link copied.", tkNoLink:"Cannot create the ticket: subscription expired or order not saved.", tkQrFail:"QR unavailable (no network?)", scNotFound:"Ticket not found in this shop. Check it comes from your workshop.", scCount:"{n} item(s) in progress", scTotal:"Total balance due", scAgain:"Scan another ticket",
+      nbTitle:"Notebook page", nbHint:"Take a photo of the old notebook page: it stays in the customer file, no need to retype everything.", nbBtn:"📷 Photograph the notebook page", nbNone:"No notebook page.", nbTag:"Notebook", dictBtn:"🎤 Dictate measurements", dictStop:"⏹ Stop dictation", dictGo:"Listening… say for example \"shoulder 42, chest 96\".", dictHeard:"Heard: \"{t}\" · {n} field(s) filled. Check before saving.", dictNo:"Dictation isn't available on this phone (use Chrome).", dictDenied:"Allow the microphone for SanaaPro in the browser settings.", dictNet:"Dictation needs internet. Try again when the network is back.", dictErr:"Dictation stopped. Tap the microphone again.",
       ptScan:"Scan my badge", ptAddStaff:"＋ Add an employee", ptModeT:"How your staff clock in",
       ptModeCode:"4-digit code", ptModeBadge:"Badge (barcode)", ptModeBoth:"Both",
       ptModeHint:"With a badge, the employee shows their card to the phone camera, or passes it in front of a plugged-in barcode reader.",
@@ -4358,14 +4379,14 @@
   const PH_CACHE={};
   async function addPhotos(files, role, list){
     for(const f of Array.from(files||[])){
-      try{ list.push({ role, data: await compressImage(f, 1100, 0.62) }); }catch(e){}
+      try{ list.push({ role, data: role==="cahier" ? await compressImage(f, 1400, 0.65) : await compressImage(f, 1100, 0.62) }); }catch(e){}
     }
   }
   function phThumb(box, p, onDel){
     const it=document.createElement("div"); it.className="ph-item";
     const im=document.createElement("img"); im.src=p.data; im.alt="";
     im.addEventListener("click", ()=>{ const v=document.createElement("div"); v.className="ph-view"; const i2=document.createElement("img"); i2.src=p.data; v.appendChild(i2); v.addEventListener("click", ()=>v.remove()); document.body.appendChild(v); });
-    const tg=document.createElement("span"); tg.className="tag"; tg.textContent=t(p.role==="tissu"?"phTagFabric":"phTagModel");
+    const tg=document.createElement("span"); tg.className="tag"; tg.textContent=t(p.role==="tissu"?"phTagFabric":(p.role==="cahier"?"nbTag":"phTagModel"));
     it.appendChild(im); it.appendChild(tg);
     if(onDel){ const x=document.createElement("button"); x.type="button"; x.className="x"; x.textContent="✕"; x.addEventListener("click", onDel); it.appendChild(x); }
     box.appendChild(it);
@@ -5529,12 +5550,12 @@
 
   async function openFiche(id){
     const local = CLIENTES.find(x=>x.id===id);
-    if(local){ fillFiche(local, id); show("fiche"); return; }
+    if(local){ fillFiche(local, id); show("fiche"); drawNb("f-nb", id); return; }
     show("loading"); $("loading").textContent=t("loading");
     try{
       const snap = await getDocSmart(doc(db,"boutiques",BID,"clientes",id));
       if(!snap.exists()){ show("dash"); setTab("mesures"); return; }
-      fillFiche(snap.data(), id); show("fiche");
+      fillFiche(snap.data(), id); show("fiche"); drawNb("f-nb", id);
     }catch(e){ $("loading").textContent=t("ficheFail"); show("loading"); }
   }
 
@@ -5565,9 +5586,114 @@
   function buildInputs(m){ buildGrid("in-mesures","m-",m,GENRE_FORM); }
   function buildCmdGrid(m){ buildGrid("cf-mesures","cm-",m,GENRE_CF); }
 
+
+  // =================== PAGE DU CAHIER (photo rangée dans la fiche cliente) ===================
+  const nbKey = cid => "cli-"+cid;
+  let IN_NB=[];
+  async function loadNb(cid){
+    const k=nbKey(cid);
+    if(PH_CACHE[k]) return PH_CACHE[k];
+    try{
+      const snap=await getDocsSmart(query(collection(db,"boutiques",BID,"clientes"), where("cmdId","==",k)));
+      const arr=[]; snap.forEach(d=>{ const v=d.data(); if(v && v.photo) arr.push(Object.assign({ id:d.id }, v)); });
+      arr.sort((a,b)=>(a.createdAtMs||0)-(b.createdAtMs||0));
+      PH_CACHE[k]=arr;
+    }catch(e){ PH_CACHE[k]=[]; }
+    return PH_CACHE[k];
+  }
+  async function drawNb(boxId, cid, pending){
+    const box=$(boxId); if(!box) return; box.innerHTML="";
+    const saved = cid ? await loadNb(cid) : [];
+    const k = cid ? nbKey(cid) : null;
+    saved.forEach(p=>phThumb(box, p, async ()=>{
+      if(!confirm(t("phDelQ"))) return;
+      if(!await askCode()) return;
+      PH_CACHE[k]=(PH_CACHE[k]||[]).filter(x=>x!==p); drawNb(boxId, cid, pending);
+      deleteDoc(doc(db,"boutiques",BID,"clientes",p.id)).catch(function(){});
+    }));
+    (pending||[]).forEach(p=>phThumb(box, p, ()=>{ const i=pending.indexOf(p); if(i>-1) pending.splice(i,1); drawNb(boxId, cid, pending); }));
+    if(!box.children.length){ const e=document.createElement("div"); e.className="empty"; e.style.cssText="padding:6px 0;grid-column:1/-1"; e.textContent=t("nbNone"); box.appendChild(e); }
+  }
+  $("f-nb-file").addEventListener("change", async e=>{
+    if(!currentCliente) return; const list=[]; await addPhotos(e.target.files, "cahier", list); e.target.value="";
+    await savePhotos(nbKey(currentCliente), list, $("f-nb-msg")); drawNb("f-nb", currentCliente);
+  });
+  $("in-nb-file").addEventListener("change", async e=>{
+    await addPhotos(e.target.files, "cahier", IN_NB); e.target.value="";
+    drawNb("in-nb", editingId, IN_NB);
+  });
+
+  // =================== DICTÉE DES MESURES (reconnaissance vocale du téléphone) ===================
+  const normV = s => String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9,.\s]/g," ").replace(/\s+/g," ").trim();
+  function aliasMap(keys){
+    const all=MESURES_F.concat(MESURES_H), seen={}, cand={};
+    const add=(a,k)=>{ a=normV(a); if(a.length<3) return; (cand[a]=cand[a]||new Set()).add(k); };
+    all.forEach(mm=>{
+      const k=mm[0]; if(keys.indexOf(k)<0 || seen[k+mm[1]]) return; seen[k+mm[1]]=1;
+      [mm[1], mm[2]].forEach(lbl=>{
+        const n=normV(lbl.replace(/\(.*?\)/g," "));
+        add(n,k);
+        add(n.replace(/^tour (de )?/,""),k);
+        add(n.replace(/^longueur (de )?/,"long "),k);
+        add(n.replace(/^long\.? (de )?/,"longueur "),k);
+        add(n.replace(/^longueur (de )?/,"").replace(/^long\.? /,""),k);
+      });
+      (mm[1].match(/\((.*?)\)/)||[]).slice(1).forEach(x=>add(x,k));
+    });
+    const out=[]; Object.keys(cand).forEach(a=>{ if(cand[a].size===1) out.push([a, Array.from(cand[a])[0]]); });
+    out.sort((x,y)=>y[0].length-x[0].length);
+    return out;
+  }
+  function parseDictee(text, keys){
+    let s=normV(text).replace(/(\d)\s*(virgule|point)\s*(\d)/g,"$1.$3").replace(/(\d),(\d)/g,"$1.$2");
+    s=s.replace(/(\d+)\s*(et demi|and a half)/g,(m,a)=>String(Number(a)+0.5));
+    const al=aliasMap(keys), res=[], re=/\d+(?:\.\d+)?/g; let m, last=0;
+    while((m=re.exec(s))){
+      const seg=" "+s.slice(last, m.index)+" "; last=m.index+m[0].length;
+      let key=null;
+      for(const [a,k] of al){ if(seg.indexOf(" "+a+" ")>-1){ key=k; break; } }
+      res.push({ key, v:parseFloat(m[0]) });
+    }
+    return res;
+  }
+  let DICT=null;
+  function setupDict(id, boxId){
+    const btn=$(id+"-dict"), st=$(id+"-dict-st");
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR){ btn.disabled=true; st.textContent=t("dictNo"); return; }
+    btn.addEventListener("click", ()=>{
+      if(DICT){ const was=DICT.id; DICT.rec.stop(); if(was===id) return; }
+      const box=$(boxId); const inputs=Array.from(box.querySelectorAll("input"));
+      const keys=inputs.map(i=>i.id.replace(/^c?m-/,""));
+      const rec=new SR(); rec.lang = LANG_UI==="en" ? "en-GB" : "fr-FR"; rec.continuous=true; rec.interimResults=false;
+      let lastIdx=-1, n=0;
+      const fill=(k,v)=>{ const el=inputs.find(i=>i.id.replace(/^c?m-/,"")===k); if(!el) return false; el.value=v; el.classList.add("dict-hit"); lastIdx=inputs.indexOf(el); n++; return true; };
+      rec.onresult = ev=>{
+        for(let i=ev.resultIndex;i<ev.results.length;i++){
+          if(!ev.results[i].isFinal) continue;
+          const txt=ev.results[i][0].transcript;
+          parseDictee(txt, keys).forEach(r=>{
+            if(r.key){ fill(r.key, r.v); return; }
+            for(let j=lastIdx+1;j<inputs.length;j++){ if(inputs[j].value===""){ fill(inputs[j].id.replace(/^c?m-/,""), r.v); break; } }
+          });
+          st.textContent=t("dictHeard").replace("{t}", txt).replace("{n}", n);
+        }
+      };
+      rec.onerror = e=>{ st.textContent = (e.error==="not-allowed"||e.error==="service-not-allowed") ? t("dictDenied") : (e.error==="network" ? t("dictNet") : t("dictErr")); };
+      rec.onend = ()=>{ btn.classList.remove("on"); btn.textContent=t("dictBtn"); if(DICT && DICT.rec===rec) DICT=null; };
+      try{ rec.start(); }catch(e){ st.textContent=t("dictErr"); return; }
+      DICT={ id, rec }; btn.classList.add("on"); btn.textContent=t("dictStop"); st.textContent=t("dictGo");
+    });
+  }
+  setupDict("in","in-mesures");
+  setupDict("cf","cf-mesures");
+  function stopDict(){ if(DICT){ try{ DICT.rec.stop(); }catch(e){} } }
+
   function openForm(id){
     $("form-msg").classList.remove("show");
     editingId = id || null;
+    stopDict(); IN_NB=[]; $("in-dict-st").textContent="";
+    drawNb("in-nb", editingId, IN_NB);
     if(!editingId){
       $("form-title").textContent=t("newClientTitle");
       $("in-name").value=""; $("in-phone").value=""; $("in-notes").value="";
@@ -5603,7 +5729,8 @@
     if(existing) Object.assign(existing, data);
     else CLIENTES.push(Object.assign({ id }, data));
     CLIENTES.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
-    editingId=null;
+    editingId=null; stopDict();
+    if(IN_NB.length){ const pend=IN_NB.slice(); IN_NB=[]; savePhotos(nbKey(id), pend, null); (PH_CACHE[nbKey(id)]=PH_CACHE[nbKey(id)]||[]); }
     renderLists(); show("dash"); setTab("mesures");
   });
 
