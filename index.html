@@ -2905,7 +2905,7 @@
   }
 
   // ---- Suivi client : une copie minimale de la commande dans /suivi/{jeton}, lisible par lien ----
-  const SUIVI_BASE = "https://sanaapro.github.io/tape-espace/suivi.html?t=";
+  const SUIVI_BASE = "https://sanaapro.github.io/suivi.html?t=";
   function syncSuivi(o, id){
     try{
       if(!o || !id || !BID || isExpired()) return;
@@ -2939,7 +2939,11 @@
       }, { merge:true }).catch(function(){});
     }catch(e){}
   }
-  function suiviUrl(o){ return (o && o.suiviToken) ? SUIVI_BASE + o.suiviToken : ""; }
+  // Lien envoyé au client (WhatsApp, copie) : « client=1 » garantit qu'il voit toujours la page
+  // de suivi, même ouvert sur le téléphone du propriétaire. Le QR du ticket imprimé n'a pas ce
+  // marqueur : scanné par le propriétaire, il ouvre la commande dans la gestion.
+  function suiviUrl(o){ return (o && o.suiviToken) ? SUIVI_BASE + o.suiviToken + "&client=1" : ""; }
+  function ticketUrl(o){ return (o && o.suiviToken) ? SUIVI_BASE + o.suiviToken : ""; }
 
   function joursAvant(v){
     if(!v) return null;
@@ -4529,7 +4533,7 @@
   async function showTicket(o){
     if(!o || !o.id){ if(o===ORD && ORDID) o.id=ORDID; else return; }
     syncSuivi(o, o.id);
-    const url = suiviUrl(o);
+    const url = ticketUrl(o);
     if(!url){ alert(t("tkNoLink")); return; }
     const ov=document.createElement("div"); ov.className="tk-ov";
     const d=document.createElement("div"); d.className="tk-doc";
