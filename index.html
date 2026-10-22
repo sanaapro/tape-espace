@@ -2151,35 +2151,48 @@
   });
 
   // Glisser à gauche / à droite n'importe où dans l'app pour passer à l'onglet voisin,
-  // comme sur un téléphone, sans remonter toucher la barre des onglets.
+  // comme sur un téléphone. La page suit le doigt, et un geste un peu en biais suffit.
   (function(){
-    let sx=0, sy=0, st=0, ok=false;
     const dash=$("dash");
+    let sx=0, sy=0, lx=0, ly=0, st=0, on=false, horiz=null, pane=null;
     function scrollsSideways(el){
       for(let e=el; e && e!==dash; e=e.parentElement){
         if(e.scrollWidth>e.clientWidth+4){ const o=getComputedStyle(e).overflowX; if(o==="auto"||o==="scroll") return true; }
       }
       return false;
     }
+    function tabsList(){ return Array.from($("tabs").querySelectorAll("button")).filter(b=>!b.hidden && b.offsetParent!==null).map(b=>b.getAttribute("data-tab")); }
+    function reset(){ if(pane){ pane.style.transition="transform .18s ease-out, opacity .18s"; pane.style.transform=""; pane.style.opacity=""; const p0=pane; setTimeout(()=>{ p0.style.transition=""; }, 200); } pane=null; }
     dash.addEventListener("touchstart", e=>{
-      ok=false; if(e.touches.length!==1) return;
+      on=false; horiz=null; if(e.touches.length!==1) return;
       const t=e.target;
-      if(t.closest("input,textarea,select,.tabs,#cof-panel,svg,canvas,[data-noswipe]")) return;
+      if(t.closest("input,textarea,select,.tabs,#cof-panel,[data-noswipe]")) return;
+      const cp=document.getElementById("cof-panel"); if(cp && !cp.hidden) return;
       if(scrollsSideways(t)) return;
-      const p=document.getElementById("cof-panel"); if(p && !p.hidden) return;
-      sx=e.touches[0].clientX; sy=e.touches[0].clientY; st=Date.now(); ok=true;
+      sx=lx=e.touches[0].clientX; sy=ly=e.touches[0].clientY; st=Date.now(); on=true;
+      pane=$("pane-"+TAB);
     }, { passive:true });
-    dash.addEventListener("touchend", e=>{
-      if(!ok) return; ok=false;
-      const c=e.changedTouches[0], dx=c.clientX-sx, dy=c.clientY-sy;
-      if(Date.now()-st>700 || Math.abs(dx)<70 || Math.abs(dx)<Math.abs(dy)*2) return;
-      const sel=window.getSelection && String(window.getSelection()); if(sel) return;
-      const list=Array.from($("tabs").querySelectorAll("button")).filter(b=>!b.hidden && b.offsetParent!==null).map(b=>b.getAttribute("data-tab"));
-      const i=list.indexOf(TAB); if(i<0) return;
-      const j=dx<0 ? i+1 : i-1; if(j<0 || j>=list.length) return;
+    dash.addEventListener("touchmove", e=>{
+      if(!on) return;
+      lx=e.touches[0].clientX; ly=e.touches[0].clientY;
+      const dx=lx-sx, dy=ly-sy;
+      if(horiz===null && (Math.abs(dx)>10 || Math.abs(dy)>10)) horiz = Math.abs(dx) > Math.abs(dy)*0.9;
+      if(horiz && pane){ pane.style.transition=""; pane.style.transform="translateX("+Math.round(dx*0.6)+"px)"; pane.style.opacity=String(Math.max(.55, 1-Math.abs(dx)/600)); }
+    }, { passive:true });
+    function finish(e){
+      if(!on) return; on=false;
+      const c=e.changedTouches && e.changedTouches[0]; if(c){ lx=c.clientX; ly=c.clientY; }
+      const dx=lx-sx, dy=ly-sy, fast=(Date.now()-st)<300;
+      const go = horiz && (Math.abs(dx)>60 || (fast && Math.abs(dx)>30)) && Math.abs(dx)>Math.abs(dy)*0.9;
+      if(!go){ reset(); return; }
+      const list=tabsList(), i=list.indexOf(TAB), j=dx<0 ? i+1 : i-1;
+      if(i<0 || j<0 || j>=list.length){ reset(); return; }
+      if(pane){ pane.style.transform=""; pane.style.opacity=""; pane.style.transition=""; } pane=null;
       setTab(list[j]);
-      const pane=$("pane-"+list[j]); if(pane){ pane.classList.remove("swipe-in-l","swipe-in-r"); void pane.offsetWidth; pane.classList.add(dx<0?"swipe-in-l":"swipe-in-r"); }
-    }, { passive:true });
+      const np=$("pane-"+list[j]); if(np){ np.classList.remove("swipe-in-l","swipe-in-r"); void np.offsetWidth; np.classList.add(dx<0?"swipe-in-l":"swipe-in-r"); }
+    }
+    dash.addEventListener("touchend", finish, { passive:true });
+    dash.addEventListener("touchcancel", finish, { passive:true });
   })();
 
   function subInfo(){
