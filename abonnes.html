@@ -109,6 +109,7 @@
     <div class="card">
       <h2>Connexion prestataire</h2>
       <label for="email">Email admin</label>
+      <div id="last-acc" hidden style="background:#2a2416;border:1px solid #C9A227;color:#E8C55A;border-radius:12px;padding:10px 12px;margin:0 0 10px;font-size:14px"></div>
       <input id="email" type="email" placeholder="vous@email.com" autocomplete="email">
       <label for="pass">Mot de passe</label>
       <div class="pwrap">
@@ -255,7 +256,18 @@
       msg.textContent="Connexion Google impossible ("+((e&&e.code)||"?")+")."; msg.classList.add("show");
     }
   });
-  $("logout-btn").addEventListener("click", ()=>signOut(auth));
+  // Déconnexion protégée : une mauvaise touche ne doit plus faire perdre l'accès.
+  $("logout-btn").addEventListener("click", ()=>{
+    const r=prompt("Pour te déconnecter, tape le mot OUI.\n\nTu devras ensuite te reconnecter (rappel affiché sur l'écran de connexion).");
+    if(r && r.trim().toUpperCase()==="OUI") signOut(auth);
+  });
+  function showLastAcc(){
+    let a=null; try{ a=JSON.parse(localStorage.getItem("sanaapro_admin_last")||"null"); }catch(e){}
+    const box=$("last-acc"); if(!box || !a || !a.email) return;
+    box.textContent = "Ton compte sur ce téléphone : " + a.email + (a.google ? " — touche « Se connecter avec Google »." : " — email et mot de passe (lien « Mot de passe oublié » si besoin).");
+    box.hidden=false;
+    if(!a.google && !$("email").value) $("email").value=a.email;
+  }
 
   $("news-ack").addEventListener("click", ()=>{
     LAST_SEEN = Date.now();
@@ -265,7 +277,8 @@
 
   onAuthStateChanged(auth, async (user)=>{
     window.__loaded = true;
-    if(!user){ show("login"); $("login-btn").disabled=false; return; }
+    if(!user){ show("login"); $("login-btn").disabled=false; showLastAcc(); return; }
+    try{ const g=(user.providerData||[]).some(x=>x.providerId==="google.com"); localStorage.setItem("sanaapro_admin_last", JSON.stringify({ email:user.email||"", google:g })); }catch(e){}
     show("loading"); $("loading").textContent="Lecture des abonnements…";
     await loadShops();
   });
