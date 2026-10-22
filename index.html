@@ -2443,7 +2443,7 @@
 
   onAuthStateChanged(auth, async (user) => {
     window.__loaded = true;
-    if(!user){ show("login"); $("login-btn").disabled=false; return; }
+    if(!user){ try{ localStorage.removeItem("sanaapro_owner_bid"); }catch(e){} show("login"); $("login-btn").disabled=false; return; }
     show("loading"); $("loading").textContent=t("loading");
     try{
       const snap = await getDocSmart(doc(db,"boutiques",user.uid));
@@ -2457,8 +2457,9 @@
         zone.appendChild(b); show("loading"); return;
       }
       BID=user.uid; BOUTIQUE=snap.data();
+      try{ localStorage.setItem("sanaapro_owner_bid", BID); }catch(e){}
       renderDashboard(BOUTIQUE); paintLocks(); updateOffline(); setTab("apercu"); show("dash");
-      loadAll();
+      loadAll().then(scanFromUrl);
       syncCatalogueExpiry();
     }catch(e){ $("loading").textContent=t("loadFail"); show("loading"); }
   });
@@ -3618,11 +3619,32 @@
     }
     $("pt-print").hidden = !SALARIES.some(s=>s.badge);
   }
+  // Bip + vibration quand un code est lu
+  let BEEP_CTX = null;
+  function beepInit(){ try{ if(!BEEP_CTX) BEEP_CTX = new (window.AudioContext||window.webkitAudioContext)(); BEEP_CTX.resume(); }catch(e){} }
+  function beep(){
+    try{ if(navigator.vibrate) navigator.vibrate(120); }catch(e){}
+    try{
+      beepInit(); const A=BEEP_CTX, o=A.createOscillator(), g=A.createGain();
+      o.type="square"; o.frequency.value=1750; g.gain.value=0.12;
+      o.connect(g); g.connect(A.destination); o.start(); o.stop(A.currentTime+0.13);
+    }catch(e){}
+  }
+  // Ticket scanné avec l'appareil photo du téléphone : suivi.html renvoie ici avec ?scan=jeton
+  function scanFromUrl(){
+    try{
+      const u=new URL(location.href), tok=u.searchParams.get("scan");
+      if(!tok) return;
+      u.searchParams.delete("scan"); history.replaceState(null, "", u.pathname+(u.search||"")+u.hash);
+      beep(); onTicketScan(tok);
+    }catch(e){}
+  }
   // Caméra : BarcodeDetector (Chrome Android) sinon jsQR
   let CAM = null;
   async function openCam(onVal, facing){
     if(typeof onVal!=="function") onVal = ptPunchBadge;
     if(CAM) CAM();
+    beepInit();
     const wrap=document.createElement("div"); wrap.className="pt-cam";
     const v=document.createElement("video"); v.setAttribute("playsinline",""); v.muted=true; wrap.appendChild(v);
     const tx=document.createElement("div"); tx.className="frame"; tx.textContent=t("ptCamHint"); wrap.appendChild(tx);
@@ -3655,7 +3677,7 @@
     const loop = async ()=>{
       if(stop) return;
       let val=null; try{ val = await detect(); }catch(e){}
-      if(val){ close(); onVal(val); return; }
+      if(val){ beep(); close(); onVal(val); return; }
       setTimeout(loop, 250);
     };
     loop();

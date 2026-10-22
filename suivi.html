@@ -338,6 +338,9 @@
     }).then(function(j){
       var f = j.fields || {}, d = {};
       Object.keys(f).forEach(function(k){ d[k] = val(f[k]); });
+      // Le propriétaire de l'atelier (connecté sur ce téléphone) est envoyé directement dans SanaaPro
+      var ob = null; try{ ob = localStorage.getItem("sanaapro_owner_bid"); }catch(e){}
+      if(ob && d.bid === ob && !/[?&]client=1/.test(location.search)){ location.replace("index.html?scan=" + encodeURIComponent(token)); return; }
       DATA = d; ERR = null;
       if(!LANG) LANG = (d.lang === "fr") ? "fr" : "en";
       paint();
