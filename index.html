@@ -3634,6 +3634,10 @@
   function scanFromUrl(){
     try{
       const u=new URL(location.href), tok=u.searchParams.get("scan");
+      if(u.searchParams.get("go")==="scan"){
+        u.searchParams.delete("go"); history.replaceState(null, "", u.pathname+(u.search||"")+u.hash);
+        openCam(onTicketScan, "environment"); return;
+      }
       if(!tok) return;
       u.searchParams.delete("scan"); history.replaceState(null, "", u.pathname+(u.search||"")+u.hash);
       beep(); onTicketScan(tok);
