@@ -422,6 +422,23 @@
       grid-template-columns:repeat(auto-fill, minmax(380px, 1fr)); gap:14px;
     }
   }
+  /* ---------- coffre : petit coffre flottant + panneau ---------- */
+  #cof-fab{ position:fixed; right:16px; bottom:20px; z-index:900; width:60px; height:60px; border-radius:50%;
+    background:#1c1912; border:2px solid var(--gold); box-shadow:0 6px 20px rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center;
+    cursor:pointer; padding:0; transition:transform .35s cubic-bezier(.3,1.6,.5,1); }
+  #cof-fab svg{ width:38px; height:38px; }
+  #cof-fab.pop{ transform:scale(1.35); }
+  #cof-fab .pct{ position:absolute; top:-6px; right:-6px; background:var(--gold); color:#141310; font:800 11px var(--sans); border-radius:10px; padding:2px 6px; }
+  .cof-coin{ position:fixed; z-index:901; pointer-events:none; white-space:nowrap; font:800 17px Georgia,serif; color:#E8C55A; text-shadow:0 2px 8px rgba(0,0,0,.8);
+    animation:cofCoin 1.6s ease-in forwards; }
+  @keyframes cofCoin{ 0%{ opacity:0; transform:translate(-50%,-70px) scale(.8) } 20%{ opacity:1; transform:translate(-50%,-70px) scale(1.1) }
+    100%{ opacity:0; transform:translate(-50%,0) scale(.6) } }
+  #cof-panel{ position:fixed; inset:0; z-index:950; background:rgba(0,0,0,.55); display:flex; align-items:flex-end; justify-content:center; padding:16px; }
+  #cof-panel .cof-sheet{ width:100%; max-width:460px; max-height:85vh; overflow:auto; background:var(--panel); border:2px solid var(--gold); border-radius:20px; padding:18px;
+    animation:cofOpen .3s ease-out; }
+  @keyframes cofOpen{ from{ transform:translateY(40px) scale(.9); opacity:0 } to{ transform:none; opacity:1 } }
+  #cof-panel .cof-in{ background:#2a2416; border:1px solid var(--gold); color:#E8C55A; border-radius:12px; padding:10px 12px; margin-top:10px; font-weight:700; text-align:center; }
+  @media (prefers-reduced-motion:reduce){ #cof-fab, .cof-coin, #cof-panel .cof-sheet{ animation:none !important; transition:none !important; } }
 </style>
 </head>
 <body>
@@ -2334,7 +2351,7 @@
     setDoc(ref, m, { merge:true }).catch(function(){});
     MOUV.unshift(Object.assign({ id:ref.id }, m));
     try{ if(type==="recette" && coffreActif() && m.montant>0){ const part=Math.round(m.montant*coffrePct()/100);
-      if(part>0) cofToast("🔒 "+money(part)+(LANG_UI==="en"?" for your vault ("+coffrePct()+" %)":" pour votre coffre ("+coffrePct()+" %)")); } }catch(e){}
+      if(part>0) setTimeout(()=>cofPop(part), 300); } }catch(e){}
     return ref.id;
   }
   function periodStart(p){
@@ -2459,7 +2476,7 @@
 
   onAuthStateChanged(auth, async (user) => {
     window.__loaded = true;
-    if(!user){ try{ localStorage.removeItem("sanaapro_owner_bid"); }catch(e){} show("login"); $("login-btn").disabled=false; return; }
+    if(!user){ try{ localStorage.removeItem("sanaapro_owner_bid"); }catch(e){} try{ cofFab(false); }catch(e){} show("login"); $("login-btn").disabled=false; return; }
     show("loading"); $("loading").textContent=t("loading");
     try{
       const snap = await getDocSmart(doc(db,"boutiques",user.uid));
@@ -3226,6 +3243,39 @@
     if(!el){ el=document.createElement("div"); el.id="cof-toast"; el.style.cssText="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9999;background:#2a2416;color:#E8C55A;border:2px solid #C9A227;border-radius:14px;padding:12px 18px;font:600 15px var(--sans);box-shadow:0 8px 24px rgba(0,0,0,.5);max-width:90vw;text-align:center"; document.body.appendChild(el); }
     el.textContent=txt; el.hidden=false; clearTimeout(el._t); el._t=setTimeout(()=>{ el.hidden=true; }, 4500);
   }
+  // Petit coffre flottant : visible quand le coffre est actif. Il s'ouvre quand on le touche
+  // ou quand de l'argent entre, puis se referme tout seul.
+  let COF_TIMER=null, COF_IN=0;
+  function cofFab(show){
+    let f=document.getElementById("cof-fab");
+    if(!show){ if(f) f.hidden=true; closeCoffre(); return; }
+    if(!f){ f=document.createElement("button"); f.type="button"; f.id="cof-fab"; f.setAttribute("aria-label","Coffre");
+      f.addEventListener("click", ()=>{ const p=document.getElementById("cof-panel"); if(p && !p.hidden) closeCoffre(); else openCoffre(6000); });
+      document.body.appendChild(f); }
+    f.innerHTML=COF_SAFE+'<span class="pct">'+coffrePct()+'%</span>'; f.hidden=false;
+  }
+  function closeCoffre(){ clearTimeout(COF_TIMER); COF_IN=0; const p=document.getElementById("cof-panel"); if(p) p.hidden=true; }
+  function armClose(ms){ clearTimeout(COF_TIMER); COF_TIMER=setTimeout(()=>{
+      const p=document.getElementById("cof-panel"); if(!p || p.hidden) return;
+      const d=p.querySelector("details"), a=document.activeElement;
+      if((d && d.open) || (a && p.contains(a) && /INPUT|SELECT|TEXTAREA/.test(a.tagName))){ armClose(ms); return; }
+      closeCoffre(); }, ms); }
+  function openCoffre(ms){
+    let p=document.getElementById("cof-panel");
+    if(!p){ p=document.createElement("div"); p.id="cof-panel"; p.innerHTML='<div class="cof-sheet" id="cof-body"></div>';
+      p.addEventListener("click", e=>{ if(e.target===p) closeCoffre(); });
+      p.addEventListener("pointerdown", ()=>armClose(8000)); p.addEventListener("input", ()=>armClose(8000));
+      document.body.appendChild(p); }
+    p.hidden=false; renderCoffre(); armClose(ms||6000);
+  }
+  function cofPop(part){
+    const f=document.getElementById("cof-fab"); if(!f || f.hidden) return;
+    const r=f.getBoundingClientRect(), c=document.createElement("div"); c.className="cof-coin";
+    c.textContent="+"+money(part); c.style.left=(r.left+r.width/2)+"px"; c.style.top=(r.top)+"px";
+    document.body.appendChild(c); setTimeout(()=>c.remove(), 1700);
+    setTimeout(()=>{ f.classList.add("pop"); setTimeout(()=>f.classList.remove("pop"), 450); }, 1300);
+    COF_IN=part; setTimeout(()=>openCoffre(5000), 1500);
+  }
   function saveCoffre(ch){
     Object.assign(BOUTIQUE, ch);
     setDoc(doc(db,"boutiques",BID), ch, { merge:true }).catch(function(){});
@@ -3240,12 +3290,13 @@
       +'<div class="stat"><div class="n" style="color:var(--gold)" id="cof-pm">'+escH(money(mens*p/100))+'</div><div class="l">'+escH(L("économisés par mois","saved per month"))+'</div></div>'
       +'<div class="stat"><div class="n" style="color:var(--ok)" id="cof-pa">'+escH(money(mens*p/100*12))+'</div><div class="l">'+escH(L("économisés par an","saved per year"))+'</div></div></div>'
       +'<p style="margin:6px 0 0;font-size:12.5px;color:var(--muted)">'+escH(L("Estimation d'après vos recettes passées (moyenne ","Estimate from your past takings (average "))+escH(money(mens))+escH(L(" par mois). Le coffre commence le jour de l'activation : les recettes d'avant ne comptent pas."," per month). The vault starts the day you turn it on: earlier takings don't count."))+'</p>';
-    const wire=(onPick)=>{ box.querySelectorAll("#cof-chips button").forEach(b=>b.addEventListener("click", ()=>{
+    const wire=(onPick)=>{ document.querySelectorAll("#cof-chips button").forEach(b=>b.addEventListener("click", ()=>{
         const p=Number(b.getAttribute("data-p")); box.querySelectorAll("#cof-chips button").forEach(x=>x.classList.toggle("on", x===b));
         const c=$("cof-custom"); if(c) c.value=p; onPick(p); })); };
     const upd=p=>{ const a=$("cof-pm"), b=$("cof-pa"); if(a) a.textContent=money(mens*p/100); if(b) b.textContent=money(mens*p/100*12); };
 
     if(!coffreActif()){
+      box.hidden=false; cofFab(false);
       let sel=coffrePct();
       box.innerHTML='<div style="display:flex;gap:14px;align-items:center"><div style="flex:0 0 56px">'+COF_SAFE+'</div><div><h2 style="margin:0">'+escH(L("Mon coffre","My savings vault"))+'</h2>'
         +'<div style="font-size:14px;color:var(--muted);margin-top:4px">'+escH(L("Chaque fois qu'un client paie, une part va directement dans votre coffre. Vos gains d'aujourd'hui deviennent vos projets de demain.","Every time a client pays, a share goes straight to your vault. Today's earnings become tomorrow's dreams."))+'</div></div></div>'
@@ -3257,11 +3308,15 @@
       wire(p=>{ sel=p; upd(p); });
       $("cof-custom").addEventListener("input", e=>{ const p=Math.min(100,Math.max(0,parseFloat(e.target.value)||0)); sel=p; box.querySelectorAll("#cof-chips button").forEach(x=>x.classList.toggle("on", Number(x.getAttribute("data-p"))===p)); upd(p); });
       $("cof-on").addEventListener("click", ()=>{ if(!(sel>0)) return; const d=new Date(); d.setHours(0,0,0,0);
-        saveCoffre({ coffreActif:true, coffrePct:sel, coffreDepuis:d.getTime() });
+        saveCoffre({ coffreActif:true, coffrePct:sel, coffreDepuis:d.getTime() }); openCoffre(5000);
         cofToast("🔒 "+L("Coffre activé : ","Vault on: ")+sel+" % "+L("de chaque recette.","of every payment.")); });
       return;
     }
 
+    box.hidden=true; box.innerHTML=""; cofFab(true);
+    const panel=document.getElementById("cof-panel");
+    if(!panel || panel.hidden) return;
+    const body=document.getElementById("cof-body");
     const pct=coffrePct(), depuis=Number(BOUTIQUE.coffreDepuis)||0, obj=Number(BOUTIQUE.coffreObjectif)||0;
     const vers=Array.isArray(BOUTIQUE.coffreVers)?BOUTIQUE.coffreVers:[];
     const now=new Date(), d0=new Date(now); d0.setHours(0,0,0,0);
@@ -3283,6 +3338,7 @@
     let h='<div style="display:flex;gap:14px;align-items:center"><div style="flex:0 0 56px">'+COF_SAFE+'</div><div style="flex:1"><h2 style="margin:0">'+escH(L("Mon coffre","My savings vault"))+' · '+pct+' %</h2>'
       +'<div style="font:700 30px Georgia,serif;color:var(--gold);margin-top:4px">'+escH(money(verse))+'</div>'
       +'<div style="font-size:13px;color:var(--muted)">'+escH(L("épargnés depuis le ","saved since "))+escH(new Date(depuis).toLocaleDateString(loc))+'</div></div></div>'
+      +(COF_IN?'<div class="cof-in">🔒 +'+escH(money(COF_IN))+' '+escH(L("à mettre dans votre coffre","to put in your vault"))+'</div>':'')
       +'<div class="stats3" style="grid-template-columns:1fr 1fr;margin-top:12px">'
       +'<div class="stat"><div class="n" style="color:var(--gold)">'+escH(money(duJour))+'</div><div class="l">'+escH(L("À mettre aujourd'hui","To put away today"))+'<br>'+escH(pct+" % × "+money(recJour))+'</div></div>'
       +'<div class="stat"><div class="n" style="color:'+(reste?"var(--warn)":"var(--ok)")+'">'+escH(money(reste))+'</div><div class="l">'+escH(reste?L("Reste à verser","Still to deposit"):L("Coffre à jour ✓","Vault up to date ✓"))+'</div></div></div>'
@@ -3305,14 +3361,14 @@
       h+='<div style="margin-top:10px;font-size:13px;color:var(--muted)">'+escH(L("Derniers dépôts","Last deposits"))+'</div>';
       vers.slice().sort((a,b)=>(b.ms||0)-(a.ms||0)).slice(0,5).forEach(v=>{ h+='<div class="mline"><span class="k">'+escH(new Date(v.ms).toLocaleDateString(loc))+'</span><span class="v">'+escH(money(v.montant))+'</span></div>'; });
     }
-    box.innerHTML=h;
+    body.innerHTML=h;
     let sel=pct; wire(p=>{ sel=p; });
     $("cof-custom").addEventListener("input", e=>{ sel=Math.min(100,Math.max(0,parseFloat(e.target.value)||0)); });
     $("cof-vers").addEventListener("click", ()=>{
       const r=prompt(L("Combien avez-vous mis dans votre coffre ?","How much did you put in your vault?"), String(reste||duJour||""));
       const v=parseFloat(String(r||"").replace(/\s/g,"").replace(",","."));
       if(!(v>0)) return;
-      saveCoffre({ coffreVers: vers.concat([{ ms:Date.now(), montant:Math.round(v) }]) });
+      COF_IN=0; saveCoffre({ coffreVers: vers.concat([{ ms:Date.now(), montant:Math.round(v) }]) }); armClose(4000);
       cofToast("🔒 +"+money(v)+" "+L("dans votre coffre. Bravo !","in your vault. Well done!"));
     });
     $("cof-save").addEventListener("click", ()=>{
@@ -3320,7 +3376,7 @@
     });
     $("cof-off").addEventListener("click", ()=>{
       if(!confirm(L("Désactiver le coffre ? Vos dépôts déjà notés restent enregistrés.","Turn off the vault? Deposits already noted are kept."))) return;
-      saveCoffre({ coffreActif:false });
+      saveCoffre({ coffreActif:false }); closeCoffre();
     });
   }
   function renderFinances(){
