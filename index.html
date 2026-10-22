@@ -439,6 +439,11 @@
   @keyframes cofOpen{ from{ transform:translateY(40px) scale(.9); opacity:0 } to{ transform:none; opacity:1 } }
   #cof-panel .cof-in{ background:#2a2416; border:1px solid var(--gold); color:#E8C55A; border-radius:12px; padding:10px 12px; margin-top:10px; font-weight:700; text-align:center; }
   @media (prefers-reduced-motion:reduce){ #cof-fab, .cof-coin, #cof-panel .cof-sheet{ animation:none !important; transition:none !important; } }
+  /* ---------- glisser pour changer d'onglet ---------- */
+  .swipe-in-l{ animation:swInL .22s ease-out; } .swipe-in-r{ animation:swInR .22s ease-out; }
+  @keyframes swInL{ from{ transform:translateX(40px); opacity:.3 } to{ transform:none; opacity:1 } }
+  @keyframes swInR{ from{ transform:translateX(-40px); opacity:.3 } to{ transform:none; opacity:1 } }
+  @media (prefers-reduced-motion:reduce){ .swipe-in-l, .swipe-in-r{ animation:none } }
 </style>
 </head>
 <body>
@@ -2144,6 +2149,38 @@
   $("tabs").querySelectorAll("button").forEach(b=>{
     b.addEventListener("click", ()=>setTab(b.getAttribute("data-tab")));
   });
+
+  // Glisser à gauche / à droite n'importe où dans l'app pour passer à l'onglet voisin,
+  // comme sur un téléphone, sans remonter toucher la barre des onglets.
+  (function(){
+    let sx=0, sy=0, st=0, ok=false;
+    const dash=$("dash");
+    function scrollsSideways(el){
+      for(let e=el; e && e!==dash; e=e.parentElement){
+        if(e.scrollWidth>e.clientWidth+4){ const o=getComputedStyle(e).overflowX; if(o==="auto"||o==="scroll") return true; }
+      }
+      return false;
+    }
+    dash.addEventListener("touchstart", e=>{
+      ok=false; if(e.touches.length!==1) return;
+      const t=e.target;
+      if(t.closest("input,textarea,select,.tabs,#cof-panel,svg,canvas,[data-noswipe]")) return;
+      if(scrollsSideways(t)) return;
+      const p=document.getElementById("cof-panel"); if(p && !p.hidden) return;
+      sx=e.touches[0].clientX; sy=e.touches[0].clientY; st=Date.now(); ok=true;
+    }, { passive:true });
+    dash.addEventListener("touchend", e=>{
+      if(!ok) return; ok=false;
+      const c=e.changedTouches[0], dx=c.clientX-sx, dy=c.clientY-sy;
+      if(Date.now()-st>700 || Math.abs(dx)<70 || Math.abs(dx)<Math.abs(dy)*2) return;
+      const sel=window.getSelection && String(window.getSelection()); if(sel) return;
+      const list=Array.from($("tabs").querySelectorAll("button")).filter(b=>!b.hidden && b.offsetParent!==null).map(b=>b.getAttribute("data-tab"));
+      const i=list.indexOf(TAB); if(i<0) return;
+      const j=dx<0 ? i+1 : i-1; if(j<0 || j>=list.length) return;
+      setTab(list[j]);
+      const pane=$("pane-"+list[j]); if(pane){ pane.classList.remove("swipe-in-l","swipe-in-r"); void pane.offsetWidth; pane.classList.add(dx<0?"swipe-in-l":"swipe-in-r"); }
+    }, { passive:true });
+  })();
 
   function subInfo(){
     const sub = (BOUTIQUE && BOUTIQUE.subscription) || {};
