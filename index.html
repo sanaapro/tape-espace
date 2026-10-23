@@ -230,6 +230,8 @@
   body.mgr #pane-finances, body.mgr #pane-staff, body.mgr #pane-reglages{ display:none !important; }
   /* Totaux globaux de ce que doivent les clients : cachés au manager (la liste client par client reste visible) */
   body.mgr .mgr-mask{ font-size:0 !important; }
+  /* Coffre (épargne) : fermé au manager */
+  body.mgr #cof-fab, body.mgr #cof-panel, body.mgr .cof-coin, body.mgr #cof-toast, body.mgr #coffre-card{ display:none !important; }
   body.mgr .mgr-mask::after{ content:"🔒"; font-size:22px; }
   .pt-scan{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; max-width:340px; margin:14px auto 0; padding:16px;
              border:1px solid var(--gold); border-radius:14px; background:var(--gold); color:#141310; font:600 17px var(--sans); cursor:pointer }
@@ -3379,6 +3381,7 @@
       if((d && d.open) || (a && p.contains(a) && /INPUT|SELECT|TEXTAREA/.test(a.tagName))){ armClose(ms); return; }
       closeCoffre(); }, ms); }
   function openCoffre(ms){
+    if(isMgr()){ closeCoffre(); return; }
     let p=document.getElementById("cof-panel");
     if(!p){ p=document.createElement("div"); p.id="cof-panel"; p.innerHTML='<div class="cof-sheet" id="cof-body"></div>';
       p.addEventListener("click", e=>{ if(e.target===p) closeCoffre(); });
@@ -3387,6 +3390,7 @@
     p.hidden=false; renderCoffre(); armClose(ms||6000);
   }
   function cofPop(part){
+    if(isMgr()) return;
     const f=document.getElementById("cof-fab"); if(!f || f.hidden) return;
     const r=f.getBoundingClientRect(), c=document.createElement("div"); c.className="cof-coin";
     c.textContent="+"+money(part); c.style.left=(r.left+r.width/2)+"px"; c.style.top=(r.top)+"px";
