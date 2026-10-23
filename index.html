@@ -2899,6 +2899,41 @@
     renderSearch();
   }
 
+
+  // ---- Nom d'article dans les messages clients : regroupe les doublons et traduit en anglais ----
+  const ART_PHRASES=[["robe de mariee","wedding dress"],["robe de soiree","evening dress"],["robe longue","long dress"],["robe courte","short dress"],["robe droite","straight dress"],["grand boubou","grand boubou"],["fermeture eclair","zip"],["bas de pantalon","trouser hem"]];
+  const ART_NOUN={robe:"dress",robes:"dresses",jupe:"skirt",jupes:"skirts",pantalon:"trousers",pantalons:"trousers",chemise:"shirt",chemises:"shirts",chemisier:"blouse",veste:"jacket",vestes:"jackets",costume:"suit",costumes:"suits",ensemble:"outfit",ensembles:"outfits",caftan:"kaftan",kaftan:"kaftan",boubou:"boubou",tailleur:"skirt suit",haut:"top",hauts:"tops",gilet:"waistcoat",manteau:"coat",uniforme:"uniform",uniformes:"uniforms",short:"shorts",tunique:"tunic",abaya:"abaya",pagne:"wrapper",camisole:"camisole",body:"bodysuit",combinaison:"jumpsuit",bustier:"bustier",corsage:"blouse",drap:"sheet",draps:"sheets",rideau:"curtain",rideaux:"curtains",couverture:"blanket",nappe:"tablecloth",cravate:"tie",echarpe:"scarf",foulard:"headscarf",retouche:"alteration",retouches:"alterations",ourlet:"hem",modele:"style",tissu:"fabric",vetement:"garment",vetements:"garments",article:"item",articles:"items"};
+  const ART_ADJ={noir:"black",noire:"black",noirs:"black",noires:"black",blanc:"white",blanche:"white",blancs:"white",blanches:"white",rouge:"red",rouges:"red",bleu:"blue",bleue:"blue",bleus:"blue",vert:"green",verte:"green",jaune:"yellow",beige:"beige",marron:"brown",gris:"grey",grise:"grey",rose:"pink",violet:"purple",violette:"purple",orange:"orange",dore:"gold",doree:"gold",argent:"silver",bordeaux:"burgundy",cafe:"brown",lin:"linen",soie:"silk",coton:"cotton",wax:"wax",bazin:"bazin",dentelle:"lace",jean:"denim",velours:"velvet",homme:"men's",hommes:"men's",femme:"women's",femmes:"women's",enfant:"children's",enfants:"children's",fille:"girls'",garcon:"boys'",brode:"embroidered",brodee:"embroidered",long:"long",longue:"long",court:"short",courte:"short",nouveau:"new",nouvelle:"new",simple:"simple"};
+  const ART_DROP={de:1,du:1,des:1,en:1,pour:1,avec:1,a:1,au:1,le:1,la:1,les:1,un:1,une:1,et:1};
+  function artNorm(x){ return String(x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim(); }
+  function artEn(name){
+    const orig=String(name||"").trim().split(/\s+/).filter(Boolean); if(!orig.length) return "";
+    const nw=orig.map(artNorm), mods=[], nouns=[], other=[];
+    for(let i=0;i<nw.length;i++){
+      let hit=null;
+      for(const ph of ART_PHRASES){ const L=ph[0].split(" ").length; if(nw.slice(i,i+L).join(" ")===ph[0]){ hit=[ph[1],L]; break; } }
+      if(hit){ nouns.push(hit[0]); i+=hit[1]-1; continue; }
+      const w=nw[i];
+      if(ART_DROP[w]) continue;
+      if(ART_ADJ[w]) mods.push(ART_ADJ[w]);
+      else if(ART_NOUN[w]) nouns.push(ART_NOUN[w]);
+      else other.push(orig[i]);
+    }
+    if(!nouns.length && !mods.length) return orig.join(" ");
+    return mods.concat(other, nouns).join(" ");
+  }
+  function artMsg(s){
+    const parts=String(s||"").split(/\s*[,;\n]\s*/).map(x=>x.trim()).filter(Boolean);
+    if(!parts.length) return "";
+    const order=[], seen={};
+    parts.forEach(x=>{
+      let q=1, nm=x; const m=x.match(/^(\d+)\s*[x×*]\s*(.+)$/i); if(m){ q=Number(m[1])||1; nm=m[2]; }
+      const k=artNorm(nm);
+      if(seen[k]) seen[k].q+=q; else { seen[k]={q,nm}; order.push(k); }
+    });
+    return order.map(k=>{ const it=seen[k]; const lab=LANG_MSG==="en"?artEn(it.nm):it.nm; return (it.q>1?it.q+" × ":"")+lab; }).join(", ");
+  }
+
   function resteDe(o){
     const p = Number(o.prix)||0, pa = Number(o.paye)||0;
     return Math.max(0, p - pa);
@@ -2924,7 +2959,7 @@
         ...((BOUTIQUE && BOUTIQUE.waveLink) ? { waveLink: BOUTIQUE.waveLink } : {}),
         wave: (BOUTIQUE && BOUTIQUE.wave) || "",
         prenom: String(o.clienteName||"").trim().split(/\s+/)[0] || "",
-        article: o.article || o.resume || "",
+        article: artMsg(o.article || o.resume || ""),
         type: o.type || "confection",
         kind: o.kind === "pressing" ? "pressing" : "atelier",
         statut: o.statut || "recu",
@@ -2990,7 +3025,7 @@
   function remindMsg(it){
     const o=it.o;
     let msg=tm("mRemind").replace("{nom}", o.clienteName||"").replace("{boutique}", (BOUTIQUE&&BOUTIQUE.name)||"")
-      .replace("{article}", it.art || "").replace("{num}", fmtNum(o.numero));
+      .replace("{article}", artMsg(it.art)).replace("{num}", fmtNum(o.numero));
     if(it.ready) msg+="\n"+tm("mRemindReady");
     if(it.re>0) msg+="\n"+tm("mAmount").replace("{prix}", Math.round(it.re)).replace("{cur}", cur())+waveLines();
     return msg+"\n"+tm("waFoot");
@@ -5220,7 +5255,7 @@
     const re=resteDe(o);
     if(st!=="recupere") msg += "\n" + tm("pmTicket").replace("{v}", fmtNum(o.numero));
     if(st==="recu"){
-      if(o.resume) msg += "\n" + tm("pmItems").replace("{v}", o.resume);
+      if(o.resume) msg += "\n" + tm("pmItems").replace("{v}", artMsg(o.resume));
       msg += "\n" + tm("pmTotal").replace("{v}", money(o.prix));
       if(Number(o.paye)>0) msg += "\n" + tm("pmAdvance").replace("{v}", money(o.paye));
       if(o.retrait) msg += "\n" + tm("pzPickupOn").replace("{d}", fmtDate(o.retrait, LANG_MSG));
@@ -5534,13 +5569,13 @@
     let msg = tm(base)
       .replace("{nom}", o.clienteName||"")
       .replace("{recu}", tm(o.recu==="materiel" ? "rcvMaterial" : (o.recu==="vetement" ? "rcvGarment" : "rcvFabric")))
-      .replace("{article}", o.article||"")
+      .replace("{article}", artMsg(o.article))
       .replace("{boutique}", (BOUTIQUE && BOUTIQUE.name) || "");
     if(st==="recu"){
       if(o.numero) msg += "\n" + tm("lineReceipt").replace("{v}", fmtNum(o.numero));
       if(Array.isArray(o.articles) && o.articles.length>1){
-        o.articles.forEach(a=>{ msg += "\n" + tm("lineItem").replace("{n}", a.nom||"").replace("{p}", Math.round(Number(a.prix)||0)).replace("{cur}", cur()); });
-      } else if(o.article) msg += "\n" + tm("lineModel").replace("{v}", o.article);
+        o.articles.forEach(a=>{ msg += "\n" + tm("lineItem").replace("{n}", artMsg(a.nom)).replace("{p}", Math.round(Number(a.prix)||0)).replace("{cur}", cur()); });
+      } else if(o.article) msg += "\n" + tm("lineModel").replace("{v}", artMsg(o.article));
       if(o.prix || o.prix===0) msg += "\n" + tm("linePrice").replace("{v}", Math.round(Number(o.prix)||0)).replace("{cur}", cur());
       if(Number(o.paye)>0){
         msg += "\n" + tm("pmAdvance").replace("{v}", money(o.paye));
