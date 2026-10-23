@@ -287,6 +287,10 @@
   .tk-doc .hint{ font-size:11.5px; color:#444; margin-bottom:8px }
   .tk-doc .rw{ display:flex; justify-content:space-between; gap:10px; font-size:13px; border-top:1px dashed #aaa; padding:5px 0; text-align:left }
   .tk-doc .rw b{ text-align:right }
+  .tk-doc .rct{ font-weight:800; letter-spacing:2px; font-size:13px; border:1.5px solid #111; padding:3px 6px; display:inline-block; margin-top:6px }
+  .tk-doc .amt{ font-size:22px; font-weight:800; margin:6px 0 2px }
+  .tk-doc .stamp{ display:inline-block; border:2.5px solid #1a7f4b; color:#1a7f4b; font-weight:900; letter-spacing:3px; padding:4px 12px; transform:rotate(-6deg); margin:8px 0 4px; font-size:16px }
+  .tk-doc .thx{ font-size:12px; color:#444; margin-top:8px }
   .tk-bar{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:14px auto 0; max-width:300px }
   .tk-bar button{ flex:1 1 40%; padding:12px; border-radius:12px; border:1px solid var(--gold); background:var(--panel); color:var(--gold); font:inherit; font-weight:700; cursor:pointer }
   .sc-doc{ background:var(--panel); border:1px solid var(--line2); color:var(--txt); width:100%; max-width:440px; border-radius:16px; padding:16px }
@@ -1698,7 +1702,7 @@
       pmPret:"Bonjour {nom}, vos vêtements sont prêts. Vous pouvez passer les récupérer chez {boutique}.",
       pmRecupere:"Merci {nom} d'avoir choisi {boutique}. À très bientôt !",
       pmTicket:"Ticket n° {v}", pmItems:"Articles : {v}", pmTotal:"Total : {v}", pmAdvance:"Avance : {v}",
-      scTicket:"Scanner un ticket client", qTicket:"🔳 Ticket avec QR code", tkOrder:"Commande n°", tkHint:"Scannez pour suivre votre commande", tkClient:"Client", tkItem:"Article", tkDate:"Date prévue", tkTotal:"Total", tkPaid:"Payé", tkLeft:"Reste à payer", tkPrint:"🖨️ Imprimer", tkShare:"📤 Partager", tkCopied:"Lien de suivi copié.", tkNoLink:"Impossible de créer le ticket : abonnement expiré ou commande non enregistrée.", tkQrFail:"QR indisponible (pas de réseau ?)", scNotFound:"Ticket introuvable dans cette boutique. Vérifiez qu'il vient bien de votre atelier.", scCount:"{n} article(s) en cours", scTotal:"Reste à payer en tout", scAgain:"Scanner un autre ticket",
+      scTicket:"Scanner un ticket client", qTicket:"🔳 Ticket avec QR code", tkOrder:"Commande n°", rcTitle:"REÇU DE PAIEMENT", rcAmt:"Montant reçu", rcDate:"Date", rcPaidAll:"SOLDÉ", rcThanks:"Merci de votre confiance", rcWa:"💬 Envoyer par WhatsApp", rcAsk:"🧾 Reçu", tkHint:"Scannez pour suivre votre commande", tkClient:"Client", tkItem:"Article", tkDate:"Date prévue", tkTotal:"Total", tkPaid:"Payé", tkLeft:"Reste à payer", tkPrint:"🖨️ Imprimer", tkShare:"📤 Partager", tkCopied:"Lien de suivi copié.", tkNoLink:"Impossible de créer le ticket : abonnement expiré ou commande non enregistrée.", tkQrFail:"QR indisponible (pas de réseau ?)", scNotFound:"Ticket introuvable dans cette boutique. Vérifiez qu'il vient bien de votre atelier.", scCount:"{n} article(s) en cours", scTotal:"Reste à payer en tout", scAgain:"Scanner un autre ticket",
       nbTitle:"Page du cahier", nbHint:"Photographiez la page de l'ancien cahier : les mesures se remplissent toutes seules et la page reste dans la fiche.", aiReading:"📖 Lecture du cahier en cours…", aiWaking:"📖 Lecture en cours… le lecteur se réveille, cela peut prendre jusqu'à une minute.", aiDone:"✅ {n} mesure(s) lue(s) dans le cahier. Vérifiez les cases vertes avant d'enregistrer.", aiMany:"Plusieurs personnes sur la page : seule la première a été lue.", aiNone:"Aucune mesure lisible sur cette photo. Reprenez-la plus près, bien éclairée, ou dictez les mesures.", aiFail:"La lecture n'a pas abouti. La photo est gardée ; vous pouvez dicter les mesures.", aiOffline:"Pas de réseau : la photo est gardée, la lecture automatique demande Internet.", aiLimit:"Limite de lectures du jour atteinte. Dictez les mesures ou réessayez demain.", aiNoKey:"Le lecteur de cahier n'est pas encore activé.", aiAuth:"Reconnectez-vous pour utiliser la lecture du cahier.", nbBtn:"📷 Photographier la page du cahier", nbNone:"Aucune page de cahier.", nbTag:"Cahier", dictBtn:"🎤 Dicter les mesures", dictStop:"⏹ Arrêter la dictée", dictGo:"Je vous écoute… dites par exemple « épaule 42, poitrine 96 ».", dictHeard:"Entendu : « {t} » · {n} case(s) remplie(s). Vérifiez avant d'enregistrer.", dictNo:"La dictée n'est pas disponible sur ce téléphone (utilisez Chrome).", dictDenied:"Autorisez le micro pour SanaaPro dans les réglages du navigateur.", dictNet:"La dictée a besoin d'Internet. Réessayez quand le réseau revient.", dictErr:"La dictée s'est arrêtée. Touchez à nouveau le micro.",
       ptScan:"Scanner mon badge", ptAddStaff:"＋ Ajouter un employé", ptModeT:"Comment vos employés pointent",
       ptModeCode:"Code à 4 chiffres", ptModeBadge:"Badge (code-barres)", ptModeBoth:"Les deux",
@@ -1979,7 +1983,7 @@
       pmPret:"Hello {nom}, your clothes are ready. You can collect them at {boutique}.",
       pmRecupere:"Thank you {nom} for choosing {boutique}. See you soon!",
       pmTicket:"Ticket no. {v}", pmItems:"Items: {v}", pmTotal:"Total: {v}", pmAdvance:"Deposit: {v}",
-      scTicket:"Scan a customer ticket", qTicket:"🔳 Ticket with QR code", tkOrder:"Order no.", tkHint:"Scan to follow your order", tkClient:"Customer", tkItem:"Item", tkDate:"Due date", tkTotal:"Total", tkPaid:"Paid", tkLeft:"Balance due", tkPrint:"🖨️ Print", tkShare:"📤 Share", tkCopied:"Tracking link copied.", tkNoLink:"Cannot create the ticket: subscription expired or order not saved.", tkQrFail:"QR unavailable (no network?)", scNotFound:"Ticket not found in this shop. Check it comes from your workshop.", scCount:"{n} item(s) in progress", scTotal:"Total balance due", scAgain:"Scan another ticket",
+      scTicket:"Scan a customer ticket", qTicket:"🔳 Ticket with QR code", tkOrder:"Order no.", rcTitle:"PAYMENT RECEIPT", rcAmt:"Amount received", rcDate:"Date", rcPaidAll:"PAID IN FULL", rcThanks:"Thank you for your trust", rcWa:"💬 Send on WhatsApp", rcAsk:"🧾 Receipt", tkHint:"Scan to follow your order", tkClient:"Customer", tkItem:"Item", tkDate:"Due date", tkTotal:"Total", tkPaid:"Paid", tkLeft:"Balance due", tkPrint:"🖨️ Print", tkShare:"📤 Share", tkCopied:"Tracking link copied.", tkNoLink:"Cannot create the ticket: subscription expired or order not saved.", tkQrFail:"QR unavailable (no network?)", scNotFound:"Ticket not found in this shop. Check it comes from your workshop.", scCount:"{n} item(s) in progress", scTotal:"Total balance due", scAgain:"Scan another ticket",
       nbTitle:"Notebook page", nbHint:"Take a photo of the old notebook page: the measurements fill in by themselves and the page stays in the file.", aiReading:"📖 Reading the notebook…", aiWaking:"📖 Still reading… the reader is waking up, this can take up to a minute.", aiDone:"✅ {n} measurement(s) read from the notebook. Check the green fields before saving.", aiMany:"Several people on the page: only the first one was read.", aiNone:"No readable measurement in this photo. Retake it closer and well lit, or dictate.", aiFail:"Reading didn't work. The photo is kept; you can dictate the measurements.", aiOffline:"No network: the photo is kept, automatic reading needs internet.", aiLimit:"Daily reading limit reached. Dictate or try again tomorrow.", aiNoKey:"The notebook reader isn't switched on yet.", aiAuth:"Sign in again to use notebook reading.", nbBtn:"📷 Photograph the notebook page", nbNone:"No notebook page.", nbTag:"Notebook", dictBtn:"🎤 Dictate measurements", dictStop:"⏹ Stop dictation", dictGo:"Listening… say for example \"shoulder 42, chest 96\".", dictHeard:"Heard: \"{t}\" · {n} field(s) filled. Check before saving.", dictNo:"Dictation isn't available on this phone (use Chrome).", dictDenied:"Allow the microphone for SanaaPro in the browser settings.", dictNet:"Dictation needs internet. Try again when the network is back.", dictErr:"Dictation stopped. Tap the microphone again.",
       ptScan:"Scan my badge", ptAddStaff:"＋ Add an employee", ptModeT:"How your staff clock in",
       ptModeCode:"4-digit code", ptModeBadge:"Badge (barcode)", ptModeBoth:"Both",
@@ -4565,6 +4569,55 @@
   const isPz = o => o && o.kind==="pressing";
   const stLbl = o => isPz(o) ? pzStepLabel(o.statut||"recu") : t("st"+String(o.statut||"recu").charAt(0).toUpperCase()+String(o.statut||"recu").slice(1));
   const isDone = o => isPz(o) ? (o.statut==="recupere") : (o.statut==="livre");
+  function nowLabel(lang){ const d=new Date(); return d.toLocaleDateString(lang==="en"?"en-GB":"fr-FR")+" "+d.toLocaleTimeString(lang==="en"?"en-GB":"fr-FR",{hour:"2-digit",minute:"2-digit"}); }
+  function receiptMsg(o, amt){
+    const L=LANG_MSG, re=resteDe(o);
+    const lines=[ "🧾 "+tt("rcTitle",L)+" — "+((BOUTIQUE&&BOUTIQUE.name)||""),
+      (isPz(o)?tt("pzTicket",L):tt("tkOrder",L))+" "+fmtNum(o.numero)+" · "+nowLabel(L),
+      tt("tkClient",L)+" : "+(o.clienteName||"—"),
+      tt("tkItem",L)+" : "+(artMsg(isPz(o)?o.resume:o.article)||"—"),
+      tt("rcAmt",L)+" : *"+money(amt)+"*" ];
+    if(o.prix||o.prix===0) lines.push(tt("tkTotal",L)+" : "+money(o.prix));
+    lines.push(tt("tkPaid",L)+" : "+money(Number(o.paye)||0));
+    lines.push(re>0 ? tt("tkLeft",L)+" : "+money(re) : "✅ "+tt("rcPaidAll",L));
+    lines.push(tt("rcThanks",L)+" 🙏");
+    return lines.join("\n");
+  }
+  // Reçu affiché juste après un encaissement : imprimable (ticket 58 mm) ou envoyé sur WhatsApp
+  function showReceipt(o, amt){
+    if(!o) return;
+    if(o.id) syncSuivi(o, o.id);
+    const ov=document.createElement("div"); ov.className="tk-ov";
+    const d=document.createElement("div"); d.className="tk-doc";
+    const add=(cls,txt)=>{ const e=document.createElement("div"); e.className=cls; e.textContent=txt; d.appendChild(e); return e; };
+    const row=(k,v)=>{ const r=document.createElement("div"); r.className="rw"; const a=document.createElement("span"); a.textContent=k; const b=document.createElement("b"); b.textContent=v; r.appendChild(a); r.appendChild(b); d.appendChild(r); };
+    add("sh",(BOUTIQUE&&BOUTIQUE.name)||"SanaaPro");
+    if(BOUTIQUE&&BOUTIQUE.whatsapp) add("nb","WhatsApp "+BOUTIQUE.whatsapp);
+    add("rct",t("rcTitle"));
+    add("nb",(isPz(o)?t("pzTicket"):t("tkOrder"))+" "+fmtNum(o.numero)+" · "+nowLabel(LANG_UI));
+    add("hint",t("rcAmt")); const a=add("amt",money(amt)); a.style.marginTop="-6px";
+    row(t("tkClient"), o.clienteName||"—");
+    row(t("tkItem"), String((isPz(o)?o.resume:o.article)||"—").slice(0,60));
+    if(o.prix||o.prix===0) row(t("tkTotal"), money(o.prix));
+    row(t("tkPaid"), money(Number(o.paye)||0));
+    const re=resteDe(o);
+    if(re>0) row(t("tkLeft"), money(re)); else add("stamp",t("rcPaidAll"));
+    add("thx",t("rcThanks"));
+    ov.appendChild(d);
+    const bar=document.createElement("div"); bar.className="tk-bar";
+    const mk=(lbl,fn)=>{ const b=document.createElement("button"); b.type="button"; b.textContent=lbl; b.addEventListener("click", fn); bar.appendChild(b); };
+    mk(t("tkPrint"), ()=>{ document.body.classList.add("printticket"); setTimeout(()=>{ window.print(); setTimeout(()=>document.body.classList.remove("printticket"), 500); }, 200); });
+    mk(t("rcWa"), async ()=>{
+      const txt=receiptMsg(o, amt); const num=waNumber(o.clientePhone);
+      if(num){ openWa(num, txt); return; }
+      if(navigator.share){ try{ await navigator.share({ text:txt }); }catch(e){} return; }
+      if(await copyText(txt)) alert(t("tkCopied"));
+    });
+    mk(t("ptCamClose"), ()=>ov.remove());
+    ov.appendChild(bar);
+    ov.addEventListener("click", e=>{ if(e.target===ov) ov.remove(); });
+    document.body.appendChild(ov);
+  }
   async function showTicket(o){
     if(!o || !o.id){ if(o===ORD && ORDID) o.id=ORDID; else return; }
     syncSuivi(o, o.id);
@@ -4816,12 +4869,11 @@
     addMouv("recette","atelier",re, t("soldeLabel")+" "+fmtNum(ORD.numero)+" — "+(ORD.clienteName||""), { commandeId:ORDID });
     syncSuivi(ORD, ORDID); renderCmd(ORD, ORDID); renderLists();
     const m=$("p-msg"); m.textContent=t("cashedIn")+" "+money(re); m.className="msg ok show"; setTimeout(()=>m.classList.remove("show"), 4000);
+    showReceipt(ORD, re);
   });
   $("q-receipt").addEventListener("click", ()=>{
     if(!ORD) return;
-    const num=waNumber(ORD.clientePhone); if(!num){ alert(t("noPhone")); return; }
-    syncSuivi(ORD, ORDID);
-    openWa(num, clientMessage(Object.assign({}, ORD, { statut:"recu" })));
+    showReceipt(Object.assign({ id:ORDID }, ORD), Number(ORD.paye)||0);
   });
   $("q-resched").addEventListener("click", ()=>{
     if(!ORD || !ORDID) return;
@@ -5365,6 +5417,7 @@
             .catch(e=>{ o.paye=old; renderLists(); pzFail(e); });
           addMouv("recette","pressing",amt, t("pzTicket")+" "+fmtNum(o.numero)+" — "+(o.clienteName||""), { commandeId:o.id });
           renderLists();
+          showReceipt(o, amt);
         });
         acts.appendChild(cb);
       }
@@ -5617,6 +5670,7 @@
     msg.textContent=t("cashedIn")+" "+money(amt); msg.className="msg ok show";
     setTimeout(()=>{ msg.classList.remove("show"); }, 4000);
     renderCmd(ORD, ORDID); renderLists();
+    showReceipt(ORD, amt);
   });
 
   $("c-wa-cli").addEventListener("click", ()=>{
