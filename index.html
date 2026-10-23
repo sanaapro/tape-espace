@@ -2431,8 +2431,9 @@
     const ref = doc(collection(db,"boutiques",BID,"mouvements"));
     setDoc(ref, m, { merge:true }).catch(function(){});
     MOUV.unshift(Object.assign({ id:ref.id }, m));
-    try{ if(type==="recette" && coffreActif() && m.montant>0){ const part=Math.round(m.montant*coffrePct()/100);
-      if(part>0) setTimeout(()=>cofPop(part), 300); } }catch(e){}
+    try{ if(type==="recette" && (coffreActif()||salActif()) && m.montant>0){
+      const pe=coffreActif()?Math.round(m.montant*coffrePct()/100):0, ps=salActif()?Math.round(m.montant*salPct()/100):0;
+      if(pe+ps>0) setTimeout(()=>cofPop(pe+ps, pe, ps), 300); } }catch(e){}
     return ref.id;
   }
   function periodStart(p){
@@ -3351,6 +3352,13 @@
   const COF_SAFE='<svg viewBox="0 0 64 64" width="56" height="56" aria-hidden="true"><rect x="6" y="8" width="52" height="46" rx="7" fill="#2a2416" stroke="#C9A227" stroke-width="3"/><rect x="13" y="15" width="38" height="32" rx="4" fill="none" stroke="#C9A227" stroke-width="2"/><circle cx="32" cy="31" r="9" fill="none" stroke="#C9A227" stroke-width="3"/><path d="M32 22v4M32 36v4M23 31h4M37 31h4" stroke="#C9A227" stroke-width="2.5" stroke-linecap="round"/><rect x="12" y="54" width="8" height="5" rx="1.5" fill="#C9A227"/><rect x="44" y="54" width="8" height="5" rx="1.5" fill="#C9A227"/></svg>';
   function coffreActif(){ return !!(BOUTIQUE && BOUTIQUE.coffreActif); }
   function coffrePct(){ return Math.min(100, Math.max(0, Number(BOUTIQUE && BOUTIQUE.coffrePct!=null ? BOUTIQUE.coffrePct : 25)||0)); }
+  // Compartiment SALAIRES du même coffre : une part de chaque recette réservée à la paie des employés.
+  // Doc boutique : salActif, salPct, salDepuis (ms), salFixes (autres charges fixes par mois : loyer…),
+  // salVers : [{ ms, montant }] = versements réels sur le compte salaires (Wave, banque…).
+  function salActif(){ return !!(BOUTIQUE && BOUTIQUE.salActif); }
+  function salPct(){ return Math.min(100, Math.max(0, Number(BOUTIQUE && BOUTIQUE.salPct!=null ? BOUTIQUE.salPct : 30)||0)); }
+  function salBesoin(){ let t=0; SALARIES.forEach(x=>{ t+=Number(x.salaire)||0; }); return t + (Number(BOUTIQUE && BOUTIQUE.salFixes)||0); }
+  function salConseil(){ const m=recetteMensuelle(), b=salBesoin(); if(!(m>0) || !(b>0)) return 0; return Math.min(100, Math.ceil(b*100/m/5)*5); }
   // recettes moyennes par mois, d'après les 90 derniers jours enregistrés
   function recetteMensuelle(){
     const now=Date.now(); let first=now, sum=0;
@@ -3365,16 +3373,16 @@
   }
   // Petit coffre flottant : visible quand le coffre est actif. Il s'ouvre quand on le touche
   // ou quand de l'argent entre, puis se referme tout seul.
-  let COF_TIMER=null, COF_IN=0;
+  let COF_TIMER=null, COF_IN=0, COF_IN_E=0, COF_IN_S=0;
   function cofFab(show){
     let f=document.getElementById("cof-fab");
     if(!show){ if(f) f.hidden=true; closeCoffre(); return; }
     if(!f){ f=document.createElement("button"); f.type="button"; f.id="cof-fab"; f.setAttribute("aria-label","Coffre");
       f.addEventListener("click", ()=>{ const p=document.getElementById("cof-panel"); if(p && !p.hidden) closeCoffre(); else openCoffre(6000); });
       document.body.appendChild(f); }
-    f.innerHTML=COF_SAFE+'<span class="pct">'+coffrePct()+'%</span>'; f.hidden=false;
+    f.innerHTML=COF_SAFE+'<span class="pct">'+((coffreActif()?coffrePct():0)+(salActif()?salPct():0))+'%</span>'; f.hidden=false;
   }
-  function closeCoffre(){ clearTimeout(COF_TIMER); COF_IN=0; const p=document.getElementById("cof-panel"); if(p) p.hidden=true; }
+  function closeCoffre(){ clearTimeout(COF_TIMER); COF_IN=0; COF_IN_E=0; COF_IN_S=0; const p=document.getElementById("cof-panel"); if(p) p.hidden=true; }
   function armClose(ms){ clearTimeout(COF_TIMER); COF_TIMER=setTimeout(()=>{
       const p=document.getElementById("cof-panel"); if(!p || p.hidden) return;
       const d=p.querySelector("details"), a=document.activeElement;
@@ -3389,14 +3397,14 @@
       document.body.appendChild(p); }
     p.hidden=false; renderCoffre(); armClose(ms||6000);
   }
-  function cofPop(part){
+  function cofPop(part, pe, ps){
     if(isMgr()) return;
     const f=document.getElementById("cof-fab"); if(!f || f.hidden) return;
     const r=f.getBoundingClientRect(), c=document.createElement("div"); c.className="cof-coin";
     c.textContent="+"+money(part); c.style.left=(r.left+r.width/2)+"px"; c.style.top=(r.top)+"px";
     document.body.appendChild(c); setTimeout(()=>c.remove(), 1700);
     setTimeout(()=>{ f.classList.add("pop"); setTimeout(()=>f.classList.remove("pop"), 450); }, 1300);
-    COF_IN=part; setTimeout(()=>openCoffre(5000), 1500);
+    COF_IN=part; COF_IN_E=(pe==null?part:pe); COF_IN_S=ps||0; setTimeout(()=>openCoffre(5000), 1500);
   }
   function saveCoffre(ch){
     Object.assign(BOUTIQUE, ch);
@@ -3417,7 +3425,7 @@
         const c=$("cof-custom"); if(c) c.value=p; onPick(p); })); };
     const upd=p=>{ const a=$("cof-pm"), b=$("cof-pa"); if(a) a.textContent=money(mens*p/100); if(b) b.textContent=money(mens*p/100*12); };
 
-    if(!coffreActif()){
+    if(!coffreActif() && !salActif()){
       box.hidden=false; cofFab(false);
       let sel=coffrePct();
       box.innerHTML='<div style="display:flex;gap:14px;align-items:center"><div style="flex:0 0 56px">'+COF_SAFE+'</div><div><h2 style="margin:0">'+escH(L("Mon coffre","My savings vault"))+'</h2>'
@@ -3426,8 +3434,10 @@
         +'<div class="fchips" id="cof-chips">'+chips(sel)+'</div>'
         +'<div class="mgrid" style="margin-top:8px"><div><label>'+escH(L("Ou un autre pourcentage","Or another percentage"))+'</label><input id="cof-custom" type="number" min="1" max="100" value="'+sel+'"></div></div>'
         +proj(sel)
-        +'<button class="primary" type="button" id="cof-on" style="margin-top:14px">🔒 '+escH(L("Activer mon coffre","Turn on my vault"))+'</button>';
+        +'<button class="primary" type="button" id="cof-on" style="margin-top:14px">🔒 '+escH(L("Activer mon coffre","Turn on my vault"))+'</button>'
+        +'<button class="ghost" type="button" id="sal-only" style="margin-top:8px">👥 '+escH(L("Ou seulement le compartiment Salaires","Or only the Wages compartment"))+'</button>';
       wire(p=>{ sel=p; upd(p); });
+      $("sal-only").addEventListener("click", ()=>salActivate());
       $("cof-custom").addEventListener("input", e=>{ const p=Math.min(100,Math.max(0,parseFloat(e.target.value)||0)); sel=p; box.querySelectorAll("#cof-chips button").forEach(x=>x.classList.toggle("on", Number(x.getAttribute("data-p"))===p)); upd(p); });
       $("cof-on").addEventListener("click", ()=>{ if(!(sel>0)) return; const d=new Date(); d.setHours(0,0,0,0);
         saveCoffre({ coffreActif:true, coffrePct:sel, coffreDepuis:d.getTime() }); openCoffre(5000);
@@ -3460,7 +3470,7 @@
     let h='<div style="display:flex;gap:14px;align-items:center"><div style="flex:0 0 56px">'+COF_SAFE+'</div><div style="flex:1"><h2 style="margin:0">'+escH(L("Mon coffre","My savings vault"))+' · '+pct+' %</h2>'
       +'<div style="font:700 30px Georgia,serif;color:var(--gold);margin-top:4px">'+escH(money(verse))+'</div>'
       +'<div style="font-size:13px;color:var(--muted)">'+escH(L("épargnés depuis le ","saved since "))+escH(new Date(depuis).toLocaleDateString(loc))+'</div></div></div>'
-      +(COF_IN?'<div class="cof-in">🔒 +'+escH(money(COF_IN))+' '+escH(L("à mettre dans votre coffre","to put in your vault"))+'</div>':'')
+      +(COF_IN_E?'<div class="cof-in">🔒 +'+escH(money(COF_IN_E))+' '+escH(L("à mettre dans votre coffre","to put in your vault"))+'</div>':'')
       +'<div class="stats3" style="grid-template-columns:1fr 1fr;margin-top:12px">'
       +'<div class="stat"><div class="n" style="color:var(--gold)">'+escH(money(duJour))+'</div><div class="l">'+escH(L("À mettre aujourd'hui","To put away today"))+'<br>'+escH(pct+" % × "+money(recJour))+'</div></div>'
       +'<div class="stat"><div class="n" style="color:'+(reste?"var(--warn)":"var(--ok)")+'">'+escH(money(reste))+'</div><div class="l">'+escH(reste?L("Reste à verser","Still to deposit"):L("Coffre à jour ✓","Vault up to date ✓"))+'</div></div></div>'
@@ -3479,11 +3489,16 @@
       +'<div><label>'+escH(L("Mon rêve : objectif par an","My dream: yearly goal"))+'</label><input id="cof-obj" type="number" min="0" value="'+(obj||"")+'"></div></div>'
       +'<button class="ghost" type="button" id="cof-save" style="margin-top:8px">'+escH(L("Enregistrer","Save"))+'</button>'
       +'<button class="ghost" type="button" id="cof-off" style="margin-top:8px;color:var(--muted)">'+escH(L("Désactiver le coffre","Turn off the vault"))+'</button></details>';
-    if(vers.length){
+    if(coffreActif() && vers.length){
       h+='<div style="margin-top:10px;font-size:13px;color:var(--muted)">'+escH(L("Derniers dépôts","Last deposits"))+'</div>';
       vers.slice().sort((a,b)=>(b.ms||0)-(a.ms||0)).slice(0,5).forEach(v=>{ h+='<div class="mline"><span class="k">'+escH(new Date(v.ms).toLocaleDateString(loc))+'</span><span class="v">'+escH(money(v.montant))+'</span></div>'; });
     }
+    if(!coffreActif()) h='<div style="display:flex;gap:14px;align-items:center"><div style="flex:0 0 56px">'+COF_SAFE+'</div><div style="flex:1"><h2 style="margin:0">'+escH(L("Mon coffre","My vault"))+'</h2></div></div>'
+      +'<button class="ghost" type="button" id="cof-on2" style="margin-top:10px">🔒 '+escH(L("Activer aussi mon épargne","Also turn on my savings"))+'</button>';
+    h+=salSection(L, loc);
     body.innerHTML=h;
+    salWire(L);
+    if(!coffreActif()){ $("cof-on2").addEventListener("click", ()=>{ const d=new Date(); d.setHours(0,0,0,0); saveCoffre({ coffreActif:true, coffreDepuis:d.getTime() }); }); return; }
     let sel=pct; wire(p=>{ sel=p; });
     $("cof-custom").addEventListener("input", e=>{ sel=Math.min(100,Math.max(0,parseFloat(e.target.value)||0)); });
     $("cof-vers").addEventListener("click", ()=>{
@@ -3498,7 +3513,84 @@
     });
     $("cof-off").addEventListener("click", ()=>{
       if(!confirm(L("Désactiver le coffre ? Vos dépôts déjà notés restent enregistrés.","Turn off the vault? Deposits already noted are kept."))) return;
-      saveCoffre({ coffreActif:false }); closeCoffre();
+      saveCoffre({ coffreActif:false }); if(!salActif()) closeCoffre();
+    });
+  }
+  function salActivate(){
+    const L=(fr,en)=>LANG_UI==="en"?en:fr;
+    const c=salConseil(), b=salBesoin();
+    const def=c||30;
+    const r=prompt(L("Compartiment Salaires\n\nVos salaires","Wages compartment\n\nYour wages")+(b>0?" : "+money(b)+L(" par mois"," per month"):L(" : ajoutez vos employés dans l'onglet Salariés","s: add your employees in the Staff tab"))+(c?"\n"+L("Conseillé d'après vos recettes : ","Advised from your takings: ")+c+" %":"")+"\n\n"+L("Quelle part de chaque recette réserver aux salaires (en %) ?","What share of each payment to keep for wages (%)?"), String(def));
+    if(r===null) return;
+    const p=Math.min(100, Math.max(1, parseFloat(String(r).replace(",","."))||0));
+    if(!(p>0)) return;
+    const d=new Date(); d.setHours(0,0,0,0);
+    saveCoffre({ salActif:true, salPct:p, salDepuis:d.getTime() }); openCoffre(6000);
+    cofToast("👥 "+L("Compartiment Salaires activé : ","Wages compartment on: ")+p+" % "+L("de chaque recette.","of every payment."));
+  }
+  function salSection(L, loc){
+    if(!salActif()) return '<div style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">'
+      +'<h3 style="margin:0;font-size:16px">👥 '+escH(L("Compartiment Salaires","Wages compartment"))+'</h3>'
+      +'<div style="font-size:13px;color:var(--muted);margin-top:4px">'+escH(L("Une part de chaque recette mise à part pour payer vos employés en fin de mois, séparée de votre épargne.","A share of each payment kept aside to pay your staff at the end of the month, separate from your savings."))+'</div>'
+      +'<button class="ghost" type="button" id="sal-on" style="margin-top:8px">👥 '+escH(L("Activer le compartiment Salaires","Turn on the Wages compartment"))+'</button></div>';
+    const pct=salPct(), depuis=Number(BOUTIQUE.salDepuis)||0, fixes=Number(BOUTIQUE.salFixes)||0;
+    const vers=Array.isArray(BOUTIQUE.salVers)?BOUTIQUE.salVers:[];
+    const now=new Date(), d0=new Date(now); d0.setHours(0,0,0,0); const m0=new Date(now.getFullYear(),now.getMonth(),1).getTime();
+    let recJour=0, recTot=0, recMois=0;
+    MOUV.forEach(m=>{ if(m.type!=="recette") return; const ms=Number(m.ms)||0, v=Number(m.montant)||0;
+      if(ms<depuis) return; recTot+=v; if(ms>=d0.getTime()) recJour+=v; if(ms>=m0) recMois+=v; });
+    const du=Math.round(recTot*pct/100), duJour=Math.round(recJour*pct/100), duMois=Math.round(recMois*pct/100);
+    const verse=vers.reduce((a,v)=>a+(Number(v.montant)||0),0);
+    const verseMois=vers.filter(v=>(Number(v.ms)||0)>=m0).reduce((a,v)=>a+(Number(v.montant)||0),0);
+    const reste=Math.max(0, du-verse), besoin=salBesoin(), conseil=salConseil(), mens=recetteMensuelle();
+    const pc=besoin>0?Math.min(100, Math.round(verseMois*100/besoin)):0;
+    let h='<div style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">'
+      +'<h3 style="margin:0;font-size:16px">👥 '+escH(L("Salaires","Wages"))+' · '+pct+' %</h3>'
+      +(COF_IN_S?'<div class="cof-in">👥 +'+escH(money(COF_IN_S))+' '+escH(L("pour le compte Salaires","for the Wages account"))+'</div>':'')
+      +'<div class="stats3" style="grid-template-columns:1fr 1fr;margin-top:10px">'
+      +'<div class="stat"><div class="n" style="color:var(--gold)">'+escH(money(duJour))+'</div><div class="l">'+escH(L("À verser aujourd'hui","To deposit today"))+'<br>'+escH(pct+" % × "+money(recJour))+'</div></div>'
+      +'<div class="stat"><div class="n" style="color:'+(reste?"var(--warn)":"var(--ok)")+'">'+escH(money(reste))+'</div><div class="l">'+escH(reste?L("Reste à verser","Still to deposit"):L("Compte à jour ✓","Account up to date ✓"))+'</div></div></div>';
+    if(besoin>0){
+      h+='<div style="margin-top:10px;font-size:14px">'+escH(L("Ce mois : ","This month: "))+'<b style="color:'+(verseMois>=besoin?"var(--ok)":"var(--gold)")+'">'+escH(money(verseMois))+'</b> / '+escH(money(besoin))+' '+escH(L("à payer","to pay"))+' ('+pc+' %)</div>'
+        +'<div style="height:12px;border-radius:7px;background:var(--line);margin-top:6px;overflow:hidden"><div style="height:100%;width:'+pc+'%;background:linear-gradient(90deg,#C9A227,#4FD18B)"></div></div>'
+        +'<div class="mline"><span class="k">'+escH(L("Part de ce mois (recettes)","This month's share (takings)"))+'</span><span class="v">'+escH(money(duMois))+'</span></div>';
+      if(mens>0 && mens*pct/100 < besoin) h+='<div style="margin-top:8px;font-size:13px;color:var(--warn)">⚠️ '+escH(L("À ce rythme (","At this pace (")+money(mens*pct/100)+L(" par mois), vous n'atteindrez pas "," per month), you won't reach ")+money(besoin)+L(". Il faudrait "," . You would need ")+conseil+" %.")+'</div>';
+    } else {
+      h+='<div style="margin-top:8px;font-size:13px;color:var(--muted)">'+escH(L("Ajoutez vos employés et leur salaire dans l'onglet Salariés : l'app calculera ce qu'il faut chaque mois.","Add your employees and their wages in the Staff tab: the app will work out what you need each month."))+'</div>';
+    }
+    h+='<button class="primary" type="button" id="sal-vers" style="margin-top:12px">✅ '+escH(L("J'ai versé sur le compte Salaires","I deposited on the Wages account"))+'</button>'
+      +'<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--muted);font-size:14px">⚙️ '+escH(L("Réglages des salaires","Wages settings"))+'</summary>'
+      +(conseil?'<div style="font-size:13px;color:var(--muted);margin-top:6px">'+escH(L("Conseillé d'après vos recettes : ","Advised from your takings: ")+conseil+" %")+'</div>':'')
+      +'<div class="mgrid" style="margin-top:8px"><div><label>'+escH(L("Part de chaque recette (%)","Share of each payment (%)"))+'</label><input id="sal-pct" type="number" min="1" max="100" value="'+pct+'"></div>'
+      +'<div><label>'+escH(L("Autres charges fixes / mois (loyer…)","Other fixed costs / month (rent…)"))+'</label><input id="sal-fixes" type="number" min="0" value="'+(fixes||"")+'"></div></div>'
+      +'<button class="ghost" type="button" id="sal-save" style="margin-top:8px">'+escH(L("Enregistrer","Save"))+'</button>'
+      +'<button class="ghost" type="button" id="sal-off" style="margin-top:8px;color:var(--muted)">'+escH(L("Désactiver le compartiment Salaires","Turn off the Wages compartment"))+'</button></details>';
+    if(vers.length){
+      h+='<div style="margin-top:10px;font-size:13px;color:var(--muted)">'+escH(L("Derniers versements","Last deposits"))+'</div>';
+      vers.slice().sort((a,b)=>(b.ms||0)-(a.ms||0)).slice(0,5).forEach(v=>{ h+='<div class="mline"><span class="k">'+escH(new Date(v.ms).toLocaleDateString(loc))+'</span><span class="v">'+escH(money(v.montant))+'</span></div>'; });
+    }
+    SAL_RESTE=reste||duJour;
+    return h+'</div>';
+  }
+  let SAL_RESTE=0;
+  function salWire(L){
+    const on=$("sal-on"); if(on){ on.addEventListener("click", ()=>salActivate()); return; }
+    if(!$("sal-vers")) return;
+    $("sal-vers").addEventListener("click", ()=>{
+      const r=prompt(L("Combien avez-vous versé sur le compte Salaires ?","How much did you deposit on the Wages account?"), String(SAL_RESTE||""));
+      const v=parseFloat(String(r||"").replace(/\s/g,"").replace(",","."));
+      if(!(v>0)) return;
+      const vers=Array.isArray(BOUTIQUE.salVers)?BOUTIQUE.salVers:[];
+      COF_IN_S=0; saveCoffre({ salVers: vers.concat([{ ms:Date.now(), montant:Math.round(v) }]) }); armClose(4000);
+      cofToast("👥 +"+money(v)+" "+L("sur le compte Salaires.","on the Wages account."));
+    });
+    $("sal-save").addEventListener("click", ()=>{
+      const p=Math.min(100, Math.max(1, parseFloat($("sal-pct").value)||salPct()));
+      saveCoffre({ salPct:p, salFixes: Math.max(0, parseFloat($("sal-fixes").value)||0) });
+    });
+    $("sal-off").addEventListener("click", ()=>{
+      if(!confirm(L("Désactiver le compartiment Salaires ? Les versements déjà notés restent enregistrés.","Turn off the Wages compartment? Deposits already noted are kept."))) return;
+      saveCoffre({ salActif:false }); if(!coffreActif()) closeCoffre();
     });
   }
   function renderFinances(){
