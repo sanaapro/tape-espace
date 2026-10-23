@@ -223,6 +223,11 @@
   .pt-row .hrs .abs{ color:#6A665F; }
   body.kiosk .head, body.kiosk #tabs, body.kiosk #off-dash, body.kiosk .foot, body.kiosk .pt-admin{ display:none !important; }
   body.kiosk .pt-screen{ margin-top:4vh; }
+  /* Mode manager : ce téléphone ne montre ni les chiffres de la semaine/du mois, ni les salaires, ni les réglages */
+  body.mgr #tabs button[data-tab="finances"], body.mgr #tabs button[data-tab="staff"], body.mgr #tabs button[data-tab="reglages"],
+  body.mgr #settings-btn, body.mgr #logout-btn, body.mgr #clo-hist-btn, body.mgr #clo-hist, body.mgr #clo-owner-btn,
+  body.mgr #cmd-month, body.mgr #pz-tarifs, body.mgr #pz-tedit, body.mgr #pt-addstaff, body.mgr #sub-card,
+  body.mgr #pane-finances, body.mgr #pane-staff, body.mgr #pane-reglages{ display:none !important; }
   .pt-scan{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; max-width:340px; margin:14px auto 0; padding:16px;
              border:1px solid var(--gold); border-radius:14px; background:var(--gold); color:#141310; font:600 17px var(--sans); cursor:pointer }
   .pt-scan svg{ width:22px; height:22px }
@@ -589,6 +594,7 @@
       </div>
       <button class="logout" id="settings-btn" type="button" style="margin-right:8px">⚙ <span data-i18n="tabSettings">Réglages</span></button>
       <button class="logout" id="logout-btn" data-i18n="logout">Déconnexion</button>
+      <button class="logout" id="mgr-badge" type="button" hidden data-i18n="mgrBadge">🔒 Mode manager</button>
     </div>
 
     <div class="tabs" id="tabs">
@@ -670,7 +676,7 @@
         <button class="wa" id="teaser-btn" data-i18n="lockBtn">Passer au premium sur WhatsApp</button>
       </div>
 
-      <div class="card">
+      <div class="card" id="sub-card">
         <h2 data-i18n="subscription">Abonnement</h2>
         <div class="row"><span class="k" data-i18n="status">Statut</span><span class="v"><span id="d-badge" class="badge"></span></span></div>
         <div class="row"><span class="k" data-i18n="plan">Formule</span><span class="v" id="d-plan"></span></div>
@@ -865,6 +871,11 @@
         <p style="margin:0 0 4px;font-size:13px;color:var(--muted)" data-i18n="ownerCodeHint">Sans code, n'importe qui peut modifier un prix ou un modèle. Avec un code, vous seul.</p>
         <input id="b-code" type="password" inputmode="numeric" autocomplete="new-password" maxlength="6" data-i18n-ph="ownerCodePh" placeholder="4 à 6 chiffres">
         <button class="ghost" id="b-code-save" data-i18n="saveCode">Enregistrer le code</button>
+      </div>
+      <div class="card" id="mgr-card">
+        <h2 data-i18n="mgrTitle">Téléphone du manager</h2>
+        <p style="margin:0 0 8px;font-size:13px;color:var(--muted)" data-i18n="mgrHint">Sur ce téléphone, le manager enregistre les commandes, les dépôts, les paiements et les dépenses. Il ne voit ni les Finances, ni les salaires, ni les Réglages, ni l'historique des clôtures. Pour modifier ou supprimer, il lui faut votre code.</p>
+        <button class="primary" id="mgr-on" type="button" data-i18n="mgrOn">🔒 Activer le mode manager sur ce téléphone</button>
       </div>
       <div class="card">
         <h2 data-i18n="autoNotify">Notification WhatsApp automatique</h2>
@@ -1730,6 +1741,11 @@
       otpHint:"Utile quand vous n'êtes pas sur place : un bouton génère un code, vous le dictez au manager par téléphone. Il ne fonctionne qu'une seule fois.",
       otpGen:"Générer un code à usage unique", otpNote:"Valable une seule fois, pendant 24 heures.",
       codeSaved:"Code enregistré.", codeAsk:"Code propriétaire :", codeWrong:"Code incorrect.",
+      mgrTitle:"Téléphone du manager", mgrHint:"Sur ce téléphone, le manager enregistre les commandes, les dépôts, les paiements et les dépenses. Il ne voit ni les Finances, ni les salaires, ni les Réglages, ni l'historique des clôtures. Pour modifier ou supprimer, il lui faut votre code.",
+      mgrOn:"🔒 Activer le mode manager sur ce téléphone", mgrBadge:"🔒 Mode manager",
+      mgrNeedCode:"Enregistrez d'abord un code administrateur (juste au-dessus) : c'est lui seul qui permettra de sortir du mode manager.",
+      mgrConfirm:"Activer le mode manager sur ce téléphone ?\n\nFinances, salaires, réglages et historique des clôtures seront cachés. Seul votre code administrateur permettra d'en sortir.",
+      mgrDone:"Mode manager activé sur ce téléphone.", mgrExitAsk:"Code administrateur pour revenir en mode propriétaire :", mgrOff:"Mode propriétaire rétabli sur ce téléphone.",
       loginTitle:"Connexion à votre espace", loginLead:"Entrez les identifiants créés à l'inscription.",
       email:"Email", emailPh:"vous@email.com", password:"Mot de passe", passwordPh:"Votre mot de passe",
       signIn:"Se connecter", logout:"Déconnexion", hello:"Bonjour",
@@ -2011,6 +2027,11 @@
       otpHint:"Useful when you are not on site: one button generates a code, you dictate it to your manager by phone. It works only once.",
       otpGen:"Generate a one-time code", otpNote:"Valid once, for 24 hours.",
       codeSaved:"Code saved.", codeAsk:"Owner code:", codeWrong:"Wrong code.",
+      mgrTitle:"Manager's phone", mgrHint:"On this phone the manager records orders, drop-offs, payments and expenses. He cannot see Finances, wages, Settings or the closing history. To edit or delete anything he needs your code.",
+      mgrOn:"🔒 Turn on manager mode on this phone", mgrBadge:"🔒 Manager mode",
+      mgrNeedCode:"First save an admin code (just above): it is the only way to leave manager mode.",
+      mgrConfirm:"Turn on manager mode on this phone?\n\nFinances, wages, settings and closing history will be hidden. Only your admin code can turn it off.",
+      mgrDone:"Manager mode is on for this phone.", mgrExitAsk:"Admin code to return to owner mode:", mgrOff:"Owner mode restored on this phone.",
       loginTitle:"Sign in to your space", loginLead:"Enter the credentials created at sign-up.",
       email:"Email", emailPh:"you@email.com", password:"Password", passwordPh:"Your password",
       signIn:"Sign in", logout:"Sign out", hello:"Hello",
@@ -2139,6 +2160,7 @@
   const typeKey = x => "t" + x.charAt(0).toUpperCase() + x.slice(1);
 
   function setTab(name){
+    if(isMgr() && ["finances","staff","reglages"].indexOf(name)!==-1) name="apercu";
     TAB = name;
     TABS.forEach(x=>{ $("pane-"+x).hidden = (x!==name); });
     $("tabs").querySelectorAll("button").forEach(b=>{
@@ -2545,7 +2567,7 @@
       }
       BID=user.uid; BOUTIQUE=snap.data();
       try{ localStorage.setItem("sanaapro_owner_bid", BID); }catch(e){}
-      renderDashboard(BOUTIQUE); paintLocks(); updateOffline(); setTab("apercu"); show("dash");
+      renderDashboard(BOUTIQUE); paintLocks(); updateOffline(); applyMgr(); setTab("apercu"); show("dash");
       loadAll().then(scanFromUrl);
       syncCatalogueExpiry();
     }catch(e){ $("loading").textContent=t("loadFail"); show("loading"); }
@@ -6190,6 +6212,35 @@
     setDoc(doc(db,"boutiques",BID), { codeAdmin:v, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
     $("b-code").value=""; $("b-code").placeholder = v ? "••••••" : t("ownerCodePh");
     alert(t("codeSaved"));
+  });
+
+  // =================== MODE MANAGER (par téléphone) ===================
+  // Le téléphone du manager garde la même connexion que la boutique, mais cache les chiffres
+  // de la semaine / du mois, les salaires et les réglages. Seul le code administrateur
+  // (jamais un code à usage unique) permet d'en sortir.
+  function isMgr(){ try{ return !!BID && localStorage.getItem("sanaapro_mgr")===BID; }catch(e){ return false; } }
+  function applyMgr(){
+    const on=isMgr();
+    document.body.classList.toggle("mgr", on);
+    $("mgr-badge").hidden=!on;
+    if(on && ["finances","staff","reglages"].indexOf(TAB)!==-1) setTab("apercu");
+  }
+  $("mgr-on").addEventListener("click", ()=>{
+    const admin=(BOUTIQUE && BOUTIQUE.codeAdmin) ? String(BOUTIQUE.codeAdmin) : "";
+    if(!admin){ alert(t("mgrNeedCode")); try{ $("b-code").focus(); $("b-code").scrollIntoView({block:"center"}); }catch(e){} return; }
+    if(!confirm(t("mgrConfirm"))) return;
+    try{ localStorage.setItem("sanaapro_mgr", BID); }catch(e){}
+    applyMgr(); setTab("apercu");
+    alert(t("mgrDone"));
+  });
+  $("mgr-badge").addEventListener("click", ()=>{
+    const admin=(BOUTIQUE && BOUTIQUE.codeAdmin) ? String(BOUTIQUE.codeAdmin) : "";
+    const given=prompt(t("mgrExitAsk"));
+    if(given===null) return;
+    if(admin && String(given).trim()!==admin){ alert(t("codeWrong")); return; }
+    try{ localStorage.removeItem("sanaapro_mgr"); }catch(e){}
+    applyMgr();
+    alert(t("mgrOff"));
   });
 
   $("b-otp-gen").addEventListener("click", async ()=>{
