@@ -310,6 +310,7 @@
   .sc-it.hit{ border-color:var(--gold) }
   .sc-it .a{ display:flex; justify-content:space-between; gap:8px; font-weight:700 }
   .sc-it .b{ font-size:13px; color:var(--muted); margin-top:3px }
+  .sc-pay{ display:block; width:100%; margin-top:8px; padding:12px; border-radius:10px; border:1px solid var(--ok); background:transparent; color:var(--ok); font-weight:700; font-size:15px }
   .sc-tot{ display:flex; justify-content:space-between; margin-top:12px; padding-top:10px; border-top:1px solid var(--line2); font-weight:700 }
   @media print{
     body.printticket *{ visibility:hidden !important }
@@ -4790,6 +4791,39 @@
     if(pa && pb) return pa===pb;
     return !!normNom(a.clienteName) && normNom(a.clienteName)===normNom(b.clienteName);
   }
+  // Depuis le scan : ouvrir la commande directement sur la case « Encaisser », reste déjà rempli
+  async function allerEncaisser(x){
+    const re=resteDe(x);
+    if(isPz(x)){
+      show("dash"); setTab("pressing"); PZ_FILTER="tous"; $("q-pz").value=fmtNum(x.numero); renderPressing();
+      setTimeout(()=>{ const l=$("pz-list"); if(l) l.scrollIntoView({ behavior:"smooth", block:"start" }); }, 80);
+      return;
+    }
+    await openCmd(x.id);
+    setTimeout(()=>{
+      const a=$("p-amt"); if(!a) return;
+      if(re>0) a.value=String(Math.round(re));
+      a.scrollIntoView({ behavior:"smooth", block:"center" });
+      try{ a.focus({ preventScroll:true }); }catch(e){}
+    }, 120);
+  }
+  // Encaisser en une touche depuis l'écran du scan (atelier ou pressing)
+  function encaisserScan(x){
+    const re=resteDe(x); if(re<=0) return false;
+    const v=prompt(t("pzCashAsk").replace("{n}", x.clienteName||""), String(Math.round(re)));
+    if(v===null) return false;
+    const amt=parseFloat(String(v).replace(",", "."));
+    if(isNaN(amt) || amt<=0){ alert(t("amountRequired")); return false; }
+    const paye=(Number(x.paye)||0)+amt; const old=x.paye; x.paye=paye;
+    if(ORD && ORDID===x.id && ORD!==x) ORD.paye=paye;
+    setDoc(doc(db,"boutiques",BID,"commandes",x.id), { paye, updatedAt:serverTimestamp() }, { merge:true })
+      .catch(e=>{ x.paye=old; renderLists(); if(isPz(x)) pzFail(e); });
+    if(isPz(x)) addMouv("recette","pressing",amt, t("pzTicket")+" "+fmtNum(x.numero)+" — "+(x.clienteName||""), { commandeId:x.id });
+    else addMouv("recette","atelier",amt, t("shopOrder")+" "+fmtNum(x.numero)+" — "+(x.clienteName||""), { commandeId:x.id });
+    renderLists();
+    showReceipt(x, amt);
+    return true;
+  }
   function onTicketScan(val){
     const tok=tokenFrom(val);
     const all=COMMANDES.concat(PRESS);
@@ -4810,7 +4844,13 @@
       const r=document.createElement("span"); r.textContent = re>0 ? t("pzDueShort").replace("{v}", money(re)) : t("pzPaidAll"); r.style.color = re>0 ? "var(--warn)" : "var(--ok)";
       a.appendChild(l); a.appendChild(r); it.appendChild(a);
       const b=document.createElement("div"); b.className="b"; b.textContent=String((isPz(x)?x.resume:x.article)||"—").slice(0,80)+((x.livraison||x.retrait)?" · "+fmtDate(x.livraison||x.retrait, LANG_UI):""); it.appendChild(b);
-      it.addEventListener("click", ()=>{ ov.remove(); if(isPz(x)){ show("dash"); setTab("pressing"); PZ_FILTER="tous"; $("q-pz").value=fmtNum(x.numero); renderPressing(); } else openCmd(x.id); });
+      it.addEventListener("click", ()=>{ ov.remove(); allerEncaisser(x); });
+      if(re>0){
+        const pb=document.createElement("button"); pb.type="button"; pb.className="sc-pay";
+        pb.textContent="💰 "+t("pzCash")+" · "+money(re);
+        pb.addEventListener("click", e=>{ e.stopPropagation(); if(encaisserScan(x)) ov.remove(); });
+        it.appendChild(pb);
+      }
       d.appendChild(it);
     });
     const tt_=document.createElement("div"); tt_.className="sc-tot";
