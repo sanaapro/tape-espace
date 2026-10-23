@@ -228,6 +228,9 @@
   body.mgr #settings-btn, body.mgr #logout-btn, body.mgr #clo-hist-btn, body.mgr #clo-hist, body.mgr #clo-owner-btn,
   body.mgr #cmd-month, body.mgr #pz-tarifs, body.mgr #pz-tedit, body.mgr #pt-addstaff, body.mgr #sub-card,
   body.mgr #pane-finances, body.mgr #pane-staff, body.mgr #pane-reglages{ display:none !important; }
+  /* Totaux globaux de ce que doivent les clients : cachés au manager (la liste client par client reste visible) */
+  body.mgr .mgr-mask{ font-size:0 !important; }
+  body.mgr .mgr-mask::after{ content:"🔒"; font-size:22px; }
   .pt-scan{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; max-width:340px; margin:14px auto 0; padding:16px;
              border:1px solid var(--gold); border-radius:14px; background:var(--gold); color:#141310; font:600 17px var(--sans); cursor:pointer }
   .pt-scan svg{ width:22px; height:22px }
@@ -627,13 +630,13 @@
       <div class="stats3">
         <div class="stat"><div class="n" id="s-cmd">—</div><div class="l" data-i18n="statOrders">Commandes</div></div>
         <div class="stat"><div class="n" id="s-cli">—</div><div class="l" id="s-cli-l" data-i18n="statClients">Clientes</div></div>
-        <div class="stat"><div class="n" id="s-du">—</div><div class="l" data-i18n="statDue">À encaisser</div></div>
+        <div class="stat"><div class="n mgr-mask" id="s-du">—</div><div class="l" data-i18n="statDue">À encaisser</div></div>
       </div>
 
       <div class="card" id="due-card" hidden>
         <h2 data-i18n="dueTitle">Impayés et vêtements à récupérer</h2>
         <div class="stats3" style="margin-top:4px">
-          <div class="stat"><div class="n" id="due-tot">0</div><div class="l" data-i18n="dueTotal">Total dû</div></div>
+          <div class="stat"><div class="n mgr-mask" id="due-tot">0</div><div class="l" data-i18n="dueTotal">Total dû</div></div>
           <div class="stat"><div class="n" id="due-late" style="color:var(--err)">0</div><div class="l" data-i18n="dueLate">En retard</div></div>
           <div class="stat"><div class="n" id="due-ready">0</div><div class="l" data-i18n="dueReady">Prêts à récupérer</div></div>
         </div>
@@ -689,7 +692,7 @@
       <div class="stats3">
         <div class="stat"><div class="n" id="a-tot">0</div><div class="l" data-i18n="statOrders">Commandes</div></div>
         <div class="stat"><div class="n" id="a-pret">0</div><div class="l" data-i18n="statReady">Prêtes</div></div>
-        <div class="stat"><div class="n" id="a-du">0</div><div class="l" data-i18n="statDue">À encaisser</div></div>
+        <div class="stat"><div class="n mgr-mask" id="a-du">0</div><div class="l" data-i18n="statDue">À encaisser</div></div>
       </div>
       <div class="card">
         <h2 data-i18n="quickExpense">Dépense rapide — Atelier</h2>
@@ -733,7 +736,7 @@
       <div class="stats3">
         <div class="stat"><div class="n" id="pz-n-cours">0</div><div class="l" data-i18n="pzInProgress">En cours</div></div>
         <div class="stat"><div class="n" id="pz-n-prets">0</div><div class="l" data-i18n="pzReadyN">Prêts</div></div>
-        <div class="stat"><div class="n" id="pz-n-du">0</div><div class="l" data-i18n="statDue">À encaisser</div></div>
+        <div class="stat"><div class="n mgr-mask" id="pz-n-du">0</div><div class="l" data-i18n="statDue">À encaisser</div></div>
       </div>
       <div class="card">
         <h2 data-i18n="pzNew">Nouveau dépôt</h2>
