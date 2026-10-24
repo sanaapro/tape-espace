@@ -352,6 +352,14 @@
   try{ SHARED = (new URLSearchParams(location.search).get("s") || "").split(".").filter(function(x){ return /^[A-Za-z0-9_-]{4,64}$/.test(x); }).slice(0, 15); }catch(e){}
   try{ PICK = new URLSearchParams(location.search).get("m") || ""; }catch(e){}
   try{ ONLY = new URLSearchParams(location.search).get("a") || ""; }catch(e){}
+  // L'atelier dont la cliente a reçu le lien devient la page d'accueil de l'appli installée
+  try{
+    if(ONLY) localStorage.setItem("sanaapro_home_shop", ONLY);
+    else if(/[?&]app=client\b/.test(location.search) && !PICK && !SHARED.length && !PREFIXES.length){
+      var hs = localStorage.getItem("sanaapro_home_shop") || "";
+      if(/^[A-Za-z0-9_-]{2,64}$/.test(hs)) ONLY = hs;
+    }
+  }catch(e){}
   if(ONLY) SHOP = ONLY;
   var $ = function(id){ return document.getElementById(id); };
   function L(){ return T[LANG]; }
