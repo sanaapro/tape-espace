@@ -372,6 +372,9 @@
   function link(o){ return location.origin + location.pathname + "?m=" + encodeURIComponent(o.id); }
   function shopKey(o){ return o.slug || o.bid || ""; }
   function shopUrl(o){ return location.origin + location.pathname + "?a=" + encodeURIComponent(shopKey(o)); }
+  // Ateliers de test retirés du catalogue public
+  var HIDDEN_SHOPS = ["djamil couture"];
+  function hiddenShop(o){ var n = String((o && o.boutique) || "").trim().toLowerCase(); return HIDDEN_SHOPS.indexOf(n) !== -1 || String((o && o.slug) || "") === "djamil-couture"; }
   function live(o){ return !(o.subExpMs && Number(o.subExpMs) < Date.now()); }
   function money(o){ return Math.round(o.prix).toLocaleString(LANG==="fr"?"fr-FR":"en-GB") + " " + (o.devise || "D"); }
   function amt(v, dev){ return Math.round(v).toLocaleString(LANG==="fr"?"fr-FR":"en-GB") + " " + (dev || "D"); }
@@ -539,7 +542,7 @@
     var url = BASE + "catalogue?pageSize=24&orderBy=createdMs%20desc&key=" + KEY + (NEXT ? "&pageToken=" + encodeURIComponent(NEXT) : "");
     fetch(url, { cache:"no-store" }).then(function(r){ if(!r.ok) throw 0; return r.json(); })
     .then(function(j){
-      (j.documents || []).forEach(function(d){ ITEMS.push(parse(d)); });
+      (j.documents || []).forEach(function(d){ var o = parse(d); if(!hiddenShop(o)) ITEMS.push(o); });
       NEXT = j.nextPageToken || null; FAILED = false;
     }).catch(function(){ FAILED = true; })
     .then(function(){ LOADING = false; paint(); });
