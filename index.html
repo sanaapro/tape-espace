@@ -5332,6 +5332,11 @@
           try{ await b.commit(); }catch(e){}
         }
       }
+      // ses modèles quittent le catalogue public
+      try{
+        const cs=await getDocs(query(collection(db,"catalogue"), where("bid","==",BID)));
+        for(const d of cs.docs){ try{ await _deleteDoc(doc(db,"catalogue_photos",d.id)); }catch(e){} try{ await _deleteDoc(doc(db,"catalogue",d.id)); }catch(e){} }
+      }catch(e){}
       // la fiche boutique est marquée supprimée (l'administrateur la retire de la liste)
       try{ await _setDoc(doc(db,"boutiques",BID), { deleted:true, deletedAt:serverTimestamp(), deletedEmail:user.email||"", activites:[], name:nm }, { merge:true }); }catch(e){}
       try{ await _deleteDoc(doc(db,"boutiques",BID)); }catch(e){}

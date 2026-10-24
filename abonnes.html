@@ -147,6 +147,10 @@
       <button id="news-ack">Tout marquer comme vu</button>
     </div>
     <div id="list"></div>
+    <div class="newsbox" id="orphans" hidden>
+      <div class="txt" id="orph-text"></div>
+      <button id="orph-del">Supprimer ces modèles</button>
+    </div>
     <div class="price-note" id="price-note"></div>
     <div class="note">
       Cette page n'accède qu'aux licences.<br>
@@ -304,6 +308,7 @@
         return a.exp - b.exp;
       });
       render(); show("board");
+      scanOrphans();
     }catch(e){
       const denied = String(e && e.code || e).indexOf("permission-denied") !== -1;
       if(denied){
@@ -329,6 +334,34 @@
       show("loading");
     }
   }
+
+  // Catalogue : modèles restés en ligne alors que leur atelier n'existe plus (compte supprimé ou test)
+  let ORPHANS = [];
+  async function scanOrphans(){
+    const box=$("orphans"); box.hidden=true; ORPHANS=[];
+    try{
+      const live=new Set(SHOPS.map(x=>x.id));
+      const snap=await getDocs(collection(db,"catalogue"));
+      const names={};
+      snap.forEach(d=>{ const o=d.data()||{}; if(o.bid && !live.has(o.bid)){ ORPHANS.push(d.id); const n=o.boutique||o.slug||o.bid; names[n]=(names[n]||0)+1; } });
+      if(!ORPHANS.length) return;
+      $("orph-text").textContent = "Catalogue : " + ORPHANS.length + " modèle(s) d'ateliers qui n'existent plus sont encore visibles (" +
+        Object.keys(names).map(n=>n+" : "+names[n]).join(", ") + ").";
+      box.hidden=false;
+    }catch(e){}
+  }
+  $("orph-del").addEventListener("click", async ()=>{
+    if(!ORPHANS.length) return;
+    if(!confirm("Supprimer définitivement ces " + ORPHANS.length + " modèle(s) du catalogue ?")) return;
+    const btn=$("orph-del"); btn.disabled=true; let ok=0, fail=0;
+    for(const id of ORPHANS){
+      try{ await deleteDoc(doc(db,"catalogue",id)); ok++; }catch(e){ fail++; }
+      try{ await deleteDoc(doc(db,"catalogue_photos",id)); }catch(e){}
+    }
+    btn.disabled=false;
+    flash(fail ? (ok+" supprimé(s), "+fail+" refusé(s) : les règles Firestore ne donnent pas encore ce droit à l'administrateur.") : (ok+" modèle(s) retiré(s) du catalogue."), fail ? "err" : "ok");
+    scanOrphans();
+  });
 
   function render(){
     let soon=0, expired=0, news=0;
