@@ -863,6 +863,17 @@
         </div>
       </div>
       <div class="card">
+        <h2 data-i18n="toolTitle">Outils avancés</h2>
+        <p style="margin:0 0 6px;font-size:13px;color:var(--muted)" data-i18n="toolHint">Activez seulement ce dont vous avez besoin. Les onglets s'ajoutent en haut de l'écran.</p>
+        <div class="chips" id="tool-chips">
+          <button type="button" data-tool="charge" data-i18n="tabCharge">Charge</button>
+          <button type="button" data-tool="vitrine" data-i18n="tabVitrine">Vitrine</button>
+          <button type="button" data-tool="staff" data-i18n="tabStaff">Salariés</button>
+          <button type="button" data-tool="pointage" data-i18n="tabPointage">Pointage</button>
+          <button type="button" data-tool="visits" data-i18n="tabVisitors">Visiteurs</button>
+        </div>
+      </div>
+      <div class="card">
         <h2 data-i18n="impTitle">Importer mes anciennes données</h2>
         <p style="margin:0 0 8px;font-size:13px;color:var(--muted)" data-i18n="impHint">Choisissez le fichier d'import que vous avez reçu (.json). Rien n'est enregistré avant votre confirmation.</p>
         <input id="imp-file" type="file" accept=".json,application/json">
@@ -1714,6 +1725,7 @@
       pzWaMsg:"WhatsApp", noPhonePz:"Pas de numéro pour ce client.",
       actTitle:"Mes activités", actHint:"Choisissez ce que fait votre commerce. Seuls les onglets utiles s'affichent.",
       actCouture:"Couture", actPressing:"Pressing", actBoutique:"Boutique", actNeedOne:"Gardez au moins une activité.",
+      toolTitle:"Outils avancés", toolHint:"Activez seulement ce dont vous avez besoin. Les onglets s'ajoutent en haut de l'écran.",
       pmRecu:"Bonjour {nom}, voici votre reçu de dépôt chez {boutique}.", pmLavage:"Bonjour {nom}, vos vêtements sont en cours de lavage chez {boutique}.",
       pmRepassage:"Bonjour {nom}, vos vêtements sont en cours de repassage chez {boutique}.",
       pmPret:"Bonjour {nom}, vos vêtements sont prêts. Vous pouvez passer les récupérer chez {boutique}.",
@@ -2000,6 +2012,7 @@
       pzWaMsg:"WhatsApp", noPhonePz:"No phone number for this customer.",
       actTitle:"My activities", actHint:"Choose what your business does. Only the useful tabs are shown.",
       actCouture:"Tailoring", actPressing:"Dry cleaning", actBoutique:"Shop", actNeedOne:"Keep at least one activity.",
+      toolTitle:"Advanced tools", toolHint:"Turn on only what you need. The tabs appear at the top of the screen.",
       pmRecu:"Hello {nom}, here is your drop-off receipt from {boutique}.", pmLavage:"Hello {nom}, your clothes are being washed at {boutique}.",
       pmRepassage:"Hello {nom}, your clothes are being ironed at {boutique}.",
       pmPret:"Hello {nom}, your clothes are ready. You can collect them at {boutique}.",
@@ -4606,9 +4619,23 @@
     return (Array.isArray(a) && a.length) ? a : ["couture","boutique"];
   }
   function hasAct(k){ return activites().indexOf(k) !== -1; }
+  // Outils avancés : cachés au démarrage pour les nouvelles boutiques, activables dans Réglages.
+  // Les boutiques créées avant le démarrage simplifié gardent tous leurs onglets.
+  const TOOL_TABS = ["charge","vitrine","staff","pointage","visits"];
+  const SIMPLE_START_MS = Date.UTC(2026, 9, 25);
+  function outils(){
+    const o = BOUTIQUE && BOUTIQUE.outils;
+    if(Array.isArray(o)) return o;
+    let ms = 0;
+    try{ const c = BOUTIQUE && BOUTIQUE.createdAt; ms = c && c.toMillis ? c.toMillis() : (Number(c)||0); }catch(e){}
+    return (!ms || ms < SIMPLE_START_MS) ? TOOL_TABS.slice() : [];
+  }
+  function hasTool(k){ return outils().indexOf(k) !== -1; }
   function applyActivities(){
     const hide = new Set();
     Object.keys(ACT_TABS).forEach(k=>{ if(!hasAct(k)) ACT_TABS[k].forEach(x=>hide.add(x)); });
+    TOOL_TABS.forEach(x=>{ if(!hasTool(x)) hide.add(x); });
+    $("tool-chips").querySelectorAll("button").forEach(b=>b.classList.toggle("on", hasTool(b.getAttribute("data-tool"))));
     $("tabs").querySelectorAll("button").forEach(b=>{ b.style.display = hide.has(b.getAttribute("data-tab")) ? "none" : ""; });
     $("act-chips").querySelectorAll("button").forEach(b=>b.classList.toggle("on", hasAct(b.getAttribute("data-act"))));
     $("fi-row-atelier").style.display  = hasAct("couture")  ? "" : "none";
@@ -4625,6 +4652,16 @@
       if(BOUTIQUE) BOUTIQUE.activites=a;
       applyActivities();
       setDoc(doc(db,"boutiques",BID), { activites:a, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+    });
+  });
+  $("tool-chips").querySelectorAll("button").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      const k=b.getAttribute("data-tool");
+      let o=outils().slice();
+      if(o.indexOf(k)!==-1) o=o.filter(x=>x!==k); else o.push(k);
+      if(BOUTIQUE) BOUTIQUE.outils=o;
+      applyActivities();
+      setDoc(doc(db,"boutiques",BID), { outils:o, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
     });
   });
 
