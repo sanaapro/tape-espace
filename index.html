@@ -170,6 +170,10 @@
   .types .ic{ display:block; font-size:19px; margin-bottom:3px; }
   .seg.big{ width:100%; }
   .seg.big button{ flex:1; padding:14px 4px; font-size:14px; letter-spacing:0; }
+  .phl{ display:inline-flex; flex-wrap:wrap; gap:6px; align-items:center; justify-content:flex-end; }
+  .phl .phn{ color:var(--gold); font-weight:700; text-decoration:none; }
+  .phl .phb{ font-size:13px; padding:5px 11px; border-radius:16px; border:1px solid var(--line2); color:var(--txt); text-decoration:none; white-space:nowrap; }
+  .phl .phb.wa{ color:#25D366; border-color:#25D366; }
   .chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
   .chips button{ padding:9px 13px; border:1px solid var(--line2); border-radius:20px; background:transparent;
     color:var(--txt); font-size:13px; cursor:pointer; font-family:var(--sans); }
@@ -1724,7 +1728,7 @@
       pzDeleteQ:"Supprimer le ticket n° {n} de {c} ?", pzPaidAll:"Payé", pzDueShort:"Reste {v}",
       pzWaMsg:"WhatsApp", noPhonePz:"Pas de numéro pour ce client.",
       actTitle:"Mes activités", actHint:"Choisissez ce que fait votre commerce. Seuls les onglets utiles s'affichent.",
-      actCouture:"Couture", actPressing:"Pressing", actBoutique:"Boutique", actNeedOne:"Gardez au moins une activité.",
+      actCouture:"Couture", actPressing:"Pressing", actBoutique:"Boutique", actNeedOne:"Gardez au moins une activité.", callBtn:"Appeler",
       toolTitle:"Outils avancés", toolHint:"Activez seulement ce dont vous avez besoin. Les onglets s'ajoutent en haut de l'écran.",
       pmRecu:"Bonjour {nom}, voici votre reçu de dépôt chez {boutique}.", pmLavage:"Bonjour {nom}, vos vêtements sont en cours de lavage chez {boutique}.",
       pmRepassage:"Bonjour {nom}, vos vêtements sont en cours de repassage chez {boutique}.",
@@ -2011,7 +2015,7 @@
       pzDeleteQ:"Delete ticket no. {n} for {c}?", pzPaidAll:"Paid", pzDueShort:"Due {v}",
       pzWaMsg:"WhatsApp", noPhonePz:"No phone number for this customer.",
       actTitle:"My activities", actHint:"Choose what your business does. Only the useful tabs are shown.",
-      actCouture:"Tailoring", actPressing:"Dry cleaning", actBoutique:"Shop", actNeedOne:"Keep at least one activity.",
+      actCouture:"Tailoring", actPressing:"Dry cleaning", actBoutique:"Shop", actNeedOne:"Keep at least one activity.", callBtn:"Call",
       toolTitle:"Advanced tools", toolHint:"Turn on only what you need. The tabs appear at the top of the screen.",
       pmRecu:"Hello {nom}, here is your drop-off receipt from {boutique}.", pmLavage:"Hello {nom}, your clothes are being washed at {boutique}.",
       pmRepassage:"Hello {nom}, your clothes are being ironed at {boutique}.",
@@ -5588,8 +5592,9 @@
       l1.textContent = t("pzTicket")+" "+fmtNum(o.numero)+" · "+(o.resume||"")+" · "+money(o.prix);
       el.appendChild(l1);
       const l2=document.createElement("div"); l2.className="ln";
-      l2.textContent = fmtWhen(o.createdAtMs) + (o.retrait ? " · "+t("pzPickupOn").replace("{d}", fmtDate(o.retrait, LANG_UI)) : "") + (o.clientePhone ? " · "+o.clientePhone : "");
+      l2.textContent = fmtWhen(o.createdAtMs) + (o.retrait ? " · "+t("pzPickupOn").replace("{d}", fmtDate(o.retrait, LANG_UI)) : "");
       el.appendChild(l2);
+      if(o.clientePhone){ const l3=document.createElement("div"); l3.className="ln"; l3.style.marginTop="6px"; const pl=phoneLinks(o.clientePhone); pl.style.justifyContent="flex-start"; l3.appendChild(pl); el.appendChild(l3); }
       const steps=document.createElement("div"); steps.className="pz-steps";
       const ci=PZ_STEPS.indexOf(o.statut||"recu");
       PZ_STEPS.forEach((st,i)=>{
@@ -5760,12 +5765,30 @@
   $("f-edit").addEventListener("click", async ()=>{ if(await askCode()) openForm(currentCliente); });
   $("c-edit").addEventListener("click", async ()=>{ if(await askCode()) openCmdForm(ORDID); });
 
+  // Numéro du client cliquable : appel direct ou WhatsApp
+  function phoneLinks(p){
+    const w=document.createElement("span"); w.className="phl";
+    const num=waNumber(p);
+    if(!num){ w.textContent=p; return w; }
+    const mk=(cls,href,txt,blank)=>{ const a=document.createElement("a"); a.className=cls; a.href=href; a.textContent=txt;
+      if(blank){ a.target="_blank"; a.rel="noopener"; } a.addEventListener("click", e=>e.stopPropagation()); w.appendChild(a); };
+    mk("phn","tel:+"+num,p,false);
+    mk("phb","tel:+"+num,"📞 "+t("callBtn"),false);
+    mk("phb wa","https://wa.me/"+num,"WhatsApp",true);
+    return w;
+  }
+  function phoneOfOrder(o){
+    if(o && o.clientePhone) return o.clientePhone;
+    const c=o && o.clienteId ? CLIENTES.find(x=>x.id===o.clienteId) : null;
+    return (c && c.phone) || "";
+  }
   function renderCmd(o, id){
     ORD=o; ORDID=id;
+    if(!o.clientePhone){ const p=phoneOfOrder(o); if(p){ o.clientePhone=p; if(id && BID) setDoc(doc(db,"boutiques",BID,"commandes",id), { clientePhone:p }, { merge:true }).catch(function(){}); } }
     $("c-title").textContent = o.clienteName || t("shopOrder");
     $("c-num").textContent = fmtNum(o.numero);
     $("c-cliente").textContent = o.clienteName || t("noName");
-    if(o.clientePhone){ $("c-phone").textContent=o.clientePhone; $("c-phone-row").hidden=false; } else $("c-phone-row").hidden=true;
+    if(o.clientePhone){ $("c-phone").innerHTML=""; $("c-phone").appendChild(phoneLinks(o.clientePhone)); $("c-phone-row").hidden=false; } else $("c-phone-row").hidden=true;
     $("c-type").textContent = t(typeKey(o.type || "confection"));
     $("c-recu").textContent = t(o.recu==="materiel" ? "rcvMaterial" : (o.recu==="vetement" ? "rcvGarment" : "rcvFabric"));
     $("c-article").textContent = o.article || "—";
@@ -6082,7 +6105,7 @@
   function fillFiche(c, id){
     currentCliente=id; CLIDATA=c;
     $("f-name").textContent=c.name||t("noName");
-    if(c.phone){ $("f-phone").textContent=c.phone; $("f-phone-row").hidden=false; } else $("f-phone-row").hidden=true;
+    if(c.phone){ $("f-phone").innerHTML=""; $("f-phone").appendChild(phoneLinks(c.phone)); $("f-phone-row").hidden=false; } else $("f-phone-row").hidden=true;
     if(c.notes){ $("f-notes").textContent=c.notes; $("f-notes-row").hidden=false; } else $("f-notes-row").hidden=true;
     $("f-wa-shop").hidden = !(BOUTIQUE && BOUTIQUE.whatsapp);
     const m=c.mesures||{}, box=$("f-mesures"); box.innerHTML=""; let any=false;
