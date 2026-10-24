@@ -335,33 +335,43 @@
     }
   }
 
-  // Catalogue : modèles restés en ligne alors que leur atelier n'existe plus (compte supprimé ou test)
-  let ORPHANS = [];
+  // Catalogue : chaque atelier présent dans le catalogue public, avec le compte auquel il appartient
   async function scanOrphans(){
-    const box=$("orphans"); box.hidden=true; ORPHANS=[];
+    const box=$("orphans"); box.hidden=true;
     try{
-      const live=new Set(SHOPS.map(x=>x.id));
+      const shops={}; SHOPS.forEach(x=>{ shops[x.id]=x.name; });
       const snap=await getDocs(collection(db,"catalogue"));
-      const names={};
-      snap.forEach(d=>{ const o=d.data()||{}; if(o.bid && !live.has(o.bid)){ ORPHANS.push(d.id); const n=o.boutique||o.slug||o.bid; names[n]=(names[n]||0)+1; } });
-      if(!ORPHANS.length) return;
-      $("orph-text").textContent = "Catalogue : " + ORPHANS.length + " modèle(s) d'ateliers qui n'existent plus sont encore visibles (" +
-        Object.keys(names).map(n=>n+" : "+names[n]).join(", ") + ").";
+      const groups={};
+      snap.forEach(d=>{ const o=d.data()||{}; const k=o.bid||"?";
+        if(!groups[k]) groups[k]={ bid:k, label:o.boutique||o.slug||"(sans nom)", ids:[] };
+        groups[k].ids.push(d.id); });
+      const keys=Object.keys(groups);
+      if(!keys.length) return;
+      const txt=$("orph-text"); txt.innerHTML=""; $("orph-del").hidden=true;
+      const h=document.createElement("div"); h.style.fontWeight="700"; h.style.marginBottom="8px";
+      h.textContent="Catalogue public : "+keys.length+" atelier(s)"; txt.appendChild(h);
+      keys.forEach(k=>{
+        const g=groups[k], owner=shops[k];
+        const row=document.createElement("div"); row.style.cssText="padding:10px 0;border-top:1px solid rgba(255,255,255,.12)";
+        const line=document.createElement("div");
+        line.textContent=g.label+" · "+g.ids.length+" modèle(s) · compte : "+(owner ? owner : "SUPPRIMÉ (n'existe plus)");
+        row.appendChild(line);
+        const b=document.createElement("button"); b.textContent="Retirer ces "+g.ids.length+" modèle(s)"; b.style.marginTop="8px";
+        b.addEventListener("click", async ()=>{
+          if(!confirm("Retirer du catalogue les "+g.ids.length+" modèle(s) de « "+g.label+" » ?")) return;
+          b.disabled=true; let ok=0, fail=0;
+          for(const id of g.ids){
+            try{ await deleteDoc(doc(db,"catalogue",id)); ok++; }catch(e){ fail++; }
+            try{ await deleteDoc(doc(db,"catalogue_photos",id)); }catch(e){}
+          }
+          flash(fail ? (ok+" retiré(s), "+fail+" refusé(s) : publie d'abord les nouvelles règles Firestore (droit administrateur sur le catalogue).") : (ok+" modèle(s) de « "+g.label+" » retiré(s) du catalogue."), fail ? "err" : "ok");
+          scanOrphans();
+        });
+        row.appendChild(b); txt.appendChild(row);
+      });
       box.hidden=false;
     }catch(e){}
   }
-  $("orph-del").addEventListener("click", async ()=>{
-    if(!ORPHANS.length) return;
-    if(!confirm("Supprimer définitivement ces " + ORPHANS.length + " modèle(s) du catalogue ?")) return;
-    const btn=$("orph-del"); btn.disabled=true; let ok=0, fail=0;
-    for(const id of ORPHANS){
-      try{ await deleteDoc(doc(db,"catalogue",id)); ok++; }catch(e){ fail++; }
-      try{ await deleteDoc(doc(db,"catalogue_photos",id)); }catch(e){}
-    }
-    btn.disabled=false;
-    flash(fail ? (ok+" supprimé(s), "+fail+" refusé(s) : les règles Firestore ne donnent pas encore ce droit à l'administrateur.") : (ok+" modèle(s) retiré(s) du catalogue."), fail ? "err" : "ok");
-    scanOrphans();
-  });
 
   function render(){
     let soon=0, expired=0, news=0;
