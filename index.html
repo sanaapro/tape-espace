@@ -2587,7 +2587,7 @@
       }
       BID=user.uid; BOUTIQUE=snap.data();
       try{ localStorage.setItem("sanaapro_owner_bid", BID); }catch(e){}
-      renderDashboard(BOUTIQUE); paintLocks(); updateOffline(); applyMgr(); setTab("apercu"); show("dash");
+      renderDashboard(BOUTIQUE); paintLocks(); updateOffline(); applyMgr(); setTab("apercu"); show("dash"); try{ if(navigator.onLine) wakeLecteur(); }catch(e){}
       loadAll().then(scanFromUrl);
       syncCatalogueExpiry();
     }catch(e){ $("loading").textContent=t("loadFail"); show("loading"); }
@@ -6190,6 +6190,10 @@
   // =================== LECTURE AUTOMATIQUE DU CAHIER (serveur + IA) ===================
   const LECTEUR_URL = "https://sanaapro-lecteur.onrender.com";
   function wakeLecteur(){ try{ fetch(LECTEUR_URL+"/", { cache:"no-store" }).catch(function(){}); }catch(e){} }
+  // Render gratuit endort le lecteur après 15 min sans requête : on le réveille dès que l'app
+  // s'ouvre ou revient au premier plan, puis toutes les 10 min tant qu'elle reste affichée.
+  setInterval(function(){ if(BID && document.visibilityState==="visible" && navigator.onLine) wakeLecteur(); }, 10*60*1000);
+  document.addEventListener("visibilitychange", function(){ if(BID && document.visibilityState==="visible" && navigator.onLine) wakeLecteur(); });
   async function lireCahier(img){
     const st=$("in-nb-st"); st.style.color="";
     if(!navigator.onLine){ st.textContent=t("aiOffline"); return; }
