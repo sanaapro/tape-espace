@@ -3111,6 +3111,11 @@
       const l3=document.createElement("div"); l3.className="ln"; l3.textContent=t("duePaid").replace("{a}", money(o.paye)).replace("{b}", money(o.prix));
       el.appendChild(l3);
       const acts=document.createElement("div"); acts.className="pz-acts";
+      const ph=phoneOfOrder(o);
+      if(ph){
+        const lp=document.createElement("div"); lp.className="ln"; lp.style.marginTop="6px";
+        const pl=phoneLinks(ph); pl.style.justifyContent="flex-start"; lp.appendChild(pl); el.appendChild(lp);
+      }
       if(o.clientePhone){
         const b=document.createElement("button"); b.type="button"; b.textContent="💬 "+t("dueRemind"); b.style.color="var(--ok)";
         b.addEventListener("click", ()=>openWa(waNumber(o.clientePhone), remindMsg(it)));
@@ -3188,6 +3193,8 @@
       l2.style.color = n<=0 ? "var(--err)" : "var(--warn)";
       l2.style.fontWeight = "700";
       el.appendChild(nm); el.appendChild(l1); el.appendChild(l2);
+      const ph=phoneOfOrder(o);
+      if(ph){ const lp=document.createElement("div"); lp.className="ln"; lp.style.marginTop="6px"; const pl=phoneLinks(ph); pl.style.justifyContent="flex-start"; lp.appendChild(pl); el.appendChild(lp); }
       el.style.cursor="pointer";
       el.addEventListener("click", ()=>{ if(kind==="atelier") openCmd(o.id); else { setTab("pressing"); PZ_FILTER="tous"; $("q-pz").value=fmtNum(o.numero); renderPressing(); } });
       box.appendChild(el);
@@ -3204,6 +3211,8 @@
         d.innerHTML='<div style="font-weight:800;color:#ffe2b8;font-size:17px">'+escH(o.clienteName||"")+'</div>'
           +'<span class="fpill" style="--c:'+col+'">'+(kind==="pressing"?"🧺 ":"✂️ ")+escH(t(kind==="pressing"?"tabPressing":"tabAtelier")+" "+fmtNum(o.numero))+'</span>'
           +(late>0?'<span class="fpill" style="--c:#ff5e3a;color:#fff">⏰ '+escH(t("todoLate").replace("{n}", late))+'</span>':'');
+        const ph=phoneOfOrder(o);
+        if(ph){ const lp=document.createElement("div"); lp.style.marginTop="6px"; const pl=phoneLinks(ph); pl.style.justifyContent="flex-start"; lp.appendChild(pl); d.appendChild(lp); }
         d.addEventListener("click", ()=>{ if(kind==="atelier") openCmd(o.id); else { setTab("pressing"); PZ_FILTER="pret"; renderPressing(); } });
         rb.appendChild(d);
       });
