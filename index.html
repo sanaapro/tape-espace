@@ -2591,7 +2591,7 @@
       }
       BID=user.uid; BOUTIQUE=snap.data();
       try{ localStorage.setItem("sanaapro_owner_bid", BID); }catch(e){}
-      renderDashboard(BOUTIQUE); paintLocks(); updateOffline(); applyMgr(); setTab("apercu"); show("dash"); try{ if(navigator.onLine) wakeLecteur(); }catch(e){}
+      renderDashboard(BOUTIQUE); paintLocks(); updateOffline(); applyMgr(); setTab("apercu"); show("dash"); setTimeout(() => { try{ checkRdv(false); }catch(e){} }, 5000); try{ if(navigator.onLine) wakeLecteur(); }catch(e){}
       loadAll().then(scanFromUrl);
       syncCatalogueExpiry();
     }catch(e){ $("loading").textContent=t("loadFail"); show("loading"); }
@@ -2767,7 +2767,7 @@
     const today = new Date(); today.setHours(0,0,0,0);
     const tK = key(today);
     const byDay = {}; let late=0, noDate=0;
-    COMMANDES.filter(o => o.statut !== "livre").forEach(o => {
+    COMMANDES.filter(o => o.statut !== "livre" && o.statut !== "pret").forEach(o => {
       if(!o.livraison){ noDate++; return; }
       const k = String(o.livraison).slice(0,10);
       if(k < tK){ late++; return; }
@@ -2833,6 +2833,87 @@
   }
   /* ---------- aperçu verrouillé du plan de charge, sur l'Aperçu (Standard) ---------- */
   let teaserWired = false;
+  /* ---------- rendez-vous proches : rappel à l'écran toutes les 6 heures ---------- */
+  const RDV_EVERY = 6*3600*1000, RDV_DAYS = 4;
+  function rdvDaysUntil(v){
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(v||"")); if(!m) return null;
+    const d = new Date(+m[1], +m[2]-1, +m[3]); const t0 = new Date(); t0.setHours(0,0,0,0);
+    return Math.round((d - t0)/86400000);
+  }
+  function rdvList(){
+    return COMMANDES.filter(o => o.statut !== "livre" && o.livraison)
+      .map(o => ({ o, d: rdvDaysUntil(o.livraison) }))
+      .filter(x => x.d !== null && x.d <= RDV_DAYS)
+      .sort((a,b) => a.d - b.d);
+  }
+  function rdvWhen(d){
+    const en = LANG_UI === "en";
+    if(d < 0) return en ? (-d)+" day(s) late" : "en retard de "+(-d)+" j";
+    if(d === 0) return en ? "today" : "aujourd'hui";
+    if(d === 1) return en ? "tomorrow" : "demain";
+    return en ? "in "+d+" days" : "dans "+d+" jours";
+  }
+  function showRdv(list){
+    const en = LANG_UI === "en";
+    const old = document.getElementById("rdv-ov"); if(old) old.remove();
+    const ov = document.createElement("div"); ov.id = "rdv-ov";
+    ov.style.cssText = "position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.72);display:flex;align-items:flex-end;justify-content:center;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom,0px))";
+    const box = document.createElement("div");
+    box.style.cssText = "width:100%;max-width:520px;max-height:80vh;overflow:auto;background:var(--panel);border:1.5px solid var(--gold);border-radius:18px;padding:18px";
+    const h = document.createElement("div"); h.style.cssText = "font-family:Georgia,serif;font-size:22px;color:var(--gold);font-weight:700;margin-bottom:4px";
+    h.textContent = "⏰ " + (en ? "Upcoming appointments" : "Rendez-vous proches");
+    const sub = document.createElement("div"); sub.style.cssText = "color:var(--muted);font-size:13px;margin-bottom:10px";
+    sub.textContent = en ? "Deliveries promised in the next "+RDV_DAYS+" days." : "Livraisons promises dans les "+RDV_DAYS+" prochains jours.";
+    box.appendChild(h); box.appendChild(sub);
+    list.forEach(({o, d}) => {
+      const r = document.createElement("div"); r.style.cssText = "border-top:1px solid var(--line);padding:10px 0";
+      const top = document.createElement("div"); top.style.cssText = "display:flex;justify-content:space-between;gap:8px;align-items:baseline";
+      const nm = document.createElement("div"); nm.style.cssText = "font-weight:700"; nm.textContent = o.clienteName || t("noName");
+      const wh = document.createElement("div"); wh.style.cssText = "white-space:nowrap;font-weight:700;color:" + (d <= 0 ? "var(--err)" : d <= 2 ? "var(--warn)" : "var(--ok)");
+      wh.textContent = rdvWhen(d);
+      top.appendChild(nm); top.appendChild(wh); r.appendChild(top);
+      const ln = document.createElement("div"); ln.style.cssText = "font-size:14px;color:var(--muted);margin-top:2px";
+      const ready = o.statut === "pret";
+      ln.textContent = fmtNum(o.numero) + " · " + String(o.article||"—").slice(0,60) + " · " + (ready ? (en ? "✓ ready" : "✓ prêt") : (en ? "not ready yet" : "pas encore prêt"));
+      if(!ready) ln.style.color = "var(--warn)";
+      r.appendChild(ln);
+      const ph = phoneOfOrder(o);
+      if(ph){ const lp = document.createElement("div"); lp.style.marginTop = "6px"; const pl = phoneLinks(ph); pl.style.justifyContent = "flex-start"; lp.appendChild(pl); r.appendChild(lp); }
+      r.style.cursor = "pointer";
+      r.addEventListener("click", () => { ov.remove(); openCmd(o.id); });
+      box.appendChild(r);
+    });
+    const bar = document.createElement("div"); bar.style.cssText = "display:flex;gap:10px;flex-wrap:wrap;margin-top:12px";
+    if("Notification" in window && Notification.permission === "default"){
+      const nb = document.createElement("button"); nb.type = "button"; nb.className = "ghost"; nb.style.flex = "1";
+      nb.textContent = en ? "🔔 Phone alerts" : "🔔 Alertes du téléphone";
+      nb.addEventListener("click", () => { try{ Notification.requestPermission().then(() => nb.remove()); }catch(e){} });
+      bar.appendChild(nb);
+    }
+    const ok = document.createElement("button"); ok.type = "button"; ok.style.flex = "1"; ok.textContent = "OK";
+    ok.addEventListener("click", () => ov.remove());
+    bar.appendChild(ok); box.appendChild(bar);
+    ov.appendChild(box);
+    ov.addEventListener("click", e => { if(e.target === ov) ov.remove(); });
+    document.body.appendChild(ov);
+  }
+  function checkRdv(force){
+    if(!BID) return;
+    const list = rdvList(); if(!list.length) return;
+    let last = 0; try{ last = Number(localStorage.getItem("sanaapro_rdv_last_"+BID)) || 0; }catch(e){}
+    if(!force && Date.now() - last < RDV_EVERY) return;
+    try{ localStorage.setItem("sanaapro_rdv_last_"+BID, String(Date.now())); }catch(e){}
+    if(document.visibilityState !== "visible" && "Notification" in window && Notification.permission === "granted" && navigator.serviceWorker){
+      const en = LANG_UI === "en", first = list[0];
+      navigator.serviceWorker.ready.then(reg => reg.showNotification("SanaaPro — " + (en ? "upcoming appointments" : "rendez-vous proches"), {
+        body: list.length + (en ? " delivery(ies) soon. Next: " : " livraison(s) proche(s). Prochaine : ") + (first.o.clienteName||"") + " (" + rdvWhen(first.d) + ")",
+        icon: "icon-192.png", tag: "sanaapro-rdv" })).catch(function(){});
+    }
+    showRdv(list);
+  }
+  setInterval(() => checkRdv(false), 10*60*1000);
+  document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible") setTimeout(() => checkRdv(false), 1500); });
+
   function renderChargeTeaser(){
     const card = $("charge-teaser"); if(!card) return;
     if(subInfo().premium){ card.hidden = true; return; }
