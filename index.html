@@ -342,7 +342,9 @@
     padding:12px max(16px, env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px)); box-shadow:0 -10px 30px rgba(0,0,0,.5) }
   #dict-panel.on{ display:block }
   #dict-panel .dp-top{ display:flex; align-items:center; gap:10px; font-size:16px; color:var(--gold) }
-  #dict-panel .dp-dot{ width:12px; height:12px; border-radius:50%; background:#e0533d; animation:dpb 1s infinite }
+  #dict-panel .dp-dot{ width:14px; height:14px; border-radius:50%; background:#6b5a3a; flex:none }
+  #dict-panel .dp-dot.go{ background:#3ecf6e; animation:dpb 1s infinite; box-shadow:0 0 0 4px rgba(62,207,110,.25) }
+  #vt-state.go::before{ content:"🟢 "; }
   @keyframes dpb{ 50%{ opacity:.25 } }
   #dp-last{ font-size:18px; font-weight:700; color:var(--ok); margin-top:6px; min-height:22px }
   #dp-live{ font-size:14px; color:var(--muted); font-style:italic; min-height:18px; margin-top:2px }
@@ -6974,17 +6976,17 @@
     if(!VOICE_ON || !("speechSynthesis" in window) || !txt) return;
     try{
       if(CUR_REC){ try{ CUR_REC.abort(); }catch(e){} }
-      const u=new SpeechSynthesisUtterance(txt); u.lang = vLang(); u.rate=1.05;
+      const u=new SpeechSynthesisUtterance(txt); u.lang = vLang(); u.rate=1.15;
       LAST_SAID=normV(txt); LAST_SAID_AT=Date.now(); SPEAKING++;
-      let done=false; const fin=()=>{ if(done) return; done=true; LAST_SAID_AT=Date.now(); setTimeout(()=>{ SPEAKING=Math.max(0,SPEAKING-1); }, 450); };
-      u.onend=fin; u.onerror=fin; setTimeout(fin, 2500+txt.length*90);
+      let done=false; const fin=()=>{ if(done) return; done=true; LAST_SAID_AT=Date.now(); setTimeout(()=>{ SPEAKING=Math.max(0,SPEAKING-1); }, 150); };
+      u.onend=fin; u.onerror=fin; setTimeout(fin, 1200+txt.length*75);
       speechSynthesis.speak(u);
     }catch(e){}
   }
   // écho = la phrase reprend presque toute la dernière phrase dite par l'app (« homme » seul n'est pas un écho de « homme ou femme ? »)
   function isEcho(txt){ if(!LAST_SAID || Date.now()-LAST_SAID_AT>5000) return false; const a=normV(txt).replace(/[?.!,]/g,"").replace(/\s+/g," ").trim(), L=LAST_SAID.replace(/[?.!,]/g,"").replace(/\s+/g," ").trim();
     if(a.length<6) return false; return a===L || (L.indexOf(a)>-1 && a.length>=L.length*0.6) || (a.indexOf(L)>-1 && L.length>=a.length*0.6); }
-  function whenQuiet(fn){ if(SPEAKING || (window.speechSynthesis && speechSynthesis.speaking)) setTimeout(()=>whenQuiet(fn), 200); else setTimeout(fn, 350); }
+  function whenQuiet(fn){ if(SPEAKING || (window.speechSynthesis && speechSynthesis.speaking)) setTimeout(()=>whenQuiet(fn), 120); else setTimeout(fn, 60); }
   function vbeep(ok){ try{ const C=window.AudioContext||window.webkitAudioContext; const c=vbeep.c||(vbeep.c=new C()); if(c.state==="suspended") c.resume();
     const o=c.createOscillator(), g=c.createGain(); o.frequency.value = ok ? 880 : 240; g.gain.value=.07; o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+(ok?.08:.25)); }catch(e){} }
   const sayDate = iso => { try{ return new Date(iso+"T12:00:00").toLocaleDateString(LANG_UI==="en"?"en-GB":"fr-FR",{ weekday:"long", day:"numeric", month:"long" }); }catch(e){ return iso; } };
@@ -7161,25 +7163,36 @@
         document.querySelectorAll(".dict-cur").forEach(x=>x.classList.remove("dict-cur")); if(GUIDED) ask(nextEmpty(0)); else { showFree(); speak(EN?"Free mode":"Mode libre"); } };
       paintMode();
 
+      const ready=on=>{ const d=P.querySelector(".dp-dot"); if(d) d.classList.toggle("go", !!on); $("dp-live").textContent = on ? (EN?"🟢 Speak now":"🟢 Parlez maintenant") : ""; };
+      const dispatch=alts=>{ if(GUIDED) handleGuided(alts); else { handleFree(alts); if(active) showFree(); } };
       const start=()=>{
         if(!active) return;
         rec=new SR(); CUR_REC=rec; rec.lang = vLang(); rec.continuous=false; rec.interimResults=true; rec.maxAlternatives=5;
+        let interim=null, done=false, early=null;
+        const take=alts=>{ if(done) return; done=true; clearTimeout(early); fails=0; ready(false); dispatch(alts); };
+        rec.onaudiostart = ()=>ready(true);
+        rec.onspeechstart = ()=>{ $("dp-live").textContent="…"; };
         rec.onresult = ev=>{
-          if(SPEAKING) return;
+          if(SPEAKING || done) return;
           const res=ev.results[ev.results.length-1];
-          if(!res.isFinal){ $("dp-live").textContent="« "+res[0].transcript+" »"; return; }
-          fails=0; $("dp-live").textContent="";
           const alts=[]; for(let a=0;a<res.length;a++) alts.push(res[a].transcript);
-          if(GUIDED) handleGuided(alts); else { handleFree(alts); if(active) showFree(); }
+          if(res.isFinal){ take(alts); try{ rec.abort(); }catch(e){} return; }
+          interim=alts; $("dp-live").textContent="« "+alts[0]+" »";
+          // en mode guidé, une réponse nette (un nombre pour une mesure) est prise sans attendre la fin
+          clearTimeout(early);
+          if(GUIDED){ const tp=steps()[cur]; if(tp && !ASK[tp] || tp==="prix" || tp==="avance" || tp==="phone"){ const r=vInterp(tp, alts[0], keysNow()); const txt=alts[0];
+            if(r && r.v!==null && tp!=="phone") early=setTimeout(()=>{ if(!done && interim && interim[0]===txt){ take(interim); try{ rec.abort(); }catch(e){} } }, 700); } }
         };
         rec.onerror = e=>{
           if(e.error==="not-allowed"||e.error==="service-not-allowed"){ active=false; st.textContent=t("dictDenied"); }
           else if(e.error==="network"){ active=false; st.textContent=t("dictNet"); }
           else if(e.error==="audio-capture"){ active=false; st.textContent=t("dictErr"); }
         };
-        // Une phrase à la fois puis on relance (plus fiable sur Android) ; on attend que l'app ait fini de parler.
-        rec.onend = ()=>{ if(CUR_REC===rec) CUR_REC=null; if(!active){ end(); return; } if(++fails>90){ active=false; end(); return; } whenQuiet(()=>{ if(active && !CUR_REC){ try{ start(); }catch(e){ active=false; end(); } } }); };
-        try{ rec.start(); }catch(e){ setTimeout(()=>{ if(active && !CUR_REC) try{ start(); }catch(e2){ active=false; end(); } }, 600); }
+        // Chrome Android coupe souvent sans « résultat final » sur un mot court : on garde ce qu'il a entendu.
+        rec.onend = ()=>{ if(CUR_REC===rec) CUR_REC=null; clearTimeout(early); ready(false);
+          if(!done && interim && !SPEAKING && active){ done=true; fails=0; dispatch(interim); }
+          if(!active){ end(); return; } if(++fails>90){ active=false; end(); return; } whenQuiet(()=>{ if(active && !CUR_REC){ try{ start(); }catch(e){ active=false; end(); } } }); };
+        try{ rec.start(); }catch(e){ setTimeout(()=>{ if(active && !CUR_REC) try{ start(); }catch(e2){ active=false; end(); } }, 400); }
       };
       if(typeof vaPause==="function") vaPause();
       DICT={ id, stop };
@@ -7282,18 +7295,23 @@
     function start(){
       if(!VA.on || VA.paused || VA.rec || DICT) return;
       const rec=new SR(); VA.rec=rec; CUR_REC=rec; rec.lang = vLang(); rec.continuous=false; rec.interimResults=true; rec.maxAlternatives=4;
-      rec.onresult = ev=>{
-        if(SPEAKING) return;
-        const r=ev.results[ev.results.length-1];
-        if(!r.isFinal){ heard("« "+r[0].transcript+" »"); return; }
-        fails=0;
-        const alts=[]; for(let a=0;a<r.length;a++) if(!isEcho(r[a].transcript)) alts.push(r[a].transcript);
-        if(!alts.length) return;
+      let interim=null, done=false;
+      const take=list=>{ if(done) return; done=true; fails=0;
+        const alts=list.filter(x=>!isEcho(x)); if(!alts.length) return;
         for(const a of alts){ const act=understand(a); if(act){ act(); return; } }
-        heard((EN()?"? Not understood: ":"? Pas compris : ")+"« "+alts[0]+" »"); vbeep(false);
+        heard((EN()?"? Not understood: ":"? Pas compris : ")+"« "+alts[0]+" »"); vbeep(false); };
+      rec.onaudiostart = ()=>{ $("vt-state").classList.add("go"); };
+      rec.onresult = ev=>{
+        if(SPEAKING || done) return;
+        const r=ev.results[ev.results.length-1];
+        const alts=[]; for(let a=0;a<r.length;a++) alts.push(r[a].transcript);
+        if(!r.isFinal){ interim=alts; heard("« "+alts[0]+" »"); return; }
+        take(alts);
       };
       rec.onerror = e=>{ if(e.error==="not-allowed"||e.error==="service-not-allowed"){ heard(t("dictDenied")); off(); } else if(e.error==="network"){ heard(t("dictNet")); off(); } };
-      rec.onend = ()=>{ if(VA.rec===rec) VA.rec=null; if(CUR_REC===rec) CUR_REC=null; if(VA.on && !VA.paused && !DICT){ if(++fails>120){ off(); return; } whenQuiet(start); } };
+      rec.onend = ()=>{ $("vt-state").classList.remove("go"); if(VA.rec===rec) VA.rec=null; if(CUR_REC===rec) CUR_REC=null;
+        if(!done && interim && !SPEAKING && VA.on) take(interim);
+        if(VA.on && !VA.paused && !DICT){ if(++fails>120){ off(); return; } whenQuiet(start); } };
       try{ rec.start(); }catch(e){ VA.rec=null; if(CUR_REC===rec) CUR_REC=null; setTimeout(start, 600); }
     }
     VA.start=start;
