@@ -338,6 +338,18 @@
   .dict-btn.on{ background:var(--gold); color:#0E0E0F }
   .dict-st{ font-size:13px; color:var(--muted); margin-top:6px; min-height:0 }
   .mgrid input.dict-hit{ border-color:var(--ok) !important; box-shadow:0 0 0 1px var(--ok) }
+  #dict-panel{ position:fixed; left:0; right:0; bottom:0; z-index:60; display:none; background:#16130f; border-top:2px solid var(--gold);
+    padding:12px max(16px, env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px)); box-shadow:0 -10px 30px rgba(0,0,0,.5) }
+  #dict-panel.on{ display:block }
+  #dict-panel .dp-top{ display:flex; align-items:center; gap:10px; font-size:16px; color:var(--gold) }
+  #dict-panel .dp-dot{ width:12px; height:12px; border-radius:50%; background:#e0533d; animation:dpb 1s infinite }
+  @keyframes dpb{ 50%{ opacity:.25 } }
+  #dp-last{ font-size:18px; font-weight:700; color:var(--ok); margin-top:6px; min-height:22px }
+  #dp-live{ font-size:14px; color:var(--muted); font-style:italic; min-height:18px; margin-top:2px }
+  #dict-panel .dp-btns{ display:flex; gap:10px; margin-top:10px }
+  #dict-panel .dp-btns button{ flex:1; padding:13px; border-radius:12px; font:inherit; font-weight:700; border:1px solid var(--line2); background:none; color:inherit }
+  #dict-panel #dp-stop{ background:var(--gold); color:#0E0E0F; border-color:var(--gold) }
+  body.dicting{ padding-bottom:160px }
   .ph-item{ position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--line2); aspect-ratio:1; background:#111; }
   .ph-item img{ width:100%; height:100%; object-fit:cover; display:block; cursor:zoom-in; }
   .ph-item .tag{ position:absolute; left:4px; bottom:4px; background:rgba(0,0,0,.65); color:#fff; font-size:10.5px; padding:2px 6px; border-radius:6px; }
@@ -6761,69 +6773,153 @@
 
   // =================== DICTÉE DES MESURES (reconnaissance vocale du téléphone) ===================
   const normV = s => String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9,.\s]/g," ").replace(/\s+/g," ").trim();
+  // Mots sans importance retirés des deux côtés (« longueur DES manche(S) » = « longueur manche »)
+  const DSTOP = new Set(["de","des","du","d","la","le","les","l","of","the","a","au","aux","en"]);
+  const dWords = s => normV(s).split(" ").filter(w=>w && !DSTOP.has(w)).map(w=>(w.length>3 && /[a-z]s$/.test(w)) ? w.slice(0,-1) : w);
   function aliasMap(keys){
-    const all=MESURES_F.concat(MESURES_H), seen={}, cand={};
-    const add=(a,k)=>{ a=normV(a); if(a.length<3) return; (cand[a]=cand[a]||new Set()).add(k); };
+    // priorité : libellé complet (3) > « tour de X » sans « tour » (2) > « longueur de X » sans « longueur » (1).
+    // « taille » va donc sur Tour de taille ; « longueur de taille » garde son libellé complet.
+    const all=MESURES_F.concat(MESURES_H), best={};
+    const add=(a,k,p)=>{ const w=dWords(a).join(" "); if(w.length<3) return; const b=best[w]; if(!b || p>b.p) best[w]={k,p,amb:false}; else if(p===b.p && b.k!==k) b.amb=true; };
     all.forEach(mm=>{
-      const k=mm[0]; if(keys.indexOf(k)<0 || seen[k+mm[1]]) return; seen[k+mm[1]]=1;
+      const k=mm[0]; if(keys.indexOf(k)<0) return;
       [mm[1], mm[2]].forEach(lbl=>{
         const n=normV(lbl.replace(/\(.*?\)/g," "));
-        add(n,k);
-        add(n.replace(/^tour (de )?/,""),k);
-        add(n.replace(/^longueur (de )?/,"long "),k);
-        add(n.replace(/^long\.? (de )?/,"longueur "),k);
-        add(n.replace(/^longueur (de )?/,"").replace(/^long\.? /,""),k);
+        add(n,k,3);
+        add(n.replace(/^long\.? /,"longueur "),k,3);
+        add(n.replace(/^longueur /,"long "),k,3);
+        if(/^tour /.test(n)) add(n.replace(/^tour (de )?/,""),k,2);
+        if(/^(longueur|long\.?) /.test(n)) add(n.replace(/^(longueur|long\.?) (de )?/,""),k,1);
       });
-      (mm[1].match(/\((.*?)\)/)||[]).slice(1).forEach(x=>add(x,k));
+      (mm[1].match(/\((.*?)\)/)||[]).slice(1).forEach(x=>add(x,k,2));
     });
-    const out=[]; Object.keys(cand).forEach(a=>{ if(cand[a].size===1) out.push([a, Array.from(cand[a])[0]]); });
+    // mots courants des couturiers
+    const extra={ bassin:["hanche","tour de hanche","hips","hip"], poitrine:["buste","chest","bust"], epaule:["epaules","shoulder"],
+      longManche:["longueur des manches","longueur de bras","sleeve"], tourManche:["tour de bras","biceps"], cou:["col","neck"],
+      taille:["waist"], longPantalon:["longueur du pantalon"], basPantalon:["bas pantalon","ourlet"], entrejambe:["entre jambe"] };
+    Object.keys(extra).forEach(k=>{ if(keys.indexOf(k)>-1) extra[k].forEach(x=>add(x,k,2)); });
+    if(keys.indexOf("longManche")>-1){ add("manche","longManche",4); add("sleeve","longManche",4); }
+    const out=[]; Object.keys(best).forEach(w=>{ if(!best[w].amb) out.push([w.split(" "), best[w].k]); });
     out.sort((x,y)=>y[0].length-x[0].length);
     return out;
   }
-  function parseDictee(text, keys){
-    let s=normV(text).replace(/(\d)\s*(virgule|point)\s*(\d)/g,"$1.$3").replace(/(\d),(\d)/g,"$1.$2");
-    s=s.replace(/(\d+)\s*(et demi|and a half)/g,(m,a)=>String(Number(a)+0.5));
-    const al=aliasMap(keys), res=[], re=/\d+(?:\.\d+)?/g; let m, last=0;
-    while((m=re.exec(s))){
-      const seg=" "+s.slice(last, m.index)+" "; last=m.index+m[0].length;
-      let key=null;
-      for(const [a,k] of al){ if(seg.indexOf(" "+a+" ")>-1){ key=k; break; } }
-      res.push({ key, v:parseFloat(m[0]) });
+  // Nombres dits en lettres (« quatre-vingt-seize », « cent quatre », « ninety six ») → chiffres
+  const NUM_U={zero:0,un:1,une:1,deux:2,trois:3,quatre:4,cinq:5,six:6,sept:7,huit:8,neuf:9,dix:10,onze:11,douze:12,treize:13,quatorze:14,quinze:15,seize:16,
+    one:1,two:2,three:3,four:4,five:5,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19};
+  const NUM_T={vingt:20,trente:30,quarante:40,cinquante:50,soixante:60,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+  function wordsToDigits(words){
+    const out=[]; let cur=null, prev="";
+    const flush=()=>{ if(cur!==null){ out.push(String(cur)); cur=null; } };
+    for(let i=0;i<words.length;i++){
+      const w=words[i], nx=words[i+1]||"";
+      if(w==="vingt" && cur!==null && cur%100===4 && prev==="quatre"){ cur+=76; prev=w; continue; }   // quatre-vingt
+      if(w==="vingts" && cur!==null && cur%100===4){ cur+=76; prev=w; continue; }
+      if(NUM_U[w]!==undefined){ cur=(cur===null?0:cur)+NUM_U[w]; prev=w; continue; }
+      if(NUM_T[w]!==undefined){ cur=(cur===null?0:cur)+NUM_T[w]; prev=w; continue; }
+      if(w==="cent"||w==="cents"||w==="hundred"){ cur=(cur===null||cur===0?1:cur)*100; prev=w; continue; }
+      if((w==="et"||w==="and") && cur!==null && (NUM_U[nx]!==undefined||nx==="demi"||nx==="half"||nx==="a")){ prev=w; continue; }
+      if((w==="demi"||w==="half") && cur!==null){ cur+=0.5; prev=w; continue; }
+      if(w==="a" && cur!==null && nx==="half"){ prev=w; continue; }
+      flush(); out.push(w); prev=w;
     }
-    return res;
+    flush(); return out;
   }
-  let DICT=null;
+  // Découpe une phrase dictée en { key, v } ; un nom de mesure sans nombre reste « en attente » pour le nombre suivant.
+  function parseDictee(text, keys, pending){
+    let s=normV(text).replace(/(\d)\s*(virgule|point)\s*(\d)/g,"$1.$3").replace(/(\d),(\d)/g,"$1.$2");
+    let words=wordsToDigits(s.split(" ").filter(Boolean));
+    words=wordsToDigits(words.join(" ").replace(/(\d+)\s+(virgule|point)\s+(\d+)/g,"$1.$3").split(" "));
+    const al=aliasMap(keys), res=[], cmds=[]; let key=pending||null;
+    const norm=words.map(w=>DSTOP.has(w)?"":((w.length>3 && /[a-z]s$/.test(w))?w.slice(0,-1):w));
+    for(let i=0;i<words.length;i++){
+      const w=words[i];
+      if(/^\d+(\.\d+)?$/.test(w)){ let v=parseFloat(w); if(norm[i+1]==="demi"||norm[i+1]==="half"){ v+=0.5; i++; } else if((norm[i+1]==="et"||norm[i+1]==="and") && (norm[i+2]==="demi"||norm[i+2]==="half")){ v+=0.5; i+=2; }
+        res.push({ key, v }); key=null; continue; }
+      if(/^(termine|terminer|fini|finir|stop|arrete|arreter|done|finish|finished)$/.test(w)){ cmds.push("stop"); continue; }
+      if(/^(efface|effacer|corrige|corriger|annule|annuler|erase|undo|delete)$/.test(w)){ cmds.push("undo"); key=null; continue; }
+      if(!norm[i]) continue;
+      const rest=norm.slice(i).filter(Boolean);
+      for(const [aw,k] of al){ if(aw.length<=rest.length && aw.every((x,j)=>rest[j]===x)){ key=k; let c=0; while(c<aw.length){ if(norm[i]) c++; i++; } i--; break; } }
+    }
+    return { res, pending:key, cmds };
+  }
+  let DICT=null, DLOCK=null;
+  async function dictWake(on){
+    try{
+      if(on && "wakeLock" in navigator && !DLOCK){ DLOCK=await navigator.wakeLock.request("screen"); DLOCK.addEventListener("release", ()=>{ DLOCK=null; }); }
+      if(!on && DLOCK){ const l=DLOCK; DLOCK=null; await l.release(); }
+    }catch(e){}
+  }
+  document.addEventListener("visibilitychange", ()=>{ if(DICT && document.visibilityState==="visible") dictWake(true); });
+  function dictPanel(){
+    let p=$("dict-panel"); if(p) return p;
+    p=document.createElement("div"); p.id="dict-panel";
+    p.innerHTML='<div class="dp-top"><span class="dp-dot"></span><b id="dp-state"></b></div><div id="dp-last"></div><div id="dp-live"></div><div class="dp-btns"><button type="button" id="dp-undo"></button><button type="button" id="dp-stop"></button></div>';
+    document.body.appendChild(p); return p;
+  }
   function setupDict(id, boxId){
     const btn=$(id+"-dict"), st=$(id+"-dict-st");
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if(!SR){ btn.disabled=true; st.textContent=t("dictNo"); return; }
     btn.addEventListener("click", ()=>{
-      if(DICT){ const was=DICT.id; DICT.rec.stop(); if(was===id) return; }
+      if(DICT){ const was=DICT.id; DICT.stop(); if(was===id) return; }
       const box=$(boxId); const inputs=Array.from(box.querySelectorAll("input"));
       const keys=inputs.map(i=>i.id.replace(/^c?m-/,""));
-      const rec=new SR(); rec.lang = LANG_UI==="en" ? "en-GB" : "fr-FR"; rec.continuous=true; rec.interimResults=false;
-      let lastIdx=-1, n=0;
-      const fill=(k,v)=>{ const el=inputs.find(i=>i.id.replace(/^c?m-/,"")===k); if(!el) return false; el.value=v; el.classList.add("dict-hit"); lastIdx=inputs.indexOf(el); n++; return true; };
-      rec.onresult = ev=>{
-        for(let i=ev.resultIndex;i<ev.results.length;i++){
-          if(!ev.results[i].isFinal) continue;
-          const txt=ev.results[i][0].transcript;
-          parseDictee(txt, keys).forEach(r=>{
-            if(r.key){ fill(r.key, r.v); return; }
-            for(let j=lastIdx+1;j<inputs.length;j++){ if(inputs[j].value===""){ fill(inputs[j].id.replace(/^c?m-/,""), r.v); break; } }
-          });
-          st.textContent=t("dictHeard").replace("{t}", txt).replace("{n}", n);
-        }
+      const label=k=>{ const lb=box.querySelector('label[for="'+(inputs.find(i=>i.id.replace(/^c?m-/,"")===k)||{}).id+'"]'); return lb?lb.textContent:k; };
+      const EN=LANG_UI==="en", P=dictPanel();
+      $("dp-undo").textContent = EN?"↩ Undo":"↩ Effacer";
+      $("dp-stop").textContent = EN?"✓ Finish":"✓ Terminer";
+      let active=true, rec=null, lastIdx=-1, n=0, pending=null, hist=[], fails=0;
+      const say=(txt)=>{ $("dp-state").textContent=txt; };
+      const show=()=>{ say(pending ? (EN?"Listening… "+label(pending)+" ?":"J'écoute… "+label(pending)+" ?") : (EN?"Listening… say “chest 96”":"J'écoute… dites « poitrine 96 »")); };
+      const fill=(k,v)=>{ const el=inputs.find(i=>i.id.replace(/^c?m-/,"")===k); if(!el) return false;
+        hist.push([el, el.value]); el.value=v; el.classList.add("dict-hit"); lastIdx=inputs.indexOf(el); n++;
+        try{ el.scrollIntoView({ behavior:"smooth", block:"center" }); }catch(e){}
+        $("dp-last").textContent="✓ "+label(k)+" : "+v+" cm"; return true; };
+      const undo=()=>{ const h=hist.pop(); if(!h) return; h[0].value=h[1]; if(!h[1]) h[0].classList.remove("dict-hit"); n=Math.max(0,n-1);
+        $("dp-last").textContent = EN?"↩ Erased":"↩ Effacé"; };
+      const stop=()=>{ active=false; try{ rec && rec.stop(); }catch(e){} end(); };
+      const end=()=>{ if(DICT && DICT.id===id) DICT=null; dictWake(false); P.classList.remove("on"); document.body.classList.remove("dicting"); btn.classList.remove("on"); btn.textContent=t("dictBtn");
+        st.textContent = n ? t("dictHeard").replace("« {t} »","").replace("\"{t}\"","").replace("{t}","").replace(" · ","").replace("{n}", n) : ""; };
+      $("dp-undo").onclick=undo; $("dp-stop").onclick=stop;
+      const start=()=>{
+        rec=new SR(); rec.lang = EN ? "en-GB" : "fr-FR"; rec.continuous=true; rec.interimResults=true; rec.maxAlternatives=1;
+        rec.onresult = ev=>{
+          let live="";
+          for(let i=ev.resultIndex;i<ev.results.length;i++){
+            const txt=ev.results[i][0].transcript;
+            if(!ev.results[i].isFinal){ live+=txt; continue; }
+            fails=0;
+            const r=parseDictee(txt, keys, pending);
+            r.res.forEach(x=>{
+              if(x.key){ fill(x.key, x.v); return; }
+              for(let j=lastIdx+1;j<inputs.length;j++){ if(inputs[j].value===""){ fill(inputs[j].id.replace(/^c?m-/,""), x.v); break; } }
+            });
+            pending=r.pending;
+            r.cmds.forEach(c=>{ if(c==="undo") undo(); if(c==="stop") stop(); });
+          }
+          $("dp-live").textContent = live ? "« "+live+" »" : "";
+          if(active) show();
+        };
+        rec.onerror = e=>{
+          if(e.error==="not-allowed"||e.error==="service-not-allowed"){ active=false; st.textContent=t("dictDenied"); }
+          else if(e.error==="network"){ active=false; st.textContent=t("dictNet"); }
+          else if(e.error==="audio-capture"){ active=false; st.textContent=t("dictErr"); }
+          // « no-speech » et « aborted » : on relance simplement
+        };
+        // Chrome coupe le micro après un silence : tant que l'atelier n'a pas dit « terminé », on le relance.
+        rec.onend = ()=>{ if(!active){ end(); return; } if(++fails>40){ active=false; end(); return; } setTimeout(()=>{ if(active){ try{ start(); }catch(e){ active=false; end(); } } }, 250); };
+        try{ rec.start(); }catch(e){ active=false; st.textContent=t("dictErr"); end(); }
       };
-      rec.onerror = e=>{ st.textContent = (e.error==="not-allowed"||e.error==="service-not-allowed") ? t("dictDenied") : (e.error==="network" ? t("dictNet") : t("dictErr")); };
-      rec.onend = ()=>{ btn.classList.remove("on"); btn.textContent=t("dictBtn"); if(DICT && DICT.rec===rec) DICT=null; };
-      try{ rec.start(); }catch(e){ st.textContent=t("dictErr"); return; }
-      DICT={ id, rec }; btn.classList.add("on"); btn.textContent=t("dictStop"); st.textContent=t("dictGo");
+      DICT={ id, stop };
+      btn.classList.add("on"); btn.textContent=t("dictStop"); st.textContent="";
+      $("dp-last").textContent=""; $("dp-live").textContent=""; P.classList.add("on"); document.body.classList.add("dicting"); show();
+      dictWake(true); start();
     });
   }
   setupDict("in","in-mesures");
   setupDict("cf","cf-mesures");
-  function stopDict(){ if(DICT){ try{ DICT.rec.stop(); }catch(e){} } }
+  function stopDict(){ if(DICT){ try{ DICT.stop(); }catch(e){} } }
 
   function openForm(id){
     $("form-msg").classList.remove("show");
