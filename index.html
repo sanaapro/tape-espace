@@ -152,6 +152,11 @@
   .mline:last-child{ border-bottom:none; }
   .mline .k{ color:var(--muted); font-size:14px; }
   .mline .v{ font-weight:700; color:var(--gold); }
+  .cp-sec td{ padding:10px 0 6px; font-weight:700; color:var(--gold); font-size:13px; letter-spacing:.5px; text-transform:uppercase; border-bottom:1px solid var(--line); }
+  .cp-row td{ padding:9px 0; border-bottom:1px solid var(--line); vertical-align:top; font-size:15px; }
+  .cp-row td small{ display:block; color:var(--muted); font-size:12px; margin-top:2px; font-variant-numeric:tabular-nums; }
+  .cp-row td.v{ text-align:right; font-weight:800; color:var(--gold); white-space:nowrap; padding-left:12px; font-variant-numeric:tabular-nums; }
+  #cp-ais input{ width:84px; }
 
   .foot{ text-align:center; font-size:11px; color:#5F5B54; margin-top:28px; letter-spacing:.5px; }
   .center{ text-align:center; color:var(--muted); padding:70px 20px; font-size:14px; line-height:1.7; }
@@ -1404,10 +1409,28 @@
       <div class="ph-btns"><label><input type="file" id="f-nb-file" accept="image/*" capture="environment"><span data-i18n="nbBtn">📷 Photographier la page du cahier</span></label></div>
       <div class="msg" id="f-nb-msg"></div>
     </div>
+    <button class="primary" id="f-coupe" style="margin-top:14px">✂️ <span id="f-coupe-t">Fiche de coupe</span></button>
     <button class="wa" id="f-wa-shop" data-i18n="measuresToShop">Envoyer ces mesures à la boutique</button>
     <button class="ghost" id="f-edit" data-i18n="editClient">Modifier la fiche</button>
     <button class="del" id="f-del" data-i18n="deleteClient">Supprimer cette cliente</button>
     <div style="height:20px"></div>
+  </div>
+
+  <div id="coupe" hidden>
+    <div class="subtop"><button class="back" id="coupe-back">‹ Fiche</button><h1 id="cp-title">Fiche de coupe</h1></div>
+    <div class="card">
+      <div id="cp-size" style="font-size:14px;margin:0 0 10px"></div>
+      <div class="chips" id="cp-models"></div>
+      <p id="cp-hint" style="font-size:13px;color:var(--muted);margin:12px 0 4px"></p>
+      <div id="cp-table"></div>
+    </div>
+    <div class="card">
+      <h2 id="cp-ais-t">Aisances (cm)</h2>
+      <p id="cp-ais-h" style="font-size:13px;color:var(--muted);margin:0 0 10px"></p>
+      <div id="cp-ais" style="display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center;font-size:14px"></div>
+    </div>
+    <button class="ghost" id="cp-share">💬 <span id="cp-share-t">Envoyer la fiche par WhatsApp</span></button>
+    <div style="height:24px"></div>
   </div>
 
   <div id="form" hidden>
@@ -2148,11 +2171,11 @@
   const msgKey  = st => "m"  + st.charAt(0).toUpperCase() + st.slice(1);
 
   const $ = id => document.getElementById(id);
-  const views = ["loading","login","dash","cmd","cform","fiche","form"];
+  const views = ["loading","login","dash","cmd","cform","fiche","form","coupe"];
   const show = v => { views.forEach(x=>{ $(x).hidden = (x!==v); }); window.scrollTo(0,0); navSync(); };
 
   /* ---------- Bouton retour du téléphone : revenir au tableau de bord au lieu de quitter ---------- */
-  const SUB_BACK = { cmd:"c-back", cform:"cf-back", fiche:"fiche-back", form:"form-back" };
+  const SUB_BACK = { cmd:"c-back", cform:"cf-back", fiche:"fiche-back", form:"form-back", coupe:"coupe-back" };
   function navHome(){ return !$("dash").hidden && TAB==="apercu"; }
   function navSync(){
     try{
@@ -6194,6 +6217,7 @@
 
   function fillFiche(c, id){
     currentCliente=id; CLIDATA=c;
+    $("f-coupe-t").textContent = LANG_UI==="en" ? "Cutting sheet" : "Fiche de coupe";
     $("f-name").textContent=c.name||t("noName");
     if(c.phone){ $("f-phone").innerHTML=""; $("f-phone").appendChild(phoneLinks(c.phone)); $("f-phone-row").hidden=false; } else $("f-phone-row").hidden=true;
     if(c.notes){ $("f-notes").textContent=c.notes; $("f-notes-row").hidden=false; } else $("f-notes-row").hidden=true;
@@ -6266,6 +6290,228 @@
   function buildInputs(m){ buildGrid("in-mesures","m-",m,GENRE_FORM); }
   function buildCmdGrid(m){ buildGrid("cf-mesures","cm-",m,GENRE_CF); }
 
+
+
+  // =================== FICHE DE COUPE (reprise de l'app de gestion Chez Djamil) ===================
+  // Valeurs à craier sur le tissu PLIÉ (demi-pièces). Chaque ligne montre le calcul avec les
+  // chiffres de la cliente, pour que l'atelier et les élèves puissent le suivre.
+  const CP_AIS_DEF = { poitrine:10, bassin:4, manche:4, poignet:4, ajuste:4, boubou:40 };
+  let CP_AIS = Object.assign({}, CP_AIS_DEF);
+  try{ const a=JSON.parse(localStorage.getItem("sanaapro_aisances")||"null"); if(a) Object.assign(CP_AIS, a); }catch(e){}
+  let CP_MODEL = null;
+  const cpEN = () => LANG_UI==="en";
+  const cpL = (fr,en) => cpEN() ? en : fr;
+  const cpN = x => { const v=Math.round(x*10)/10; return cpEN() ? String(v) : String(v).replace(".",","); };
+  function cpM(m){
+    const n=k=>{ const x=parseFloat(m && m[k]); return x>0 ? x : 0; };
+    return { P:n("poitrine"), C:n("cou"), E:n("epaule"), LM:n("longManche"), TM:n("tourManche"), Pg:n("poignet"),
+      T:n("taille"), LT:n("longTaille"), Ce:n("ceinture")||n("taille"), B:n("bassin"), Cu:n("cuisse"), G:n("genou"),
+      Bp:n("basPantalon"), Pi:n("pince"), LH:n("longHaut")||n("longChemise"), LP:n("longPantalon"), LR:n("longRobe"),
+      LJ:n("longJupe"), LBo:n("longBoubou"), LV:n("longVeste") };
+  }
+  function cpModels(){
+    const S=(fr,en)=>['sec',fr,en];
+    const R=(fr,en,v,f)=>['row',fr,en,v,f];
+    const fx=()=>cpL("valeur fixe","fixed value"), pr=()=>cpL("mesure prise","measured");
+    return {
+    chemise:{ fr:"👔 Chemise", en:"👔 Shirt", pour:"both", calc:(m,A)=>!m.P?null:[
+      S("Dos","Back"),
+      R("Largeur du dos","Back width",(m.P+A.poitrine)/4,"("+m.P+" + "+A.poitrine+") ÷ 4"),
+      R("Largeur d'encolure","Neck width",m.C?m.C/6+2:null,m.C+" ÷ 6 + 2"),
+      R("Profondeur d'encolure dos","Back neck depth",m.C?2.5:null,fx()),
+      R("Demi-carrure","Half shoulder",m.E?m.E/2:null,m.E+" ÷ 2"),
+      R("Profondeur d'emmanchure","Armhole depth",m.P/8+7,m.P+" ÷ 8 + 7"),
+      R("Ligne de taille","Waist line",m.LT||null,pr()),
+      R("Longueur totale","Total length",m.LH||(m.LT?m.LT+22:null),m.LH?pr():m.LT+" + 22"),
+      S("Devant","Front"),
+      R("Largeur du devant","Front width",(m.P+A.poitrine)/4,"("+m.P+" + "+A.poitrine+") ÷ 4"),
+      R("Largeur d'encolure","Neck width",m.C?m.C/6+2:null,m.C+" ÷ 6 + 2"),
+      R("Profondeur d'encolure devant","Front neck depth",m.C?m.C/6+2:null,m.C+" ÷ 6 + 2"),
+      R("Profondeur d'emmanchure","Armhole depth",m.P/8+7,m.P+" ÷ 8 + 7"),
+      R("Longueur totale","Total length",m.LH?m.LH+2:(m.LT?m.LT+24:null),m.LH?m.LH+" + 2":m.LT+" + 24"),
+      R("Croisure (boutonnage)","Button overlap",2,fx()),
+      S("Manche et col","Sleeve and collar"),
+      R("Longueur de manche","Sleeve length",m.LM||null,pr()),
+      R("Hauteur de tête de manche","Sleeve cap height",m.P/8+3,m.P+" ÷ 8 + 3"),
+      R("Largeur de manche (pliée)","Sleeve width (folded)",m.TM?(m.TM+A.manche)/2:null,"("+m.TM+" + "+A.manche+") ÷ 2"),
+      R("Largeur au poignet (pliée)","Wrist width (folded)",m.Pg?(m.Pg+A.poignet)/2:null,"("+m.Pg+" + "+A.poignet+") ÷ 2"),
+      R("Longueur du col","Collar length",m.C?m.C+2:null,m.C+" + 2")]},
+    veste:{ fr:"🧥 Veste", en:"🧥 Jacket", pour:"both", calc:(m,A)=>{ if(!m.P) return null; const a=A.poitrine+4; const L=m.LV||(m.LH?m.LH+4:(m.LT?m.LT+26:null)); return [
+      S("Dos","Back"),
+      R("Largeur du dos","Back width",(m.P+a)/4,"("+m.P+" + "+a+") ÷ 4"),
+      R("Demi-carrure","Half shoulder",m.E?m.E/2+0.5:null,m.E+" ÷ 2 + 0,5"),
+      R("Profondeur d'emmanchure","Armhole depth",m.P/8+8,m.P+" ÷ 8 + 8"),
+      R("Ligne de taille","Waist line",m.LT||null,pr()),
+      R("Longueur totale","Total length",L,m.LV?pr():(m.LH?m.LH+" + 4":m.LT+" + 26")),
+      S("Devant","Front"),
+      R("Largeur du devant","Front width",(m.P+a)/4,"("+m.P+" + "+a+") ÷ 4"),
+      R("Largeur d'encolure","Neck width",m.C?m.C/6+2:null,m.C+" ÷ 6 + 2"),
+      R("Cassure du revers","Lapel break",m.LT?m.LT/2:null,m.LT+" ÷ 2"),
+      R("Croisure","Overlap",2.5,fx()),
+      S("Manche","Sleeve"),
+      R("Longueur de manche","Sleeve length",m.LM||null,pr()),
+      R("Hauteur de tête de manche","Sleeve cap height",m.P/8+4,m.P+" ÷ 8 + 4"),
+      R("Largeur de manche (pliée)","Sleeve width (folded)",m.TM?(m.TM+A.manche+2)/2:null,"("+m.TM+" + "+(A.manche+2)+") ÷ 2")]; }},
+    bustier:{ fr:"👗 Bustier", en:"👗 Bustier", pour:"femme", calc:(m,A)=>{ if(!m.P) return null; const pc=(m.P&&m.T)?(m.P-m.T)/8:(m.Pi||null); return [
+      S("Dos","Back"),
+      R("Largeur à la poitrine","Bust width",(m.P+A.ajuste)/4,"("+m.P+" + "+A.ajuste+") ÷ 4"),
+      R("Largeur à la taille","Waist width",m.T?(m.T+A.ajuste)/4-1:null,"("+m.T+" + "+A.ajuste+") ÷ 4 − 1"),
+      R("Largeur d'encolure","Neck width",m.C?m.C/6+2:null,m.C+" ÷ 6 + 2"),
+      R("Profondeur d'emmanchure","Armhole depth",m.P/8+6,m.P+" ÷ 8 + 6"),
+      R("Longueur (nuque à la taille)","Length (nape to waist)",m.LT||null,pr()),
+      R("Valeur de pince dos","Back dart",pc,m.T?"("+m.P+" − "+m.T+") ÷ 8":pr()),
+      S("Devant","Front"),
+      R("Largeur à la poitrine","Bust width",(m.P+A.ajuste)/4+1,"("+m.P+" + "+A.ajuste+") ÷ 4 + 1"),
+      R("Largeur à la taille","Waist width",m.T?(m.T+A.ajuste)/4+1:null,"("+m.T+" + "+A.ajuste+") ÷ 4 + 1"),
+      R("Hauteur de poitrine","Bust height",m.LT?m.LT*0.6:null,m.LT+" × 0,6"),
+      R("Écart entre les pointes","Bust point spacing",m.P/10+2,m.P+" ÷ 10 + 2"),
+      R("Valeur de pince poitrine","Bust dart",m.Pi||pc,m.Pi?pr():"("+m.P+" − "+m.T+") ÷ 8"),
+      R("Profondeur d'encolure devant","Front neck depth",m.C?m.C/6+3:null,m.C+" ÷ 6 + 3")]; }},
+    robe:{ fr:"👚 Robe", en:"👚 Dress", pour:"femme", calc:(m,A)=>{ if(!m.P) return null; const a=A.ajuste+2, pc=(m.P&&m.T)?(m.P-m.T)/8:(m.Pi||null); return [
+      S("Haut (dos et devant)","Bodice (back and front)"),
+      R("Largeur à la poitrine","Bust width",(m.P+a)/4,"("+m.P+" + "+a+") ÷ 4"),
+      R("Largeur à la taille","Waist width",m.T?(m.T+a)/4:null,"("+m.T+" + "+a+") ÷ 4"),
+      R("Profondeur d'emmanchure","Armhole depth",m.P/8+6.5,m.P+" ÷ 8 + 6,5"),
+      R("Hauteur de poitrine","Bust height",m.LT?m.LT*0.6:null,m.LT+" × 0,6"),
+      R("Valeur de pince","Dart",pc,m.T?"("+m.P+" − "+m.T+") ÷ 8":pr()),
+      R("Ligne de taille","Waist line",m.LT||null,pr()),
+      S("Jupe de la robe","Skirt of the dress"),
+      R("Largeur au bassin","Hip width",m.B?(m.B+A.bassin)/4:null,"("+m.B+" + "+A.bassin+") ÷ 4"),
+      R("Hauteur du bassin (sous la taille)","Hip depth (below waist)",m.B?m.B/6:null,m.B+" ÷ 6"),
+      R("Longueur totale","Total length",m.LR||null,pr()),
+      R("Longueur jupe seule","Skirt length only",(m.LR&&m.LT)?m.LR-m.LT:null,m.LR+" − "+m.LT),
+      S("Manche","Sleeve"),
+      R("Longueur de manche","Sleeve length",m.LM||null,pr()),
+      R("Hauteur de tête de manche","Sleeve cap height",m.P/8+3,m.P+" ÷ 8 + 3"),
+      R("Largeur de manche (pliée)","Sleeve width (folded)",m.TM?(m.TM+A.manche)/2:null,"("+m.TM+" + "+A.manche+") ÷ 2")]; }},
+    jupe:{ fr:"👗 Jupe", en:"👗 Skirt", pour:"femme", calc:(m,A)=>{ if(!m.B) return null; const Bb=m.B+A.bassin, Cc=m.Ce?m.Ce+2:0;
+      const half=[R("Largeur au bassin","Hip width",Bb/4,"("+m.B+" + "+A.bassin+") ÷ 4"),
+        R("Largeur à la ceinture","Waistband width",Cc?Cc/4:null,"("+m.Ce+" + 2) ÷ 4"),
+        R("Valeur de pince","Dart",Cc?(Bb-Cc)/8:null,"("+cpN(Bb)+" − "+cpN(Cc)+") ÷ 8")];
+      return [S("Devant","Front")].concat(half,[S("Dos","Back")],half,[S("Commun","Both"),
+        R("Hauteur du bassin","Hip depth",m.B/6,m.B+" ÷ 6"),
+        R("Longueur totale","Total length",m.LJ||null,pr()),
+        R("Hauteur de ceinture","Waistband height",4,fx()),
+        R("Longueur de la ceinture","Waistband length",m.Ce?m.Ce+4:null,m.Ce+" + 4")]); }},
+    tunique:{ fr:"👘 Tunique", en:"👘 Tunic", pour:"both", calc:(m,A)=>{ if(!m.P) return null; const a=A.poitrine+6; return [
+      S("Dos et devant","Back and front"),
+      R("Largeur à la poitrine","Chest width",(m.P+a)/4,"("+m.P+" + "+a+") ÷ 4"),
+      R("Largeur en bas (évasement)","Hem width (flare)",(m.P+a)/4+6,cpN((m.P+a)/4)+" + 6"),
+      R("Largeur d'encolure","Neck width",m.C?m.C/6+2:null,m.C+" ÷ 6 + 2"),
+      R("Profondeur d'encolure devant","Front neck depth",m.C?m.C/6+4:null,m.C+" ÷ 6 + 4"),
+      R("Profondeur d'emmanchure","Armhole depth",m.P/8+8,m.P+" ÷ 8 + 8"),
+      R("Longueur totale","Total length",m.LR?m.LR*0.7:(m.LH?m.LH+18:null),m.LR?m.LR+" × 0,7":m.LH+" + 18"),
+      R("Fente latérale","Side slit",20,fx()),
+      S("Manche","Sleeve"),
+      R("Longueur de manche","Sleeve length",m.LM||null,pr()),
+      R("Hauteur de tête de manche","Sleeve cap height",m.P/8+2,m.P+" ÷ 8 + 2"),
+      R("Largeur de manche (pliée)","Sleeve width (folded)",m.TM?(m.TM+A.manche+4)/2:null,"("+m.TM+" + "+(A.manche+4)+") ÷ 2")]; }},
+    boubou:{ fr:"🥻 Boubou", en:"🥻 Boubou", pour:"both", calc:(m,A)=>{ if(!m.P) return null; const L=m.LBo||m.LR||(m.LP?m.LP+8:null); return [
+      S("Corps (dos et devant identiques)","Body (back and front the same)"),
+      R("Largeur (pliée)","Width (folded)",(m.P+A.boubou)/4,"("+m.P+" + "+A.boubou+") ÷ 4"),
+      R("Largeur d'encolure","Neck width",m.C?m.C/6+2:null,m.C+" ÷ 6 + 2"),
+      R("Profondeur d'encolure dos","Back neck depth",3,fx()),
+      R("Profondeur d'encolure devant","Front neck depth",m.C?m.C/6+4:null,m.C+" ÷ 6 + 4"),
+      R("Fente devant","Front slit",25,fx()),
+      R("Longueur totale","Total length",L,(m.LBo||m.LR)?pr():m.LP+" + 8"),
+      S("Manche (ample, coupée droite)","Sleeve (wide, cut straight)"),
+      R("Longueur de manche","Sleeve length",m.LM?m.LM+10:null,m.LM+" + 10"),
+      R("Largeur de manche (pliée)","Sleeve width (folded)",m.TM?(m.TM+20)/2:null,"("+m.TM+" + 20) ÷ 2"),
+      R("Ouverture au poignet (pliée)","Wrist opening (folded)",m.Pg?(m.Pg+14)/2:null,"("+m.Pg+" + 14) ÷ 2")]; }},
+    pantalon:{ fr:"👖 Pantalon", en:"👖 Trousers", pour:"both", calc:(m,A)=>{ if(!m.B) return null; const Bb=m.B+A.bassin; return [
+      S("Devant","Front"),
+      R("Largeur au bassin","Hip width",Bb/4-1,"("+m.B+" + "+A.bassin+") ÷ 4 − 1"),
+      R("Largeur à la ceinture","Waist width",m.Ce?(m.Ce+A.bassin)/4-1:null,"("+m.Ce+" + "+A.bassin+") ÷ 4 − 1"),
+      R("Petite fourche","Front crotch extension",m.B/16,m.B+" ÷ 16"),
+      S("Dos","Back"),
+      R("Largeur au bassin","Hip width",Bb/4+1,"("+m.B+" + "+A.bassin+") ÷ 4 + 1"),
+      R("Largeur à la ceinture","Waist width",m.Ce?(m.Ce+A.bassin)/4+1:null,"("+m.Ce+" + "+A.bassin+") ÷ 4 + 1"),
+      R("Grande fourche","Back crotch extension",m.B/8,m.B+" ÷ 8"),
+      S("Commun aux deux","Both pieces"),
+      R("Montant (hauteur de fourche)","Crotch depth",m.B/4+2.5,m.B+" ÷ 4 + 2,5"),
+      R("Longueur totale","Total length",m.LP||null,pr()),
+      R("Hauteur du genou","Knee height",m.LP?m.LP*0.55:null,m.LP+" × 0,55"),
+      R("Largeur à la cuisse (pliée)","Thigh width (folded)",m.Cu?(m.Cu+6)/2:null,"("+m.Cu+" + 6) ÷ 2"),
+      R("Largeur au genou (pliée)","Knee width (folded)",m.G?(m.G+A.manche)/2:null,"("+m.G+" + "+A.manche+") ÷ 2"),
+      R("Largeur en bas (pliée)","Hem width (folded)",m.Bp?m.Bp/2:null,m.Bp+" ÷ 2")]; }}
+    };
+  }
+  // Grille de tailles du classeur de Djamil (poitrine, à défaut bassin), tolérance de 2 cm.
+  const CP_TAILLES = ["XS","S","M","L","XL","XXL","3XL"];
+  const CP_GRILLE = { femme:{ poitrine:[80,84,88,92,96,100,104], bassin:[86,90,94,98,102,106,110] },
+                      homme:{ poitrine:[86,90,94,98,102,106,110], bassin:[88,92,96,100,104,108,112] } };
+  function cpTaille(c){
+    const G=CP_GRILLE[c.genre==="homme"?"homme":"femme"], m=c.mesures||{};
+    let base=parseFloat(m.poitrine)||0, poste="poitrine";
+    if(!base){ base=parseFloat(m.bassin)||0; poste="bassin"; }
+    if(!base) return null;
+    const ref=G[poste]; let r=ref.length-1;
+    for(let i=0;i<ref.length;i++){ if(base<=ref[i]+2){ r=i; break; } }
+    const hors = base>ref[ref.length-1]+2;
+    return { taille: hors ? cpL("Sur mesure","Made to measure") : CP_TAILLES[r], poste, valeur:Math.round(base) };
+  }
+  function cpModelsFor(genre){ const M=cpModels(); return Object.keys(M).filter(k=>M[k].pour==="both"||M[k].pour===(genre==="homme"?"homme":"femme")); }
+  function cpRows(c, key){
+    const M=cpModels()[key]; const out=M.calc(cpM(c.mesures||{}), CP_AIS);
+    return out ? out.filter(r=>r[0]==="sec" || (r[3]!==null && r[3]!==undefined && !isNaN(r[3]))) : null;
+  }
+  function renderCoupe(){
+    const c=CLIDATA; if(!c) return;
+    const list=cpModelsFor(c.genre), M=cpModels();
+    if(!CP_MODEL || list.indexOf(CP_MODEL)<0) CP_MODEL=list[0];
+    $("coupe-back").textContent = cpL("‹ Fiche","‹ Card");
+    $("cp-title").textContent = "✂️ "+(c.name||t("noName"));
+    const tl=cpTaille(c), sz=$("cp-size"); sz.innerHTML="";
+    if(tl){ const b=document.createElement("b"); b.style.color="var(--gold)"; b.textContent=cpL("Taille ","Size ")+tl.taille;
+      sz.appendChild(b); sz.appendChild(document.createTextNode("  ("+cpL(tl.poste==="poitrine"?"poitrine":"bassin", tl.poste==="poitrine"?"chest":"hips")+" "+tl.valeur+" cm)")); }
+    const ch=$("cp-models"); ch.innerHTML="";
+    list.forEach(k=>{ const b=document.createElement("button"); b.type="button"; b.className=(k===CP_MODEL?"on":""); b.textContent=cpEN()?M[k].en:M[k].fr;
+      b.addEventListener("click", ()=>{ CP_MODEL=k; renderCoupe(); }); ch.appendChild(b); });
+    $("cp-hint").textContent = cpL("Valeurs à craier sur le tissu PLIÉ (demi-pièces). Chaque ligne montre le calcul avec les mesures de la cliente.",
+                                   "Values to chalk on the FOLDED fabric (half pieces). Each line shows the calculation with the client's measurements.");
+    const box=$("cp-table"); box.innerHTML="";
+    const rows=cpRows(c, CP_MODEL);
+    if(!rows){ const p=document.createElement("p"); p.style.cssText="color:var(--warn);font-size:14px";
+      p.textContent=cpL("Il manque la mesure de base de ce modèle (tour de poitrine, ou tour de bassin pour la jupe et le pantalon). Touchez « Modifier la fiche » pour la compléter.",
+                        "This model needs its base measurement (chest, or hips for skirt and trousers). Tap “Edit” on the card to add it.");
+      box.appendChild(p); }
+    else{
+      const tb=document.createElement("table"); tb.style.cssText="width:100%;border-collapse:collapse";
+      rows.forEach(r=>{ const tr=document.createElement("tr");
+        if(r[0]==="sec"){ tr.className="cp-sec"; const td=document.createElement("td"); td.colSpan=2; td.textContent=cpEN()?r[2]:r[1]; tr.appendChild(td); }
+        else{ tr.className="cp-row"; const a=document.createElement("td"); a.textContent=cpEN()?r[2]:r[1];
+          const sm=document.createElement("small"); sm.textContent=cpEN()?String(r[4]).replace(/(\d),(\d)/g,"$1.$2"):r[4]; a.appendChild(sm);
+          const v=document.createElement("td"); v.className="v"; v.textContent=cpN(r[3])+" cm"; tr.appendChild(a); tr.appendChild(v); }
+        tb.appendChild(tr); });
+      box.appendChild(tb);
+    }
+    $("cp-ais-t").textContent = cpL("Aisances (cm)","Ease (cm)");
+    $("cp-ais-h").textContent = cpL("Ce que vous ajoutez à la mesure du corps pour que le vêtement ne serre pas. Gardé sur ce téléphone.",
+                                    "What you add to the body measurement so the garment is not tight. Saved on this phone.");
+    const ai=$("cp-ais"); ai.innerHTML="";
+    [["poitrine","Poitrine (chemise, veste, tunique)","Chest (shirt, jacket, tunic)"],["ajuste","Poitrine ajustée (bustier, robe)","Fitted bust (bustier, dress)"],
+     ["bassin","Bassin (jupe, pantalon, robe)","Hips (skirt, trousers, dress)"],["manche","Manche et genou","Sleeve and knee"],
+     ["poignet","Poignet","Wrist"],["boubou","Ampleur du boubou","Boubou fullness"]].forEach(x=>{
+      const lb=document.createElement("label"); lb.htmlFor="cp-a-"+x[0]; lb.textContent=cpEN()?x[2]:x[1];
+      const inp=document.createElement("input"); inp.id="cp-a-"+x[0]; inp.type="number"; inp.step="0.5"; inp.inputMode="decimal"; inp.value=CP_AIS[x[0]];
+      inp.addEventListener("change", ()=>{ const v=parseFloat(String(inp.value).replace(",",".")); if(!isNaN(v)){ CP_AIS[x[0]]=v;
+        try{ localStorage.setItem("sanaapro_aisances", JSON.stringify(CP_AIS)); }catch(e){} renderCoupe(); } });
+      ai.appendChild(lb); ai.appendChild(inp); });
+    $("cp-share-t").textContent = cpL("Envoyer la fiche par WhatsApp","Send the sheet on WhatsApp");
+  }
+  function coupeText(){
+    const c=CLIDATA, M=cpModels()[CP_MODEL], rows=cpRows(c, CP_MODEL)||[], tl=cpTaille(c);
+    let s="✂️ "+(cpEN()?M.en:M.fr)+" — "+(c.name||"")+(tl?" · "+cpL("taille ","size ")+tl.taille:"")+"\n"+cpL("Tissu plié (demi-pièces)","Folded fabric (half pieces)")+"\n";
+    rows.forEach(r=>{ s += r[0]==="sec" ? "\n*"+(cpEN()?r[2]:r[1]).toUpperCase()+"*\n" : "• "+(cpEN()?r[2]:r[1])+" : "+cpN(r[3])+" cm\n"; });
+    return s;
+  }
+  $("f-coupe").addEventListener("click", ()=>{ if(!CLIDATA) return; CP_MODEL=null; renderCoupe(); show("coupe"); });
+  $("coupe-back").addEventListener("click", ()=>{ show("fiche"); });
+  $("cp-share").addEventListener("click", ()=>{
+    if(!CLIDATA) return;
+    const num=waNumber(BOUTIQUE && BOUTIQUE.whatsapp);
+    if(num) openWa(num, coupeText()); else copyText(coupeText()).then(ok=>{ if(ok) alert(cpL("Fiche copiée.","Sheet copied.")); });
+  });
 
   // =================== PAGE DU CAHIER (photo rangée dans la fiche cliente) ===================
   const nbKey = cid => "cli-"+cid;
