@@ -353,6 +353,8 @@
   #dict-panel #dp-stop{ background:var(--gold); color:#0E0E0F; border-color:var(--gold) }
   body.dicting{ padding-bottom:200px }
   body.dicting #cof-fab, body.dicting #voice-fab, body.dicting #inst{ display:none !important }
+  .draft-bar{ margin:10px 0 4px; padding:12px 14px; border:1px dashed var(--gold); border-radius:12px; font-size:14px; color:var(--gold) }
+  .draft-bar button.ghost{ margin-top:8px; padding:10px; font-size:14px }
   .dict-cur{ outline:3px solid var(--gold) !important; outline-offset:2px; border-radius:10px }
   #dp-state{ font-size:20px }
   #dict-panel #dp-tts{ margin-left:auto; background:none; border:1px solid var(--line2); border-radius:10px; font-size:18px; padding:4px 10px; color:inherit }
@@ -6138,6 +6140,8 @@
       TYPE_CF="confection"; paintTypes();
       $("cf-cliente").value="__new"; toggleNewCliente();
       buildCmdGrid({});
+      { const sg=document.querySelector('.seg[data-seg="cfgenre"]'); if(sg) delete sg.dataset.done; }
+      restoreDraft("cf");
       show("cform"); return;
     }
     const o = COMMANDES.find(x=>x.id===editingOrd) || {};
@@ -6232,6 +6236,7 @@
     const existing = COMMANDES.find(x=>x.id===id);
     if(existing) Object.assign(existing, data);
     else COMMANDES.unshift(Object.assign({ id }, data));
+    if(!editingOrd) clearDraft("cf");
     editingOrd=null;
     if(CF_PH.length){ const pend=CF_PH.slice(); CF_PH=[]; renderCfPh(); savePhotos(id, pend, $("c-ph-msg")).then(()=>{ if(ORDID===id) renderCmdPhotos(id); }); }
     syncSuivi(COMMANDES.find(x=>x.id===id), id);
@@ -7059,7 +7064,7 @@
       const paintLang=()=>{ $("dp-lang").textContent = VOICE_LANG==="en" ? "EN" : "FR"; };
       $("dp-lang").onclick=()=>{ setVoiceLang(VOICE_LANG==="en"?"fr":"en"); paintLang(); };
       paintLang();
-      let active=true, rec=null, lastIdx=-1, n=0, pending=null, hist=[], fails=0, mute=false, said=[], pendField=null;
+      let active=true, rec=null, lastIdx=-1, n=0, pending=null, hist=[], fails=0, mute=false, said=[], pendField=null, paused=false, micBusy=false;
       const sp=x=>{ if(mute) said.push(x); else speak(x); };
       const say=(txt)=>{ $("dp-state").textContent=txt; };
 
@@ -7068,7 +7073,8 @@
         if(tp==="genre") return document.querySelector('.seg[data-seg="'+F.seg+'"]');
         if(tp==="modele"||tp==="prix"){ const r=$("cf-arts").querySelector(".art-row"); return r ? r.children[tp==="modele"?0:1] : null; }
         return inputs().find(i=>i.id.replace(/^c?m-/,"")===tp) || null; };
-      const isEmpty=tp=>{ if(tp==="genre") return !(id==="in" ? editingId : ($("cf-cliente").value!=="__new")); const el=fieldEl(tp); return !el || !String(el.value||"").trim(); };
+      const segEl=()=>document.querySelector('.seg[data-seg="'+F.seg+'"]');
+      const isEmpty=tp=>{ if(tp==="genre") return !(id==="in" ? editingId : ($("cf-cliente").value!=="__new")) && !(segEl() && segEl().dataset.done); const el=fieldEl(tp); return !el || !String(el.value||"").trim(); };
       const ASK={ name:["Nom du client ?","Client's name?"], phone:["Numéro de téléphone ?","Phone number?"], genre:["Homme ou femme ?","Man or woman?"],
         modele:["Quel modèle ?","Which garment?"], prix:["Prix ?","Price?"], avance:["Avance ?","Advance?"], date:["Date de livraison ?","Delivery date?"] };
       const prompt=tp=> ASK[tp] ? (EN?ASK[tp][1]:ASK[tp][0]) : label(tp)+" ?";
@@ -7084,11 +7090,11 @@
       const mark=(el,txt)=>{ el.classList.add("dict-hit"); try{ el.scrollIntoView({ behavior:"smooth", block:"center" }); }catch(e){} $("dp-last").textContent="✓ "+txt; };
       const setVal=(el,v,txt,spoken)=>{ if(!el) return; hist.push([el, el.value]); el.value=v; el.dispatchEvent(new Event("input",{ bubbles:true })); el.dispatchEvent(new Event("change",{ bubbles:true })); mark(el,txt); sp(spoken||txt); n++; };
       const fill=(k,v)=>{ const el=inputs().find(i=>i.id.replace(/^c?m-/,"")===k); if(!el) return false;
-        hist.push([el, el.value]); el.value=v; lastIdx=inputs().indexOf(el); n++; mark(el, label(k)+" : "+v+" cm"); sp((GUIDED?"":label(k)+" ")+String(v).replace(".", EN?" point ":" virgule ")); return true; };
+        hist.push([el, el.value]); el.value=v; el.dispatchEvent(new Event("input",{ bubbles:true })); lastIdx=inputs().indexOf(el); n++; mark(el, label(k)+" : "+v+" cm"); sp((GUIDED?"":label(k)+" ")+String(v).replace(".", EN?" point ":" virgule ")); return true; };
       const undo=()=>{ const h=hist.pop(); if(!h) return; h[0].value=h[1]; if(!h[1]) h[0].classList.remove("dict-hit"); h[0].dispatchEvent(new Event("input",{ bubbles:true })); n=Math.max(0,n-1);
         $("dp-last").textContent = EN?"↩ Erased":"↩ Effacé"; return true; };
       const applyField=f=>{
-        if(f.t==="genre"){ const b=document.querySelector('.seg[data-seg="'+F.seg+'"] button[data-g="'+f.v+'"]'); if(b){ b.click(); $("dp-last").textContent="✓ "+(f.v==="homme"?(EN?"Man":"Homme"):(EN?"Woman":"Femme")); sp(f.v==="homme"?(EN?"Man":"Homme"):(EN?"Woman":"Femme")); } return; }
+        if(f.t==="genre"){ const b=document.querySelector('.seg[data-seg="'+F.seg+'"] button[data-g="'+f.v+'"]'); if(b){ b.click(); if(segEl()) segEl().dataset.done="1"; saveDraft(id); $("dp-last").textContent="✓ "+(f.v==="homme"?(EN?"Man":"Homme"):(EN?"Woman":"Femme")); sp(f.v==="homme"?(EN?"Man":"Homme"):(EN?"Woman":"Femme")); } return; }
         if(f.t==="name"){ if(id==="cf" && $("cf-cliente").value!=="__new"){ $("cf-cliente").value="__new"; toggleNewCliente(); }
           setVal($(F.name), f.v, (EN?"Name: ":"Nom : ")+f.v, f.v); return; }
         if(f.t==="phone"){ if(id==="cf" && $("cf-cliente").value!=="__new") return; setVal($(F.phone), f.v, (EN?"Number: ":"Numéro : ")+f.v, sayPhone(f.v)); return; }
@@ -7105,7 +7111,13 @@
           return; }
       };
       const stop=()=>{ active=false; try{ rec && rec.abort(); }catch(e){} if(CUR_REC===rec) CUR_REC=null; end(); };
-      const end=()=>{ if(DICT && DICT.id===id) DICT=null; document.querySelectorAll(".dict-cur").forEach(x=>x.classList.remove("dict-cur"));
+      const onVis=()=>{ if(!active) return;
+        if(document.visibilityState==="hidden"){ paused=true; saveDraft(id); try{ speechSynthesis.cancel(); }catch(e){} try{ rec && rec.abort(); }catch(e){} return; }
+        paused=false; micBusy=false; fails=0; dictWake(true);
+        if(GUIDED) ask(cur>=0 ? cur : nextEmpty(0), EN?"Let's continue":"On reprend"); else { showFree(); speak(EN?"Let's continue":"On reprend"); }
+        whenQuiet(()=>{ if(active && !paused && !CUR_REC) start(); }); };
+      document.addEventListener("visibilitychange", onVis);
+      const end=()=>{ document.removeEventListener("visibilitychange", onVis); saveDraft(id); if(DICT && DICT.id===id) DICT=null; document.querySelectorAll(".dict-cur").forEach(x=>x.classList.remove("dict-cur"));
         if(!VA.on) dictWake(false); setTimeout(vaResume, 400); P.classList.remove("on"); document.body.classList.remove("dicting"); btn.classList.remove("on"); btn.textContent=t("dictBtn");
         st.textContent = n ? (EN?"✅ "+n+" field(s) filled. Check before saving.":"✅ "+n+" case(s) remplie(s). Vérifiez avant d'enregistrer.") : ""; };
       $("dp-undo").onclick=()=>{ if(GUIDED){ const S=steps(); const el=fieldEl(S[cur]); if(el && "value" in el && el.value){ hist.push([el,el.value]); el.value=""; el.dispatchEvent(new Event("input",{ bubbles:true })); } else undo(); ask(Math.max(0,cur)); } else { undo(); speak(EN?"Erased":"Effacé"); } };
@@ -7186,12 +7198,14 @@
         rec.onerror = e=>{
           if(e.error==="not-allowed"||e.error==="service-not-allowed"){ active=false; st.textContent=t("dictDenied"); }
           else if(e.error==="network"){ active=false; st.textContent=t("dictNet"); }
-          else if(e.error==="audio-capture"){ active=false; st.textContent=t("dictErr"); }
+          else if(e.error==="audio-capture"){ micBusy=true; $("dp-live").textContent = EN?"📞 Microphone busy (call?) — I will continue by myself":"📞 Micro occupé (appel ?) — je reprends tout seul"; }
         };
         // Chrome Android coupe souvent sans « résultat final » sur un mot court : on garde ce qu'il a entendu.
         rec.onend = ()=>{ if(CUR_REC===rec) CUR_REC=null; clearTimeout(early); ready(false);
           if(!done && interim && !SPEAKING && active){ done=true; fails=0; dispatch(interim); }
-          if(!active){ end(); return; } if(++fails>90){ active=false; end(); return; } whenQuiet(()=>{ if(active && !CUR_REC){ try{ start(); }catch(e){ active=false; end(); } } }); };
+          if(!active){ end(); return; } if(paused) return;
+          if(micBusy){ micBusy=false; setTimeout(()=>{ if(active && !paused && !CUR_REC) try{ start(); }catch(e){} }, 2000); return; }
+          if(++fails>90){ active=false; end(); return; } whenQuiet(()=>{ if(active && !paused && !CUR_REC){ try{ start(); }catch(e){ active=false; end(); } } }); };
         try{ rec.start(); }catch(e){ setTimeout(()=>{ if(active && !CUR_REC) try{ start(); }catch(e2){ active=false; end(); } }, 400); }
       };
       if(typeof vaPause==="function") vaPause();
@@ -7323,6 +7337,61 @@
   })();
 
 
+
+  // =================== BROUILLON : la fiche en cours est gardée sur le téléphone ===================
+  // Un appel, une coupure ou Android qui ferme l'app : on retrouve tout en revenant.
+  const draftKey = k => "sanaapro_draft_"+(BID||"x")+"_"+k;
+  function readDraft(k){ try{ const d=JSON.parse(localStorage.getItem(draftKey(k))||"null"); if(d && Date.now()-d.ts < 24*3600*1000) return d; }catch(e){} return null; }
+  function clearDraft(k){ try{ localStorage.removeItem(draftKey(k)); }catch(e){} }
+  function saveDraft(k){
+    try{
+      if(k==="in"){ if(editingId || $("form").hidden) return;
+        const d={ ts:Date.now(), name:$("in-name").value.trim(), phone:$("in-phone").value.trim(), notes:$("in-notes").value.trim(), genre:GENRE_FORM,
+          gdone:!!(document.querySelector('.seg[data-seg="ingenre"]')||{dataset:{}}).dataset.done, mesures:currentMesuresFromForm("m-") };
+        if(!d.name && !d.phone && !Object.keys(d.mesures).length){ return; }
+        localStorage.setItem(draftKey("in"), JSON.stringify(d)); }
+      if(k==="cf"){ if(editingOrd || $("cform").hidden) return;
+        const arts=Array.from($("cf-arts").querySelectorAll(".art-row")).map(r=>({ nom:r.children[0].value, prix:r.children[1].value })).filter(a=>a.nom||a.prix);
+        const d={ ts:Date.now(), cliente:$("cf-cliente").value, name:$("cf-new-name").value.trim(), phone:$("cf-new-phone").value.trim(), genre:GENRE_CF,
+          gdone:!!(document.querySelector('.seg[data-seg="cfgenre"]')||{dataset:{}}).dataset.done, mesures:currentMesuresFromForm("cm-"),
+          liv:$("cf-liv").value, avance:$("cf-avance").value, arts };
+        if(!d.name && !d.phone && !arts.length && !Object.keys(d.mesures).length){ return; }
+        localStorage.setItem(draftKey("cf"), JSON.stringify(d)); }
+    }catch(e){}
+  }
+  ["form","cform"].forEach(v=>{ const el=$(v); const k=v==="form"?"in":"cf"; let tm=null;
+    const later=()=>{ clearTimeout(tm); tm=setTimeout(()=>saveDraft(k), 300); };
+    el.addEventListener("input", later); el.addEventListener("change", later); el.addEventListener("click", later); });
+  document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="hidden"){ saveDraft("in"); saveDraft("cf"); } });
+  function draftBanner(k, d){
+    const host = k==="in" ? $("form") : $("cform"); let b=host.querySelector(".draft-bar");
+    if(!b){ b=document.createElement("div"); b.className="draft-bar"; host.insertBefore(b, host.children[1]); }
+    const EN=LANG_UI==="en", nm=d.name || (EN?"no name yet":"sans nom");
+    const nb=Object.keys(d.mesures||{}).length;
+    b.innerHTML=""; const p=document.createElement("div"); p.textContent=(EN?"📝 Resumed: ":"📝 Fiche reprise : ")+nm+" · "+nb+(EN?" measurement(s)":" mesure(s)"); b.appendChild(p);
+    const z=document.createElement("button"); z.type="button"; z.className="ghost"; z.textContent=EN?"Start again from zero":"Recommencer à zéro";
+    z.addEventListener("click", ()=>{ clearDraft(k); b.remove(); if(k==="in") openForm(null); else openCmdForm(null); });
+    b.appendChild(z); b.hidden=false;
+  }
+  function restoreDraft(k){
+    const d=readDraft(k); const host = k==="in" ? $("form") : $("cform"); const old=host.querySelector(".draft-bar"); if(old) old.remove();
+    if(!d) return false;
+    if(k==="in"){
+      GENRE_FORM = d.genre==="homme" ? "homme" : "femme"; paintSegs();
+      $("in-name").value=d.name||""; $("in-phone").value=d.phone||""; $("in-notes").value=d.notes||"";
+      buildInputs(d.mesures||{});
+      const sg=document.querySelector('.seg[data-seg="ingenre"]'); if(sg){ if(d.gdone) sg.dataset.done="1"; else delete sg.dataset.done; }
+    } else {
+      GENRE_CF = d.genre==="homme" ? "homme" : "femme"; paintSegs(); fillClienteSelect();
+      const sel=$("cf-cliente"); if(d.cliente && Array.prototype.some.call(sel.options, o=>o.value===d.cliente)) sel.value=d.cliente; toggleNewCliente();
+      $("cf-new-name").value=d.name||""; if(sel.value==="__new") $("cf-new-phone").value=d.phone||"";
+      $("cf-liv").value=d.liv||""; $("cf-avance").value=d.avance||"";
+      if(d.arts && d.arts.length) buildArtRows(d.arts);
+      buildCmdGrid(d.mesures||{});
+      const sg=document.querySelector('.seg[data-seg="cfgenre"]'); if(sg){ if(d.gdone) sg.dataset.done="1"; else delete sg.dataset.done; }
+    }
+    draftBanner(k, d); return true;
+  }
   function openForm(id){
     $("form-msg").classList.remove("show");
     editingId = id || null;
@@ -7333,7 +7402,9 @@
       $("in-name").value=""; $("in-phone").value=""; $("in-notes").value="";
       GENRE_FORM = GENRE_MES; paintSegs();
       buildInputs(null);
-      show("form"); $("in-name").focus();
+      { const sg=document.querySelector('.seg[data-seg="ingenre"]'); if(sg) delete sg.dataset.done; }
+      const resumed = restoreDraft("in");
+      show("form"); if(!resumed) $("in-name").focus();
       return;
     }
     const c = CLIENTES.find(x=>x.id===editingId) || {};
@@ -7363,6 +7434,7 @@
     if(existing) Object.assign(existing, data);
     else CLIENTES.push(Object.assign({ id }, data));
     CLIENTES.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+    if(!editingId) clearDraft("in");
     editingId=null; stopDict();
     if(IN_NB.length){ const pend=IN_NB.slice(); IN_NB=[]; savePhotos(nbKey(id), pend, null); (PH_CACHE[nbKey(id)]=PH_CACHE[nbKey(id)]||[]); }
     renderLists(); show("dash"); setTab("mesures");
