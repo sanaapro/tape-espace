@@ -355,6 +355,7 @@
     border:none; background:var(--gold); color:#0E0E0F; display:grid; place-items:center; box-shadow:0 8px 24px rgba(0,0,0,.45); cursor:pointer }
   #voice-fab.on{ background:#e0533d; color:#fff; animation:vfp 1.2s infinite }
   @keyframes vfp{ 0%{ box-shadow:0 0 0 0 rgba(224,83,61,.55) } 100%{ box-shadow:0 0 0 22px rgba(224,83,61,0) } }
+  #vt-heard{ color:var(--gold); font-weight:700; margin-top:4px; min-height:20px }
   #voice-tip{ position:fixed; left:max(16px, env(safe-area-inset-left,0px)); right:96px; bottom:calc(22px + env(safe-area-inset-bottom,0px)); z-index:55; background:#16130f;
     border:1px solid var(--gold); border-radius:14px; padding:12px 14px; font-size:15px; line-height:1.4 }
   .ph-item{ position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--line2); aspect-ratio:1; background:#111; }
@@ -7027,7 +7028,7 @@
           return; }
       };
       const stop=()=>{ active=false; try{ rec && rec.stop(); }catch(e){} end(); };
-      const end=()=>{ if(DICT && DICT.id===id) DICT=null; dictWake(false); P.classList.remove("on"); document.body.classList.remove("dicting"); btn.classList.remove("on"); btn.textContent=t("dictBtn");
+      const end=()=>{ if(DICT && DICT.id===id) DICT=null; if(!VA.on) dictWake(false); setTimeout(vaResume, 400); P.classList.remove("on"); document.body.classList.remove("dicting"); btn.classList.remove("on"); btn.textContent=t("dictBtn");
         st.textContent = n ? (EN?"✅ "+n+" field(s) filled. Check before saving.":"✅ "+n+" case(s) remplie(s). Vérifiez avant d'enregistrer.") : ""; };
       $("dp-undo").onclick=undo; $("dp-stop").onclick=stop;
       const start=()=>{
@@ -7061,6 +7062,7 @@
         rec.onend = ()=>{ if(!active){ end(); return; } if(++fails>40){ active=false; end(); return; } setTimeout(()=>{ if(active){ try{ start(); }catch(e){ active=false; end(); } } }, 250); };
         try{ rec.start(); }catch(e){ active=false; st.textContent=t("dictErr"); end(); }
       };
+      if(typeof vaPause==="function") vaPause();
       DICT={ id, stop };
       btn.classList.add("on"); btn.textContent=t("dictStop"); st.textContent="";
       $("dp-last").textContent=""; $("dp-live").textContent=""; P.classList.add("on"); document.body.classList.add("dicting"); show();
@@ -7101,40 +7103,60 @@
     if(cl2.length>1) return { go:"many", q };
     return null;
   }
+  // Le micro reste allumé tant qu'on ne l'arrête pas, sur tous les écrans. Il se met en pause
+  // pendant la dictée d'une fiche ou d'une commande, puis reprend tout seul.
+  let VA={ on:false, paused:false };
+  function vaPause(){ VA.paused=true; if(VA.rec){ try{ VA.rec.abort(); }catch(e){} } }
+  function vaResume(){ VA.paused=false; if(VA.on && VA.start) setTimeout(()=>{ if(VA.on && !VA.paused && !VA.rec && !DICT) VA.start(); }, 700); }
   (function(){
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition; if(!SR) return;
     const b=document.createElement("button"); b.type="button"; b.id="voice-fab"; b.setAttribute("aria-label","Assistant vocal");
     b.innerHTML='<svg width="30" height="30" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
     const tip=document.createElement("div"); tip.id="voice-tip"; tip.hidden=true;
+    tip.innerHTML='<div id="vt-state"></div><div id="vt-heard"></div>';
     document.body.appendChild(b); document.body.appendChild(tip);
-    const vis=()=>{ b.hidden = !BID || $("dash").hidden || !!DICT; };
-    setInterval(vis, 600);
-    let rec=null;
-    const tell=(x,ms)=>{ tip.textContent=x; tip.hidden=false; clearTimeout(tell.t); tell.t=setTimeout(()=>{ tip.hidden=true; }, ms||3500); };
-    b.addEventListener("click", ()=>{
-      const EN=LANG_UI==="en";
-      if(rec){ try{ rec.stop(); }catch(e){} return; }
-      try{ speechSynthesis.cancel(); }catch(e){}
-      rec=new SR(); rec.lang = EN ? "en-GB" : "fr-FR"; rec.continuous=false; rec.interimResults=true;
-      b.classList.add("on"); tell(EN?"🎤 Say where to go: “pressing”, “new client”, “new order”, a client's name…":"🎤 Dites où aller : « pressing », « nouveau client », « nouvelle commande », le nom d'une cliente…", 8000);
-      let done=false;
+    const EN=()=>LANG_UI==="en";
+    const vis=()=>{ const logged = !!BID && $("login").hidden && $("loading").hidden;
+      b.hidden = !logged || !!DICT; tip.hidden = !logged || !!DICT || !VA.on;
+      if(!logged && VA.on) off(); };
+    setInterval(vis, 500);
+    const state=()=>{ $("vt-state").textContent = EN() ? "🎤 Listening — say “pressing”, “measurements”, “new client”, a client's name… (“stop” to finish)"
+                                                       : "🎤 J'écoute — dites « pressing », « mesures », « nouveau client », un nom… (« stop » pour arrêter)"; };
+    const heard=x=>{ $("vt-heard").textContent=x; };
+    let fails=0;
+    function exec(txt){
+      const w=normV(txt);
+      if(/\b(stop|arrete|arreter|termine|terminer|fini|ferme le micro|finish|done)\b/.test(w)){ speak(EN()?"Microphone off":"Micro arrêté"); off(); return; }
+      if(/\b(retour|revenir|back|go back)\b/.test(w)){ if(!$("dash").hidden) setTab("apercu"); else { const bk=document.querySelector("#"+["cmd","cform","fiche","form","coupe"].find(v=>!$(v).hidden)+" .subtop .back"); if(bk) bk.click(); else { show("dash"); } } speak(EN()?"Back":"Retour"); heard("✓ "+(EN()?"Back":"Retour")); return; }
+      if(!$("fiche").hidden && /\b(coupe|cutting|cut)\b/.test(w)){ $("f-coupe").click(); speak(EN()?"Cutting sheet":"Fiche de coupe"); heard("✓ "+(EN()?"Cutting sheet":"Fiche de coupe")); return; }
+      const c=voiceCommand(txt);
+      if(!c){ heard((EN()?"Not understood: ":"Pas compris : ")+"« "+txt+" »"); speak(EN()?"I did not understand":"Je n'ai pas compris"); return; }
+      if(c.go==="tab"){ if($("dash").hidden) show("dash"); setTab(c.tab); const lb=$("tabs").querySelector('button[data-tab="'+TAB+'"]'); const nm=lb?lb.textContent:c.tab; speak(nm); heard("✓ "+nm); }
+      if(c.go==="fiche"){ openFiche(c.id); speak(c.name); heard("✓ "+c.name); }
+      if(c.go==="many"){ if($("dash").hidden) show("dash"); setTab("mesures"); const q=$("q-cli"); if(q){ q.value=c.q; q.dispatchEvent(new Event("input",{ bubbles:true })); } speak(EN()?"Several clients found":"Plusieurs clientes trouvées"); heard("✓ "+c.q); }
+      if(c.go==="newClient"){ vaPause(); openForm(null); speak(EN()?"New client. I am listening: name, number, measurements.":"Nouveau client. Je vous écoute : nom, numéro, mesures."); setTimeout(()=>{ if(!DICT) $("in-dict").click(); }, 2800); }
+      if(c.go==="newOrder"){ vaPause(); openCmdForm(null); speak(EN()?"New order. I am listening: name, number, garment, price, delivery date.":"Nouvelle commande. Je vous écoute : nom, numéro, modèle, prix, date de livraison."); setTimeout(()=>{ if(!DICT) $("cf-dict").click(); }, 3600); }
+      if(c.go==="help"){ const h=EN()?"You can say: workshop, pressing, measurements, finances, new client, new order, a client's name, back, or stop.":"Vous pouvez dire : atelier, pressing, mesures, finances, nouveau client, nouvelle commande, le nom d'une cliente, retour, ou stop."; heard(h); speak(h); }
+    }
+    function start(){
+      if(!VA.on || VA.paused || VA.rec || DICT) return;
+      const rec=new SR(); VA.rec=rec; rec.lang = EN() ? "en-GB" : "fr-FR"; rec.continuous=true; rec.interimResults=true;
       rec.onresult = ev=>{
-        const r=ev.results[ev.results.length-1], txt=r[0].transcript;
-        tell("« "+txt+" »", 4000);
-        if(!r.isFinal || done) return; done=true;
-        const c=voiceCommand(txt);
-        if(!c){ tell(EN?"Not understood. Say “help” to hear the commands.":"Pas compris. Dites « aide » pour entendre les commandes."); speak(EN?"Sorry, I did not understand":"Je n'ai pas compris"); return; }
-        if(c.go==="tab"){ setTab(c.tab); const lb=$("tabs").querySelector('button[data-tab="'+TAB+'"]'); speak(lb?lb.textContent:c.tab); tell("✓ "+(lb?lb.textContent:c.tab)); }
-        if(c.go==="fiche"){ openFiche(c.id); speak(c.name); tell("✓ "+c.name); }
-        if(c.go==="many"){ setTab("mesures"); const q=$("q-cli"); if(q){ q.value=c.q; q.dispatchEvent(new Event("input",{ bubbles:true })); } speak(EN?"Several clients found":"Plusieurs clientes trouvées"); }
-        if(c.go==="newClient"){ openForm(null); speak(EN?"New client. I am listening: name, number, measurements.":"Nouveau client. Je vous écoute : nom, numéro, mesures."); setTimeout(()=>{ if(!DICT) $("in-dict").click(); }, 2600); }
-        if(c.go==="newOrder"){ openCmdForm(null); speak(EN?"New order. I am listening: name, number, garment, price, delivery date.":"Nouvelle commande. Je vous écoute : nom, numéro, modèle, prix, date de livraison."); setTimeout(()=>{ if(!DICT) $("cf-dict").click(); }, 3400); }
-        if(c.go==="help"){ const h=EN?"You can say: workshop, pressing, measurements, finances, new client, new order, or a client's name.":"Vous pouvez dire : atelier, pressing, mesures, finances, nouveau client, nouvelle commande, ou le nom d'une cliente."; tell(h, 9000); speak(h); }
+        for(let i=ev.resultIndex;i<ev.results.length;i++){
+          if(SPEAKING) continue;
+          const r=ev.results[i], txt=r[0].transcript;
+          if(!r.isFinal){ heard("« "+txt+" »"); continue; }
+          fails=0; exec(txt);
+        }
       };
-      rec.onerror = e=>{ if(e.error==="not-allowed"||e.error==="service-not-allowed") tell(t("dictDenied"), 6000); else if(e.error==="network") tell(t("dictNet"), 6000); };
-      rec.onend = ()=>{ rec=null; b.classList.remove("on"); };
-      try{ rec.start(); }catch(e){ rec=null; b.classList.remove("on"); }
-    });
+      rec.onerror = e=>{ if(e.error==="not-allowed"||e.error==="service-not-allowed"){ heard(t("dictDenied")); off(); } else if(e.error==="network"){ heard(t("dictNet")); off(); } };
+      rec.onend = ()=>{ if(VA.rec===rec) VA.rec=null; if(VA.on && !VA.paused && !DICT){ if(++fails>60){ off(); return; } setTimeout(start, 300); } };
+      try{ rec.start(); }catch(e){ VA.rec=null; }
+    }
+    VA.start=start;
+    function on(){ VA.on=true; VA.paused=false; fails=0; b.classList.add("on"); state(); heard(""); tip.hidden=false; try{ speechSynthesis.cancel(); }catch(e){} dictWake(true); start(); }
+    function off(){ VA.on=false; b.classList.remove("on"); tip.hidden=true; if(VA.rec){ try{ VA.rec.abort(); }catch(e){} VA.rec=null; } if(!DICT) dictWake(false); }
+    b.addEventListener("click", ()=>{ VA.on ? off() : on(); });
   })();
 
 
