@@ -355,6 +355,7 @@
     border:none; background:var(--gold); color:#0E0E0F; display:grid; place-items:center; box-shadow:0 8px 24px rgba(0,0,0,.45); cursor:pointer }
   #voice-fab.on{ background:#e0533d; color:#fff; animation:vfp 1.2s infinite }
   @keyframes vfp{ 0%{ box-shadow:0 0 0 0 rgba(224,83,61,.55) } 100%{ box-shadow:0 0 0 22px rgba(224,83,61,0) } }
+  .vchip{ background:none; border:1px solid var(--gold); color:var(--gold); border-radius:10px; font:inherit; font-weight:800; font-size:13px; padding:4px 9px; margin-left:6px }
   #vt-heard{ color:var(--gold); font-weight:700; margin-top:4px; min-height:20px }
   #voice-tip{ position:fixed; left:max(16px, env(safe-area-inset-left,0px)); right:96px; bottom:calc(22px + env(safe-area-inset-bottom,0px)); z-index:55; background:#16130f;
     border:1px solid var(--gold); border-radius:14px; padding:12px 14px; font-size:15px; line-height:1.4 }
@@ -6780,6 +6781,13 @@
   }
 
   // =================== DICTÉE DES MESURES (reconnaissance vocale du téléphone) ===================
+  function lev(a,b){ if(a===b) return 0; const m=a.length, n=b.length; if(!m||!n) return m||n; let p=Array.from({length:n+1},(_,j)=>j);
+    for(let i=1;i<=m;i++){ const c=[i]; for(let j=1;j<=n;j++) c[j]=Math.min(p[j]+1, c[j-1]+1, p[j-1]+(a[i-1]===b[j-1]?0:1)); p=c; } return p[n]; }
+  // mot « presque juste » : une lettre de travers sur un mot de 5 lettres ou plus, deux sur un mot de 8 ou plus
+  const nearW = (w,x) => w===x || (Math.max(w.length,x.length)>=6 && Math.abs(w.length-x.length)<=2 && lev(w,x) <= (Math.max(w.length,x.length)>=9 ? 2 : 1));
+  // cherche un nom de mesure au début de « rest » : d'abord exact, puis presque juste
+  const aliasHit = (al, rest) => { for(const [aw,k] of al){ if(aw.length<=rest.length && aw.every((x,j)=>rest[j]===x)) return [aw,k]; }
+    for(const [aw,k] of al){ if(aw.length<=rest.length && aw.every((x,j)=>nearW(rest[j],x))) return [aw,k]; } return null; };
   const normV = s => String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9,.\s]/g," ").replace(/\s+/g," ").trim();
   // Mots sans importance retirés des deux côtés (« longueur DES manche(S) » = « longueur manche »)
   const DSTOP = new Set(["de","des","du","d","la","le","les","l","of","the","a","au","aux","en"]);
@@ -6834,7 +6842,7 @@
   }
   // Découpe une phrase dictée en { key, v } ; un nom de mesure sans nombre reste « en attente » pour le nombre suivant.
   function parseDictee(text, keys, pending){
-    let s=normV(text).replace(/(\d)\s*(virgule|point)\s*(\d)/g,"$1.$3").replace(/(\d),(\d)/g,"$1.$2");
+    let s=normV(String(text||"").replace(/(\d)([a-zA-Zà-ÿ])/g,"$1 $2")).replace(/(\d)\s*(virgule|point)\s*(\d)/g,"$1.$3").replace(/(\d),(\d)/g,"$1.$2");
     let words=wordsToDigits(s.split(" ").filter(Boolean));
     words=wordsToDigits(words.join(" ").replace(/(\d+)\s+(virgule|point)\s+(\d+)/g,"$1.$3").split(" "));
     const al=aliasMap(keys), res=[], cmds=[]; let key=pending||null;
@@ -6847,7 +6855,7 @@
       if(/^(efface|effacer|corrige|corriger|annule|annuler|erase|undo|delete)$/.test(w)){ cmds.push("undo"); key=null; continue; }
       if(!norm[i]) continue;
       const rest=norm.slice(i).filter(Boolean);
-      for(const [aw,k] of al){ if(aw.length<=rest.length && aw.every((x,j)=>rest[j]===x)){ key=k; let c=0; while(c<aw.length){ if(norm[i]) c++; i++; } i--; break; } }
+      const hit=aliasHit(al, rest); if(hit){ const [aw,k]=hit; key=k; let c=0; while(c<aw.length){ if(norm[i]) c++; i++; } i--; }
     }
     return { res, pending:key, cmds };
   }
@@ -6910,7 +6918,7 @@
   }
   // Découpe une phrase en champs de fiche (nom, numéro…) et en texte de mesures.
   function parseVoiceForm(text, kinds, keys, pending){
-    const raw=String(text||"").replace(/[-–'’]/g," ").split(/\s+/).filter(Boolean);
+    const raw=String(text||"").replace(/(\d)([a-zA-Zà-ÿ])/g,"$1 $2").replace(/[-–'’]/g," ").split(/\s+/).filter(Boolean);
     const nt=raw.map(x=>normV(x).replace(/\s+/g,"").replace(/[,.]+$/,"").replace(/^[,.]+/,""));
     const np=nt.map(v=>(v.length>3 && /[a-z]s$/.test(v) && NUM_U[v]===undefined) ? v.slice(0,-1) : v);
     const al=aliasMap(keys);
@@ -6918,7 +6926,7 @@
     const aliasAt=i=>{ const rest=np.slice(i).filter(x=>x && !DSTOP.has(x)); return al.some(([aw])=>aw.length<=rest.length && aw.every((x,j)=>rest[j]===x)); };
     // un nom de mesure suivi d'un nombre (« poitrine 96 ») : fin du nom ou du modèle
     const aliasNumAt=i=>{ const idx=[]; for(let j=i;j<np.length && idx.length<6;j++) if(np[j] && !DSTOP.has(np[j])) idx.push(j);
-      const rest=idx.map(j=>np[j]); return al.some(([aw])=>{ if(aw.length>rest.length || !aw.every((x,j)=>rest[j]===x)) return false; const nx=nt[idx[aw.length-1]+1]||""; return (/^\d/.test(nx) && parseFloat(nx)>=10)||(NUM_U[nx]!==undefined && NUM_U[nx]>=10)||NUM_T[nx]!==undefined||nx==="cent"; }); };
+      const rest=idx.map(j=>np[j]); const hit=aliasHit(al, rest); return !!hit && [hit].some(([aw])=>{ const nx=nt[idx[aw.length-1]+1]||""; return (/^\d/.test(nx) && parseFloat(nx)>=10)||(NUM_U[nx]!==undefined && NUM_U[nx]>=10)||NUM_T[nx]!==undefined||nx==="cent"; }); };
     const FILL=new Set(["c","est","cest","s","appelle","sappelle","is","it","its","called","son","sa","his","her","egal"]);
     const isNumTok=x=>/^\d/.test(x) || NUM_U[x]!==undefined || NUM_T[x]!==undefined || ["cent","cents","hundred","mille","thousand","vingts","et","and","plus"].indexOf(x)>-1;
     const fields=[]; let free=[];
@@ -6954,15 +6962,26 @@
 
   // ---------- L'app parle : elle répète ce qu'elle a compris ----------
   let VOICE_ON = true; try{ VOICE_ON = localStorage.getItem("sanaapro_voice_tts")!=="0"; }catch(e){}
-  let SPEAKING = 0;
+  let SPEAKING = 0, CUR_REC = null, LAST_SAID = "", LAST_SAID_AT = 0;
+  let VOICE_LANG = "fr"; try{ VOICE_LANG = localStorage.getItem("sanaapro_voice_lang") || (localStorage.getItem("sanaapro_lang_ui")==="en" ? "en" : "fr"); }catch(e){}
+  const vLang = () => VOICE_LANG==="en" ? "en-GB" : "fr-FR";
+  function setVoiceLang(l){ VOICE_LANG=l; try{ localStorage.setItem("sanaapro_voice_lang", l); }catch(e){} if(CUR_REC){ try{ CUR_REC.abort(); }catch(e){} } }
+  // Pendant que l'app parle, le micro est coupé : elle ne s'entend plus elle-même.
   function speak(txt){
     if(!VOICE_ON || !("speechSynthesis" in window) || !txt) return;
     try{
-      const u=new SpeechSynthesisUtterance(txt); u.lang = LANG_UI==="en" ? "en-GB" : "fr-FR"; u.rate=1.05;
-      SPEAKING++; u.onend=u.onerror=()=>{ setTimeout(()=>{ SPEAKING=Math.max(0,SPEAKING-1); }, 350); };
+      if(CUR_REC){ try{ CUR_REC.abort(); }catch(e){} }
+      const u=new SpeechSynthesisUtterance(txt); u.lang = vLang(); u.rate=1.05;
+      LAST_SAID=normV(txt); LAST_SAID_AT=Date.now(); SPEAKING++;
+      let done=false; const fin=()=>{ if(done) return; done=true; LAST_SAID_AT=Date.now(); setTimeout(()=>{ SPEAKING=Math.max(0,SPEAKING-1); }, 450); };
+      u.onend=fin; u.onerror=fin; setTimeout(fin, 2500+txt.length*90);
       speechSynthesis.speak(u);
     }catch(e){}
   }
+  function isEcho(txt){ if(!LAST_SAID || Date.now()-LAST_SAID_AT>5000) return false; const a=normV(txt); return !!a && (LAST_SAID.indexOf(a)>-1 || a.indexOf(LAST_SAID)>-1); }
+  function whenQuiet(fn){ if(SPEAKING || (window.speechSynthesis && speechSynthesis.speaking)) setTimeout(()=>whenQuiet(fn), 200); else setTimeout(fn, 350); }
+  function vbeep(ok){ try{ const C=window.AudioContext||window.webkitAudioContext; const c=vbeep.c||(vbeep.c=new C()); if(c.state==="suspended") c.resume();
+    const o=c.createOscillator(), g=c.createGain(); o.frequency.value = ok ? 880 : 240; g.gain.value=.07; o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+(ok?.08:.25)); }catch(e){} }
   const sayDate = iso => { try{ return new Date(iso+"T12:00:00").toLocaleDateString(LANG_UI==="en"?"en-GB":"fr-FR",{ weekday:"long", day:"numeric", month:"long" }); }catch(e){ return iso; } };
   const sayPhone = p => String(p).split("").join(" ");
 
@@ -6977,7 +6996,7 @@
   function dictPanel(){
     let p=$("dict-panel"); if(p) return p;
     p=document.createElement("div"); p.id="dict-panel";
-    p.innerHTML='<div class="dp-top"><span class="dp-dot"></span><b id="dp-state"></b><button type="button" id="dp-tts" aria-label="voix"></button></div><div id="dp-last"></div><div id="dp-live"></div><div class="dp-btns"><button type="button" id="dp-undo"></button><button type="button" id="dp-stop"></button></div>';
+    p.innerHTML='<div class="dp-top"><span class="dp-dot"></span><b id="dp-state"></b><button type="button" id="dp-lang" class="vchip"></button><button type="button" id="dp-tts" aria-label="voix"></button></div><div id="dp-last"></div><div id="dp-live"></div><div class="dp-btns"><button type="button" id="dp-undo"></button><button type="button" id="dp-stop"></button></div>';
     document.body.appendChild(p); return p;
   }
   // Ce que chaque formulaire accepte à la voix
@@ -7001,6 +7020,9 @@
       const paintTts=()=>{ $("dp-tts").textContent = VOICE_ON ? "🔊" : "🔇"; };
       $("dp-tts").onclick=()=>{ VOICE_ON=!VOICE_ON; try{ localStorage.setItem("sanaapro_voice_tts", VOICE_ON?"1":"0"); }catch(e){} paintTts(); if(!VOICE_ON) try{ speechSynthesis.cancel(); }catch(e){} };
       paintTts();
+      const paintLang=()=>{ $("dp-lang").textContent = VOICE_LANG==="en" ? "EN" : "FR"; };
+      $("dp-lang").onclick=()=>{ setVoiceLang(VOICE_LANG==="en"?"fr":"en"); paintLang(); };
+      paintLang();
       let active=true, rec=null, lastIdx=-1, n=0, pending=null, hist=[], fails=0;
       const say=(txt)=>{ $("dp-state").textContent=txt; };
       const show=()=>{ say(pending ? (EN?"Listening… "+label(pending)+" ?":"J'écoute… "+label(pending)+" ?") : (EN?"Listening… say “name”, “number”, “chest 96”":"J'écoute… dites « nom », « numéro », « poitrine 96 »")); };
@@ -7027,30 +7049,39 @@
           try{ artTotal(); }catch(e){}
           return; }
       };
-      const stop=()=>{ active=false; try{ rec && rec.stop(); }catch(e){} end(); };
+      const stop=()=>{ active=false; try{ rec && rec.abort(); }catch(e){} if(CUR_REC===rec) CUR_REC=null; end(); };
       const end=()=>{ if(DICT && DICT.id===id) DICT=null; if(!VA.on) dictWake(false); setTimeout(vaResume, 400); P.classList.remove("on"); document.body.classList.remove("dicting"); btn.classList.remove("on"); btn.textContent=t("dictBtn");
         st.textContent = n ? (EN?"✅ "+n+" field(s) filled. Check before saving.":"✅ "+n+" case(s) remplie(s). Vérifiez avant d'enregistrer.") : ""; };
       $("dp-undo").onclick=undo; $("dp-stop").onclick=stop;
+      // Traite une phrase : on essaie chaque version entendue et on garde celle qui remplit le plus de cases.
+      const handle=alts=>{
+        let best=null, bs=-1;
+        alts.forEach(txt=>{ if(isEcho(txt)) return; const r=parseVoiceForm(txt, F.kinds, keysNow(), pending);
+          const sc=r.fields.length*3 + r.res.filter(x=>x.key).length*3 + r.res.length + r.cmds.length*3 + (r.pending?1:0);
+          if(sc>bs){ bs=sc; best={ r, txt }; } });
+        if(!best) return;
+        const r=best.r;
+        if(bs<=0){ $("dp-last").textContent=(EN?"? Not understood: ":"? Pas compris : ")+"« "+best.txt+" »"; vbeep(false); return; }
+        r.fields.forEach(applyField);
+        r.res.forEach(x=>{
+          if(x.key){ fill(x.key, x.v); return; }
+          const ins=inputs();
+          for(let j=lastIdx+1;j<ins.length;j++){ if(ins[j].value===""){ fill(ins[j].id.replace(/^c?m-/,""), x.v); break; } }
+        });
+        if(r.pending && r.pending!==pending){ $("dp-last").textContent="… "+label(r.pending)+" ?"; vbeep(true); }
+        pending=r.pending;
+        r.cmds.forEach(c=>{ if(c==="undo") undo(); if(c==="stop"){ speak(EN?"Finished":"Terminé"); stop(); } });
+      };
       const start=()=>{
-        rec=new SR(); rec.lang = EN ? "en-GB" : "fr-FR"; rec.continuous=true; rec.interimResults=true; rec.maxAlternatives=1;
+        if(!active) return;
+        rec=new SR(); CUR_REC=rec; rec.lang = vLang(); rec.continuous=false; rec.interimResults=true; rec.maxAlternatives=4;
         rec.onresult = ev=>{
-          let live="";
-          for(let i=ev.resultIndex;i<ev.results.length;i++){
-            const txt=ev.results[i][0].transcript;
-            if(SPEAKING) continue;                       // n'écoute pas sa propre voix
-            if(!ev.results[i].isFinal){ live+=txt; continue; }
-            fails=0;
-            const r=parseVoiceForm(txt, F.kinds, keysNow(), pending);
-            r.fields.forEach(applyField);
-            r.res.forEach(x=>{
-              if(x.key){ fill(x.key, x.v); return; }
-              const ins=inputs();
-              for(let j=lastIdx+1;j<ins.length;j++){ if(ins[j].value===""){ fill(ins[j].id.replace(/^c?m-/,""), x.v); break; } }
-            });
-            pending=r.pending;
-            r.cmds.forEach(c=>{ if(c==="undo") undo(); if(c==="stop"){ speak(EN?"Finished":"Terminé"); stop(); } });
-          }
-          $("dp-live").textContent = live ? "« "+live+" »" : "";
+          if(SPEAKING) return;
+          const res=ev.results[ev.results.length-1];
+          if(!res.isFinal){ $("dp-live").textContent="« "+res[0].transcript+" »"; return; }
+          fails=0; $("dp-live").textContent="";
+          const alts=[]; for(let a=0;a<res.length;a++) alts.push(res[a].transcript);
+          handle(alts);
           if(active) show();
         };
         rec.onerror = e=>{
@@ -7058,15 +7089,16 @@
           else if(e.error==="network"){ active=false; st.textContent=t("dictNet"); }
           else if(e.error==="audio-capture"){ active=false; st.textContent=t("dictErr"); }
         };
-        // Chrome coupe le micro après un silence : tant que l'atelier n'a pas dit « terminé », on le relance.
-        rec.onend = ()=>{ if(!active){ end(); return; } if(++fails>40){ active=false; end(); return; } setTimeout(()=>{ if(active){ try{ start(); }catch(e){ active=false; end(); } } }, 250); };
-        try{ rec.start(); }catch(e){ active=false; st.textContent=t("dictErr"); end(); }
+        // Une phrase à la fois puis on relance (plus fiable sur Android) ; on attend que l'app ait fini de parler.
+        rec.onend = ()=>{ if(CUR_REC===rec) CUR_REC=null; if(!active){ end(); return; } if(++fails>90){ active=false; end(); return; } whenQuiet(()=>{ if(active && !CUR_REC){ try{ start(); }catch(e){ active=false; end(); } } }); };
+        try{ rec.start(); }catch(e){ setTimeout(()=>{ if(active && !CUR_REC) try{ start(); }catch(e2){ active=false; end(); } }, 600); }
       };
       if(typeof vaPause==="function") vaPause();
       DICT={ id, stop };
       btn.classList.add("on"); btn.textContent=t("dictStop"); st.textContent="";
       $("dp-last").textContent=""; $("dp-live").textContent=""; P.classList.add("on"); document.body.classList.add("dicting"); show();
       dictWake(true); start();
+      if(window.DICT_SEED){ const sd=window.DICT_SEED; window.DICT_SEED=null; setTimeout(()=>handle([sd]), 300); }
     });
   }
   setupDict("in","in-mesures");
@@ -7078,18 +7110,18 @@
   const VNAV = [
     ["apercu",["apercu","accueil","home","overview","tableau de bord","resume","summary"]],
     ["atelier",["atelier","commande","commandes","workshop","order","orders"]],
-    ["pressing",["pressing","blanchisserie","lavage","laundry","dry cleaning"]],
+    ["pressing",["pressing","presing","presse","blanchisserie","lavage","laundry","dry cleaning","dry clean"]],
     ["charge",["charge","planning","plan de charge","load"]],
     ["boutique",["boutique","stock","shop","magasin"]],
     ["vitrine",["vitrine","catalogue","catalog","showcase"]],
-    ["mesures",["mesure","mesures","client","clients","cliente","clientes","measures","measurements","customers"]],
+    ["mesures",["mesure","mesures","mesurer","client","clients","cliente","clientes","measure","measures","measurement","measurements","customers","customer"]],
     ["finances",["finance","finances","argent","caisse","money","cash","depense","depenses"]],
     ["staff",["salarie","salaries","employe","employes","personnel","staff"]],
     ["pointage",["pointage","presence","attendance"]],
     ["visits",["visiteur","visiteurs","visite","visites","visitors","visits"]],
     ["reglages",["reglage","reglages","parametre","parametres","settings"]]
   ];
-  function voiceCommand(text){
+  function voiceCommand(text, fuzzy){
     const w=normV(text), has=re=>re.test(w);
     if(has(/\b(nouveau|nouvelle|ajouter|new|add)\b.*\b(client|cliente|customer|fiche)\b/)) return { go:"newClient" };
     if(has(/\b(nouveau|nouvelle|ajouter|new|add)\b.*\b(commande|order|habit|couture)\b/)) return { go:"newOrder" };
@@ -7099,21 +7131,23 @@
     const cl=(CLIENTES||[]).filter(c=>c.name && normV(c.name)===q);
     const cl2=cl.length ? cl : (CLIENTES||[]).filter(c=>{ const n=normV(c.name||""); return q.length>=3 && (n.indexOf(q)===0 || n.split(" ").indexOf(q)>-1); });
     if(cl2.length===1) return { go:"fiche", id:cl2[0].id, name:cl2[0].name };
-    for(const [tab,words] of VNAV){ if(words.some(x=>new RegExp("\\b"+x+"s?\\b").test(w))) return { go:"tab", tab }; }
+    const toks=w.split(" ");
+    for(const [tab,words] of VNAV){ if(words.some(x=> x.indexOf(" ")>-1 ? w.indexOf(x)>-1 : toks.some(tk=>tk===x || tk===x+"s"))) return { go:"tab", tab }; }
+    if(fuzzy!==false) for(const [tab,words] of VNAV){ if(words.some(x=> x.indexOf(" ")===-1 && toks.some(tk=>nearW(tk,x)))) return { go:"tab", tab }; }
     if(cl2.length>1) return { go:"many", q };
     return null;
   }
   // Le micro reste allumé tant qu'on ne l'arrête pas, sur tous les écrans. Il se met en pause
   // pendant la dictée d'une fiche ou d'une commande, puis reprend tout seul.
   let VA={ on:false, paused:false };
-  function vaPause(){ VA.paused=true; if(VA.rec){ try{ VA.rec.abort(); }catch(e){} } }
+  function vaPause(){ VA.paused=true; if(VA.rec){ try{ VA.rec.abort(); }catch(e){} if(CUR_REC===VA.rec) CUR_REC=null; VA.rec=null; } }
   function vaResume(){ VA.paused=false; if(VA.on && VA.start) setTimeout(()=>{ if(VA.on && !VA.paused && !VA.rec && !DICT) VA.start(); }, 700); }
   (function(){
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition; if(!SR) return;
     const b=document.createElement("button"); b.type="button"; b.id="voice-fab"; b.setAttribute("aria-label","Assistant vocal");
     b.innerHTML='<svg width="30" height="30" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
     const tip=document.createElement("div"); tip.id="voice-tip"; tip.hidden=true;
-    tip.innerHTML='<div id="vt-state"></div><div id="vt-heard"></div>';
+    tip.innerHTML='<div style="display:flex;gap:8px;align-items:flex-start"><div id="vt-state" style="flex:1"></div><button type="button" id="vt-lang" class="vchip"></button></div><div id="vt-heard"></div>';
     document.body.appendChild(b); document.body.appendChild(tip);
     const EN=()=>LANG_UI==="en";
     const vis=()=>{ const logged = !!BID && $("login").hidden && $("loading").hidden;
@@ -7124,38 +7158,58 @@
                                                        : "🎤 J'écoute — dites « pressing », « mesures », « nouveau client », un nom… (« stop » pour arrêter)"; };
     const heard=x=>{ $("vt-heard").textContent=x; };
     let fails=0;
-    function exec(txt){
+    // Comprend une phrase : renvoie l'action à faire, ou null.
+    function understand(txt){
       const w=normV(txt);
-      if(/\b(stop|arrete|arreter|termine|terminer|fini|ferme le micro|finish|done)\b/.test(w)){ speak(EN()?"Microphone off":"Micro arrêté"); off(); return; }
-      if(/\b(retour|revenir|back|go back)\b/.test(w)){ if(!$("dash").hidden) setTab("apercu"); else { const bk=document.querySelector("#"+["cmd","cform","fiche","form","coupe"].find(v=>!$(v).hidden)+" .subtop .back"); if(bk) bk.click(); else { show("dash"); } } speak(EN()?"Back":"Retour"); heard("✓ "+(EN()?"Back":"Retour")); return; }
-      if(!$("fiche").hidden && /\b(coupe|cutting|cut)\b/.test(w)){ $("f-coupe").click(); speak(EN()?"Cutting sheet":"Fiche de coupe"); heard("✓ "+(EN()?"Cutting sheet":"Fiche de coupe")); return; }
-      const c=voiceCommand(txt);
-      if(!c){ heard((EN()?"Not understood: ":"Pas compris : ")+"« "+txt+" »"); speak(EN()?"I did not understand":"Je n'ai pas compris"); return; }
-      if(c.go==="tab"){ if($("dash").hidden) show("dash"); setTab(c.tab); const lb=$("tabs").querySelector('button[data-tab="'+TAB+'"]'); const nm=lb?lb.textContent:c.tab; speak(nm); heard("✓ "+nm); }
-      if(c.go==="fiche"){ openFiche(c.id); speak(c.name); heard("✓ "+c.name); }
-      if(c.go==="many"){ if($("dash").hidden) show("dash"); setTab("mesures"); const q=$("q-cli"); if(q){ q.value=c.q; q.dispatchEvent(new Event("input",{ bubbles:true })); } speak(EN()?"Several clients found":"Plusieurs clientes trouvées"); heard("✓ "+c.q); }
-      if(c.go==="newClient"){ vaPause(); openForm(null); speak(EN()?"New client. I am listening: name, number, measurements.":"Nouveau client. Je vous écoute : nom, numéro, mesures."); setTimeout(()=>{ if(!DICT) $("in-dict").click(); }, 2800); }
-      if(c.go==="newOrder"){ vaPause(); openCmdForm(null); speak(EN()?"New order. I am listening: name, number, garment, price, delivery date.":"Nouvelle commande. Je vous écoute : nom, numéro, modèle, prix, date de livraison."); setTimeout(()=>{ if(!DICT) $("cf-dict").click(); }, 3600); }
-      if(c.go==="help"){ const h=EN()?"You can say: workshop, pressing, measurements, finances, new client, new order, a client's name, back, or stop.":"Vous pouvez dire : atelier, pressing, mesures, finances, nouveau client, nouvelle commande, le nom d'une cliente, retour, ou stop."; heard(h); speak(h); }
+      if(/\b(stop|arrete|arreter|termine|terminer|fini|ferme le micro|finish|done)\b/.test(w)) return ()=>{ speak(EN()?"Microphone off":"Micro arrêté"); off(); };
+      if(/\b(retour|revenir|back|go back|precedent)\b/.test(w)) return ()=>{ if(!$("dash").hidden) setTab("apercu"); else { const v=["cmd","cform","fiche","form","coupe"].find(x=>!$(x).hidden); const bk=v && document.querySelector("#"+v+" .subtop .back"); if(bk) bk.click(); else show("dash"); } speak(EN()?"Back":"Retour"); heard("✓ "+(EN()?"Back":"Retour")); };
+      if(!$("fiche").hidden && /\b(coupe|cutting|cut|couper)\b/.test(w)) return ()=>{ $("f-coupe").click(); speak(EN()?"Cutting sheet":"Fiche de coupe"); heard("✓ "+(EN()?"Cutting sheet":"Fiche de coupe")); };
+      if(!$("fiche").hidden && /\b(modifier|changer|edit|corriger)\b/.test(w)) return ()=>{ $("f-edit").click(); heard("✓ "+(EN()?"Edit":"Modifier")); };
+      const allKeys=MESURES_F.concat(MESURES_H).map(x=>x[0]);
+      const p=parseVoiceForm(txt, ["name","phone","genre"], allKeys, null);
+      const formy = p.fields.some(x=>x.t!=="genre") || p.res.some(x=>x.key) || !!p.pending;
+      const c=voiceCommand(txt, !formy);
+      if(c){
+        if(c.go==="tab") return ()=>{ if($("dash").hidden) show("dash"); setTab(c.tab); const lb=$("tabs").querySelector('button[data-tab="'+TAB+'"]'); const nm=lb?lb.textContent:c.tab; speak(nm); heard("✓ "+nm); };
+        if(c.go==="fiche") return ()=>{ openFiche(c.id); speak(c.name); heard("✓ "+c.name); };
+        if(c.go==="many") return ()=>{ if($("dash").hidden) show("dash"); setTab("mesures"); const q=$("q-cli"); if(q){ q.value=c.q; q.dispatchEvent(new Event("input",{ bubbles:true })); } speak(EN()?"Several clients found":"Plusieurs clientes trouvées"); heard("✓ "+c.q); };
+        if(c.go==="newClient") return ()=>{ vaPause(); openForm(null); speak(EN()?"New client. I am listening.":"Nouveau client. Je vous écoute."); setTimeout(()=>{ if(!DICT) $("in-dict").click(); }, 1800); };
+        if(c.go==="newOrder") return ()=>{ vaPause(); openCmdForm(null); speak(EN()?"New order. I am listening.":"Nouvelle commande. Je vous écoute."); setTimeout(()=>{ if(!DICT) $("cf-dict").click(); }, 2000); };
+        if(c.go==="help") return ()=>{ const h=EN()?"You can say: workshop, pressing, measurements, finances, new client, new order, a client's name, back, or stop.":"Vous pouvez dire : atelier, pressing, mesures, finances, nouveau client, nouvelle commande, le nom d'une cliente, retour, ou stop."; heard(h); speak(h); };
+      }
+      // « poitrine 96 », « nom Awa… » dits au micro doré : on ouvre la fiche et on remplit
+      if(formy){
+        return ()=>{
+          window.DICT_SEED=txt; vaPause();
+          if(!$("fiche").hidden && currentCliente){ $("f-edit").click(); let k=0; const iv=setInterval(()=>{ if(!$("form").hidden){ clearInterval(iv); if(!DICT) $("in-dict").click(); } else if(++k>40){ clearInterval(iv); window.DICT_SEED=null; vaResume(); } }, 250); }
+          else { openForm(null); setTimeout(()=>{ if(!DICT) $("in-dict").click(); }, 400); }
+          heard("✓ "+(EN()?"Client card":"Fiche cliente"));
+        };
+      }
+      return null;
     }
     function start(){
       if(!VA.on || VA.paused || VA.rec || DICT) return;
-      const rec=new SR(); VA.rec=rec; rec.lang = EN() ? "en-GB" : "fr-FR"; rec.continuous=true; rec.interimResults=true;
+      const rec=new SR(); VA.rec=rec; CUR_REC=rec; rec.lang = vLang(); rec.continuous=false; rec.interimResults=true; rec.maxAlternatives=4;
       rec.onresult = ev=>{
-        for(let i=ev.resultIndex;i<ev.results.length;i++){
-          if(SPEAKING) continue;
-          const r=ev.results[i], txt=r[0].transcript;
-          if(!r.isFinal){ heard("« "+txt+" »"); continue; }
-          fails=0; exec(txt);
-        }
+        if(SPEAKING) return;
+        const r=ev.results[ev.results.length-1];
+        if(!r.isFinal){ heard("« "+r[0].transcript+" »"); return; }
+        fails=0;
+        const alts=[]; for(let a=0;a<r.length;a++) if(!isEcho(r[a].transcript)) alts.push(r[a].transcript);
+        if(!alts.length) return;
+        for(const a of alts){ const act=understand(a); if(act){ act(); return; } }
+        heard((EN()?"? Not understood: ":"? Pas compris : ")+"« "+alts[0]+" »"); vbeep(false);
       };
       rec.onerror = e=>{ if(e.error==="not-allowed"||e.error==="service-not-allowed"){ heard(t("dictDenied")); off(); } else if(e.error==="network"){ heard(t("dictNet")); off(); } };
-      rec.onend = ()=>{ if(VA.rec===rec) VA.rec=null; if(VA.on && !VA.paused && !DICT){ if(++fails>60){ off(); return; } setTimeout(start, 300); } };
-      try{ rec.start(); }catch(e){ VA.rec=null; }
+      rec.onend = ()=>{ if(VA.rec===rec) VA.rec=null; if(CUR_REC===rec) CUR_REC=null; if(VA.on && !VA.paused && !DICT){ if(++fails>120){ off(); return; } whenQuiet(start); } };
+      try{ rec.start(); }catch(e){ VA.rec=null; if(CUR_REC===rec) CUR_REC=null; setTimeout(start, 600); }
     }
     VA.start=start;
-    function on(){ VA.on=true; VA.paused=false; fails=0; b.classList.add("on"); state(); heard(""); tip.hidden=false; try{ speechSynthesis.cancel(); }catch(e){} dictWake(true); start(); }
-    function off(){ VA.on=false; b.classList.remove("on"); tip.hidden=true; if(VA.rec){ try{ VA.rec.abort(); }catch(e){} VA.rec=null; } if(!DICT) dictWake(false); }
+    const paintL=()=>{ $("vt-lang").textContent = VOICE_LANG==="en" ? "EN" : "FR"; };
+    $("vt-lang").addEventListener("click", ()=>{ setVoiceLang(VOICE_LANG==="en"?"fr":"en"); paintL(); });
+    function on(){ paintL(); VA.on=true; VA.paused=false; fails=0; b.classList.add("on"); state(); heard(""); tip.hidden=false; try{ speechSynthesis.cancel(); }catch(e){} dictWake(true); start(); }
+    function off(){ VA.on=false; b.classList.remove("on"); tip.hidden=true; if(VA.rec){ try{ VA.rec.abort(); }catch(e){} if(CUR_REC===VA.rec) CUR_REC=null; VA.rec=null; } if(!DICT) dictWake(false); }
     b.addEventListener("click", ()=>{ VA.on ? off() : on(); });
   })();
 
