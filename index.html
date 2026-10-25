@@ -338,7 +338,7 @@
   .dict-btn.on{ background:var(--gold); color:#0E0E0F }
   .dict-st{ font-size:13px; color:var(--muted); margin-top:6px; min-height:0 }
   .mgrid input.dict-hit{ border-color:var(--ok) !important; box-shadow:0 0 0 1px var(--ok) }
-  #dict-panel{ position:fixed; left:0; right:0; bottom:0; z-index:60; display:none; background:#16130f; border-top:2px solid var(--gold);
+  #dict-panel{ position:fixed; left:0; right:0; bottom:0; z-index:1001; display:none; background:#16130f; border-top:2px solid var(--gold);
     padding:12px max(16px, env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px)); box-shadow:0 -10px 30px rgba(0,0,0,.5) }
   #dict-panel.on{ display:block }
   #dict-panel .dp-top{ display:flex; align-items:center; gap:10px; font-size:16px; color:var(--gold) }
@@ -349,15 +349,18 @@
   #dict-panel .dp-btns{ display:flex; gap:10px; margin-top:10px }
   #dict-panel .dp-btns button{ flex:1; padding:13px; border-radius:12px; font:inherit; font-weight:700; border:1px solid var(--line2); background:none; color:inherit }
   #dict-panel #dp-stop{ background:var(--gold); color:#0E0E0F; border-color:var(--gold) }
-  body.dicting{ padding-bottom:160px }
+  body.dicting{ padding-bottom:200px }
+  body.dicting #cof-fab, body.dicting #voice-fab, body.dicting #inst{ display:none !important }
+  .dict-cur{ outline:3px solid var(--gold) !important; outline-offset:2px; border-radius:10px }
+  #dp-state{ font-size:20px }
   #dict-panel #dp-tts{ margin-left:auto; background:none; border:1px solid var(--line2); border-radius:10px; font-size:18px; padding:4px 10px; color:inherit }
-  #voice-fab{ position:fixed; right:max(16px, env(safe-area-inset-right,0px)); bottom:calc(18px + env(safe-area-inset-bottom,0px)); z-index:55; width:64px; height:64px; border-radius:50%;
+  #voice-fab{ position:fixed; left:max(16px, env(safe-area-inset-left,0px)); bottom:calc(18px + env(safe-area-inset-bottom,0px)); z-index:1000; width:64px; height:64px; border-radius:50%;
     border:none; background:var(--gold); color:#0E0E0F; display:grid; place-items:center; box-shadow:0 8px 24px rgba(0,0,0,.45); cursor:pointer }
   #voice-fab.on{ background:#e0533d; color:#fff; animation:vfp 1.2s infinite }
   @keyframes vfp{ 0%{ box-shadow:0 0 0 0 rgba(224,83,61,.55) } 100%{ box-shadow:0 0 0 22px rgba(224,83,61,0) } }
   .vchip{ background:none; border:1px solid var(--gold); color:var(--gold); border-radius:10px; font:inherit; font-weight:800; font-size:13px; padding:4px 9px; margin-left:6px }
   #vt-heard{ color:var(--gold); font-weight:700; margin-top:4px; min-height:20px }
-  #voice-tip{ position:fixed; left:max(16px, env(safe-area-inset-left,0px)); right:96px; bottom:calc(22px + env(safe-area-inset-bottom,0px)); z-index:55; background:#16130f;
+  #voice-tip{ position:fixed; left:max(16px, env(safe-area-inset-left,0px)); right:max(16px, env(safe-area-inset-right,0px)); bottom:calc(96px + env(safe-area-inset-bottom,0px)); z-index:1000; background:#16130f;
     border:1px solid var(--gold); border-radius:14px; padding:12px 14px; font-size:15px; line-height:1.4 }
   .ph-item{ position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--line2); aspect-ratio:1; background:#111; }
   .ph-item img{ width:100%; height:100%; object-fit:cover; display:block; cursor:zoom-in; }
@@ -6936,7 +6939,7 @@
         let j=i+k.len; const cap=[];
         if(k.t==="phone"){ while(j<raw.length && (isNumTok(nt[j]) || /^\+?\d[\d.]*$/.test(raw[j]))){ cap.push(nt[j]); j++; }
           const digits=phoneDigits(cap);
-          if(digits) fields.push({ t:"phone", v:digits }); }
+          if(digits) fields.push({ t:"phone", v:digits }); else fields.push({ t:"phone", empty:true }); }
         else if(k.t==="avance"||k.t==="prix"){ while(j<raw.length && isNumTok(nt[j])){ cap.push(nt[j]); j++; }
           while(j<raw.length && /^(dalasi|dalasis|d|cfa|franc|francs|frs|fcfa)$/.test(nt[j])) j++;
           const n=wordsToDigits(cap).find(x=>/^\d/.test(x)); if(n) fields.push({ t:k.t, v:parseFloat(n) }); }
@@ -6945,12 +6948,12 @@
         else if(k.t==="notes"){ while(j<raw.length){ cap.push(raw[j]); j++; } const v=cap.join(" ").trim(); if(v) fields.push({ t:"notes", v }); }
         else { // nom, modèle : texte jusqu'au prochain mot-clé, « mesure + nombre », nombre ou genre
           while(j<raw.length && FILL.has(nt[j]) && cap.length===0){ j++; }
-          while(j<raw.length && !kwAt(j) && !aliasNumAt(j) && !VG[nt[j]]){
+          while(j<raw.length && !kwAt(j) && !aliasNumAt(j) && !VG[nt[j]] && !/^(efface|effacer|corrige|corriger|annule|annuler|termine|terminer|stop|fini|erase|undo)$/.test(nt[j])){
             if(/^\d/.test(nt[j]) && !(k.t==="modele" && parseFloat(nt[j])<10 && nt[j+1] && !/^\d/.test(nt[j+1]) && !kwAt(j+1) && !aliasAt(j+1))) break;
             cap.push(raw[j]); j++; }
           let v=cap.join(" ").replace(/[.,;:!?]+$/,"").trim();
           if(k.t==="name") v=v.split(" ").map(x=>x.charAt(0).toUpperCase()+x.slice(1)).join(" ");
-          if(v) fields.push({ t:k.t, v }); }
+          if(v) fields.push({ t:k.t, v }); else fields.push({ t:k.t, empty:true }); }
         i=j-1; continue;
       }
       if(kinds.indexOf("genre")>-1 && VG[nt[i]]){ fields.push({ t:"genre", v:VG[nt[i]] }); continue; }
@@ -6978,7 +6981,9 @@
       speechSynthesis.speak(u);
     }catch(e){}
   }
-  function isEcho(txt){ if(!LAST_SAID || Date.now()-LAST_SAID_AT>5000) return false; const a=normV(txt); return !!a && (LAST_SAID.indexOf(a)>-1 || a.indexOf(LAST_SAID)>-1); }
+  // écho = la phrase reprend presque toute la dernière phrase dite par l'app (« homme » seul n'est pas un écho de « homme ou femme ? »)
+  function isEcho(txt){ if(!LAST_SAID || Date.now()-LAST_SAID_AT>5000) return false; const a=normV(txt).replace(/[?.!,]/g,"").replace(/\s+/g," ").trim(), L=LAST_SAID.replace(/[?.!,]/g,"").replace(/\s+/g," ").trim();
+    if(a.length<6) return false; return a===L || (L.indexOf(a)>-1 && a.length>=L.length*0.6) || (a.indexOf(L)>-1 && L.length>=a.length*0.6); }
   function whenQuiet(fn){ if(SPEAKING || (window.speechSynthesis && speechSynthesis.speaking)) setTimeout(()=>whenQuiet(fn), 200); else setTimeout(fn, 350); }
   function vbeep(ok){ try{ const C=window.AudioContext||window.webkitAudioContext; const c=vbeep.c||(vbeep.c=new C()); if(c.state==="suspended") c.resume();
     const o=c.createOscillator(), g=c.createGain(); o.frequency.value = ok ? 880 : 240; g.gain.value=.07; o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+(ok?.08:.25)); }catch(e){} }
@@ -6996,7 +7001,7 @@
   function dictPanel(){
     let p=$("dict-panel"); if(p) return p;
     p=document.createElement("div"); p.id="dict-panel";
-    p.innerHTML='<div class="dp-top"><span class="dp-dot"></span><b id="dp-state"></b><button type="button" id="dp-lang" class="vchip"></button><button type="button" id="dp-tts" aria-label="voix"></button></div><div id="dp-last"></div><div id="dp-live"></div><div class="dp-btns"><button type="button" id="dp-undo"></button><button type="button" id="dp-stop"></button></div>';
+    p.innerHTML='<div class="dp-top"><span class="dp-dot"></span><b id="dp-state"></b><button type="button" id="dp-lang" class="vchip"></button><button type="button" id="dp-tts" aria-label="voix"></button></div><div id="dp-last"></div><div id="dp-live"></div><div class="dp-btns"><button type="button" id="dp-mode"></button><button type="button" id="dp-undo"></button><button type="button" id="dp-stop"></button></div>';
     document.body.appendChild(p); return p;
   }
   // Ce que chaque formulaire accepte à la voix
@@ -7004,6 +7009,35 @@
     in:{ kinds:["name","phone","notes","genre"], name:"in-name", phone:"in-phone", notes:"in-notes", seg:"ingenre" },
     cf:{ kinds:["name","phone","genre","date","avance","prix","modele"], name:"cf-new-name", phone:"cf-new-phone", date:"cf-liv", avance:"cf-avance", seg:"cfgenre" }
   };
+  let GUIDED = true; try{ GUIDED = localStorage.getItem("sanaapro_voice_guided")!=="0"; }catch(e){}
+  // mots de remplissage autour d'une réponse (« le nom c'est… », « son numéro… »)
+  const VFILL = new Set(["nom","name","du","de","d","des","le","la","les","l","client","cliente","customer","c","est","cest","s","appelle","sappelle","il","elle","is","it","its","called","the","his","her","son","sa","ses",
+    "numero","telephone","phone","number","tel","modele","model","prix","price","avance","advance","un","une","a","an","egal","alors","euh","heu","ok","oui","yes","voila","donc","madame","monsieur","mademoiselle","mme","mr","mrs","miss"]);
+  const VCMD = { stop:/^(termine|terminer|fini|finir|stop|arrete|arreter|done|finish|finished)$/, next:/^(suivant|suivante|passe|passer|next|skip|rien|apres)$/,
+    prev:/^(retour|precedent|precedente|back|previous|revenir)$/, undo:/^(efface|effacer|corrige|corriger|annule|annuler|recommence|erase|undo|delete)$/ };
+  function vCmd(txt){ const w=normV(txt).split(" ").filter(Boolean); if(!w.length || w.length>3) return null;
+    for(const k of ["stop","undo","prev","next"]) if(w.some(x=>VCMD[k].test(x))) return k; return null; }
+  function trimFill(raw, nt){ let a=0, b=raw.length; while(a<b && VFILL.has(nt[a])) a++; while(b>a && VFILL.has(nt[b-1])) b--; return raw.slice(a,b); }
+  // Interprète une réponse pour UNE question précise (mode guidé)
+  function vInterp(type, txt, keys){
+    const raw=String(txt||"").replace(/(\d)([a-zA-Zà-ÿ])/g,"$1 $2").replace(/[-–'’]/g," ").split(/\s+/).filter(Boolean);
+    const nt=raw.map(x=>normV(x).replace(/\s+/g,"").replace(/[,.!?;:]+$/,"").replace(/^[,.]+/,""));
+    const core=nt.filter(x=>x && !VFILL.has(x));
+    if(type==="name"||type==="modele"||type==="notes"){
+      const r=trimFill(raw, nt).map(x=>x.replace(/[,.!?;:]+$/,"")).filter(x=>!/^\d/.test(x) || type!=="name");
+      if(!r.length) return null; let v=r.join(" ").trim(); if(!/[a-zA-Zà-ÿ]/.test(v)) return null;
+      if(type==="name") v=v.split(" ").map(x=>x.charAt(0).toUpperCase()+x.slice(1).toLowerCase()).join(" ");
+      return { v }; }
+    if(type==="phone"){ const d=phoneDigits(core); return d.length>=3 ? { v:d } : null; }
+    if(type==="genre"){ const g=nt.map(x=>VG[x]).find(Boolean) || (nt.some(x=>/^(monsieur|garcon|homme|hommes|male)$/.test(x))?"homme":null) || (nt.some(x=>/^(madame|dame|fille|femme|femmes|mademoiselle)$/.test(x))?"femme":null); return g ? { v:g } : null; }
+    if(type==="prix"||type==="avance"){ if(type==="avance" && core.some(x=>/^(rien|pas|zero|aucune|aucun|none|nothing|no)$/.test(x))) return { v:0 };
+      const n=wordsToDigits(core).find(x=>/^\d/.test(x)); return n ? { v:parseFloat(n) } : null; }
+    if(type==="date"){ const d=parseDateVoice(nt.filter(x=>x && !DSTOP.has(x) && x!=="le" && x!=="livraison" && x!=="date")); return d ? { v:d } : null; }
+    // mesure : le nombre dit, même seul ; les autres « nom + nombre » éventuels sont rendus à part
+    const r=parseDictee(txt, keys, type);
+    const mine=r.res.find(x=>x.key===type) || r.res.find(x=>x.key===null);
+    return mine ? { v:mine.v, others:r.res.filter(x=>x.key && x.key!==type) } : (r.res.some(x=>x.key) ? { v:null, others:r.res.filter(x=>x.key) } : null);
+  }
   function setupDict(id, boxId){
     const btn=$(id+"-dict"), st=$(id+"-dict-st"), F=DFORM[id];
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -7023,46 +7057,95 @@
       const paintLang=()=>{ $("dp-lang").textContent = VOICE_LANG==="en" ? "EN" : "FR"; };
       $("dp-lang").onclick=()=>{ setVoiceLang(VOICE_LANG==="en"?"fr":"en"); paintLang(); };
       paintLang();
-      let active=true, rec=null, lastIdx=-1, n=0, pending=null, hist=[], fails=0;
+      let active=true, rec=null, lastIdx=-1, n=0, pending=null, hist=[], fails=0, mute=false, said=[], pendField=null;
+      const sp=x=>{ if(mute) said.push(x); else speak(x); };
       const say=(txt)=>{ $("dp-state").textContent=txt; };
-      const show=()=>{ say(pending ? (EN?"Listening… "+label(pending)+" ?":"J'écoute… "+label(pending)+" ?") : (EN?"Listening… say “name”, “number”, “chest 96”":"J'écoute… dites « nom », « numéro », « poitrine 96 »")); };
+
+      // ---------- étapes du mode guidé ----------
+      const fieldEl=tp=>{ if(tp==="name") return $(F.name); if(tp==="phone") return $(F.phone); if(tp==="date") return $(F.date); if(tp==="avance") return $(F.avance); if(tp==="notes") return $(F.notes);
+        if(tp==="genre") return document.querySelector('.seg[data-seg="'+F.seg+'"]');
+        if(tp==="modele"||tp==="prix"){ const r=$("cf-arts").querySelector(".art-row"); return r ? r.children[tp==="modele"?0:1] : null; }
+        return inputs().find(i=>i.id.replace(/^c?m-/,"")===tp) || null; };
+      const isEmpty=tp=>{ if(tp==="genre") return !(id==="in" ? editingId : ($("cf-cliente").value!=="__new")); const el=fieldEl(tp); return !el || !String(el.value||"").trim(); };
+      const ASK={ name:["Nom du client ?","Client's name?"], phone:["Numéro de téléphone ?","Phone number?"], genre:["Homme ou femme ?","Man or woman?"],
+        modele:["Quel modèle ?","Which garment?"], prix:["Prix ?","Price?"], avance:["Avance ?","Advance?"], date:["Date de livraison ?","Delivery date?"] };
+      const prompt=tp=> ASK[tp] ? (EN?ASK[tp][1]:ASK[tp][0]) : label(tp)+" ?";
+      const steps=()=>{ const base = id==="in" ? ["name","phone","genre"] : (($("cf-cliente").value==="__new") ? ["name","phone","genre","modele","prix","avance","date"] : ["modele","prix","avance","date"]);
+        return base.concat(keysNow()); };
+      let cur=-1, miss=0;
+      const highlight=tp=>{ document.querySelectorAll(".dict-cur").forEach(x=>x.classList.remove("dict-cur")); const el=fieldEl(tp); if(el){ el.classList.add("dict-cur"); try{ el.scrollIntoView({ behavior:"smooth", block:"center" }); }catch(e){} } };
+      const ask=(i, pre)=>{ const S=steps(); cur=i; miss=0;
+        if(i>=S.length){ document.querySelectorAll(".dict-cur").forEach(x=>x.classList.remove("dict-cur")); speak((pre?pre+". ":"")+(EN?"Finished. Check and save.":"Terminé. Vérifiez et enregistrez.")); stop(); return; }
+        const q=prompt(S[i]); highlight(S[i]); say("🎤 "+q); speak((pre?pre+". ":"")+q); };
+      const nextEmpty=(from)=>{ const S=steps(); let i=from; while(i<S.length && !isEmpty(S[i])) i++; return i; };
+
       const mark=(el,txt)=>{ el.classList.add("dict-hit"); try{ el.scrollIntoView({ behavior:"smooth", block:"center" }); }catch(e){} $("dp-last").textContent="✓ "+txt; };
-      const setVal=(el,v,txt,spoken)=>{ if(!el) return; hist.push([el, el.value]); el.value=v; el.dispatchEvent(new Event("input",{ bubbles:true })); el.dispatchEvent(new Event("change",{ bubbles:true })); mark(el,txt); speak(spoken||txt); n++; };
+      const setVal=(el,v,txt,spoken)=>{ if(!el) return; hist.push([el, el.value]); el.value=v; el.dispatchEvent(new Event("input",{ bubbles:true })); el.dispatchEvent(new Event("change",{ bubbles:true })); mark(el,txt); sp(spoken||txt); n++; };
       const fill=(k,v)=>{ const el=inputs().find(i=>i.id.replace(/^c?m-/,"")===k); if(!el) return false;
-        hist.push([el, el.value]); el.value=v; lastIdx=inputs().indexOf(el); n++; mark(el, label(k)+" : "+v+" cm"); speak(label(k)+" "+String(v).replace(".", EN?" point ":" virgule ")); return true; };
+        hist.push([el, el.value]); el.value=v; lastIdx=inputs().indexOf(el); n++; mark(el, label(k)+" : "+v+" cm"); sp((GUIDED?"":label(k)+" ")+String(v).replace(".", EN?" point ":" virgule ")); return true; };
       const undo=()=>{ const h=hist.pop(); if(!h) return; h[0].value=h[1]; if(!h[1]) h[0].classList.remove("dict-hit"); h[0].dispatchEvent(new Event("input",{ bubbles:true })); n=Math.max(0,n-1);
-        $("dp-last").textContent = EN?"↩ Erased":"↩ Effacé"; speak(EN?"Erased":"Effacé"); };
+        $("dp-last").textContent = EN?"↩ Erased":"↩ Effacé"; return true; };
       const applyField=f=>{
-        if(f.t==="genre"){ const b=document.querySelector('.seg[data-seg="'+F.seg+'"] button[data-g="'+f.v+'"]'); if(b){ b.click(); $("dp-last").textContent="✓ "+(f.v==="homme"?(EN?"Man":"Homme"):(EN?"Woman":"Femme")); speak(f.v==="homme"?(EN?"Man":"Homme"):(EN?"Woman":"Femme")); } return; }
+        if(f.t==="genre"){ const b=document.querySelector('.seg[data-seg="'+F.seg+'"] button[data-g="'+f.v+'"]'); if(b){ b.click(); $("dp-last").textContent="✓ "+(f.v==="homme"?(EN?"Man":"Homme"):(EN?"Woman":"Femme")); sp(f.v==="homme"?(EN?"Man":"Homme"):(EN?"Woman":"Femme")); } return; }
         if(f.t==="name"){ if(id==="cf" && $("cf-cliente").value!=="__new"){ $("cf-cliente").value="__new"; toggleNewCliente(); }
           setVal($(F.name), f.v, (EN?"Name: ":"Nom : ")+f.v, f.v); return; }
-        if(f.t==="phone"){ if(id==="cf" && $("cf-cliente").value!=="__new") return; setVal($(F.phone), f.v, (EN?"Number: ":"Numéro : ")+f.v, (EN?"Number ":"Numéro ")+sayPhone(f.v)); return; }
+        if(f.t==="phone"){ if(id==="cf" && $("cf-cliente").value!=="__new") return; setVal($(F.phone), f.v, (EN?"Number: ":"Numéro : ")+f.v, sayPhone(f.v)); return; }
         if(f.t==="notes"){ setVal($(F.notes), (($(F.notes).value||"")+" "+f.v).trim(), (EN?"Note: ":"Note : ")+f.v); return; }
-        if(f.t==="date"){ setVal($(F.date), f.v, (EN?"Delivery: ":"Livraison : ")+sayDate(f.v)); return; }
-        if(f.t==="avance"){ setVal($(F.avance), f.v, (EN?"Advance: ":"Avance : ")+f.v+" D", (EN?"Advance ":"Avance ")+f.v+" dalasis"); return; }
+        if(f.t==="date"){ setVal($(F.date), f.v, (EN?"Delivery: ":"Livraison : ")+sayDate(f.v), sayDate(f.v)); return; }
+        if(f.t==="avance"){ setVal($(F.avance), f.v, (EN?"Advance: ":"Avance : ")+f.v+" D", f.v+" dalasis"); return; }
         if(f.t==="modele"||f.t==="prix"){
           const rows=Array.from($("cf-arts").querySelectorAll(".art-row"));
           let r = f.t==="modele" ? rows.find(x=>!x.children[0].value.trim()) : (rows.slice().reverse().find(x=>x.children[0].value.trim() && !x.children[1].value.trim()) || rows.find(x=>!x.children[1].value.trim()));
           if(!r){ $("cf-art-add").click(); r=$("cf-arts").lastElementChild; }
           const el = f.t==="modele" ? r.children[0] : r.children[1];
-          setVal(el, f.v, f.t==="modele" ? (EN?"Garment: ":"Modèle : ")+f.v : (EN?"Price: ":"Prix : ")+f.v+" D", f.t==="modele" ? f.v : (EN?"Price ":"Prix ")+f.v+" dalasis");
+          setVal(el, f.v, f.t==="modele" ? (EN?"Garment: ":"Modèle : ")+f.v : (EN?"Price: ":"Prix : ")+f.v+" D", f.t==="modele" ? f.v : f.v+" dalasis");
           try{ artTotal(); }catch(e){}
           return; }
       };
       const stop=()=>{ active=false; try{ rec && rec.abort(); }catch(e){} if(CUR_REC===rec) CUR_REC=null; end(); };
-      const end=()=>{ if(DICT && DICT.id===id) DICT=null; if(!VA.on) dictWake(false); setTimeout(vaResume, 400); P.classList.remove("on"); document.body.classList.remove("dicting"); btn.classList.remove("on"); btn.textContent=t("dictBtn");
+      const end=()=>{ if(DICT && DICT.id===id) DICT=null; document.querySelectorAll(".dict-cur").forEach(x=>x.classList.remove("dict-cur"));
+        if(!VA.on) dictWake(false); setTimeout(vaResume, 400); P.classList.remove("on"); document.body.classList.remove("dicting"); btn.classList.remove("on"); btn.textContent=t("dictBtn");
         st.textContent = n ? (EN?"✅ "+n+" field(s) filled. Check before saving.":"✅ "+n+" case(s) remplie(s). Vérifiez avant d'enregistrer.") : ""; };
-      $("dp-undo").onclick=undo; $("dp-stop").onclick=stop;
-      // Traite une phrase : on essaie chaque version entendue et on garde celle qui remplit le plus de cases.
-      const handle=alts=>{
+      $("dp-undo").onclick=()=>{ if(GUIDED){ const S=steps(); const el=fieldEl(S[cur]); if(el && "value" in el && el.value){ hist.push([el,el.value]); el.value=""; el.dispatchEvent(new Event("input",{ bubbles:true })); } else undo(); ask(Math.max(0,cur)); } else { undo(); speak(EN?"Erased":"Effacé"); } };
+      $("dp-stop").onclick=()=>{ speak(EN?"Finished":"Terminé"); stop(); };
+
+      // ---------- mode guidé : une réponse pour la question posée ----------
+      const handleGuided=alts=>{
+        alts=alts.filter(a=>!isEcho(a)); if(!alts.length) return;
+        const S=steps(), tp=S[cur];
+        const c=alts.map(vCmd).find(Boolean);
+        if(c==="stop"){ speak(EN?"Finished":"Terminé"); stop(); return; }
+        if(c==="next"){ ask(cur+1); return; }
+        if(c==="prev"){ ask(Math.max(0,cur-1)); return; }
+        if(c==="undo"){ const el=fieldEl(tp); if(el && "value" in el && el.value){ el.value=""; el.dispatchEvent(new Event("input",{ bubbles:true })); } else if(cur>0){ const pe=fieldEl(S[cur-1]); if(pe && "value" in pe){ pe.value=""; pe.dispatchEvent(new Event("input",{ bubbles:true })); } ask(cur-1, EN?"Erased":"Effacé"); return; }
+          ask(cur, EN?"Erased":"Effacé"); return; }
+        let got=null, txt=alts[0];
+        for(const a of alts){ const r=vInterp(tp, a, keysNow()); if(r && (r.v!==null || (r.others&&r.others.length))){ got=r; txt=a; break; } }
+        if(!got){ miss++; $("dp-last").textContent=(EN?"? Not understood: ":"? Pas compris : ")+"« "+alts[0]+" »"; vbeep(false);
+          if(miss>=2){ say("🎤 "+prompt(tp)+(EN?"  (say “next” to skip)":"  (dites « suivant » pour passer)")); speak(prompt(tp)); miss=0; }
+          return; }
+        mute=true; said=[];
+        (got.others||[]).forEach(x=>fill(x.key, x.v));
+        if(got.v!==null){
+          if(ASK[tp]) applyField({ t:tp, v:got.v }); else fill(tp, got.v);
+        }
+        mute=false;
+        const pre=said.join(". ");
+        if(got.v===null){ speak(pre); return; }
+        ask(nextEmpty(cur+1), pre);
+      };
+
+      // ---------- mode libre : « poitrine 96, taille 78… » ----------
+      const handleFree=alts=>{
+        alts=alts.filter(a=>!isEcho(a)); if(!alts.length) return;
+        if(pendField){ const r=vInterp(pendField, alts[0], keysNow()); if(r && r.v!==null && !vCmd(alts[0])){ const tp=pendField; pendField=null; if(ASK[tp]) applyField({ t:tp, v:r.v }); else fill(tp, r.v); return; } }
         let best=null, bs=-1;
-        alts.forEach(txt=>{ if(isEcho(txt)) return; const r=parseVoiceForm(txt, F.kinds, keysNow(), pending);
-          const sc=r.fields.length*3 + r.res.filter(x=>x.key).length*3 + r.res.length + r.cmds.length*3 + (r.pending?1:0);
+        alts.forEach(txt=>{ const r=parseVoiceForm(txt, F.kinds, keysNow(), pending);
+          const sc=r.fields.filter(x=>!x.empty).length*3 + r.res.filter(x=>x.key).length*3 + r.res.length + r.cmds.length*3 + (r.pending?1:0) + r.fields.filter(x=>x.empty).length;
           if(sc>bs){ bs=sc; best={ r, txt }; } });
-        if(!best) return;
         const r=best.r;
         if(bs<=0){ $("dp-last").textContent=(EN?"? Not understood: ":"? Pas compris : ")+"« "+best.txt+" »"; vbeep(false); return; }
-        r.fields.forEach(applyField);
+        r.fields.forEach(f=>{ if(f.empty){ pendField=f.t; $("dp-last").textContent="… "+(ASK[f.t]?(EN?ASK[f.t][1]:ASK[f.t][0]):f.t); vbeep(true); } else applyField(f); });
         r.res.forEach(x=>{
           if(x.key){ fill(x.key, x.v); return; }
           const ins=inputs();
@@ -7070,19 +7153,24 @@
         });
         if(r.pending && r.pending!==pending){ $("dp-last").textContent="… "+label(r.pending)+" ?"; vbeep(true); }
         pending=r.pending;
-        r.cmds.forEach(c=>{ if(c==="undo") undo(); if(c==="stop"){ speak(EN?"Finished":"Terminé"); stop(); } });
+        r.cmds.forEach(c=>{ if(c==="undo"){ undo(); speak(EN?"Erased":"Effacé"); } if(c==="stop"){ speak(EN?"Finished":"Terminé"); stop(); } });
       };
+      const showFree=()=>{ say(pending ? (EN?"Listening… "+label(pending)+" ?":"J'écoute… "+label(pending)+" ?") : (EN?"Listening… say “name”, “number”, “chest 96”":"J'écoute… dites « nom », « numéro », « poitrine 96 »")); };
+      const paintMode=()=>{ $("dp-mode").textContent = GUIDED ? (EN?"🧭 Guided":"🧭 Guidé") : (EN?"✍ Free":"✍ Libre"); };
+      $("dp-mode").onclick=()=>{ GUIDED=!GUIDED; try{ localStorage.setItem("sanaapro_voice_guided", GUIDED?"1":"0"); }catch(e){} paintMode();
+        document.querySelectorAll(".dict-cur").forEach(x=>x.classList.remove("dict-cur")); if(GUIDED) ask(nextEmpty(0)); else { showFree(); speak(EN?"Free mode":"Mode libre"); } };
+      paintMode();
+
       const start=()=>{
         if(!active) return;
-        rec=new SR(); CUR_REC=rec; rec.lang = vLang(); rec.continuous=false; rec.interimResults=true; rec.maxAlternatives=4;
+        rec=new SR(); CUR_REC=rec; rec.lang = vLang(); rec.continuous=false; rec.interimResults=true; rec.maxAlternatives=5;
         rec.onresult = ev=>{
           if(SPEAKING) return;
           const res=ev.results[ev.results.length-1];
           if(!res.isFinal){ $("dp-live").textContent="« "+res[0].transcript+" »"; return; }
           fails=0; $("dp-live").textContent="";
           const alts=[]; for(let a=0;a<res.length;a++) alts.push(res[a].transcript);
-          handle(alts);
-          if(active) show();
+          if(GUIDED) handleGuided(alts); else { handleFree(alts); if(active) showFree(); }
         };
         rec.onerror = e=>{
           if(e.error==="not-allowed"||e.error==="service-not-allowed"){ active=false; st.textContent=t("dictDenied"); }
@@ -7096,9 +7184,12 @@
       if(typeof vaPause==="function") vaPause();
       DICT={ id, stop };
       btn.classList.add("on"); btn.textContent=t("dictStop"); st.textContent="";
-      $("dp-last").textContent=""; $("dp-live").textContent=""; P.classList.add("on"); document.body.classList.add("dicting"); show();
-      dictWake(true); start();
-      if(window.DICT_SEED){ const sd=window.DICT_SEED; window.DICT_SEED=null; setTimeout(()=>handle([sd]), 300); }
+      $("dp-last").textContent=""; $("dp-live").textContent=""; P.classList.add("on"); document.body.classList.add("dicting");
+      dictWake(true);
+      const seed=window.DICT_SEED; window.DICT_SEED=null;
+      if(seed){ const g=GUIDED; GUIDED=false; handleFree([seed]); GUIDED=g; }
+      if(GUIDED) ask(nextEmpty(0)); else showFree();
+      whenQuiet(start);
     });
   }
   setupDict("in","in-mesures");
