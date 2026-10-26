@@ -6837,7 +6837,13 @@
   const NUM_U={zero:0,un:1,une:1,deux:2,trois:3,quatre:4,cinq:5,six:6,sept:7,huit:8,neuf:9,dix:10,onze:11,douze:12,treize:13,quatorze:14,quinze:15,seize:16,
     one:1,two:2,three:3,four:4,five:5,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19};
   const NUM_T={vingt:20,trente:30,quarante:40,cinquante:50,soixante:60,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+  // « cent » s'entend « sans », « sang », « sent » ; « vingt » s'entend « vin », « vain » ; « cent-dix » → « sans dix »…
+  // Dans une dictée de mesures, ces mots ne veulent rien dire d'autre : on les remet en nombres.
+  const NUM_HOMO = { sans:"cent", sang:"cent", sent:"cent", sens:"cent", cents:"cent", san:"cent", vin:"vingt", vins:"vingt", vain:"vingt", vint:"vingt", "cette":"sept", set:"sept", sete:"sept", neufs:"neuf", huits:"huit", dis:"dix", disent:"dix", cinquantes:"cinquante", quarantes:"quarante", trentes:"trente", soixantes:"soixante" };
+  const homoNum = ws => ws.map((w,i)=>{ const h=NUM_HOMO[w]; if(!h) return w; if(h==="cent"||h==="vingt") return h;
+    const nb=x=>x && (/^\d/.test(x)||NUM_U[x]!==undefined||NUM_T[x]!==undefined||NUM_HOMO[x]); return (nb(ws[i-1])||nb(ws[i+1])||ws.length===1) ? h : w; });
   function wordsToDigits(words){
+    words=homoNum(words);
     const out=[]; let tot=0, grp=0, on=false, prev="";
     const flush=()=>{ if(on){ out.push(String(tot+grp)); } tot=0; grp=0; on=false; };
     for(let i=0;i<words.length;i++){
@@ -6857,7 +6863,7 @@
   // Découpe une phrase dictée en { key, v } ; un nom de mesure sans nombre reste « en attente » pour le nombre suivant.
   function parseDictee(text, keys, pending){
     let s=normV(String(text||"").replace(/(\d)([a-zA-Zà-ÿ])/g,"$1 $2")).replace(/(\d)\s*(virgule|point)\s*(\d)/g,"$1.$3").replace(/(\d),(\d)/g,"$1.$2");
-    let words=wordsToDigits(s.split(" ").filter(Boolean));
+    let words=wordsToDigits(s.split(" ").map(w=>/^\d/.test(w) ? w.replace(/[,.]+$/,"") : w.replace(/[,.]+/g,"")).filter(Boolean));
     words=wordsToDigits(words.join(" ").replace(/(\d+)\s+(virgule|point)\s+(\d+)/g,"$1.$3").split(" "));
     const al=aliasMap(keys), res=[], cmds=[]; let key=pending||null;
     const norm=words.map(w=>DSTOP.has(w)?"":((w.length>3 && /[a-z]s$/.test(w))?w.slice(0,-1):w));
@@ -7146,7 +7152,7 @@
           if(best){ const d=(buf.tp==="phone"?buf.v:"")+best; clearTimeout(buf.tm);
             const full = d.length>=7 && !(d.startsWith("220") && d.length<10);
             if(full){ commit("phone", d); return; }
-            buf={ tp:"phone", v:d, tm:setTimeout(()=>{ if(buf.tp==="phone" && buf.v.length>=3 && active){ commit("phone", buf.v); } }, 6000) };
+            buf={ tp:"phone", v:d, tm:setTimeout(()=>{ if(buf.tp==="phone" && buf.v.length>=3 && active){ commit("phone", buf.v); } }, 8000) };
             $("dp-last").textContent="📞 "+d+" …"; say("🎤 "+(EN?"Continue the number…":"Continuez le numéro…")); vbeep(true); return; }
         }
         if(tp==="name"||tp==="modele"){
@@ -7204,8 +7210,10 @@
       const dispatch=alts=>{ if(GUIDED) handleGuided(alts); else { handleFree(alts); if(active) showFree(); } };
       const start=()=>{
         if(!active) return;
-        rec=new SR(); CUR_REC=rec; rec.lang = vLang(); rec.continuous=false; rec.interimResults=true; rec.maxAlternatives=5;
-        let interim=null, done=false, early=null;
+        // pour le numéro (long), on écoute en continu : les pauses entre les chiffres ne coupent plus
+        const cont = !!(GUIDED && steps()[cur]==="phone");
+        rec=new SR(); CUR_REC=rec; rec.lang = vLang(); rec.continuous=cont; rec.interimResults=true; rec.maxAlternatives=5;
+        let interim=null, done=false, early=null, prevF="";
         const take=alts=>{ if(done) return; done=true; clearTimeout(early); fails=0; ready(false); dispatch(alts); };
         rec.onaudiostart = ()=>ready(true);
         rec.onspeechstart = ()=>{ $("dp-live").textContent="…"; };
@@ -7213,6 +7221,12 @@
           if(SPEAKING || done) return;
           const res=ev.results[ev.results.length-1];
           const alts=[]; for(let a=0;a<res.length;a++) alts.push(res[a].transcript);
+          if(res.isFinal && cont){ interim=null; fails=0;
+            // certains Android renvoient tout le texte depuis le début : on ne garde que la partie nouvelle
+            const full=alts[0]||""; let part=alts;
+            if(prevF && full.indexOf(prevF)===0){ part=alts.map(a=>a.indexOf(prevF)===0 ? a.slice(prevF.length) : a).filter(a=>a.trim()); }
+            prevF=full; if(!part.length) return;
+            dispatch(part); if(GUIDED && steps()[cur]!=="phone"){ done=true; try{ rec.abort(); }catch(e){} } return; }
           if(res.isFinal){ take(alts); try{ rec.abort(); }catch(e){} return; }
           interim=alts; $("dp-live").textContent="« "+alts[0]+" »";
           // en mode guidé, une réponse nette (un nombre pour une mesure) est prise sans attendre la fin
