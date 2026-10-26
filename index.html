@@ -352,6 +352,8 @@
   #dict-panel .dp-btns button{ flex:1; padding:13px; border-radius:12px; font:inherit; font-weight:700; border:1px solid var(--line2); background:none; color:inherit }
   #dict-panel #dp-stop{ background:var(--gold); color:#0E0E0F; border-color:var(--gold) }
   body.dicting{ padding-bottom:200px }
+  /* 26/10 : dictée vocale retirée à la demande de Djamil (code conservé) — enlever la classe novoice pour la remettre */
+  body.novoice .dict-bar, body.novoice #voice-fab, body.novoice #voice-tip{ display:none !important }
   body.dicting #cof-fab, body.dicting #voice-fab, body.dicting #inst{ display:none !important }
   .draft-bar{ margin:10px 0 4px; padding:12px 14px; border:1px dashed var(--gold); border-radius:12px; font-size:14px; color:var(--gold) }
   .draft-bar button.ghost{ margin-top:8px; padding:10px; font-size:14px }
@@ -518,7 +520,7 @@
   @media (prefers-reduced-motion:reduce){ .swipe-in-l, .swipe-in-r{ animation:none } }
 </style>
 </head>
-<body>
+<body class="novoice">
 <script>
   window.addEventListener("error", function(e){
     var l=document.getElementById("loading");
@@ -6761,7 +6763,7 @@
       PH_CACHE[k]=(PH_CACHE[k]||[]).filter(x=>x!==p); drawNb(boxId, cid, pending);
       deleteDoc(doc(db,"boutiques",BID,"clientes",p.id)).catch(function(){});
     }));
-    (pending||[]).forEach(p=>phThumb(box, p, ()=>{ const i=pending.indexOf(p); if(i>-1) pending.splice(i,1); drawNb(boxId, cid, pending); }));
+    (pending||[]).forEach(p=>phThumb(box, p, ()=>{ const i=pending.indexOf(p); if(i>-1) pending.splice(i,1); if(p.read) effacerLecture(p); drawNb(boxId, cid, pending); }));
     if(!box.children.length){ const e=document.createElement("div"); e.className="empty"; e.style.cssText="padding:6px 0;grid-column:1/-1"; e.textContent=t("nbNone"); box.appendChild(e); }
   }
   $("f-nb-file").addEventListener("change", async e=>{
@@ -6772,7 +6774,7 @@
     const before=IN_NB.length;
     await addPhotos(e.target.files, "cahier", IN_NB); e.target.value="";
     drawNb("in-nb", editingId, IN_NB);
-    if(IN_NB.length>before) lireCahier(IN_NB[IN_NB.length-1].data);
+    if(IN_NB.length>before) lireCahier(IN_NB[IN_NB.length-1].data, IN_NB[IN_NB.length-1]);
   });
 
   // =================== LECTURE AUTOMATIQUE DU CAHIER (serveur + IA) ===================
@@ -6782,7 +6784,18 @@
   // s'ouvre ou revient au premier plan, puis toutes les 10 min tant qu'elle reste affichée.
   setInterval(function(){ if(BID && document.visibilityState==="visible" && navigator.onLine) wakeLecteur(); }, 10*60*1000);
   document.addEventListener("visibilitychange", function(){ if(BID && document.visibilityState==="visible" && navigator.onLine) wakeLecteur(); });
-  async function lireCahier(img){
+  // Efface ce que la lecture d'une page de cahier a rempli (mesures, et nom / numéro s'ils venaient d'elle)
+  function effacerLecture(p, quiet){
+    if(!p || !p.read) return 0; let n=0;
+    Object.keys(p.read.mes).forEach(k=>{ const el=$("m-"+k); if(el){ el.value=p.read.mes[k]; if(!el.value) el.classList.remove("dict-hit"); n++; } });
+    if(p.read.name!==null && $("in-name").value===p.read.nameSet) $("in-name").value=p.read.name;
+    if(p.read.phone!==null && $("in-phone").value===p.read.phoneSet) $("in-phone").value=p.read.phone;
+    p.read=null;
+    const st=$("in-nb-st"); if(!quiet){ st.textContent=(LANG_UI==="en"?"🗑 The {n} measurement(s) read from the notebook were erased.":"🗑 Les {n} mesure(s) lues dans le cahier ont été effacées.").replace("{n}", n); st.style.color=""; }
+    try{ saveDraft("in"); }catch(e){}
+    return n;
+  }
+  async function lireCahier(img, photo){
     const st=$("in-nb-st"); st.style.color="";
     if(!navigator.onLine){ st.textContent=t("aiOffline"); return; }
     const inputs=Array.from($("in-mesures").querySelectorAll("input"));
@@ -6797,12 +6810,17 @@
         body: JSON.stringify({ image:img, genre:GENRE_FORM, champs }) });
       const j = await r.json().catch(()=>({}));
       if(!r.ok){ st.textContent = t(r.status===429?"aiLimit":(r.status===503?"aiNoKey":(r.status===401?"aiAuth":"aiFail"))); st.style.color="var(--warn)"; return; }
-      let n=0;
-      Object.keys(j.mesures||{}).forEach(k=>{ const el=$("m-"+k); if(el){ el.value=j.mesures[k]; el.classList.add("dict-hit"); n++; } });
-      if(j.nom && !$("in-name").value.trim()) $("in-name").value=j.nom;
-      if(j.telephone && !$("in-phone").value.trim()) $("in-phone").value=j.telephone;
+      let n=0; const read={ mes:{}, name:null, phone:null, nameSet:null, phoneSet:null };
+      Object.keys(j.mesures||{}).forEach(k=>{ const el=$("m-"+k); if(el){ read.mes[k]=el.value; el.value=j.mesures[k]; el.classList.add("dict-hit"); n++; } });
+      if(j.nom && !$("in-name").value.trim()){ read.name=""; read.nameSet=j.nom; $("in-name").value=j.nom; }
+      if(j.telephone && !$("in-phone").value.trim()){ read.phone=""; read.phoneSet=j.telephone; $("in-phone").value=j.telephone; }
+      if(photo && n) photo.read=read;
       st.textContent = n ? t("aiDone").replace("{n}", n)+(j.plusieurs?" "+t("aiMany"):"") : t("aiNone");
       st.style.color = n ? "var(--ok)" : "var(--warn)";
+      if(photo && n){ const b=document.createElement("button"); b.type="button"; b.className="ghost"; b.style.marginTop="8px";
+        b.textContent = LANG_UI==="en" ? "🗑 Erase the measurements read from this page" : "🗑 Effacer les mesures lues sur cette page";
+        b.addEventListener("click", ()=>effacerLecture(photo)); st.appendChild(document.createElement("br")); st.appendChild(b); }
+      try{ saveDraft("in"); }catch(e){}
     }catch(e){ st.textContent=t("aiFail"); st.style.color="var(--warn)"; }
     finally{ clearTimeout(slow); clearTimeout(kill); }
   }
