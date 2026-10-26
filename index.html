@@ -358,13 +358,17 @@
   .dict-cur{ outline:3px solid var(--gold) !important; outline-offset:2px; border-radius:10px }
   #dp-state{ font-size:20px }
   #dict-panel #dp-tts{ margin-left:auto; background:none; border:1px solid var(--line2); border-radius:10px; font-size:18px; padding:4px 10px; color:inherit }
-  #voice-fab{ position:fixed; left:max(16px, env(safe-area-inset-left,0px)); bottom:calc(18px + env(safe-area-inset-bottom,0px)); z-index:1000; width:64px; height:64px; border-radius:50%;
-    border:none; background:var(--gold); color:#0E0E0F; display:grid; place-items:center; box-shadow:0 8px 24px rgba(0,0,0,.45); cursor:pointer }
-  #voice-fab.on{ background:#e0533d; color:#fff; animation:vfp 1.2s infinite }
-  @keyframes vfp{ 0%{ box-shadow:0 0 0 0 rgba(224,83,61,.55) } 100%{ box-shadow:0 0 0 22px rgba(224,83,61,0) } }
+  #voice-fab{ position:fixed; right:max(10px, env(safe-area-inset-right,0px)); top:calc(8px + env(safe-area-inset-top,0px)); z-index:1000; width:30px; height:30px; border-radius:50%;
+    border:2px solid rgba(214,168,78,.9); background:rgba(20,17,12,.85); color:var(--gold); display:grid; place-items:center; padding:0; cursor:pointer;
+    animation:vfb 2.4s ease-in-out infinite; transition:width .2s, height .2s, background .2s }
+  #voice-fab svg{ width:16px; height:16px; transition:width .2s, height .2s }
+  @keyframes vfb{ 0%,100%{ opacity:.55; box-shadow:0 0 0 0 rgba(214,168,78,0) } 50%{ opacity:1; box-shadow:0 0 0 6px rgba(214,168,78,.18) } }
+  #voice-fab.on{ width:56px; height:56px; background:#e0533d; border-color:#e0533d; color:#fff; opacity:1; animation:vfp 1.2s infinite }
+  #voice-fab.on svg{ width:28px; height:28px }
+  @keyframes vfp{ 0%{ box-shadow:0 0 0 0 rgba(224,83,61,.55) } 100%{ box-shadow:0 0 0 18px rgba(224,83,61,0) } }
   .vchip{ background:none; border:1px solid var(--gold); color:var(--gold); border-radius:10px; font:inherit; font-weight:800; font-size:13px; padding:4px 9px; margin-left:6px }
   #vt-heard{ color:var(--gold); font-weight:700; margin-top:4px; min-height:20px }
-  #voice-tip{ position:fixed; left:max(16px, env(safe-area-inset-left,0px)); right:max(16px, env(safe-area-inset-right,0px)); bottom:calc(96px + env(safe-area-inset-bottom,0px)); z-index:1000; background:#16130f;
+  #voice-tip{ position:fixed; left:max(12px, env(safe-area-inset-left,0px)); right:calc(76px + env(safe-area-inset-right,0px)); top:calc(8px + env(safe-area-inset-top,0px)); z-index:1000; box-shadow:0 10px 30px rgba(0,0,0,.5); background:#16130f;
     border:1px solid var(--gold); border-radius:14px; padding:12px 14px; font-size:15px; line-height:1.4 }
   .ph-item{ position:relative; border-radius:10px; overflow:hidden; border:1px solid var(--line2); aspect-ratio:1; background:#111; }
   .ph-item img{ width:100%; height:100%; object-fit:cover; display:block; cursor:zoom-in; }
@@ -7082,7 +7086,7 @@
         return base.concat(keysNow()); };
       let cur=-1, miss=0;
       const highlight=tp=>{ document.querySelectorAll(".dict-cur").forEach(x=>x.classList.remove("dict-cur")); const el=fieldEl(tp); if(el){ el.classList.add("dict-cur"); try{ el.scrollIntoView({ behavior:"smooth", block:"center" }); }catch(e){} } };
-      const ask=(i, pre)=>{ const S=steps(); cur=i; miss=0;
+      const ask=(i, pre)=>{ try{ clearBuf(); }catch(e){} const S=steps(); cur=i; miss=0;
         if(i>=S.length){ document.querySelectorAll(".dict-cur").forEach(x=>x.classList.remove("dict-cur")); speak((pre?pre+". ":"")+(EN?"Finished. Check and save.":"Terminé. Vérifiez et enregistrez.")); stop(); return; }
         const q=prompt(S[i]); highlight(S[i]); say("🎤 "+q); speak((pre?pre+". ":"")+q); };
       const nextEmpty=(from)=>{ const S=steps(); let i=from; while(i<S.length && !isEmpty(S[i])) i++; return i; };
@@ -7124,12 +7128,33 @@
       $("dp-stop").onclick=()=>{ speak(EN?"Finished":"Terminé"); stop(); };
 
       // ---------- mode guidé : une réponse pour la question posée ----------
+      // Numéro et nom peuvent arriver en plusieurs morceaux (« 7 62… 86 83 ») : on les assemble.
+      let buf={ tp:null, v:"", tm:null };
+      const clearBuf=()=>{ clearTimeout(buf.tm); buf={ tp:null, v:"", tm:null }; };
+      const commit=(tp, v)=>{ clearBuf(); mute=true; said=[];
+        if(ASK[tp]) applyField({ t:tp, v }); else fill(tp, v);
+        mute=false; ask(nextEmpty(cur+1), said.join(". ")); };
       const handleGuided=alts=>{
         alts=alts.filter(a=>!isEcho(a)); if(!alts.length) return;
         const S=steps(), tp=S[cur];
         const c=alts.map(vCmd).find(Boolean);
-        if(c==="stop"){ speak(EN?"Finished":"Terminé"); stop(); return; }
-        if(c==="next"){ ask(cur+1); return; }
+        if(c==="stop"){ if(buf.tp && buf.v){ const b=buf; commit(b.tp, b.v); } speak(EN?"Finished":"Terminé"); stop(); return; }
+        if(c==="next"){ if(buf.tp===tp && buf.v && (tp!=="phone" || buf.v.length>=3)){ commit(tp, buf.v); return; } clearBuf(); ask(cur+1); return; }
+        if(c==="undo" && buf.tp){ clearBuf(); ask(cur, EN?"Erased":"Effacé"); return; }
+        if(tp==="phone"){
+          let best=""; for(const a of alts){ const r=vInterp("phone", a, keysNow()); if(r && r.v && r.v.length>best.length) best=r.v; }
+          if(best){ const d=(buf.tp==="phone"?buf.v:"")+best; clearTimeout(buf.tm);
+            const full = d.length>=7 && !(d.startsWith("220") && d.length<10);
+            if(full){ commit("phone", d); return; }
+            buf={ tp:"phone", v:d, tm:setTimeout(()=>{ if(buf.tp==="phone" && buf.v.length>=3 && active){ commit("phone", buf.v); } }, 6000) };
+            $("dp-last").textContent="📞 "+d+" …"; say("🎤 "+(EN?"Continue the number…":"Continuez le numéro…")); vbeep(true); return; }
+        }
+        if(tp==="name"||tp==="modele"){
+          const r=vInterp(tp, alts[0], keysNow());
+          if(r && r.v!==null){ const v=(buf.tp===tp && buf.v ? buf.v+" " : "")+r.v; clearTimeout(buf.tm);
+            buf={ tp, v, tm:setTimeout(()=>{ if(buf.tp===tp && active) commit(tp, buf.v); }, 1700) };
+            $("dp-last").textContent="✎ "+v+" …"; return; }
+        }
         if(c==="prev"){ ask(Math.max(0,cur-1)); return; }
         if(c==="undo"){ const el=fieldEl(tp); if(el && "value" in el && el.value){ el.value=""; el.dispatchEvent(new Event("input",{ bubbles:true })); } else if(cur>0){ const pe=fieldEl(S[cur-1]); if(pe && "value" in pe){ pe.value=""; pe.dispatchEvent(new Event("input",{ bubbles:true })); } ask(cur-1, EN?"Erased":"Effacé"); return; }
           ask(cur, EN?"Erased":"Effacé"); return; }
