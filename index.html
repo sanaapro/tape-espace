@@ -7135,8 +7135,8 @@
 
       // ---------- mode guidé : une réponse pour la question posée ----------
       // Numéro et nom peuvent arriver en plusieurs morceaux (« 7 62… 86 83 ») : on les assemble.
-      let buf={ tp:null, v:"", tm:null };
-      const clearBuf=()=>{ clearTimeout(buf.tm); buf={ tp:null, v:"", tm:null }; };
+      let buf={ tp:null, v:"", tm:null, restart:null };
+      const clearBuf=()=>{ clearTimeout(buf.tm); buf={ tp:null, v:"", tm:null, restart:null }; };
       const commit=(tp, v)=>{ clearBuf(); mute=true; said=[];
         if(ASK[tp]) applyField({ t:tp, v }); else fill(tp, v);
         mute=false; ask(nextEmpty(cur+1), said.join(". ")); };
@@ -7152,14 +7152,16 @@
           if(best){ const d=(buf.tp==="phone"?buf.v:"")+best; clearTimeout(buf.tm);
             const full = d.length>=7 && !(d.startsWith("220") && d.length<10);
             if(full){ commit("phone", d); return; }
-            buf={ tp:"phone", v:d, tm:setTimeout(()=>{ if(buf.tp==="phone" && buf.v.length>=3 && active){ commit("phone", buf.v); } }, 8000) };
+            const goP=()=>{ if(buf.tp==="phone" && buf.v.length>=3 && active){ commit("phone", buf.v); } };
+            buf={ tp:"phone", v:d, tm:setTimeout(goP, 8000) }; buf.restart=()=>{ clearTimeout(buf.tm); buf.tm=setTimeout(goP, 8000); };
             $("dp-last").textContent="📞 "+d+" …"; say("🎤 "+(EN?"Continue the number…":"Continuez le numéro…")); vbeep(true); return; }
         }
         if(tp==="name"||tp==="modele"){
           const r=vInterp(tp, alts[0], keysNow());
           if(r && r.v!==null){ const v=(buf.tp===tp && buf.v ? buf.v+" " : "")+r.v; clearTimeout(buf.tm);
-            buf={ tp, v, tm:setTimeout(()=>{ if(buf.tp===tp && active) commit(tp, buf.v); }, 1700) };
-            $("dp-last").textContent="✎ "+v+" …"; return; }
+            const go=()=>{ if(buf.tp===tp && active) commit(tp, buf.v); };
+            buf={ tp, v, tm:setTimeout(go, 4000) }; buf.restart=()=>{ clearTimeout(buf.tm); buf.tm=setTimeout(go, 4000); };
+            $("dp-last").textContent="✎ "+v+" …"; say("🎤 "+(EN?"Go on… (say “next” to confirm)":"Continuez… (« suivant » pour valider)")); return; }
         }
         if(c==="prev"){ ask(Math.max(0,cur-1)); return; }
         if(c==="undo"){ const el=fieldEl(tp); if(el && "value" in el && el.value){ el.value=""; el.dispatchEvent(new Event("input",{ bubbles:true })); } else if(cur>0){ const pe=fieldEl(S[cur-1]); if(pe && "value" in pe){ pe.value=""; pe.dispatchEvent(new Event("input",{ bubbles:true })); } ask(cur-1, EN?"Erased":"Effacé"); return; }
@@ -7211,7 +7213,7 @@
       const start=()=>{
         if(!active) return;
         // pour le numéro (long), on écoute en continu : les pauses entre les chiffres ne coupent plus
-        const cont = !!(GUIDED && steps()[cur]==="phone");
+        const cont = !!(GUIDED && ["phone","name","modele"].indexOf(steps()[cur])>-1);
         rec=new SR(); CUR_REC=rec; rec.lang = vLang(); rec.continuous=cont; rec.interimResults=true; rec.maxAlternatives=5;
         let interim=null, done=false, early=null, prevF="";
         const take=alts=>{ if(done) return; done=true; clearTimeout(early); fails=0; ready(false); dispatch(alts); };
@@ -7221,14 +7223,14 @@
           if(SPEAKING || done) return;
           const res=ev.results[ev.results.length-1];
           const alts=[]; for(let a=0;a<res.length;a++) alts.push(res[a].transcript);
-          if(res.isFinal && cont){ interim=null; fails=0;
+          if(res.isFinal && cont){ interim=null; fails=0; if(buf.tm && buf.restart) buf.restart();
             // certains Android renvoient tout le texte depuis le début : on ne garde que la partie nouvelle
             const full=alts[0]||""; let part=alts;
             if(prevF && full.indexOf(prevF)===0){ part=alts.map(a=>a.indexOf(prevF)===0 ? a.slice(prevF.length) : a).filter(a=>a.trim()); }
             prevF=full; if(!part.length) return;
-            dispatch(part); if(GUIDED && steps()[cur]!=="phone"){ done=true; try{ rec.abort(); }catch(e){} } return; }
+            dispatch(part); if(GUIDED && ["phone","name","modele"].indexOf(steps()[cur])===-1){ done=true; try{ rec.abort(); }catch(e){} } return; }
           if(res.isFinal){ take(alts); try{ rec.abort(); }catch(e){} return; }
-          interim=alts; $("dp-live").textContent="« "+alts[0]+" »";
+          interim=alts; $("dp-live").textContent="« "+alts[0]+" »"; if(buf.tm && buf.restart) buf.restart();
           // en mode guidé, une réponse nette (un nombre pour une mesure) est prise sans attendre la fin
           clearTimeout(early);
           if(GUIDED){ const tp=steps()[cur]; if(tp && !ASK[tp] || tp==="prix" || tp==="avance" || tp==="phone"){ const r=vInterp(tp, alts[0], keysNow()); const txt=alts[0];
