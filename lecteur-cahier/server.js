@@ -11,7 +11,7 @@ const PROJECT = process.env.FIREBASE_PROJECT || "sanaapro-app";
 const ORIGINS = (process.env.ALLOWED_ORIGINS || "https://sanaapro.github.io").split(",").map(s => s.trim());
 const MODELS = [process.env.GEMINI_MODEL, "gemini-3-flash-preview", "gemini-3.1-flash-lite", "gemini-flash-latest"].filter(Boolean);
 const DAILY_LIMIT = Number(process.env.DAILY_LIMIT || 80);
-const MAX_BODY = 4 * 1024 * 1024;
+const MAX_BODY = 6 * 1024 * 1024;
 
 const JWKS = createRemoteJWKSet(new URL("https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"));
 async function uidFrom(req){
@@ -139,12 +139,49 @@ function nettoieModele(r){
   const c = parseFloat(r.confiance); o.confiance = isFinite(c) ? Math.max(0, Math.min(1, c)) : 0.5;
   return o;
 }
+
+// ---------- Dictée par la voix : l'IA écoute l'enregistrement et remplit la fiche ----------
+function promptVoix(champs, genre, kind, today){
+  const liste = champs.map(c => `- "${c[0]}" : ${c[1]}`).join("\n");
+  return `Tu écoutes un enregistrement fait dans un atelier de couture en Gambie / Afrique de l'Ouest.
+Le couturier dicte ${kind === "commande" ? "une COMMANDE (client, modèle, prix, avance, date de livraison, mesures)" : "la FICHE d'un client (nom, téléphone, homme ou femme, mesures)"}.
+Il parle français ou anglais, parfois avec des mots wolof ou mandinka, souvent vite, avec des pauses et des répétitions.
+Aujourd'hui nous sommes le ${today}.
+Extrais ce qui est dit, en JSON :
+- "nom" : nom complet du client, avec l'orthographe habituelle d'Afrique de l'Ouest (Fatou, Awa, Assatou, Aminata, Mariama, Isatou, Ousmane, Lamin, Ebrima, Modou ; Ceesay, Jallow, Diallo, Njie, Touray, Sanneh, Jobe, Bah, Barry, Camara, Sowe, Sallah, Jammeh, Bojang…). Sans « madame », « monsieur », « nom du client ».
+- "telephone" : seulement les chiffres, dans l'ordre dit (ex. « 7 62 86 83 » → "7628683" ; « +220 » au début → "220…").
+- "genre" : "homme" ou "femme" si c'est dit (madame/dame = femme, monsieur = homme), sinon rien.
+- "mesures" : en centimètres, UNIQUEMENT avec ces clés :
+${liste}
+  « cent » est parfois entendu « sans » ou « sang » : c'est le nombre 100. « quatre-vingt-seize » = 96. « et demi » = .5.
+  Un nombre dit juste après le nom d'une mesure appartient à cette mesure. Si une mesure est redite, garde la DERNIÈRE valeur (c'est une correction).
+- "modele" : le vêtement commandé (ex. "robe sirène", "kaftan bazin"), si c'est dit.
+- "prix" et "avance" : montants en dalasis (nombres), si c'est dit. « pas d'avance » = 0.
+- "livraison" : date de livraison ou de rendez-vous au format AAAA-MM-JJ (« vendredi », « demain », « le 31 » se calculent à partir d'aujourd'hui), si c'est dit.
+- "notes" : remarque utile dite en plus (tissu, couleur, urgence), sinon rien.
+- "transcription" : ce que tu as entendu, mot à mot, court.
+Règles : n'invente rien ; si quelque chose n'est pas dit, ne mets pas la clé. Réponds UNIQUEMENT en JSON.`;
+}
+function nettoieVoix(r, ok){
+  const o = {};
+  const nom = String(r.nom || "").replace(/\s+/g, " ").trim(); if(nom && nom.length < 80) o.nom = nom;
+  const tel = String(r.telephone || "").replace(/[^0-9]/g, ""); if(tel.length >= 3 && tel.length <= 15) o.telephone = tel;
+  const g = String(r.genre || "").toLowerCase(); if(g === "homme" || g === "femme") o.genre = g;
+  const m = {}; Object.entries(r.mesures || {}).forEach(([k, v]) => { const n = typeof v === "number" ? v : parseFloat(String(v).replace(",", ".")); if(ok.has(k) && isFinite(n) && n > 0 && n < 400) m[k] = Math.round(n * 2) / 2; });
+  if(Object.keys(m).length) o.mesures = m;
+  const md = String(r.modele || "").trim(); if(md && md.length < 120) o.modele = md;
+  for(const k of ["prix", "avance"]){ const n = parseFloat(String(r[k] ?? "").replace(/[^0-9.,]/g, "").replace(",", ".")); if(isFinite(n) && n >= 0 && n < 10000000 && String(r[k] ?? "") !== "") o[k] = n; }
+  if(/^\d{4}-\d{2}-\d{2}$/.test(String(r.livraison || ""))) o.livraison = r.livraison;
+  const nt = String(r.notes || "").trim(); if(nt && nt.length < 300) o.notes = nt;
+  o.transcription = String(r.transcription || "").slice(0, 600);
+  return o;
+}
 http.createServer(async (req, res) => {
   cors(req, res);
   if(req.method === "OPTIONS"){ res.writeHead(204); return res.end(); }
   const path = (req.url || "/").split("?")[0];
   if(req.method === "GET") return send(res, 200, { ok: true, service: "sanaapro-lecteur-cahier", pret: !!KEY });
-  if(req.method !== "POST" || (path !== "/lire" && path !== "/modele")) return send(res, 404, { error: "not_found" });
+  if(req.method !== "POST" || (path !== "/lire" && path !== "/modele" && path !== "/voix")) return send(res, 404, { error: "not_found" });
   if(!KEY) return send(res, 503, { error: "no_key" });
 
   const uid = await uidFrom(req);
@@ -153,6 +190,18 @@ http.createServer(async (req, res) => {
 
   let body;
   try{ body = JSON.parse(await readBody(req)); }catch(e){ return send(res, 413, { error: "body" }); }
+  if(path === "/voix"){
+    const a = /^data:(audio\/(?:wav|x-wav|ogg|mpeg|mp3|aac|flac|webm));base64,([A-Za-z0-9+/=]+)$/.exec(String(body.audio || ""));
+    if(!a) return send(res, 400, { error: "audio" });
+    const champs = Array.isArray(body.champs) ? body.champs.filter(c => Array.isArray(c) && /^[A-Za-z]{2,30}$/.test(c[0])).slice(0, 60).map(c => [c[0], String(c[1] || c[0]).slice(0, 60)]) : [];
+    const today = /^\d{4}-\d{2}-\d{2}$/.test(String(body.today || "")) ? body.today : new Date().toISOString().slice(0, 10);
+    try{
+      const r = await gemini(a[2], a[1] === "audio/x-wav" ? "audio/wav" : a[1], promptVoix(champs, body.genre, body.kind === "commande" ? "commande" : "client", today));
+      send(res, 200, nettoieVoix(r || {}, new Set(champs.map(c => c[0]))));
+      console.log("voix", uid.slice(0, 6), r && r._model);
+    }catch(e){ console.log("erreur voix", e.message); send(res, 502, { error: "read" }); }
+    return;
+  }
   const m = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(String(body.image || ""));
   if(!m) return send(res, 400, { error: "image" });
   if(path === "/modele"){

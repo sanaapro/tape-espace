@@ -355,6 +355,19 @@
   body.dicting #cof-fab, body.dicting #voice-fab, body.dicting #inst{ display:none !important }
   .draft-bar{ margin:10px 0 4px; padding:12px 14px; border:1px dashed var(--gold); border-radius:12px; font-size:14px; color:var(--gold) }
   .draft-bar button.ghost{ margin-top:8px; padding:10px; font-size:14px }
+  #ia-panel{ position:fixed; left:0; right:0; bottom:0; z-index:1001; display:none; background:#16130f; border-top:2px solid var(--gold);
+    padding:14px max(16px, env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px, env(safe-area-inset-left,0px)); box-shadow:0 -10px 30px rgba(0,0,0,.5) }
+  #ia-panel.on{ display:block }
+  #ia-panel .ia-top{ display:flex; align-items:center; gap:10px; font-size:19px; color:var(--gold) }
+  #ia-panel .ia-dot{ width:14px; height:14px; border-radius:50%; background:#6b5a3a; flex:none }
+  #ia-panel.talk .ia-dot{ background:#3ecf6e; box-shadow:0 0 0 5px rgba(62,207,110,.25) }
+  #ia-panel .ia-meter{ height:8px; border-radius:4px; background:#2a241b; margin-top:10px; overflow:hidden }
+  #ia-lvl{ display:block; height:100%; width:0; background:linear-gradient(90deg,#3ecf6e,#d6a84e); transition:width .08s }
+  #ia-heard{ font-size:14px; color:var(--muted); font-style:italic; margin-top:8px; min-height:18px }
+  #ia-got{ font-size:16px; font-weight:700; color:var(--ok); margin-top:4px; min-height:20px; line-height:1.4 }
+  #ia-panel .dp-btns{ display:flex; gap:10px; margin-top:12px }
+  #ia-panel .dp-btns button{ flex:1; padding:13px; border-radius:12px; font:inherit; font-weight:700; border:1px solid var(--line2); background:none; color:inherit }
+  #ia-panel #ia-stop{ background:var(--gold); color:#0E0E0F; border-color:var(--gold) }
   .dict-cur{ outline:3px solid var(--gold) !important; outline-offset:2px; border-radius:10px }
   #dp-state{ font-size:20px }
   #dict-panel #dp-tts{ margin-left:auto; background:none; border:1px solid var(--line2); border-radius:10px; font-size:18px; padding:4px 10px; color:inherit }
@@ -7018,7 +7031,7 @@
   function dictPanel(){
     let p=$("dict-panel"); if(p) return p;
     p=document.createElement("div"); p.id="dict-panel";
-    p.innerHTML='<div class="dp-top"><span class="dp-dot"></span><b id="dp-state"></b><button type="button" id="dp-lang" class="vchip"></button><button type="button" id="dp-tts" aria-label="voix"></button></div><div id="dp-last"></div><div id="dp-live"></div><div class="dp-btns"><button type="button" id="dp-mode"></button><button type="button" id="dp-undo"></button><button type="button" id="dp-stop"></button></div>';
+    p.innerHTML='<div class="dp-top"><span class="dp-dot"></span><b id="dp-state"></b><button type="button" id="dp-ia" class="vchip">IA</button><button type="button" id="dp-lang" class="vchip"></button><button type="button" id="dp-tts" aria-label="voix"></button></div><div id="dp-last"></div><div id="dp-live"></div><div class="dp-btns"><button type="button" id="dp-mode"></button><button type="button" id="dp-undo"></button><button type="button" id="dp-stop"></button></div>';
     document.body.appendChild(p); return p;
   }
   // Ce que chaque formulaire accepte à la voix
@@ -7026,6 +7039,139 @@
     in:{ kinds:["name","phone","notes","genre"], name:"in-name", phone:"in-phone", notes:"in-notes", seg:"ingenre" },
     cf:{ kinds:["name","phone","genre","date","avance","prix","modele"], name:"cf-new-name", phone:"cf-new-phone", date:"cf-liv", avance:"cf-avance", seg:"cfgenre" }
   };
+
+  // =================== DICTÉE PAR L'IA ===================
+  // On enregistre la voix (micro avec réglage automatique du volume), l'enregistrement s'arrête
+  // tout seul après un silence, l'IA du lecteur comprend la phrase entière et remplit la fiche.
+  // Puis on réécoute aussitôt : on peut dicter en mesurant, morceau par morceau, jusqu'à « Terminé ».
+  let VOICE_ENGINE = "ia"; try{ VOICE_ENGINE = localStorage.getItem("sanaapro_voice_engine") || "ia"; }catch(e){}
+  function wav16k(chunks, rate){
+    let len=0; chunks.forEach(c=>len+=c.length);
+    const all=new Float32Array(len); let o=0; chunks.forEach(c=>{ all.set(c,o); o+=c.length; });
+    const ratio=rate/16000, n=Math.floor(all.length/ratio), pcm=new Int16Array(n);
+    for(let i=0;i<n;i++){ const a=Math.floor(i*ratio), b=Math.min(all.length, Math.floor((i+1)*ratio)); let s2=0; for(let j=a;j<b;j++) s2+=all[j]; const v=Math.max(-1,Math.min(1, s2/Math.max(1,b-a))); pcm[i]=v<0?v*0x8000:v*0x7fff; }
+    const buf=new ArrayBuffer(44+pcm.length*2), dv=new DataView(buf); const w=(p,str)=>{ for(let i=0;i<str.length;i++) dv.setUint8(p+i,str.charCodeAt(i)); };
+    w(0,"RIFF"); dv.setUint32(4,36+pcm.length*2,true); w(8,"WAVE"); w(12,"fmt "); dv.setUint32(16,16,true); dv.setUint16(20,1,true); dv.setUint16(22,1,true);
+    dv.setUint32(24,16000,true); dv.setUint32(28,32000,true); dv.setUint16(32,2,true); dv.setUint16(34,16,true); w(36,"data"); dv.setUint32(40,pcm.length*2,true);
+    new Uint8Array(buf,44).set(new Uint8Array(pcm.buffer));
+    return new Promise(ok=>{ const r=new FileReader(); r.onload=()=>ok(r.result); r.readAsDataURL(new Blob([buf],{ type:"audio/wav" })); });
+  }
+  // Enregistre jusqu'au silence. stopSil : silence (ms) après la parole qui termine l'enregistrement.
+  async function iaListen(o){
+    const stream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true, autoGainControl:true, channelCount:1 } });
+    const C=window.AudioContext||window.webkitAudioContext, ctx=new C(); if(ctx.state==="suspended") try{ await ctx.resume(); }catch(e){}
+    const src=ctx.createMediaStreamSource(stream), proc=ctx.createScriptProcessor(4096,1,1), chunks=[];
+    let t0=performance.now(), noise=0, nN=0, started=false, lastVoice=0, finished=false;
+    return await new Promise(resolve=>{
+      const finish=async (why)=>{ if(finished) return; finished=true;
+        try{ proc.disconnect(); src.disconnect(); }catch(e){} stream.getTracks().forEach(t=>t.stop()); const rate=ctx.sampleRate; try{ ctx.close(); }catch(e){}
+        if(!started || why==="cancel"){ resolve({ empty:true, why }); return; }
+        resolve({ wav: await wav16k(chunks, rate), why }); };
+      o.control.stop = ()=>finish("stop"); o.control.cancel = ()=>finish("cancel");
+      proc.onaudioprocess = e=>{
+        if(finished) return;
+        const d=e.inputBuffer.getChannelData(0); chunks.push(new Float32Array(d));
+        let sm=0; for(let i=0;i<d.length;i+=2) sm+=d[i]*d[i]; const rms=Math.sqrt(sm/(d.length/2)), t=performance.now()-t0;
+        if(t<350){ noise+=rms; nN++; return; }
+        const thr=Math.max(0.010, (noise/(nN||1))*2.6);
+        if(rms>thr){ started=true; lastVoice=t; }
+        o.level && o.level(Math.min(1, rms/(thr*5)), started);
+        if(started && t-lastVoice > o.stopSil) finish("silence");
+        else if(t > 90000) finish("max");
+        else if(!started && t > (o.idle||25000)) finish("idle");
+      };
+      src.connect(proc); proc.connect(ctx.destination);
+    });
+  }
+  function iaPanel(){
+    let p=$("ia-panel"); if(p) return p;
+    p=document.createElement("div"); p.id="ia-panel";
+    p.innerHTML='<div class="ia-top"><span class="ia-dot"></span><b id="ia-state"></b></div><div class="ia-meter"><i id="ia-lvl"></i></div>'
+      +'<div id="ia-heard"></div><div id="ia-got"></div><div class="dp-btns"><button type="button" id="ia-simple"></button><button type="button" id="ia-stop"></button></div>';
+    document.body.appendChild(p); return p;
+  }
+  async function iaDict(id){
+    const F=DFORM[id], EN=LANG_UI==="en", P=iaPanel();
+    const box=$(id==="in"?"in-mesures":"cf-mesures"), pfx=id==="in"?"m-":"cm-";
+    let on=true, control={}, total=0;
+    const state=x=>{ $("ia-state").textContent=x; };
+    const lvl=(v,sp)=>{ $("ia-lvl").style.width=Math.round(v*100)+"%"; P.classList.toggle("talk", !!sp); };
+    $("ia-simple").textContent = EN?"Simple mode":"Mode simple";
+    $("ia-stop").textContent = EN?"✓ Finish":"✓ Terminé";
+    const btn=$(id+"-dict"), st=$(id+"-dict-st");
+    const close=()=>{ on=false; try{ control.cancel && control.cancel(); }catch(e){} P.classList.remove("on"); document.body.classList.remove("dicting"); btn.classList.remove("on"); btn.textContent=t("dictBtn");
+      if(DICT && DICT.id===id) DICT=null; if(!VA.on) dictWake(false); setTimeout(vaResume, 400);
+      st.textContent = total ? (EN?"✅ "+total+" field(s) filled. Check before saving.":"✅ "+total+" case(s) remplie(s). Vérifiez avant d'enregistrer.") : ""; saveDraft(id); };
+    $("ia-stop").onclick=()=>{ if(control.stop && !control.done){ on=false; control.stop(); } else close(); };
+    $("ia-simple").onclick=()=>{ VOICE_ENGINE="web"; try{ localStorage.setItem("sanaapro_voice_engine","web"); }catch(e){} close(); setTimeout(()=>btn.click(), 300); };
+    if(typeof vaPause==="function") vaPause();
+    DICT={ id, stop:close };
+    btn.classList.add("on"); btn.textContent=t("dictStop"); st.textContent="";
+    $("ia-heard").textContent=""; $("ia-got").textContent=""; P.classList.add("on"); document.body.classList.add("dicting"); dictWake(true);
+    const champs=[]; const seen={}; mesuresFor(id==="in"?GENRE_FORM:GENRE_CF).concat(MESURES_F, MESURES_H).forEach(mm=>{ if(!seen[mm[0]]){ seen[mm[0]]=1; champs.push([mm[0], mm[1]+" / "+mm[2]]); } });
+    const hit=el=>{ if(!el) return; el.classList.add("dict-hit"); try{ el.scrollIntoView({ behavior:"smooth", block:"center" }); }catch(e){} };
+    const setV=(el,v)=>{ if(!el) return; el.value=v; el.dispatchEvent(new Event("input",{ bubbles:true })); el.dispatchEvent(new Event("change",{ bubbles:true })); hit(el); total++; };
+    const apply=r=>{
+      const said=[], lines=[];
+      if(r.genre){ const b=document.querySelector('.seg[data-seg="'+F.seg+'"] button[data-g="'+r.genre+'"]'); if(b){ b.click(); const sg=b.parentElement; if(sg) sg.dataset.done="1"; lines.push((EN?"Gender: ":"Genre : ")+(r.genre==="homme"?(EN?"man":"homme"):(EN?"woman":"femme"))); } }
+      if(r.nom){ if(id==="cf" && $("cf-cliente").value!=="__new"){ $("cf-cliente").value="__new"; toggleNewCliente(); } setV($(F.name), r.nom); said.push(r.nom); lines.push((EN?"Name: ":"Nom : ")+r.nom); }
+      if(r.telephone && (id==="in" || $("cf-cliente").value==="__new")){ setV($(F.phone), r.telephone); said.push(sayPhone(r.telephone)); lines.push((EN?"Phone: ":"Numéro : ")+r.telephone); }
+      if(r.notes && F.notes){ const el=$(F.notes); setV(el, ((el.value||"")+" "+r.notes).trim()); lines.push((EN?"Note: ":"Note : ")+r.notes); }
+      if(id==="cf"){
+        if(r.modele || r.prix!==undefined){ const rows=Array.from($("cf-arts").querySelectorAll(".art-row")); let row=rows.find(x=>!x.children[0].value.trim()) || null;
+          if(r.modele){ if(!row){ $("cf-art-add").click(); row=$("cf-arts").lastElementChild; } setV(row.children[0], r.modele); said.push(r.modele); lines.push((EN?"Garment: ":"Modèle : ")+r.modele); }
+          if(r.prix!==undefined){ const pr=row || rows.slice().reverse().find(x=>x.children[0].value.trim() && !x.children[1].value.trim()) || rows[0]; if(pr){ setV(pr.children[1], r.prix); lines.push((EN?"Price: ":"Prix : ")+r.prix+" D"); } }
+          try{ artTotal(); }catch(e){} }
+        if(r.avance!==undefined){ setV($("cf-avance"), r.avance); lines.push((EN?"Advance: ":"Avance : ")+r.avance+" D"); }
+        if(r.livraison){ setV($("cf-liv"), r.livraison); lines.push((EN?"Delivery: ":"Livraison : ")+sayDate(r.livraison)); said.push(sayDate(r.livraison)); }
+      }
+      if(r.mesures){
+        const merged=Object.assign({}, currentMesuresFromForm(pfx), r.mesures);
+        if(id==="in") buildInputs(merged); else buildCmdGrid(merged);
+        const lab=k=>{ const mm=MESURES_F.concat(MESURES_H).find(x=>x[0]===k); return mm ? mlabel(mm, LANG_UI) : k; };
+        Object.keys(r.mesures).forEach(k=>{ const el=$(pfx+k); if(el){ el.classList.add("dict-hit"); total++; } lines.push(lab(k)+" : "+r.mesures[k]+" cm"); });
+        const ks=Object.keys(r.mesures); if(ks.length) { const last=$(pfx+ks[ks.length-1]); try{ last && last.scrollIntoView({ behavior:"smooth", block:"center" }); }catch(e){} }
+        said.push(ks.length===1 ? lab(ks[0])+" "+r.mesures[ks[0]] : ks.length+(EN?" measurements":" mesures"));
+      }
+      saveDraft(id);
+      return { said, lines };
+    };
+    const loop=async ()=>{
+      while(on){
+        state(EN?"🎙️ Speak… I am listening":"🎙️ Parlez… je vous écoute"); lvl(0,false);
+        control={};
+        let rec;
+        try{ rec=await iaListen({ control, stopSil:3200, idle:30000, level:lvl }); }
+        catch(e){ state(EN?"Allow the microphone for SanaaPro.":"Autorisez le micro pour SanaaPro."); on=false; break; }
+        control.done=true; lvl(0,false);
+        if(rec.empty){ if(rec.why==="idle" && on) continue; break; }
+        const stopAfter = !on;
+        state(EN?"⏳ Understanding…":"⏳ Je comprends…");
+        let r=null;
+        try{
+          const tok = auth.currentUser ? await auth.currentUser.getIdToken() : "";
+          const ac=new AbortController(), kill=setTimeout(()=>ac.abort(), 60000);
+          const resp = await fetch(LECTEUR_URL+"/voix", { method:"POST", signal:ac.signal, headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+tok },
+            body: JSON.stringify({ audio:rec.wav, champs, genre:id==="in"?GENRE_FORM:GENRE_CF, kind:id==="cf"?"commande":"client", today:todayISO() }) });
+          clearTimeout(kill);
+          r = await resp.json().catch(()=>null);
+          if(!resp.ok){ state(resp.status===429 ? (EN?"Daily limit reached. Use simple mode.":"Limite du jour atteinte. Utilisez le mode simple.") : (EN?"Not understood, speak again.":"Pas compris, redites.")); vbeep(false); r=null; if(resp.status===429||resp.status===503){ on=false; break; } }
+        }catch(e){ state(EN?"No answer (network?). Speak again.":"Pas de réponse (réseau ?). Redites."); vbeep(false); }
+        if(r){
+          $("ia-heard").textContent = r.transcription ? "« "+r.transcription+" »" : "";
+          const tr=normV(r.transcription||"");
+          const res=apply(r);
+          if(res.lines.length){ $("ia-got").textContent="✓ "+res.lines.join(" · "); vbeep(true); speak(res.said.join(". ")); }
+          else { $("ia-got").textContent=EN?"Nothing to fill in that sentence.":"Rien à remplir dans cette phrase."; vbeep(false); }
+          if(/\b(termine|terminer|fini|c est tout|cest tout|finished|that s all|done)\b/.test(tr)) on=false;
+        }
+        if(stopAfter) break;
+        await new Promise(ok=>whenQuiet(ok));
+      }
+      close();
+    };
+    loop();
+  }
   let GUIDED = true; try{ GUIDED = localStorage.getItem("sanaapro_voice_guided")!=="0"; }catch(e){}
   // mots de remplissage autour d'une réponse (« le nom c'est… », « son numéro… »)
   const VFILL = new Set(["nom","name","du","de","d","des","le","la","les","l","client","cliente","customer","c","est","cest","s","appelle","sappelle","il","elle","is","it","its","called","the","his","her","son","sa","ses",
@@ -7061,6 +7207,7 @@
     if(!SR){ btn.disabled=true; st.textContent=t("dictNo"); return; }
     btn.addEventListener("click", ()=>{
       if(DICT){ const was=DICT.id; DICT.stop(); if(was===id) return; }
+      if(VOICE_ENGINE==="ia" && navigator.onLine && navigator.mediaDevices && navigator.mediaDevices.getUserMedia){ const sd=window.DICT_SEED; window.DICT_SEED=null; iaDict(id); return; }
       const box=$(boxId);
       const inputs=()=>Array.from(box.querySelectorAll("input"));
       const keysNow=()=>inputs().map(i=>i.id.replace(/^c?m-/,""));
@@ -7071,6 +7218,7 @@
       const paintTts=()=>{ $("dp-tts").textContent = VOICE_ON ? "🔊" : "🔇"; };
       $("dp-tts").onclick=()=>{ VOICE_ON=!VOICE_ON; try{ localStorage.setItem("sanaapro_voice_tts", VOICE_ON?"1":"0"); }catch(e){} paintTts(); if(!VOICE_ON) try{ speechSynthesis.cancel(); }catch(e){} };
       paintTts();
+      $("dp-ia").onclick=()=>{ VOICE_ENGINE="ia"; try{ localStorage.setItem("sanaapro_voice_engine","ia"); }catch(e){} stop(); setTimeout(()=>btn.click(), 300); };
       const paintLang=()=>{ $("dp-lang").textContent = VOICE_LANG==="en" ? "EN" : "FR"; };
       $("dp-lang").onclick=()=>{ setVoiceLang(VOICE_LANG==="en"?"fr":"en"); paintLang(); };
       paintLang();
