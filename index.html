@@ -1780,7 +1780,7 @@
       advanceOpt:"Avance payée aujourd'hui (optionnel)", advanceLabel:"Avance",
       qAddArt:"＋ Ajouter un article", qFixPrice:"✏️ Corriger le prix", qFixPaid:"Corriger le montant payé", qArtName:"Nom de l'article ajouté :", qArtPrice:"Prix de cet article :",
       qArtDone:"Article ajouté. Nouveau total : {v}", qFixAsk:"Montant TOTAL réellement payé par {n} (actuellement {v}) :", qFixDone:"Montant payé corrigé : {v}", qFixLabel:"Correction paiement",
-      pzFix:"Corriger", pzFixPrice:"Prix total du ticket (actuellement {v}) :",
+      pzFix:"Corriger", pzPhone:"📱 Numéro", pzPhoneAsk:"Nouveau numéro WhatsApp de {n} (actuellement : {v}) :", pzPhoneBad:"Numéro invalide : tapez au moins 7 chiffres.", pzPhoneDone:"Numéro mis à jour sur {k} ticket(s).", pzFixPrice:"Prix total du ticket (actuellement {v}) :",
       histTitle:"＋ Client historique (avant l'application)", histHint:"Pour une cliente servie avant d'utiliser l'application : on enregistre ce qu'elle a payé et ce qu'elle doit encore.",
       histWhat:"Ce qui a été fait", histPaid:"Déjà payé", histDue:"Reste dû", histDate:"Date du paiement", histSave:"Enregistrer le client historique",
       histNeed:"Entrez le nom et au moins un montant.", histDone:"Client historique enregistré (n° {n}).", histLabel:"Client historique",
@@ -2067,7 +2067,7 @@
       advanceOpt:"Deposit paid today (optional)", advanceLabel:"Deposit",
       qAddArt:"＋ Add an item", qFixPrice:"✏️ Correct the price", qFixPaid:"Correct the amount paid", qArtName:"Name of the added item:", qArtPrice:"Price of this item:",
       qArtDone:"Item added. New total: {v}", qFixAsk:"TOTAL amount actually paid by {n} (currently {v}):", qFixDone:"Amount paid corrected: {v}", qFixLabel:"Payment correction",
-      pzFix:"Correct", pzFixPrice:"Total ticket price (currently {v}):",
+      pzFix:"Correct", pzPhone:"📱 Number", pzPhoneAsk:"New WhatsApp number for {n} (currently: {v}):", pzPhoneBad:"Invalid number: type at least 7 digits.", pzPhoneDone:"Number updated on {k} ticket(s).", pzFixPrice:"Total ticket price (currently {v}):",
       histTitle:"＋ Past customer (before the app)", histHint:"For a customer served before you used the app: record what she paid and what she still owes.",
       histWhat:"What was done", histPaid:"Already paid", histDue:"Still owed", histDate:"Payment date", histSave:"Save past customer",
       histNeed:"Enter the name and at least one amount.", histDone:"Past customer saved (no. {n}).", histLabel:"Past customer",
@@ -5808,6 +5808,27 @@
       }
       const tk=document.createElement("button"); tk.type="button"; tk.textContent=t("qTicket");
       tk.addEventListener("click", ()=>showTicket(o)); acts.appendChild(tk);
+      const ph=document.createElement("button"); ph.type="button"; ph.textContent=t("pzPhone");
+      ph.addEventListener("click", ()=>{
+        const old=String(o.clientePhone||"").trim();
+        const v=prompt(t("pzPhoneAsk").replace("{n}", o.clienteName||"").replace("{v}", old||"—"), old);
+        if(v===null) return;
+        const nv=String(v).trim();
+        if(nv.replace(/\D/g,"").length<7){ alert(t("pzPhoneBad")); return; }
+        if(nv===old) return;
+        // Corrige ce ticket et les autres tickets en cours de la même personne qui portaient l'ancien numéro
+        const oldN=waNumber(old);
+        const cibles=PRESS.filter(x=>x.id===o.id || (oldN && waNumber(x.clientePhone)===oldN && x.statut!=="recupere"));
+        cibles.forEach(x=>{
+          x.clientePhone=nv;
+          setDoc(doc(db,"boutiques",BID,"commandes",x.id), { clientePhone:nv, updatedAt:serverTimestamp() }, { merge:true }).catch(pzFail);
+          syncSuivi(x, x.id);
+        });
+        if(o.clienteId) setDoc(doc(db,"boutiques",BID,"clientes",o.clienteId), { phone:nv }, { merge:true }).catch(function(){});
+        renderLists();
+        alert(t("pzPhoneDone").replace("{k}", cibles.length));
+      });
+      acts.appendChild(ph);
       const fx=document.createElement("button"); fx.type="button"; fx.textContent=t("pzFix");
       fx.addEventListener("click", async ()=>{
         if(!await askCode()) return;
