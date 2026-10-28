@@ -1407,6 +1407,11 @@
       <div id="cf-arts"></div>
       <button type="button" class="ghost" id="cf-art-add" data-i18n="cfArtAdd">＋ Ajouter un article</button>
       <div class="pz-tot"><span data-i18n="cfTotal">Total commande</span><b id="cf-total">0</b></div>
+      <div id="cf-rem-box">
+        <label data-i18n="discountOpt">Réduction accordée (optionnel)</label>
+        <input id="cf-remise" type="number" step="1" min="0" inputmode="decimal" placeholder="0">
+      </div>
+      <div class="pz-tot" id="cf-net-row" hidden><span data-i18n="netPrice">Prix final</span><b id="cf-net">0</b></div>
       <input id="cf-article" type="hidden"><input id="cf-prix" type="hidden">
       <div id="cf-av-box">
         <label data-i18n="advanceOpt">Avance payée aujourd'hui (optionnel)</label>
@@ -1751,7 +1756,7 @@
       srDays:"Jours présents ce mois : {n}", srAbs:"Absences non annoncées : {n}", srNoAdv:"Aucune avance notée — salaire dû en fin de mois.",
       srAdvBtn:"💰 Noter une avance", srAbsBtn:"📅 Absence non annoncée", srAdvAsk:"Montant de l'avance donnée à {n} :", srAdvLabel:"Avance sur salaire",
       srAbsAsk:"Date de l'absence (AAAA-MM-JJ) :", srPaidMonth:"✓ Salaire payé", srAdvList:"Avances : {v}",
-      artsTitle:"Articles de la commande (facture détaillée)", cfArtAdd:"＋ Ajouter un article", cfTotal:"Total commande",
+      artsTitle:"Articles de la commande (facture détaillée)", cfArtAdd:"＋ Ajouter un article", cfTotal:"Total commande", discountOpt:"Réduction accordée (optionnel)", netPrice:"Prix final après réduction", tkInitial:"Prix initial", tkDiscount:"Réduction",
       artNamePh2:"Ex. Robe, pantalon, boubou", artPricePh:"Prix", depotLabel:"Date de dépôt", cfDone:"Vêtement déjà terminé — rien à coudre",
       cfGift:"C'est un cadeau — le vêtement est pour quelqu'un d'autre", giftName:"Pour qui ?", giftPhone:"Téléphone de la personne (optionnel)", giftFor:"Cadeau pour",
       vtTitle:"Vêtements", vtHint:"Touchez un vêtement quand il est terminé. Quand tout est fait, la commande passe à « Prêt ».",
@@ -1878,7 +1883,7 @@
       price:"Prix", priceOpt:"Prix (optionnel)", orderNotesPh:"Couleur, broderie, remarques…",
       received:"Reçu", receivedLabel:"Reçu de la cliente", rcvFabric:"tissu", rcvMaterial:"matériel",
       delivery:"Livraison prévue", deliveryOpt:"Date de livraison (optionnel)",
-      lineModel:"Modèle : {v}", linePrice:"Prix : {v} {cur}", lineDelivery:"Livraison prévue : {v}",
+      lineModel:"Modèle : {v}", linePrice:"Prix : {v} {cur}", lineNetPrice:"Prix final : {v} {cur}", lineDelivery:"Livraison prévue : {v}",
       stage:"Étape", stageHint:"Touchez l'étape atteinte, puis prévenez la cliente.",
       stRecu:"Reçu", stCoupe:"Coupe", stEssayage:"Essayage", stPret:"Prêt", stLivre:"Récupéré",
       notifyClient:"Prévenir la cliente sur WhatsApp", copyShop:"Copie à la boutique",
@@ -2038,7 +2043,7 @@
       srDays:"Days present this month: {n}", srAbs:"Unannounced absences: {n}", srNoAdv:"No advance noted — wage due at month end.",
       srAdvBtn:"💰 Note an advance", srAbsBtn:"📅 Unannounced absence", srAdvAsk:"Advance given to {n}:", srAdvLabel:"Wage advance",
       srAbsAsk:"Date of absence (YYYY-MM-DD):", srPaidMonth:"✓ Wage paid", srAdvList:"Advances: {v}",
-      artsTitle:"Order items (detailed invoice)", cfArtAdd:"＋ Add an item", cfTotal:"Order total",
+      artsTitle:"Order items (detailed invoice)", cfArtAdd:"＋ Add an item", cfTotal:"Order total", discountOpt:"Discount given (optional)", netPrice:"Final price after discount", tkInitial:"Original price", tkDiscount:"Discount",
       artNamePh2:"E.g. dress, trousers, boubou", artPricePh:"Price", depotLabel:"Drop-off date", cfDone:"Item already finished — nothing to sew",
       cfGift:"It's a gift — the garment is for someone else", giftName:"For whom?", giftPhone:"That person's phone (optional)", giftFor:"Gift for",
       vtTitle:"Garments", vtHint:"Tap a garment when it is finished. When all are done, the order moves to “Ready”.",
@@ -2165,7 +2170,7 @@
       price:"Price", priceOpt:"Price (optional)", orderNotesPh:"Colour, embroidery, remarks…",
       received:"Received", receivedLabel:"Received from the client", rcvFabric:"fabric", rcvMaterial:"materials",
       delivery:"Expected delivery", deliveryOpt:"Delivery date (optional)",
-      lineModel:"Model: {v}", linePrice:"Price: {v} {cur}", lineDelivery:"Expected delivery: {v}",
+      lineModel:"Model: {v}", linePrice:"Price: {v} {cur}", lineNetPrice:"Final price: {v} {cur}", lineDelivery:"Expected delivery: {v}",
       stage:"Stage", stageHint:"Tap the stage reached, then notify the client.",
       stRecu:"Received", stCoupe:"Cutting", stEssayage:"Fitting", stPret:"Ready", stLivre:"Collected",
       notifyClient:"Notify the client on WhatsApp", copyShop:"Copy to the shop",
@@ -4911,6 +4916,7 @@
       tt("tkClient",L)+" : "+(o.clienteName||"—"),
       tt("tkItem",L)+" : "+(artMsg(isPz(o)?o.resume:o.article)||"—"),
       tt("rcAmt",L)+" : *"+money(amt)+"*" ];
+    remiseRows(o, L).forEach(r=>lines.push(r[0]+" : "+r[1]));
     if(o.prix||o.prix===0) lines.push(tt("tkTotal",L)+" : "+money(o.prix));
     lines.push(tt("tkPaid",L)+" : "+money(Number(o.paye)||0));
     lines.push(re>0 ? tt("tkLeft",L)+" : "+money(re) : "✅ "+tt("rcPaidAll",L));
@@ -4932,6 +4938,7 @@
     add("hint",t("rcAmt")); const a=add("amt",money(amt)); a.style.marginTop="-6px";
     row(t("tkClient"), o.clienteName||"—");
     row(t("tkItem"), String((isPz(o)?o.resume:o.article)||"—").slice(0,60));
+    remiseRows(o).forEach(r=>row(r[0], r[1]));
     if(o.prix||o.prix===0) row(t("tkTotal"), money(o.prix));
     row(t("tkPaid"), money(Number(o.paye)||0));
     const re=resteDe(o);
@@ -4967,6 +4974,7 @@
     row(t("tkClient"), o.clienteName||"—");
     row(t("tkItem"), String((isPz(o)?o.resume:o.article)||"—").slice(0,60));
     const dl=o.livraison||o.retrait; if(dl) row(t("tkDate"), fmtDate(dl, LANG_UI));
+    remiseRows(o).forEach(r=>row(r[0], r[1]));
     if(o.prix||o.prix===0) row(t("tkTotal"), money(o.prix));
     row(t("tkPaid"), money(Number(o.paye)||0));
     row(t("tkLeft"), money(resteDe(o)));
@@ -5178,6 +5186,23 @@
   function artTotal(){
     let tot=0; $("cf-arts").querySelectorAll(".art-row").forEach(r=>{ tot+=parseFloat(r.children[1].value)||0; });
     $("cf-total").textContent=money(tot);
+    const rm=remiseInput(tot);
+    $("cf-net-row").hidden = !(rm>0);
+    $("cf-net").textContent=money(tot-rm);
+  }
+  // Réduction saisie dans le formulaire, bornée entre 0 et le total des articles
+  function remiseInput(tot){
+    const v=parseFloat(String($("cf-remise").value||"").replace(",", "."));
+    if(isNaN(v) || v<=0) return 0;
+    return Math.min(v, Math.max(0, tot));
+  }
+  // Lignes « Prix initial » et « Réduction » pour les reçus, tickets et messages (vide s'il n'y a pas de réduction)
+  function remiseRows(o, L){
+    const r=Number(o && o.remise)||0;
+    if(!(r>0)) return [];
+    const ini=(o.prixInitial||o.prixInitial===0) ? Number(o.prixInitial) : (Number(o.prix)||0)+r;
+    const tr=k=>L ? tt(k,L) : t(k);
+    return [[tr("tkInitial"), money(ini)], [tr("tkDiscount"), "− "+money(r)]];
   }
   function artRow(a){
     const r=document.createElement("div"); r.className="art-row"; r.dataset.etat=a.etat||"a_faire";
@@ -5977,7 +6002,11 @@
     $("c-type").textContent = t(typeKey(o.type || "confection"));
     $("c-recu").textContent = t(o.recu==="materiel" ? "rcvMaterial" : (o.recu==="vetement" ? "rcvGarment" : "rcvFabric"));
     $("c-article").textContent = o.article || "—";
-    if(o.prix || o.prix===0){ $("c-prix").textContent = money(o.prix); $("c-price-row").hidden=false; } else $("c-price-row").hidden=true;
+    if(o.prix || o.prix===0){
+      const rr=remiseRows(o);
+      $("c-prix").textContent = rr.length ? rr[0][1]+" · "+t("tkDiscount")+" "+rr[1][1]+" → "+money(o.prix) : money(o.prix);
+      $("c-price-row").hidden=false;
+    } else $("c-price-row").hidden=true;
     if(o.livraison){ $("c-liv").textContent = fmtDate(o.livraison, LANG_UI); $("c-liv-row").hidden=false; } else $("c-liv-row").hidden=true;
     if(o.notes){ $("c-notes").textContent=o.notes; $("c-notes-row").hidden=false; } else $("c-notes-row").hidden=true;
     if(o.depot){ $("c-depot").textContent=fmtDate(o.depot, LANG_UI); $("c-depot-row").hidden=false; } else $("c-depot-row").hidden=true;
@@ -6040,7 +6069,8 @@
       if(Array.isArray(o.articles) && o.articles.length>1){
         o.articles.forEach(a=>{ msg += "\n" + tm("lineItem").replace("{n}", artMsg(a.nom)).replace("{p}", Math.round(Number(a.prix)||0)).replace("{cur}", cur()); });
       } else if(o.article) msg += "\n" + tm("lineModel").replace("{v}", artMsg(o.article));
-      if(o.prix || o.prix===0) msg += "\n" + tm("linePrice").replace("{v}", Math.round(Number(o.prix)||0)).replace("{cur}", cur());
+      remiseRows(o, LANG_MSG).forEach(r=>{ msg += "\n" + r[0]+" : "+r[1]; });
+      if(o.prix || o.prix===0) msg += "\n" + tm(Number(o.remise)>0 ? "lineNetPrice" : "linePrice").replace("{v}", Math.round(Number(o.prix)||0)).replace("{cur}", cur());
       if(Number(o.paye)>0){
         msg += "\n" + tm("pmAdvance").replace("{v}", money(o.paye));
         if(resteDe(o)>0) msg += "\n" + tm("mAmount").replace("{prix}", Math.round(resteDe(o))).replace("{cur}", cur());
@@ -6099,6 +6129,7 @@
     let msg = tm("shopOrder")+" "+fmtNum(ORD.numero)+" — "+(ORD.clienteName||tm("noName"));
     msg += "\n"+tm("garment")+" : "+(ORD.article||"—");
     msg += "\n"+tm("stage")+" : "+tm(stepKey(ORD.statut||"recu"));
+    remiseRows(ORD, LANG_MSG).forEach(r=>{ msg += "\n"+r[0]+" : "+r[1]; });
     if(ORD.prix || ORD.prix===0) msg += "\n"+tm("price")+" : "+money(ORD.prix);
     if(ORD.livraison) msg += "\n"+tm("delivery")+" : "+fmtDate(ORD.livraison, LANG_MSG);
     if(ORD.clientePhone) msg += "\n"+tm("phone")+" : "+ORD.clientePhone;
@@ -6165,7 +6196,7 @@
       $("cf-article").value=""; $("cf-prix").value=""; $("cf-notes").value="";
       $("cf-recu").value="tissu"; $("cf-liv").value="";
       $("cf-new-name").value=""; $("cf-new-phone").value="";
-      $("cf-avance").value=""; $("cf-av-box").hidden=false;
+      $("cf-avance").value=""; $("cf-av-box").hidden=false; $("cf-remise").value="";
       buildArtRows([{ nom:"", prix:"" }]);
       CF_PH=[]; renderCfPh();
       $("cf-depot").value=todayISO(); $("cf-done").checked=false; $("cf-done-row").hidden=false;
@@ -6192,13 +6223,15 @@
     $("cf-prix").value=(o.prix||o.prix===0)?o.prix:"";
     $("cf-liv").value=o.livraison||"";
     $("cf-notes").value=o.notes||"";
-    buildArtRows(Array.isArray(o.articles) && o.articles.length ? o.articles : [{ nom:o.article||"", prix:(o.prix||o.prix===0)?o.prix:"" }]);
+    $("cf-remise").value=(Number(o.remise)>0)?o.remise:"";
+    buildArtRows(Array.isArray(o.articles) && o.articles.length ? o.articles : [{ nom:o.article||"", prix:(o.prix||o.prix===0)?((Number(o.prix)||0)+(Number(o.remise)||0)):"" }]);
     $("cf-depot").value=o.depot||""; $("cf-done-row").hidden=true;
     CF_PH=[]; renderCfPh();
     $("cf-gift").checked=!!o.beneficiaire; $("cf-gift-name").value=o.beneficiaire||""; $("cf-gift-tel").value=o.beneficiaireTel||""; $("cf-gift-box").hidden=!o.beneficiaire;
     show("cform");
   }
 
+  $("cf-remise").addEventListener("input", artTotal);
   $("cf-save").addEventListener("click", ()=>{
     const msg=$("cf-msg"); msg.classList.remove("show");
     let cid=$("cf-cliente").value;
@@ -6206,7 +6239,9 @@
     if(!ARTS.length){ msg.textContent=t("garmentRequired"); msg.classList.add("show"); return; }
     const article=ARTS.map(a=>a.nom).join(", ");
     const sumArts=ARTS.reduce((s0,a)=>s0+(Number(a.prix)||0),0);
-    $("cf-prix").value = ARTS.some(a=>a.prix!=="" && a.prix!=null) ? String(sumArts) : "";
+    const REMISE=remiseInput(sumArts);
+    // le prix enregistré est le prix FINAL (après réduction) : c'est lui qui compte pour le reste à payer et les finances
+    $("cf-prix").value = ARTS.some(a=>a.prix!=="" && a.prix!=null) ? String(sumArts-REMISE) : "";
 
     let c;
     if(cid === "__new" && clienteParNom($("cf-new-name").value)){
@@ -6247,6 +6282,8 @@
       notes:$("cf-notes").value.trim(),
       prix: (pv!=="" && !isNaN(parseFloat(pv))) ? parseFloat(pv) : null,
       articles: ARTS.map(a=>({ nom:a.nom, prix:Number(a.prix)||0, etat:a.etat||"a_faire" })),
+      remise: REMISE>0 ? REMISE : 0,
+      prixInitial: REMISE>0 ? sumArts : null,
       depot: $("cf-depot").value||"",
       beneficiaire: $("cf-gift").checked ? $("cf-gift-name").value.trim() : "",
       beneficiaireTel: $("cf-gift").checked ? $("cf-gift-tel").value.trim() : "",
@@ -7575,7 +7612,7 @@
         const arts=Array.from($("cf-arts").querySelectorAll(".art-row")).map(r=>({ nom:r.children[0].value, prix:r.children[1].value })).filter(a=>a.nom||a.prix);
         const d={ ts:Date.now(), cliente:$("cf-cliente").value, name:$("cf-new-name").value.trim(), phone:$("cf-new-phone").value.trim(), genre:GENRE_CF,
           gdone:!!(document.querySelector('.seg[data-seg="cfgenre"]')||{dataset:{}}).dataset.done, mesures:currentMesuresFromForm("cm-"),
-          liv:$("cf-liv").value, avance:$("cf-avance").value, arts };
+          liv:$("cf-liv").value, avance:$("cf-avance").value, remise:$("cf-remise").value, arts };
         if(!d.name && !d.phone && !arts.length && !Object.keys(d.mesures).length){ return; }
         localStorage.setItem(draftKey("cf"), JSON.stringify(d)); }
     }catch(e){}
@@ -7606,7 +7643,7 @@
       GENRE_CF = d.genre==="homme" ? "homme" : "femme"; paintSegs(); fillClienteSelect();
       const sel=$("cf-cliente"); if(d.cliente && Array.prototype.some.call(sel.options, o=>o.value===d.cliente)) sel.value=d.cliente; toggleNewCliente();
       $("cf-new-name").value=d.name||""; if(sel.value==="__new") $("cf-new-phone").value=d.phone||"";
-      $("cf-liv").value=d.liv||""; $("cf-avance").value=d.avance||"";
+      $("cf-liv").value=d.liv||""; $("cf-avance").value=d.avance||""; $("cf-remise").value=d.remise||"";
       if(d.arts && d.arts.length) buildArtRows(d.arts);
       buildCmdGrid(d.mesures||{});
       const sg=document.querySelector('.seg[data-seg="cfgenre"]'); if(sg){ if(d.gdone) sg.dataset.done="1"; else delete sg.dataset.done; }
