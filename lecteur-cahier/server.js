@@ -4,6 +4,8 @@
 // La clé GEMINI_API_KEY reste ici, sur le serveur : elle n'apparaît jamais dans l'app.
 import http from "node:http";
 import { createRemoteJWKSet, jwtVerify } from "jose";
+import { spawn } from "node:child_process";
+import ffmpegPath from "ffmpeg-static";
 
 const PORT = process.env.PORT || 10000;
 const KEY = process.env.GEMINI_API_KEY || "";
@@ -75,18 +77,26 @@ Réponds UNIQUEMENT en JSON : {"nom":"","telephone":"","plusieurs":false,"mesure
 
 async function lire(b64, mime, champs, genre){ return gemini(b64, mime, prompt(champs, genre)); }
 
-async function gemini(b64, mime, texte){
+async function gemini(b64, mime, texte, opts){
   let lastErr = "no_model";
-  for(const model of MODELS){
+  const list = (opts && opts.models) || MODELS;
+  for(const model of list){
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
-    const r = await fetch(url, {
-      method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": KEY },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: texte }, { inline_data: { mime_type: mime, data: b64 } }] }],
-        generationConfig: { temperature: 0, responseMimeType: "application/json" }
-      })
-    });
-    if(r.status === 404 || r.status === 400 && model !== MODELS[MODELS.length - 1]){
+    const gen = { temperature: 0, responseMimeType: "application/json" };
+    // Pour la voix on demande une réflexion courte : la réponse arrive plus vite.
+    // Si le modèle ne connaît pas ce réglage (400), on réessaie le même modèle sans lui.
+    const tries = opts && opts.rapide ? [{ ...gen, thinkingConfig: { thinkingLevel: "low" } }, gen] : [gen];
+    let r = null;
+    for(const g of tries){
+      r = await fetch(url, {
+        method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": KEY },
+        body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: texte }, { inline_data: { mime_type: mime, data: b64 } }] }], generationConfig: g })
+      });
+      if(r.status !== 400 || g === tries[tries.length - 1]) break;
+      console.log("réglage refusé par", model, "— nouvel essai sans");
+    }
+    // modèle absent, saturé (503) ou quota épuisé (429) : on passe au modèle suivant
+    if((r.status === 404 || r.status === 400 || r.status === 429 || r.status === 503) && model !== list[list.length - 1]){
       lastErr = "model_" + r.status + ":" + model; console.log("modèle indisponible", model, r.status); continue;
     }
     if(!r.ok){ const t = await r.text(); console.log("gemini", r.status, t.slice(0, 300)); throw new Error("gemini_" + r.status); }
@@ -99,6 +109,31 @@ async function gemini(b64, mime, texte){
   throw new Error(lastErr);
 }
 
+// ---------- Son : l'app envoie une note vocale compressée (Opus/WebM, ou AAC sur iPhone) ----------
+// Gemini lit le WAV, le MP3, l'AAC, l'OGG et le FLAC, pas le WebM : on change seulement
+// l'emballage (sans réencoder, quelques millisecondes), Ogg pour l'Opus, ADTS pour l'AAC.
+const AUDIO_RE = /^data:(audio\/[a-z0-9.+-]+)(?:;[^,]*)?;base64,([A-Za-z0-9+/=]+)$/;
+function ffmpeg(input, args){
+  return new Promise((ok, ko) => {
+    const p = spawn(ffmpegPath, ["-hide_banner", "-loglevel", "error", "-i", "pipe:0", ...args, "pipe:1"]);
+    const out = [], err = [];
+    p.stdout.on("data", c => out.push(c)); p.stderr.on("data", c => err.push(c));
+    p.on("error", ko);
+    p.on("close", code => code === 0 ? ok(Buffer.concat(out)) : ko(new Error("ffmpeg " + code + " " + Buffer.concat(err).toString().slice(0, 200))));
+    p.stdin.on("error", () => {}); p.stdin.end(input);
+  });
+}
+async function audioPourGemini(dataUrl){
+  const a = AUDIO_RE.exec(String(dataUrl || ""));
+  if(!a) return null;
+  const mime = a[1] === "audio/x-wav" ? "audio/wav" : a[1] === "audio/mp3" ? "audio/mpeg" : a[1];
+  if(["audio/wav", "audio/ogg", "audio/mpeg", "audio/aac", "audio/flac"].includes(mime)) return { b64: a[2], mime };
+  const buf = Buffer.from(a[2], "base64");
+  if(mime === "audio/webm") return { b64: (await ffmpeg(buf, ["-vn", "-c:a", "copy", "-f", "ogg"])).toString("base64"), mime: "audio/ogg" };
+  if(mime === "audio/mp4" || mime === "audio/x-m4a") return { b64: (await ffmpeg(buf, ["-vn", "-c:a", "copy", "-f", "adts"])).toString("base64"), mime: "audio/aac" };
+  // tout autre format : réencodage en Opus léger
+  return { b64: (await ffmpeg(buf, ["-vn", "-ac", "1", "-c:a", "libopus", "-b:a", "24k", "-f", "ogg"])).toString("base64"), mime: "audio/ogg" };
+}
 
 // ---------- Lecture d'une photo de MODÈLE envoyée par la cliente ----------
 // L'IA ne donne AUCUN chiffre de coupe : elle reconnaît seulement la forme du vêtement.
@@ -176,12 +211,91 @@ function nettoieVoix(r, ok){
   o.transcription = String(r.transcription || "").slice(0, 600);
   return o;
 }
+// ---------- Assistant vocal : une phrase libre → une action dans l'app ----------
+const ACTIONS = ["ouvrir", "commande", "client", "fiche", "chercher", "voir_commande", "question", "confirmer", "annuler", "retour", "aide", "rien"];
+const SUJETS = ["recettes_jour", "recettes_semaine", "recettes_mois", "impayes", "retard", "pretes", "a_livrer_aujourdhui", "en_cours"];
+function promptAssistant(champs, today, ctx){
+  const liste = champs.map(c => `"${c[0]}" (${c[1]})`).join(", ");
+  return `Tu es l'assistant vocal de SanaaPro, l'application de gestion d'un atelier de couture en Gambie / Afrique de l'Ouest.
+Beaucoup d'utilisateurs ne sont pas allés à l'école : ils parlent, ils n'écrivent pas. Ils parlent français ou anglais, avec l'accent
+d'Afrique de l'Ouest, parfois des mots wolof ou mandinka, souvent vite, avec des hésitations (« euh », « bon », « c'est-à-dire »).
+Aujourd'hui nous sommes le ${today}. Écran ouvert : ${ctx.ecran || "accueil"}.${ctx.attente ? `
+L'application vient de poser cette question : « ${ctx.attente} ». Si la personne répond oui / d'accord / vas-y / enregistre / yes / ok → action "confirmer" ; non / attends / laisse / no → "annuler".` : ""}
+
+Si l'écran ouvert est « cform » (formulaire de commande), toute information dite (nom, numéro, vêtement, prix, avance, date, mesures) → action "commande" : elle complète la commande en cours.
+Si l'écran ouvert est « form » (fiche client), toute information dite → action "client".
+
+Écoute l'enregistrement et choisis UNE action :
+- "ouvrir" : aller sur un écran. Champ "onglet" parmi : ${ctx.onglets.join(", ")}.
+  (atelier = commandes de couture ; pressing = blanchisserie ; mesures = liste des clients ; finances = argent, caisse ; staff = salariés ; visits = visiteurs ; charge = planning de la semaine ; vitrine = catalogue de modèles ; reglages = paramètres)
+- "commande" : la personne décrit une NOUVELLE commande de couture (un client + un vêtement, et souvent prix, avance, date, mesures).
+- "client" : la personne crée un NOUVEAU client ou dicte des mesures / un numéro pour un client, sans parler de vêtement à coudre.
+- "fiche" : ouvrir la fiche d'un client existant (« ouvre Awa Jallow », « les mesures de Fatou »).
+- "chercher" : chercher un client ou une commande par un mot (nom incomplet, numéro de téléphone).
+- "voir_commande" : ouvrir une commande précise (« la commande 59 », « la robe de Rokey »).
+- "question" : la personne demande une information. Champ "sujet" parmi : ${SUJETS.join(", ")}
+  (combien gagné aujourd'hui / cette semaine / ce mois ; qui doit de l'argent ; ce qui est en retard ; ce qui est prêt ; ce qu'il faut livrer aujourd'hui ; ce qui est en cours).
+- "confirmer" / "annuler" : réponse oui / non à la question posée par l'application.
+- "retour" : revenir en arrière. "aide" : la personne demande ce qu'elle peut dire. "rien" : bruit, phrase vide ou incompréhensible.
+
+Champs à extraire quand c'est dit (sinon ne mets pas la clé) :
+- "nom" : nom du client, orthographe habituelle d'Afrique de l'Ouest (Fatou, Awa, Assatou, Aminata, Mariama, Isatou, Rohey, Kaddy, Ousmane, Lamin, Ebrima, Modou ; Ceesay, Jallow, Diallo, Njie, Touray, Sanneh, Jobe, Bah, Barry, Camara, Sowe, Jammeh, Bojang, Traoré…), sans « madame », « monsieur ».
+- "telephone" : seulement les chiffres, dans l'ordre dit (« sept cent soixante-deux, quatre-vingt-six, quatre-vingt-trois » → "7628683" ; « +220 » au début → "220…").
+- "genre" : "homme" ou "femme" si c'est dit ou évident (madame, elle, sa robe → femme ; monsieur, kaftan d'homme → homme).
+- "articles" : liste des vêtements commandés, [{"nom": "robe sirène", "prix": 3000}] — prix en dalasis, seulement s'il est dit pour ce vêtement.
+- "prix" : prix total s'il est dit sans détail par vêtement.
+- "avance" : somme déjà donnée (« elle a donné 1000 », « pas d'avance » = 0).
+- "livraison" : date de livraison / rendez-vous AAAA-MM-JJ (« vendredi », « demain », « dans une semaine », « le 31 » se calculent depuis aujourd'hui).
+- "type" : "confection" (coudre du neuf), "retouche" (réparer, ajuster, raccourcir) ou "pap" (prêt-à-porter déjà fait).
+- "recu" : ce que le client a laissé : "tissu", "materiel" ou "vetement".
+- "mesures" : en cm, UNIQUEMENT avec ces clés : ${liste}.
+  « cent » est parfois entendu « sans » ou « sang » = 100. « et demi » = .5. Un nombre dit juste après une mesure lui appartient. Mesure redite = garder la DERNIÈRE.
+- "notes" : détail utile (couleur, tissu, modèle, urgence), court.
+- "recherche" : le mot à chercher (pour "chercher", "fiche", "voir_commande").
+- "numero" : numéro de reçu de la commande (« la 59 » → 59).
+- "onglet", "sujet" : voir plus haut.
+- "transcription" : ce que tu as entendu, mot à mot, court.
+- "langue" : "fr" si la personne a parlé surtout français, "en" si surtout anglais.
+- "reponse" : ce que l'application va DIRE à voix haute, DANS LA LANGUE DE LA PERSONNE, une phrase courte et chaleureuse qui répète l'essentiel compris
+  (ex. « Commande pour Awa Jallow, une robe sirène à 3000 dalasis, livraison vendredi. »). Pour "rien" : demande gentiment de répéter.
+Règles : n'invente rien ; les montants sont des nombres sans unité. Réponds UNIQUEMENT en JSON :
+{"action":"","onglet":"","sujet":"","nom":"","telephone":"","genre":"","articles":[],"prix":0,"avance":0,"livraison":"","type":"","recu":"","mesures":{},"notes":"","recherche":"","numero":0,"transcription":"","langue":"","reponse":""}`;
+}
+const num = v => { if(v === null || v === undefined || v === "") return undefined; const n = typeof v === "number" ? v : parseFloat(String(v).replace(/[^0-9.,-]/g, "").replace(",", ".")); return isFinite(n) ? n : undefined; };
+function nettoieAssistant(r, ok, ctx){
+  const o = {};
+  o.action = ACTIONS.includes(r.action) ? r.action : "rien";
+  if(r.onglet && ctx.onglets.includes(r.onglet)) o.onglet = r.onglet;
+  if(o.action === "ouvrir" && !o.onglet) o.action = "rien";
+  if(SUJETS.includes(r.sujet)) o.sujet = r.sujet;
+  if(o.action === "question" && !o.sujet) o.action = "rien";
+  const nom = String(r.nom || "").replace(/\s+/g, " ").trim(); if(nom && nom.length < 80) o.nom = nom;
+  const tel = String(r.telephone || "").replace(/[^0-9]/g, ""); if(tel.length >= 3 && tel.length <= 15) o.telephone = tel;
+  const g = String(r.genre || "").toLowerCase(); if(g === "homme" || g === "femme") o.genre = g;
+  const arts = (Array.isArray(r.articles) ? r.articles : []).map(x => ({ nom: String((x && x.nom) || "").trim().slice(0, 120), prix: num(x && x.prix) }))
+    .filter(x => x.nom).slice(0, 20).map(x => (x.prix !== undefined && x.prix >= 0 && x.prix < 10000000) ? x : { nom: x.nom });
+  if(arts.length) o.articles = arts;
+  for(const k of ["prix", "avance"]){ const n = num(r[k]); if(n !== undefined && n >= 0 && n < 10000000 && !(n === 0 && k === "prix")) o[k] = n; }
+  if(/^\d{4}-\d{2}-\d{2}$/.test(String(r.livraison || ""))) o.livraison = r.livraison;
+  if(["confection", "retouche", "pap"].includes(r.type)) o.type = r.type;
+  if(["tissu", "materiel", "vetement"].includes(r.recu)) o.recu = r.recu;
+  const m = {}; Object.entries(r.mesures || {}).forEach(([k, v]) => { const n = num(v); if(ok.has(k) && n !== undefined && n > 0 && n < 400) m[k] = Math.round(n * 2) / 2; });
+  if(Object.keys(m).length) o.mesures = m;
+  const nt = String(r.notes || "").trim(); if(nt && nt.length < 300) o.notes = nt;
+  const q = String(r.recherche || "").trim(); if(q && q.length < 80) o.recherche = q;
+  const n = num(r.numero); if(n !== undefined && n > 0 && n < 1000000) o.numero = Math.round(n);
+  o.transcription = String(r.transcription || "").slice(0, 600);
+  o.reponse = String(r.reponse || "").slice(0, 300);
+  o.langue = r.langue === "en" || r.langue === "fr" ? r.langue : ctx.langue;
+  return o;
+}
+
 http.createServer(async (req, res) => {
   cors(req, res);
   if(req.method === "OPTIONS"){ res.writeHead(204); return res.end(); }
   const path = (req.url || "/").split("?")[0];
   if(req.method === "GET") return send(res, 200, { ok: true, service: "sanaapro-lecteur-cahier", pret: !!KEY });
-  if(req.method !== "POST" || (path !== "/lire" && path !== "/modele" && path !== "/voix")) return send(res, 404, { error: "not_found" });
+  if(req.method !== "POST" || (path !== "/lire" && path !== "/modele" && path !== "/voix" && path !== "/assistant")) return send(res, 404, { error: "not_found" });
   if(!KEY) return send(res, 503, { error: "no_key" });
 
   const uid = await uidFrom(req);
@@ -190,15 +304,37 @@ http.createServer(async (req, res) => {
 
   let body;
   try{ body = JSON.parse(await readBody(req)); }catch(e){ return send(res, 413, { error: "body" }); }
+  if(path === "/assistant"){
+    let a; try{ a = await audioPourGemini(body.audio); }catch(e){ console.log("erreur son", e.message); return send(res, 400, { error: "audio" }); }
+    if(!a) return send(res, 400, { error: "audio" });
+    const champs = Array.isArray(body.champs) ? body.champs.filter(c => Array.isArray(c) && /^[A-Za-z]{2,30}$/.test(c[0])).slice(0, 60).map(c => [c[0], String(c[1] || c[0]).slice(0, 60)]) : [];
+    const today = /^\d{4}-\d{2}-\d{2}$/.test(String(body.today || "")) ? body.today : new Date().toISOString().slice(0, 10);
+    const ctx = {
+      ecran: String(body.ecran || "").slice(0, 40),
+      attente: String(body.attente || "").slice(0, 300),
+      langue: body.langue === "en" ? "en" : "fr",
+      onglets: Array.isArray(body.onglets) ? body.onglets.filter(x => /^[a-z]{2,20}$/.test(x)).slice(0, 20) : [],
+      manager: !!body.manager
+    };
+    try{
+      const t0 = Date.now();
+      const r = await gemini(a.b64, a.mime, promptAssistant(champs, today, ctx), { rapide: true });
+      const out = nettoieAssistant(r || {}, new Set(champs.map(c => c[0])), ctx);
+      send(res, 200, out);
+      console.log("assistant", uid.slice(0, 6), out.action, r && r._model, a.mime, Math.round(a.b64.length * 0.75 / 1024) + " Ko", (Date.now() - t0) + " ms");
+    }catch(e){ console.log("erreur assistant", e.message); send(res, 502, { error: "read" }); }
+    return;
+  }
   if(path === "/voix"){
-    const a = /^data:(audio\/(?:wav|x-wav|ogg|mpeg|mp3|aac|flac|webm));base64,([A-Za-z0-9+/=]+)$/.exec(String(body.audio || ""));
+    let a; try{ a = await audioPourGemini(body.audio); }catch(e){ console.log("erreur son", e.message); return send(res, 400, { error: "audio" }); }
     if(!a) return send(res, 400, { error: "audio" });
     const champs = Array.isArray(body.champs) ? body.champs.filter(c => Array.isArray(c) && /^[A-Za-z]{2,30}$/.test(c[0])).slice(0, 60).map(c => [c[0], String(c[1] || c[0]).slice(0, 60)]) : [];
     const today = /^\d{4}-\d{2}-\d{2}$/.test(String(body.today || "")) ? body.today : new Date().toISOString().slice(0, 10);
     try{
-      const r = await gemini(a[2], a[1] === "audio/x-wav" ? "audio/wav" : a[1], promptVoix(champs, body.genre, body.kind === "commande" ? "commande" : "client", today));
+      const t0 = Date.now();
+      const r = await gemini(a.b64, a.mime, promptVoix(champs, body.genre, body.kind === "commande" ? "commande" : "client", today), { rapide: true });
       send(res, 200, nettoieVoix(r || {}, new Set(champs.map(c => c[0]))));
-      console.log("voix", uid.slice(0, 6), r && r._model);
+      console.log("voix", uid.slice(0, 6), r && r._model, a.mime, Math.round(a.b64.length * 0.75 / 1024) + " Ko", (Date.now() - t0) + " ms");
     }catch(e){ console.log("erreur voix", e.message); send(res, 502, { error: "read" }); }
     return;
   }

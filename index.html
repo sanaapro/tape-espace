@@ -352,7 +352,7 @@
   #dict-panel .dp-btns button{ flex:1; padding:13px; border-radius:12px; font:inherit; font-weight:700; border:1px solid var(--line2); background:none; color:inherit }
   #dict-panel #dp-stop{ background:var(--gold); color:#0E0E0F; border-color:var(--gold) }
   body.dicting{ padding-bottom:200px }
-  /* 26/10 : dictée vocale retirée à la demande de Djamil (code conservé) — enlever la classe novoice pour la remettre */
+  /* 28/10 : voix remise, refaite avec l'IA (son compressé + assistant). La classe novoice sur <body> la cache à nouveau. */
   body.novoice .dict-bar, body.novoice #voice-fab, body.novoice #voice-tip{ display:none !important }
   body.dicting #cof-fab, body.dicting #voice-fab, body.dicting #inst{ display:none !important }
   .draft-bar{ margin:10px 0 4px; padding:12px 14px; border:1px dashed var(--gold); border-radius:12px; font-size:14px; color:var(--gold) }
@@ -381,6 +381,30 @@
   #voice-fab.on{ width:56px; height:56px; background:#e0533d; border-color:#e0533d; color:#fff; opacity:1; animation:vfp 1.2s infinite }
   #voice-fab.on svg{ width:28px; height:28px }
   @keyframes vfp{ 0%{ box-shadow:0 0 0 0 rgba(224,83,61,.55) } 100%{ box-shadow:0 0 0 18px rgba(224,83,61,0) } }
+  /* ---- Assistant vocal IA : gros micro + volet ---- */
+  #voice-fab, #voice-tip{ display:none !important }
+  #ai-fab{ position:fixed; right:max(16px, env(safe-area-inset-right,0px)); bottom:calc(92px + env(safe-area-inset-bottom,0px)); z-index:1000; width:64px; height:64px; border-radius:50%;
+    border:none; background:var(--gold); color:#0E0E0F; display:grid; place-items:center; padding:0; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,.45) }
+  #ai-fab[hidden]{ display:none }
+  #ai-fab svg{ width:30px; height:30px }
+  #ai-fab.on{ background:#e0533d; color:#fff; animation:vfp 1.2s infinite }
+  #ai-fab.wait{ background:#3a3226; color:var(--gold); animation:aiw 1s linear infinite }
+  @keyframes aiw{ 0%{ box-shadow:0 0 0 3px rgba(214,168,78,.9) } 50%{ box-shadow:0 0 0 9px rgba(214,168,78,.15) } 100%{ box-shadow:0 0 0 3px rgba(214,168,78,.9) } }
+  body.novoice #ai-fab, body.novoice #ai-sheet, body.dicting #ai-fab, body.dicting #ai-sheet{ display:none !important }
+  #ai-sheet{ position:fixed; left:max(12px, env(safe-area-inset-left,0px)); right:max(12px, env(safe-area-inset-right,0px)); bottom:calc(168px + env(safe-area-inset-bottom,0px)); z-index:1000;
+    background:#16130f; border:1px solid var(--gold); border-radius:16px; padding:14px 16px; box-shadow:0 12px 32px rgba(0,0,0,.55); font-size:16px; line-height:1.45; max-height:55vh; overflow:auto }
+  #ai-sheet .ais-top{ display:flex; align-items:center; gap:10px }
+  #ai-sheet .ais-dot{ width:10px; height:10px; border-radius:50%; background:var(--gold); flex:none }
+  #ai-sheet.talk .ais-dot{ background:#e0533d }
+  #ais-state{ flex:1; font-size:17px }
+  #ais-x{ background:none; border:1px solid var(--line2); color:inherit; border-radius:10px; width:34px; height:34px; font-size:15px; flex:none }
+  #ai-sheet .ais-meter{ height:6px; border-radius:3px; background:rgba(255,255,255,.08); margin:10px 0 6px; overflow:hidden }
+  #ai-sheet .ais-meter i{ display:block; height:100%; width:0; background:var(--gold); transition:width .08s }
+  #ais-heard{ color:var(--muted); font-size:14px; min-height:0 }
+  #ais-said{ color:var(--gold); font-weight:700; margin-top:6px }
+  #ai-sheet .ais-btns{ display:flex; gap:10px; margin-top:12px }
+  #ai-sheet .ais-btns button{ flex:1; padding:14px; border-radius:12px; font:inherit; font-weight:800; border:1px solid var(--line2); background:none; color:inherit }
+  #ais-yes{ background:var(--gold) !important; color:#0E0E0F !important; border-color:var(--gold) !important }
   .vchip{ background:none; border:1px solid var(--gold); color:var(--gold); border-radius:10px; font:inherit; font-weight:800; font-size:13px; padding:4px 9px; margin-left:6px }
   #vt-heard{ color:var(--gold); font-weight:700; margin-top:4px; min-height:20px }
   #voice-tip{ position:fixed; left:max(12px, env(safe-area-inset-left,0px)); right:calc(76px + env(safe-area-inset-right,0px)); top:calc(8px + env(safe-area-inset-top,0px)); z-index:1000; box-shadow:0 10px 30px rgba(0,0,0,.5); background:#16130f;
@@ -520,7 +544,7 @@
   @media (prefers-reduced-motion:reduce){ .swipe-in-l, .swipe-in-r{ animation:none } }
 </style>
 </head>
-<body class="novoice">
+<body>
 <script>
   window.addEventListener("error", function(e){
     var l=document.getElementById("loading");
@@ -7292,8 +7316,49 @@
     new Uint8Array(buf,44).set(new Uint8Array(pcm.buffer));
     return new Promise(ok=>{ const r=new FileReader(); r.onload=()=>ok(r.result); r.readAsDataURL(new Blob([buf],{ type:"audio/wav" })); });
   }
-  // Enregistre jusqu'au silence. stopSil : silence (ms) après la parole qui termine l'enregistrement.
-  async function iaListen(o){
+  // Enregistrement compressé (Opus, comme une note vocale WhatsApp) : ~2 Ko par seconde au lieu
+  // de 32 Ko en WAV, donc l'envoi part vite même sur un réseau faible. Le volume est suivi pour
+  // s'arrêter tout seul quand la personne se tait. Sans MediaRecorder (vieux téléphone) : WAV.
+  async function recordVoice(o){
+    const MT=["audio/webm;codecs=opus","audio/ogg;codecs=opus","audio/mp4","audio/webm"];
+    const mt = window.MediaRecorder && MediaRecorder.isTypeSupported ? MT.find(x=>{ try{ return MediaRecorder.isTypeSupported(x); }catch(e){ return false; } }) : null;
+    if(!mt){ const r=await iaListenWav(o); return r.empty ? r : { audio:r.wav, why:r.why }; }
+    const stream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true, autoGainControl:true, channelCount:1 } });
+    const C=window.AudioContext||window.webkitAudioContext, ctx=new C(); if(ctx.state==="suspended") try{ await ctx.resume(); }catch(e){}
+    const src=ctx.createMediaStreamSource(stream), an=ctx.createAnalyser(); an.fftSize=1024; src.connect(an);
+    const buf=new Float32Array(an.fftSize), chunks=[];
+    let rec; try{ rec=new MediaRecorder(stream, { mimeType:mt, audioBitsPerSecond:24000 }); }catch(e){ rec=new MediaRecorder(stream); }
+    rec.ondataavailable=e=>{ if(e.data && e.data.size) chunks.push(e.data); };
+    const stopped=new Promise(ok=>{ rec.onstop=ok; });
+    rec.start(250);
+    const t0=performance.now(); let noise=0, nN=0, started=false, lastVoice=0, finished=false, iv=null;
+    return await new Promise(resolve=>{
+      const finish=async why=>{ if(finished) return; finished=true; clearInterval(iv);
+        try{ if(rec.state!=="inactive") rec.stop(); }catch(e){}
+        await Promise.race([stopped, new Promise(ok=>setTimeout(ok, 1500))]);
+        stream.getTracks().forEach(t=>t.stop()); try{ src.disconnect(); ctx.close(); }catch(e){}
+        if(!started || why==="cancel" || !chunks.length){ resolve({ empty:true, why }); return; }
+        const blob=new Blob(chunks, { type:(rec.mimeType||mt).split(";")[0] });
+        const fr=new FileReader(); fr.onload=()=>resolve({ audio:fr.result, why, kb:Math.round(blob.size/1024) }); fr.onerror=()=>resolve({ empty:true, why:"read" }); fr.readAsDataURL(blob); };
+      o.control.stop=()=>finish("stop"); o.control.cancel=()=>finish("cancel");
+      iv=setInterval(()=>{
+        if(finished) return;
+        an.getFloatTimeDomainData(buf); let sm=0; for(let i=0;i<buf.length;i+=2) sm+=buf[i]*buf[i];
+        const rms=Math.sqrt(sm/(buf.length/2)), t=performance.now()-t0;
+        if(t<300){ noise+=rms; nN++; return; }
+        const thr=Math.max(0.010, (noise/(nN||1))*2.6);
+        if(rms>thr){ started=true; lastVoice=t; }
+        o.level && o.level(Math.min(1, rms/(thr*5)), started);
+        if(started && t-lastVoice > o.stopSil) finish("silence");
+        else if(t > 90000) finish("max");
+        else if(!started && t > (o.idle||25000)) finish("idle");
+      }, 50);
+    });
+  }
+  // Ancien nom gardé pour la dictée dans les formulaires : elle profite aussi du son compressé.
+  async function iaListen(o){ const r=await recordVoice(o); return r.empty ? r : { wav:r.audio, why:r.why }; }
+  // Enregistre jusqu'au silence (WAV, pour les téléphones sans MediaRecorder). stopSil : silence (ms) après la parole.
+  async function iaListenWav(o){
     const stream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true, autoGainControl:true, channelCount:1 } });
     const C=window.AudioContext||window.webkitAudioContext, ctx=new C(); if(ctx.state==="suspended") try{ await ctx.resume(); }catch(e){}
     const src=ctx.createMediaStreamSource(stream), proc=ctx.createScriptProcessor(4096,1,1), chunks=[];
@@ -7377,7 +7442,7 @@
         state(EN?"🎙️ Speak… I am listening":"🎙️ Parlez… je vous écoute"); lvl(0,false);
         control={};
         let rec;
-        try{ rec=await iaListen({ control, stopSil:3200, idle:30000, level:lvl }); }
+        try{ rec=await iaListen({ control, stopSil:1500, idle:30000, level:lvl }); }
         catch(e){ state(EN?"Allow the microphone for SanaaPro.":"Autorisez le micro pour SanaaPro."); on=false; break; }
         control.done=true; lvl(0,false);
         if(rec.empty){ if(rec.why==="idle" && on) continue; break; }
@@ -7680,87 +7745,259 @@
     if(cl2.length>1) return { go:"many", q };
     return null;
   }
-  // Le micro reste allumé tant qu'on ne l'arrête pas, sur tous les écrans. Il se met en pause
-  // pendant la dictée d'une fiche ou d'une commande, puis reprend tout seul.
+  // =================== ASSISTANT VOCAL (IA) ===================
+  // Un gros bouton micro sur tous les écrans. On parle normalement, en français ou en anglais,
+  // comme à une personne : « nouvelle commande pour Awa Jallow, une robe sirène à 3000, avance 1000,
+  // livraison vendredi », « ouvre le pressing », « qui me doit de l'argent ? ».
+  // La note vocale (compressée) part à l'IA du lecteur, qui comprend la phrase entière et dit
+  // quoi faire. L'app remplit, répond à voix haute, et n'enregistre RIEN sans un « oui ».
   let VA={ on:false, paused:false };
-  function vaPause(){ VA.paused=true; if(VA.rec){ try{ VA.rec.abort(); }catch(e){} if(CUR_REC===VA.rec) CUR_REC=null; VA.rec=null; } }
-  function vaResume(){ VA.paused=false; if(VA.on && VA.start) setTimeout(()=>{ if(VA.on && !VA.paused && !VA.rec && !DICT) VA.start(); }, 700); }
+  function vaPause(){ VA.paused=true; }
+  function vaResume(){ VA.paused=false; }
   (function(){
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition; if(!SR) return;
-    const b=document.createElement("button"); b.type="button"; b.id="voice-fab"; b.setAttribute("aria-label","Assistant vocal");
-    b.innerHTML='<svg width="30" height="30" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
-    const tip=document.createElement("div"); tip.id="voice-tip"; tip.hidden=true;
-    tip.innerHTML='<div style="display:flex;gap:8px;align-items:flex-start"><div id="vt-state" style="flex:1"></div><button type="button" id="vt-lang" class="vchip"></button></div><div id="vt-heard"></div>';
-    document.body.appendChild(b); document.body.appendChild(tip);
+    if(!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) return;
     const EN=()=>LANG_UI==="en";
-    const vis=()=>{ const logged = !!BID && $("login").hidden && $("loading").hidden;
-      b.hidden = !logged || !!DICT; tip.hidden = !logged || !!DICT || !VA.on;
-      if(!logged && VA.on) off(); };
+    const b=document.createElement("button"); b.type="button"; b.id="ai-fab"; b.setAttribute("aria-label","Assistant vocal");
+    b.innerHTML='<svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+    const sh=document.createElement("div"); sh.id="ai-sheet"; sh.hidden=true;
+    sh.innerHTML='<div class="ais-top"><span class="ais-dot"></span><b id="ais-state"></b><button type="button" id="ais-x" aria-label="Fermer">✕</button></div>'
+      +'<div class="ais-meter"><i id="ais-lvl"></i></div><div id="ais-heard"></div><div id="ais-said"></div>'
+      +'<div class="ais-btns" id="ais-yn" hidden><button type="button" id="ais-yes"></button><button type="button" id="ais-no"></button></div>';
+    document.body.appendChild(b); document.body.appendChild(sh);
+    let busy=false, control=null, PEND=null, ASKING=null, lastLang=VOICE_LANG;
+    const L=(fr,en)=> (lastLang==="en") ? en : fr;
+    const state=x=>{ $("ais-state").textContent=x; };
+    const lvl=(v,sp)=>{ $("ais-lvl").style.width=Math.round(v*100)+"%"; sh.classList.toggle("talk", !!sp); };
+    function say(txt){ if(!txt) return; $("ais-said").textContent=txt; const keep=VOICE_LANG; VOICE_LANG=lastLang; try{ speak(txt); }finally{ VOICE_LANG=keep; } }
+    function close(){ if(control && control.cancel && !control.done){ try{ control.cancel(); }catch(e){} } busy=false; PEND=null; ASKING=null; sh.hidden=true; b.classList.remove("on","wait"); try{ speechSynthesis.cancel(); }catch(e){} dictWake(false); }
+    const vis=()=>{ const logged = !!BID && $("login").hidden && $("loading").hidden; b.hidden = !logged || !!DICT; if(!logged && !sh.hidden) close(); };
     setInterval(vis, 500);
-    const state=()=>{ $("vt-state").textContent = EN() ? "🎤 Listening — say “pressing”, “measurements”, “new client”, a client's name… (“stop” to finish)"
-                                                       : "🎤 J'écoute — dites « pressing », « mesures », « nouveau client », un nom… (« stop » pour arrêter)"; };
-    const heard=x=>{ $("vt-heard").textContent=x; };
-    let fails=0;
-    // Comprend une phrase : renvoie l'action à faire, ou null.
-    function understand(txt){
-      const w=normV(txt);
-      if(/\b(stop|arrete|arreter|termine|terminer|fini|ferme le micro|finish|done)\b/.test(w)) return ()=>{ speak(EN()?"Microphone off":"Micro arrêté"); off(); };
-      if(/\b(retour|revenir|back|go back|precedent)\b/.test(w)) return ()=>{ if(!$("dash").hidden) setTab("apercu"); else { const v=["cmd","cform","fiche","form","coupe"].find(x=>!$(x).hidden); const bk=v && document.querySelector("#"+v+" .subtop .back"); if(bk) bk.click(); else show("dash"); } speak(EN()?"Back":"Retour"); heard("✓ "+(EN()?"Back":"Retour")); };
-      if(!$("fiche").hidden && /\b(coupe|cutting|cut|couper)\b/.test(w)) return ()=>{ $("f-coupe").click(); speak(EN()?"Cutting sheet":"Fiche de coupe"); heard("✓ "+(EN()?"Cutting sheet":"Fiche de coupe")); };
-      if(!$("fiche").hidden && /\b(modifier|changer|edit|corriger)\b/.test(w)) return ()=>{ $("f-edit").click(); heard("✓ "+(EN()?"Edit":"Modifier")); };
-      const allKeys=MESURES_F.concat(MESURES_H).map(x=>x[0]);
-      const p=parseVoiceForm(txt, ["name","phone","genre"], allKeys, null);
-      const formy = p.fields.some(x=>x.t!=="genre") || p.res.some(x=>x.key) || !!p.pending;
-      const c=voiceCommand(txt, !formy);
-      if(c){
-        if(c.go==="tab") return ()=>{ if($("dash").hidden) show("dash"); setTab(c.tab); const lb=$("tabs").querySelector('button[data-tab="'+TAB+'"]'); const nm=lb?lb.textContent:c.tab; speak(nm); heard("✓ "+nm); };
-        if(c.go==="fiche") return ()=>{ openFiche(c.id); speak(c.name); heard("✓ "+c.name); };
-        if(c.go==="many") return ()=>{ if($("dash").hidden) show("dash"); setTab("mesures"); const q=$("q-cli"); if(q){ q.value=c.q; q.dispatchEvent(new Event("input",{ bubbles:true })); } speak(EN()?"Several clients found":"Plusieurs clientes trouvées"); heard("✓ "+c.q); };
-        if(c.go==="newClient") return ()=>{ vaPause(); openForm(null); speak(EN()?"New client. I am listening.":"Nouveau client. Je vous écoute."); setTimeout(()=>{ if(!DICT) $("in-dict").click(); }, 1800); };
-        if(c.go==="newOrder") return ()=>{ vaPause(); openCmdForm(null); speak(EN()?"New order. I am listening.":"Nouvelle commande. Je vous écoute."); setTimeout(()=>{ if(!DICT) $("cf-dict").click(); }, 2000); };
-        if(c.go==="help") return ()=>{ const h=EN()?"You can say: workshop, pressing, measurements, finances, new client, new order, a client's name, back, or stop.":"Vous pouvez dire : atelier, pressing, mesures, finances, nouveau client, nouvelle commande, le nom d'une cliente, retour, ou stop."; heard(h); speak(h); };
-      }
-      // « poitrine 96 », « nom Awa… » dits au micro doré : on ouvre la fiche et on remplit
-      if(formy){
-        return ()=>{
-          window.DICT_SEED=txt; vaPause();
-          if(!$("fiche").hidden && currentCliente){ $("f-edit").click(); let k=0; const iv=setInterval(()=>{ if(!$("form").hidden){ clearInterval(iv); if(!DICT) $("in-dict").click(); } else if(++k>40){ clearInterval(iv); window.DICT_SEED=null; vaResume(); } }, 250); }
-          else { openForm(null); setTimeout(()=>{ if(!DICT) $("in-dict").click(); }, 400); }
-          heard("✓ "+(EN()?"Client card":"Fiche cliente"));
-        };
-      }
-      return null;
-    }
-    function start(){
-      if(!VA.on || VA.paused || VA.rec || DICT) return;
-      const rec=new SR(); VA.rec=rec; CUR_REC=rec; rec.lang = vLang(); rec.continuous=false; rec.interimResults=true; rec.maxAlternatives=4;
-      let interim=null, done=false;
-      const take=list=>{ if(done) return; done=true; fails=0;
-        const alts=list.filter(x=>!isEcho(x)); if(!alts.length) return;
-        for(const a of alts){ const act=understand(a); if(act){ act(); return; } }
-        heard((EN()?"? Not understood: ":"? Pas compris : ")+"« "+alts[0]+" »"); vbeep(false); };
-      rec.onaudiostart = ()=>{ $("vt-state").classList.add("go"); };
-      rec.onresult = ev=>{
-        if(SPEAKING || done) return;
-        const r=ev.results[ev.results.length-1];
-        const alts=[]; for(let a=0;a<r.length;a++) alts.push(r[a].transcript);
-        if(!r.isFinal){ interim=alts; heard("« "+alts[0]+" »"); return; }
-        take(alts);
-      };
-      rec.onerror = e=>{ if(e.error==="not-allowed"||e.error==="service-not-allowed"){ heard(t("dictDenied")); off(); } else if(e.error==="network"){ heard(t("dictNet")); off(); } };
-      rec.onend = ()=>{ $("vt-state").classList.remove("go"); if(VA.rec===rec) VA.rec=null; if(CUR_REC===rec) CUR_REC=null;
-        if(!done && interim && !SPEAKING && VA.on) take(interim);
-        if(VA.on && !VA.paused && !DICT){ if(++fails>120){ off(); return; } whenQuiet(start); } };
-      try{ rec.start(); }catch(e){ VA.rec=null; if(CUR_REC===rec) CUR_REC=null; setTimeout(start, 600); }
-    }
-    VA.start=start;
-    const paintL=()=>{ $("vt-lang").textContent = VOICE_LANG==="en" ? "EN" : "FR"; };
-    $("vt-lang").addEventListener("click", ()=>{ setVoiceLang(VOICE_LANG==="en"?"fr":"en"); paintL(); });
-    function on(){ paintL(); VA.on=true; VA.paused=false; fails=0; b.classList.add("on"); state(); heard(""); tip.hidden=false; try{ speechSynthesis.cancel(); }catch(e){} dictWake(true); start(); }
-    function off(){ VA.on=false; b.classList.remove("on"); tip.hidden=true; if(VA.rec){ try{ VA.rec.abort(); }catch(e){} if(CUR_REC===VA.rec) CUR_REC=null; VA.rec=null; } if(!DICT) dictWake(false); }
-    b.addEventListener("click", ()=>{ VA.on ? off() : on(); });
-  })();
+    $("ais-x").addEventListener("click", close);
+    $("ais-yes").addEventListener("click", ()=>{ if(PEND){ if(control && control.cancel && !control.done) try{ control.cancel(); }catch(e){} act({ action:"confirmer" }); } });
+    $("ais-no").addEventListener("click", ()=>{ if(PEND){ if(control && control.cancel && !control.done) try{ control.cancel(); }catch(e){} act({ action:"annuler" }); } });
+    b.addEventListener("click", ()=>{
+      if(busy && control && control.stop && !control.done){ control.stop(); return; }   // toucher pendant l'écoute = « j'ai fini »
+      if(busy) return;
+      try{ speechSynthesis.cancel(); }catch(e){}
+      listen();
+    });
+    const ecran=()=>{ const v=["cform","form","fiche","cmd","coupe"].find(x=>$(x) && !$(x).hidden); return v || ("dash:"+TAB); };
+    const champs=()=>{ const seen={}, out=[]; MESURES_F.concat(MESURES_H).forEach(mm=>{ if(!seen[mm[0]]){ seen[mm[0]]=1; out.push([mm[0], mm[1]+" / "+mm[2]]); } }); return out; };
+    const sayMoney=n=>{ const v=Math.round(Number(n)||0); return cur()==="D" ? v+(lastLang==="en"?" dalasis":" dalasis") : v+" "+cur(); };
+    const nomsDe=list=>{ const n=list.slice(0,4).map(o=>o.clienteName||"?"); return n.join(", ")+(list.length>4 ? L(" et "+(list.length-4)+" autres"," and "+(list.length-4)+" more") : ""); };
 
+    async function listen(){
+      busy=true; sh.hidden=false; b.classList.add("on"); $("ais-heard").textContent="";
+      if(!PEND && !ASKING) $("ais-said").textContent="";
+      $("ais-yn").hidden=!PEND; $("ais-yes").textContent=L("✓ Oui, enregistrer","✓ Yes, save"); $("ais-no").textContent=L("Non","No");
+      dictWake(true); try{ wakeLecteur(); }catch(e){}
+      state(PEND ? L("🎙️ Oui ou non ?","🎙️ Yes or no?") : ASKING ? "🎙️ "+ASKING : L("🎙️ Parlez… je vous écoute","🎙️ Speak… I'm listening"));
+      control={};
+      let rec;
+      try{ rec=await recordVoice({ control, stopSil:1300, idle:(PEND||ASKING)?9000:12000, level:lvl }); }
+      catch(e){ busy=false; b.classList.remove("on"); state(L("Autorisez le micro pour SanaaPro dans les réglages du navigateur.","Allow the microphone for SanaaPro in the browser settings.")); return; }
+      control.done=true; lvl(0,false); b.classList.remove("on");
+      if(rec.empty){ busy=false; if(rec.why==="cancel") return; state(L("Touchez le micro et parlez.","Tap the microphone and speak.")); return; }
+      if(!navigator.onLine){ busy=false; state(L("Pas de réseau : l'assistant a besoin d'Internet.","No network: the assistant needs internet.")); vbeep(false); return; }
+      b.classList.add("wait"); state(L("⏳ Je comprends…","⏳ Understanding…"));
+      const slow=setTimeout(()=>state(L("⏳ Je comprends… (réseau lent, patientez)","⏳ Understanding… (slow network, please wait)")), 7000);
+      let r=null;
+      try{
+        const tok = auth.currentUser ? await auth.currentUser.getIdToken() : "";
+        const ac=new AbortController(), kill=setTimeout(()=>ac.abort(), 45000);
+        const onglets=TABS.filter(x=>!(isMgr() && ["finances","staff","reglages"].indexOf(x)>-1));
+        const resp=await fetch(LECTEUR_URL+"/assistant", { method:"POST", signal:ac.signal, headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+tok },
+          body: JSON.stringify({ audio:rec.audio, champs:champs(), today:todayISO(), ecran:ecran(), attente:PEND ? PEND.q : (ASKING||""), langue:lastLang, onglets, manager:isMgr() }) });
+        clearTimeout(kill);
+        r=await resp.json().catch(()=>null);
+        if(!resp.ok){ state(resp.status===429 ? L("Limite du jour atteinte. Réessayez plus tard.","Daily limit reached. Try again later.")
+          : resp.status===401 ? L("Reconnectez-vous pour utiliser l'assistant.","Sign in again to use the assistant.")
+          : resp.status===503 ? L("L'assistant n'est pas encore activé.","The assistant isn't switched on yet.")
+          : L("Je n'ai pas compris, redites.","I didn't understand, say it again.")); vbeep(false); r=null; }
+      }catch(e){ state(L("Pas de réponse (réseau ?). Touchez le micro et redites.","No answer (network?). Tap the microphone and say it again.")); vbeep(false); }
+      clearTimeout(slow); b.classList.remove("wait"); busy=false;
+      if(!r) return;
+      if(r.langue==="fr" || r.langue==="en") lastLang=r.langue;
+      $("ais-heard").textContent = r.transcription ? "« "+r.transcription+" »" : "";
+      try{ act(r); }catch(e){ state(L("Erreur : ","Error: ")+((e&&e.message)||e)); vbeep(false); }
+    }
+    // L'app pose une question et réécoute toute seule dès qu'elle a fini de parler.
+    function relisten(){ whenQuiet(()=>setTimeout(()=>{ if((PEND||ASKING) && !busy && !sh.hidden) listen(); }, 250)); }
+    function done(txt){ vbeep(true); state("✓ "+L("C'est fait","Done")); say(txt); }
+    function confirmQ(txt, kind){ ASKING=null; PEND={ q:L("Je l'enregistre ?","Shall I save it?"), kind }; $("ais-yn").hidden=false;
+      $("ais-yes").textContent=L("✓ Oui, enregistrer","✓ Yes, save"); $("ais-no").textContent=L("Non","No");
+      state(PEND.q); vbeep(true); say((txt ? txt+" " : "")+PEND.q); relisten(); }
+    function askMore(txt, q){ PEND=null; ASKING=q; $("ais-yn").hidden=true; state("🎙️ "+q); vbeep(true); say((txt ? txt+" " : "")+q); relisten(); }
+
+    // ---------- trouver une cliente ----------
+    function trouverClientes(q){
+      const k=normNom(q); if(!k) return [];
+      const d=k.replace(/\D/g,"");
+      if(d.length>=5){ const l=CLIENTES.filter(c=>String(c.phone||"").replace(/\D/g,"").indexOf(d)>-1); if(l.length) return l; }
+      let l=CLIENTES.filter(c=>c.name && normNom(c.name)===k); if(l.length) return l;
+      const w=k.split(" ");
+      l=CLIENTES.filter(c=>{ const n=normNom(c.name); return n && w.every(x=>n.split(" ").some(y=>y===x || (x.length>=3 && y.indexOf(x)===0))); }); if(l.length) return l;
+      return CLIENTES.filter(c=>c.name && k.length>=3 && normNom(c.name).indexOf(k)>-1);
+    }
+    function montrerListe(q){ if($("dash").hidden) show("dash"); setTab("mesures"); const s=$("q-cli"); if(s){ s.value=q; s.dispatchEvent(new Event("input",{ bubbles:true })); } }
+
+    // ---------- remplir la commande ----------
+    function remplirCommande(r){
+      const garder = !$("cform").hidden && !editingOrd;
+      if(!garder){ clearDraft("cf"); openCmdForm(null); }
+      if(r.type && TYPES.indexOf(r.type)>-1){ TYPE_CF=r.type; paintTypes(); }
+      if(r.nom){
+        const l=trouverClientes(r.nom), ex=clienteParNom(r.nom) || (l.length===1 ? l[0] : null);
+        if(ex) choisirClienteExistante(ex);
+        else {
+          if(r.genre){ GENRE_CF=r.genre; paintSegs(); }
+          fillClienteSelect(); $("cf-cliente").value="__new"; toggleNewCliente(); $("cf-new-name").value=r.nom;
+          const sg=document.querySelector('.seg[data-seg="cfgenre"]'); if(sg && r.genre) sg.dataset.done="1";
+        }
+      } else if(r.genre && $("cf-cliente").value==="__new"){
+        const tel=$("cf-new-phone").value, nm=$("cf-new-name").value, mes=currentMesuresFromForm("cm-");
+        GENRE_CF=r.genre; paintSegs(); fillClienteSelect(); $("cf-cliente").value="__new"; toggleNewCliente();
+        $("cf-new-name").value=nm; $("cf-new-phone").value=tel; buildCmdGrid(mes);
+        const sg=document.querySelector('.seg[data-seg="cfgenre"]'); if(sg) sg.dataset.done="1";
+      }
+      if(r.telephone) $("cf-new-phone").value=r.telephone;
+      let arts=(r.articles||[]).map(a=>({ nom:a.nom, prix:(a.prix!==undefined) ? a.prix : "" }));
+      if(arts.length===1 && arts[0].prix==="" && r.prix!==undefined) arts[0].prix=r.prix;
+      if(arts.length){
+        const avant=readArts();
+        buildArtRows(garder ? avant.concat(arts) : arts);
+      } else if(r.prix!==undefined){
+        const rows=Array.from($("cf-arts").querySelectorAll(".art-row"));
+        const row=rows.find(x=>x.children[0].value.trim() && !x.children[1].value.trim()) || rows[0];
+        if(row){ row.children[1].value=r.prix; }
+      }
+      if(r.avance!==undefined) $("cf-avance").value=r.avance;
+      if(r.livraison) $("cf-liv").value=r.livraison;
+      if(r.recu) $("cf-recu").value=r.recu;
+      if(r.notes){ const n=$("cf-notes"); n.value=((n.value||"")+" "+r.notes).trim(); }
+      if(r.mesures){ const merged=Object.assign({}, currentMesuresFromForm("cm-"), r.mesures); buildCmdGrid(merged);
+        Object.keys(r.mesures).forEach(k=>{ const el=$("cm-"+k); if(el) el.classList.add("dict-hit"); }); }
+      try{ artTotal(); }catch(e){}
+      saveDraft("cf");
+      const aNom = $("cf-cliente").value!=="__new" || $("cf-new-name").value.trim();
+      if(!aNom) return askMore(r.reponse, L("Quel est le nom du client ?","What is the client's name?"));
+      if(!readArts().length) return askMore(r.reponse, L("Quel vêtement faut-il coudre ?","Which garment should we make?"));
+      confirmQ(r.reponse || L("La commande est prête.","The order is ready."), "cmd");
+    }
+
+    // ---------- remplir une fiche client ----------
+    function remplirClient(r){
+      const formOuvert = !$("form").hidden;
+      if(!formOuvert){
+        const l=r.nom ? trouverClientes(r.nom) : [], ex=r.nom ? (clienteParNom(r.nom) || (l.length===1 ? l[0] : null)) : null;
+        if(ex){
+          openFiche(ex.id);
+          let k=0; const iv=setInterval(()=>{ if(!$("fiche").hidden && currentCliente===ex.id){ clearInterval(iv); $("f-edit").click(); setTimeout(()=>remplirClientForm(r, true), 150); } else if(++k>40) clearInterval(iv); }, 100);
+          return;
+        }
+        clearDraft("in"); openForm(null);
+      }
+      remplirClientForm(r, formOuvert);
+    }
+    function remplirClientForm(r, existant){
+      if(r.genre){ const mes=currentMesuresFromForm("m-"); GENRE_FORM=r.genre; paintSegs(); buildInputs(mes);
+        const sg=document.querySelector('.seg[data-seg="ingenre"]'); if(sg) sg.dataset.done="1"; }
+      if(r.nom && !(existant && $("in-name").value.trim())) $("in-name").value=r.nom;
+      if(r.telephone) $("in-phone").value=r.telephone;
+      if(r.notes){ const n=$("in-notes"); n.value=((n.value||"")+" "+r.notes).trim(); }
+      if(r.mesures){ const merged=Object.assign({}, currentMesuresFromForm("m-"), r.mesures); buildInputs(merged);
+        Object.keys(r.mesures).forEach(k=>{ const el=$("m-"+k); if(el) el.classList.add("dict-hit"); }); }
+      saveDraft("in");
+      if(!$("in-name").value.trim()) return askMore(r.reponse, L("Quel est le nom du client ?","What is the client's name?"));
+      confirmQ(r.reponse || L("La fiche est prête.","The client card is ready."), "cli");
+    }
+
+    // ---------- répondre à une question ----------
+    function repondre(sujet){
+      const today=todayISO(), atelier=COMMANDES.filter(o=>!o.kind);
+      if(/^recettes_/.test(sujet)){
+        if(isMgr()) return done(L("Les finances sont réservées au propriétaire.","Finances are for the owner only."));
+        const p = sujet==="recettes_jour" ? "jour" : sujet==="recettes_semaine" ? "semaine" : "mois", t0=periodStart(p);
+        let rec=0, dep=0; MOUV.forEach(m=>{ if((Number(m.ms)||0)<t0) return; if(m.type==="recette") rec+=Number(m.montant)||0; else dep+=Number(m.montant)||0; });
+        const quand = p==="jour" ? L("Aujourd'hui","Today") : p==="semaine" ? L("Cette semaine","This week") : L("Ce mois-ci","This month");
+        if($("dash").hidden) show("dash"); setTab("finances");
+        return done(quand+L(" : "+sayMoney(rec)+" de recettes et "+sayMoney(dep)+" de dépenses. Il reste "+sayMoney(rec-dep)+".",
+                            ": "+sayMoney(rec)+" in, "+sayMoney(dep)+" out. Balance "+sayMoney(rec-dep)+"."));
+      }
+      let l=[], txt="";
+      if(sujet==="impayes"){ l=atelier.filter(o=>resteDe(o)>0 && o.prix);
+        const tot=l.reduce((s,o)=>s+resteDe(o),0);
+        txt = l.length ? L(l.length+" commande(s) pas encore payées, en tout "+sayMoney(tot)+" : "+nomsDe(l)+".", l.length+" unpaid order(s), "+sayMoney(tot)+" in total: "+nomsDe(l)+".") : L("Personne ne vous doit d'argent.","Nobody owes you money."); }
+      if(sujet==="retard"){ l=atelier.filter(o=>o.statut!=="livre" && o.statut!=="pret" && o.livraison && String(o.livraison).slice(0,10)<today);
+        txt = l.length ? L(l.length+" commande(s) en retard : "+nomsDe(l)+".", l.length+" late order(s): "+nomsDe(l)+".") : L("Aucune commande en retard.","No late orders."); }
+      if(sujet==="pretes"){ l=atelier.filter(o=>o.statut==="pret");
+        txt = l.length ? L(l.length+" commande(s) prête(s) : "+nomsDe(l)+".", l.length+" ready order(s): "+nomsDe(l)+".") : L("Aucune commande prête pour l'instant.","No ready orders yet."); }
+      if(sujet==="a_livrer_aujourdhui"){ l=atelier.filter(o=>o.statut!=="livre" && String(o.livraison||"").slice(0,10)===today);
+        txt = l.length ? L(l.length+" commande(s) à livrer aujourd'hui : "+nomsDe(l)+".", l.length+" order(s) due today: "+nomsDe(l)+".") : L("Rien à livrer aujourd'hui.","Nothing due today."); }
+      if(sujet==="en_cours"){ l=atelier.filter(o=>o.statut!=="livre" && o.statut!=="pret");
+        txt = l.length ? L(l.length+" commande(s) en cours : "+nomsDe(l)+".", l.length+" order(s) in progress: "+nomsDe(l)+".") : L("Aucune commande en cours.","No orders in progress."); }
+      if($("dash").hidden) show("dash"); setTab("atelier");
+      done(txt);
+    }
+
+    // ---------- exécuter ce que l'IA a compris ----------
+    function act(r){
+      const a=r.action;
+      if(a==="confirmer" || a==="annuler"){
+        const p=PEND; PEND=null; ASKING=null; $("ais-yn").hidden=true;
+        if(!p){ return done(r.reponse || L("Il n'y a rien à confirmer.","There is nothing to confirm.")); }
+        if(a==="annuler"){ vbeep(false); state(L("Rien n'est enregistré","Nothing saved")); return say(L("D'accord, rien n'est enregistré. Vous pouvez corriger ou me redire.","OK, nothing is saved. You can correct it or tell me again.")); }
+        if(p.kind==="cmd"){
+          if($("cform").hidden) return done(L("Le formulaire est fermé, rien n'est enregistré.","The form is closed, nothing saved."));
+          $("cf-save").click();
+          return setTimeout(()=>{ if($("cform").hidden) done(L("Commande enregistrée.","Order saved.")); else { const m=$("cf-msg"); state(m.textContent||"?"); vbeep(false); say(m.textContent); } }, 250);
+        }
+        if(p.kind==="cli"){
+          if($("form").hidden) return done(L("Le formulaire est fermé, rien n'est enregistré.","The form is closed, nothing saved."));
+          $("form-save").click();
+          return setTimeout(()=>{ if($("form").hidden) done(L("Fiche enregistrée.","Client saved.")); else { const m=$("form-msg"); state(m.textContent||"?"); vbeep(false); say(m.textContent); } }, 400);
+        }
+        return;
+      }
+      PEND=null; ASKING=null; $("ais-yn").hidden=true;
+      if(a==="commande") return remplirCommande(r);
+      if(a==="client") return remplirClient(r);
+      if(a==="ouvrir"){
+        if(isMgr() && ["finances","staff","reglages"].indexOf(r.onglet)>-1) return done(L("Cet écran est réservé au propriétaire.","This screen is for the owner only."));
+        if($("dash").hidden) show("dash"); setTab(r.onglet);
+        const lb=$("tabs").querySelector('button[data-tab="'+TAB+'"]'); return done(r.reponse || (lb ? lb.textContent : r.onglet));
+      }
+      if(a==="question") return repondre(r.sujet);
+      if(a==="fiche" || a==="chercher"){
+        const q=r.nom || r.recherche || r.telephone || ""; const l=trouverClientes(q);
+        if(l.length===1){ openFiche(l[0].id); return done(l[0].name || q); }
+        if(l.length>1){ montrerListe(q); return done(L(l.length+" clients trouvés pour "+q+".", l.length+" clients found for "+q+".")); }
+        if(a==="chercher" && q){ if($("dash").hidden) show("dash"); setTab("atelier"); const s=$("q-cmd"); if(s){ s.value=q; s.dispatchEvent(new Event("input",{ bubbles:true })); } return done(L("Je cherche "+q+" dans les commandes.","Searching orders for "+q+".")); }
+        vbeep(false); state(L("Introuvable","Not found")); return say(L("Je ne trouve pas "+q+". Redites le nom, ou dites « nouveau client ».","I can't find "+q+". Say the name again, or say “new client”."));
+      }
+      if(a==="voir_commande"){
+        const at=COMMANDES.filter(o=>!o.kind);
+        let o = r.numero ? at.find(x=>Number(x.numero)===Number(r.numero)) : null;
+        if(!o && (r.nom||r.recherche)){ const ids=new Set(trouverClientes(r.nom||r.recherche).map(c=>c.id)), k=normNom(r.nom||r.recherche);
+          const l=at.filter(x=>ids.has(x.clienteId) || (k && normNom(x.clienteName).indexOf(k)>-1)).sort((x,y)=>(x.statut==="livre")-(y.statut==="livre") || (Number(y.createdAtMs)||0)-(Number(x.createdAtMs)||0));
+          o=l[0]; }
+        if(!o){ vbeep(false); state(L("Introuvable","Not found")); return say(L("Je ne trouve pas cette commande.","I can't find that order.")); }
+        openCmd(o.id);
+        const st=t("st"+o.statut.charAt(0).toUpperCase()+o.statut.slice(1)), reste=resteDe(o);
+        return done(L("Commande "+fmtNum(o.numero)+" de "+(o.clienteName||"")+" : "+st+". ", "Order "+fmtNum(o.numero)+" for "+(o.clienteName||"")+": "+st+". ")
+          + (o.prix ? (reste>0 ? L("Reste à payer "+sayMoney(reste)+".","Still to pay "+sayMoney(reste)+".") : L("Tout est payé.","Fully paid.")) : ""));
+      }
+      if(a==="retour"){
+        if(!$("dash").hidden) setTab("apercu");
+        else { const v=["cmd","cform","fiche","form","coupe"].find(x=>!$(x).hidden); const bk=v && document.querySelector("#"+v+" .subtop .back"); if(bk) bk.click(); else show("dash"); }
+        return done(L("Retour","Back"));
+      }
+      if(a==="aide") return done(L("Parlez-moi normalement. Par exemple : nouvelle commande pour Awa Jallow, une robe à 3000, avance 1000, livraison vendredi. Ou : ouvre le pressing. Ou : qui me doit de l'argent ?",
+                                   "Just talk to me. For example: new order for Awa Jallow, a dress for 3000, 1000 advance, delivery Friday. Or: open the pressing. Or: who owes me money?"));
+      vbeep(false); state(L("Pas compris","Not understood"));
+      say(r.reponse || L("Je n'ai pas bien compris. Touchez le micro et redites, plus près du téléphone.","I didn't quite get that. Tap the microphone and say it again, closer to the phone."));
+    }
+  })();
 
 
   // =================== BROUILLON : la fiche en cours est gardée sur le téléphone ===================
