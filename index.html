@@ -1357,6 +1357,7 @@
         <button type="button" id="q-resched" data-i18n="qResched">📅 Reporter la livraison</button>
         <button type="button" id="q-track" data-i18n="qTrack">🔗 Envoyer le lien de suivi</button>
         <button type="button" id="q-copy" data-i18n="qCopy">📋 Copier le lien de suivi</button>
+        <button type="button" id="q-phone" data-i18n="qPhone">📞 Changer le numéro WhatsApp</button>
         <button type="button" id="q-ticket" data-i18n="qTicket">🔳 Ticket avec QR code</button>
       </div>
     </div>
@@ -1786,7 +1787,7 @@
       fDelQ:"Supprimer ce mouvement ({v}) ?", fNoData:"Rien encore.",
       catSalaires:"Salaires", catLoyer:"Loyer", catElec:"Électricité", catTransport:"Transport", catFourn:"Fournitures", catRepas:"Repas", catEau:"Eau", catInternet:"Internet / crédit",
       advanceOpt:"Avance payée aujourd'hui (optionnel)", advanceLabel:"Avance",
-      qAddArt:"＋ Ajouter un article", qFixPrice:"✏️ Corriger le prix", qFixPaid:"Corriger le montant payé", qArtName:"Nom de l'article ajouté :", qArtPrice:"Prix de cet article :",
+      qAddArt:"＋ Ajouter un article", qPhone:"📞 Changer le numéro WhatsApp", qPhoneAsk:"Nouveau numéro WhatsApp de {n} (avec l'indicatif, ex. +220 994 5578) :", qPhoneDone:"Numéro enregistré : {v}", qFixPrice:"✏️ Corriger le prix", qFixPaid:"Corriger le montant payé", qArtName:"Nom de l'article ajouté :", qArtPrice:"Prix de cet article :",
       qArtDone:"Article ajouté. Nouveau total : {v}", qFixAsk:"Montant TOTAL réellement payé par {n} (actuellement {v}) :", qFixDone:"Montant payé corrigé : {v}", qFixLabel:"Correction paiement",
       pzFix:"Corriger", pzPhone:"📱 Numéro", pzPhoneAsk:"Nouveau numéro WhatsApp de {n} (actuellement : {v}) :", pzPhoneBad:"Numéro invalide : tapez au moins 7 chiffres.", pzPhoneDone:"Numéro mis à jour sur {k} ticket(s).", pzFixPrice:"Prix total du ticket (actuellement {v}) :",
       histTitle:"＋ Client historique (avant l'application)", histHint:"Pour une cliente servie avant d'utiliser l'application : on enregistre ce qu'elle a payé et ce qu'elle doit encore.",
@@ -2073,7 +2074,7 @@
       fDelQ:"Delete this entry ({v})?", fNoData:"Nothing yet.",
       catSalaires:"Wages", catLoyer:"Rent", catElec:"Electricity", catTransport:"Transport", catFourn:"Supplies", catRepas:"Meals", catEau:"Water", catInternet:"Internet / airtime",
       advanceOpt:"Deposit paid today (optional)", advanceLabel:"Deposit",
-      qAddArt:"＋ Add an item", qFixPrice:"✏️ Correct the price", qFixPaid:"Correct the amount paid", qArtName:"Name of the added item:", qArtPrice:"Price of this item:",
+      qAddArt:"＋ Add an item", qPhone:"📞 Change WhatsApp number", qPhoneAsk:"New WhatsApp number for {n} (with country code, e.g. +220 994 5578):", qPhoneDone:"Number saved: {v}", qFixPrice:"✏️ Correct the price", qFixPaid:"Correct the amount paid", qArtName:"Name of the added item:", qArtPrice:"Price of this item:",
       qArtDone:"Item added. New total: {v}", qFixAsk:"TOTAL amount actually paid by {n} (currently {v}):", qFixDone:"Amount paid corrected: {v}", qFixLabel:"Payment correction",
       pzFix:"Correct", pzPhone:"📱 Number", pzPhoneAsk:"New WhatsApp number for {n} (currently: {v}):", pzPhoneBad:"Invalid number: type at least 7 digits.", pzPhoneDone:"Number updated on {k} ticket(s).", pzFixPrice:"Total ticket price (currently {v}):",
       histTitle:"＋ Past customer (before the app)", histHint:"For a customer served before you used the app: record what she paid and what she still owes.",
@@ -5427,6 +5428,21 @@
     setTimeout(()=>m.classList.remove("show"), 4000);
   });
   // Raccourci visible : ouvre « Modifier la commande », où le prix de chaque article se corrige
+  // Changer le numéro d'une commande (et de la fiche client) sans rouvrir tout le formulaire
+  $("q-phone").addEventListener("click", ()=>{
+    if(!ORD || !ORDID) return;
+    const v=prompt(t("qPhoneAsk").replace("{n}", ORD.clienteName||""), ORD.clientePhone||"");
+    if(v===null) return;
+    const tel=v.trim(); if(tel.replace(/\D/g,"").length<7){ alert(t("noPhone")); return; }
+    ORD.clientePhone=tel;
+    const local=COMMANDES.find(x=>x.id===ORDID); if(local) local.clientePhone=tel;
+    setDoc(doc(db,"boutiques",BID,"commandes",ORDID), { clientePhone:tel, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+    const c = ORD.clienteId ? CLIENTES.find(x=>x.id===ORD.clienteId) : null;
+    if(c){ c.phone=tel; setDoc(doc(db,"boutiques",BID,"clientes",c.id), { phone:tel, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){}); }
+    syncSuivi(ORD, ORDID);
+    renderCmd(ORD, ORDID); renderLists();
+    alert(t("qPhoneDone").replace("{v}", tel));
+  });
   $("q-fixprice").addEventListener("click", ()=>{ if(ORD && ORDID) $("c-edit").click(); });
   $("q-fixpaid").addEventListener("click", async ()=>{
     if(!ORD || !ORDID) return;
