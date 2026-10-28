@@ -383,15 +383,15 @@
   @keyframes vfp{ 0%{ box-shadow:0 0 0 0 rgba(224,83,61,.55) } 100%{ box-shadow:0 0 0 18px rgba(224,83,61,0) } }
   /* ---- Assistant vocal IA : gros micro + volet ---- */
   #voice-fab, #voice-tip{ display:none !important }
-  #ai-fab{ position:fixed; right:max(16px, env(safe-area-inset-right,0px)); bottom:calc(92px + env(safe-area-inset-bottom,0px)); z-index:1000; width:64px; height:64px; border-radius:50%;
-    border:none; background:var(--gold); color:#0E0E0F; display:grid; place-items:center; padding:0; cursor:pointer; box-shadow:0 8px 24px rgba(0,0,0,.45) }
+  #ai-fab{ position:fixed; right:max(10px, env(safe-area-inset-right,0px)); top:calc(8px + env(safe-area-inset-top,0px)); z-index:1000; width:34px; height:34px; border-radius:50%;
+    border:1px solid rgba(214,168,78,.55); background:rgba(20,17,12,.85); color:var(--gold); display:grid; place-items:center; padding:0; cursor:pointer; transition:background .15s, border-color .15s }
   #ai-fab[hidden]{ display:none }
-  #ai-fab svg{ width:30px; height:30px }
-  #ai-fab.on{ background:#e0533d; color:#fff; animation:vfp 1.2s infinite }
-  #ai-fab.wait{ background:#3a3226; color:var(--gold); animation:aiw 1s linear infinite }
-  @keyframes aiw{ 0%{ box-shadow:0 0 0 3px rgba(214,168,78,.9) } 50%{ box-shadow:0 0 0 9px rgba(214,168,78,.15) } 100%{ box-shadow:0 0 0 3px rgba(214,168,78,.9) } }
+  #ai-fab svg{ width:17px; height:17px }
+  #ai-fab.on{ background:#e0533d; border-color:#e0533d; color:#fff; animation:vfp 1.4s infinite }
+  #ai-fab.wait{ border-color:var(--gold); animation:aiw 1s linear infinite }
+  @keyframes aiw{ 0%{ box-shadow:0 0 0 1px rgba(214,168,78,.8) } 50%{ box-shadow:0 0 0 5px rgba(214,168,78,.12) } 100%{ box-shadow:0 0 0 1px rgba(214,168,78,.8) } }
   body.novoice #ai-fab, body.novoice #ai-sheet, body.dicting #ai-fab, body.dicting #ai-sheet{ display:none !important }
-  #ai-sheet{ position:fixed; left:max(12px, env(safe-area-inset-left,0px)); right:max(12px, env(safe-area-inset-right,0px)); bottom:calc(168px + env(safe-area-inset-bottom,0px)); z-index:1000;
+  #ai-sheet{ position:fixed; left:max(12px, env(safe-area-inset-left,0px)); right:max(12px, env(safe-area-inset-right,0px)); top:calc(50px + env(safe-area-inset-top,0px)); z-index:1000;
     background:#16130f; border:1px solid var(--gold); border-radius:16px; padding:14px 16px; box-shadow:0 12px 32px rgba(0,0,0,.55); font-size:16px; line-height:1.45; max-height:55vh; overflow:auto }
   #ai-sheet .ais-top{ display:flex; align-items:center; gap:10px }
   #ai-sheet .ais-dot{ width:10px; height:10px; border-radius:50%; background:var(--gold); flex:none }
@@ -984,6 +984,13 @@
         <h2 data-i18n="autoNotify">Notification WhatsApp automatique</h2>
         <p style="margin:0 0 10px;font-size:13px;color:var(--muted)" data-i18n="autoNotifyHint">À chaque changement d'étape, WhatsApp s'ouvre avec le message déjà écrit.</p>
         <div class="seg" data-seg="auto" style="width:100%">
+          <button data-v="1" data-i18n="yes" style="flex:1">Oui</button><button data-v="0" data-i18n="no" style="flex:1">Non</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="voiceSet">Assistant vocal</h2>
+        <p style="margin:0 0 10px;font-size:13px;color:var(--muted)" data-i18n="voiceSetHint">Un petit micro en haut de l'écran : on le touche et on parle pour créer une commande, une fiche ou ouvrir un écran. Réglage propre à ce téléphone.</p>
+        <div class="seg" data-seg="voix" style="width:100%">
           <button data-v="1" data-i18n="yes" style="flex:1">Oui</button><button data-v="0" data-i18n="no" style="flex:1">Non</button>
         </div>
       </div>
@@ -1721,6 +1728,7 @@
       newClientNamePh:"Ex. Awa Diallo", newPhonePh:"+220 …",
       rcvGarment:"vêtement",
       autoNotify:"Notification WhatsApp automatique",
+      voiceSet:"Assistant vocal", voiceSetHint:"Un petit micro en haut de l'écran : on le touche et on parle pour créer une commande, une fiche ou ouvrir un écran. Réglage propre à ce téléphone.",
       autoNotifyHint:"À chaque changement d'étape, WhatsApp s'ouvre avec le message déjà écrit. Mettez « Non » pour prévenir vous-même.",
       yes:"Oui", no:"Non",
       mRecuPap:"Bonjour {nom}, votre commande de {article} est enregistrée à l'atelier {boutique}.",
@@ -2008,6 +2016,7 @@
       newClientNamePh:"e.g. Awa Diallo", newPhonePh:"+220 …",
       rcvGarment:"garment",
       autoNotify:"Automatic WhatsApp notification",
+      voiceSet:"Voice assistant", voiceSetHint:"A small microphone at the top of the screen: tap it and speak to create an order or a client card, or open a screen. Set on this phone only.",
       autoNotifyHint:"On every stage change, WhatsApp opens with the message ready. Set to No to notify yourself.",
       yes:"Yes", no:"No",
       mRecuPap:"Hello {nom}, your order for {article} is registered at {boutique}.",
@@ -2429,6 +2438,10 @@
       lock.appendChild(h); lock.appendChild(p); lock.appendChild(pr); lock.appendChild(b);
     });
   }
+  // Assistant vocal : réglage du téléphone (oui par défaut). « Non » cache le micro et les boutons de dictée.
+  function voixOn(){ try{ return localStorage.getItem("sanaapro_voix")!=="0"; }catch(e){ return true; } }
+  function applyVoix(){ document.body.classList.toggle("novoice", !voixOn()); }
+  applyVoix();
   function autoNotifyOn(){
     return !(BOUTIQUE && BOUTIQUE.autoNotify === false);
   }
@@ -2439,6 +2452,11 @@
         s.querySelectorAll("button").forEach(b=>{
           b.classList.toggle("on", b.getAttribute("data-lang")===LANG_UI);
         });
+        return;
+      }
+      if(kind==="voix"){
+        const on = voixOn() ? "1" : "0";
+        s.querySelectorAll("button").forEach(b=>{ b.classList.toggle("on", b.getAttribute("data-v")===on); });
         return;
       }
       if(kind==="auto"){
@@ -2510,6 +2528,11 @@
         const lang=b.getAttribute("data-lang");
         LANG_UI=lang; LANG_MSG=lang; saveLang("sanaapro_lang_ui", lang);
         applyLang();
+        return;
+      }
+      if(seg==="voix"){
+        try{ localStorage.setItem("sanaapro_voix", b.getAttribute("data-v")); }catch(e){}
+        applyVoix(); paintSegs();
         return;
       }
       if(seg==="auto"){
