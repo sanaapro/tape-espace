@@ -4947,6 +4947,8 @@
     add("rct",t("rcTitle"));
     add("nb",(isPz(o)?t("pzTicket"):t("tkOrder"))+" "+fmtNum(o.numero)+" · "+nowLabel(LANG_UI));
     add("hint",t("rcAmt")); const a=add("amt",money(amt)); a.style.marginTop="-6px";
+    const qurl=ticketUrl(o); let qim=null;
+    if(qurl){ qim=document.createElement("img"); qim.alt="QR"; d.appendChild(qim); qrDataUrl(qurl).then(u=>{ qim.src=u; }).catch(()=>{ qim.remove(); }); }
     row(t("tkClient"), o.clienteName||"—");
     row(t("tkItem"), String((isPz(o)?o.resume:o.article)||"—").slice(0,60));
     remiseRows(o).forEach(r=>row(r[0], r[1]));
@@ -4959,16 +4961,65 @@
     const bar=document.createElement("div"); bar.className="tk-bar";
     const mk=(lbl,fn)=>{ const b=document.createElement("button"); b.type="button"; b.textContent=lbl; b.addEventListener("click", fn); bar.appendChild(b); };
     mk(t("tkPrint"), ()=>{ document.body.classList.add("printticket"); setTimeout(()=>{ window.print(); setTimeout(()=>document.body.classList.remove("printticket"), 500); }, 200); });
-    mk(t("rcWa"), async ()=>{
-      const txt=receiptMsg(o, amt); const num=waNumber(o.clientePhone);
-      if(num){ openWa(num, txt); return; }
-      if(navigator.share){ try{ await navigator.share({ text:txt }); }catch(e){} return; }
-      if(await copyText(txt)) alert(t("tkCopied"));
-    });
+    mk(t("rcWa"), ()=>shareDocImage(d, "recu-"+(o.numero||""), receiptMsg(o, amt), o.clientePhone));
     mk(t("ptCamClose"), ()=>ov.remove());
     ov.appendChild(bar);
     ov.addEventListener("click", e=>{ if(e.target===ov) ov.remove(); });
     document.body.appendChild(ov);
+  }
+  // ===== Reçu en IMAGE : redessine le reçu blanc (tk-doc) sur un canvas pour l'envoyer tel quel sur WhatsApp =====
+  function docToPng(d){
+    const W=600, P=32, S=2;
+    const SANS="-apple-system,'Segoe UI',Roboto,Arial,sans-serif", SERIF="Georgia,'Times New Roman',serif";
+    const cv=document.createElement("canvas"); const g=cv.getContext("2d");
+    const wrap=(txt,font,maxW)=>{ g.font=font; const words=String(txt||"").split(/\s+/); const out=[]; let ln="";
+      words.forEach(w=>{ const tst=ln?ln+" "+w:w; if(g.measureText(tst).width>maxW && ln){ out.push(ln); ln=w; } else ln=tst; }); if(ln) out.push(ln); return out.length?out:[""]; };
+    const ops=[]; let y=P;
+    Array.from(d.children).forEach(el=>{
+      const c=el.className, tx=(el.textContent||"").trim();
+      if(el.tagName==="IMG"){ if(el.complete && el.naturalWidth){ const sz=190*S; ops.push({ img:el, x:(W-sz)/2, y:y+10*S, sz }); y+=sz+14*S; } return; }
+      if(c==="rw"){
+        const k=(el.children[0]&&el.children[0].textContent)||"", v=(el.children[1]&&el.children[1].textContent)||"";
+        const fK=(13*S)+"px "+SANS, fV="700 "+(13*S)+"px "+SANS;
+        const vl=wrap(v,fV,(W-2*P)*0.6); const lh=17*S;
+        ops.push({ dash:true, y:y });
+        ops.push({ txt:k, font:fK, x:P, y:y+5*S+lh*0.8, align:"left", col:"#111" });
+        vl.forEach((l,i)=>ops.push({ txt:l, font:fV, x:W-P, y:y+5*S+lh*0.8+i*lh, align:"right", col:"#111" }));
+        y+=10*S+lh*vl.length; return;
+      }
+      const st={ sh:["700 "+(17*S)+"px "+SERIF,"#111",22], nb:[(13*S)+"px "+SANS,"#444",18], hint:[(11.5*S)+"px "+SANS,"#444",16],
+                 rct:["800 "+(13*S)+"px "+SANS,"#111",26], amt:["800 "+(22*S)+"px "+SANS,"#111",30], stamp:["900 "+(16*S)+"px "+SANS,"#1a7f4b",34],
+                 thx:[(12*S)+"px "+SANS,"#444",22] }[c] || [(13*S)+"px "+SANS,"#111",18];
+      const lines=wrap(tx, st[0], W-2*P);
+      lines.forEach(l=>{ ops.push({ txt:l, font:st[0], x:W/2, y:y+st[2]*S*0.78, align:"center", col:st[1], box:(c==="rct"||c==="stamp")?c:null }); y+=st[2]*S; });
+    });
+    y+=P; cv.width=W; cv.height=Math.ceil(y);
+    g.fillStyle="#ffffff"; g.fillRect(0,0,W,cv.height);
+    ops.forEach(o=>{
+      if(o.dash){ g.save(); g.strokeStyle="#aaaaaa"; g.lineWidth=S; g.setLineDash([4*S,3*S]); g.beginPath(); g.moveTo(P,o.y); g.lineTo(W-P,o.y); g.stroke(); g.restore(); return; }
+      if(o.img){ g.imageSmoothingEnabled=false; g.drawImage(o.img,o.x,o.y,o.sz,o.sz); return; }
+      g.font=o.font; g.fillStyle=o.col; g.textAlign=o.align; g.textBaseline="alphabetic";
+      if(o.box){ const w=g.measureText(o.txt).width+(o.box==="stamp"?24:12)*S, h=(o.box==="stamp"?26:20)*S;
+        g.save(); g.translate(o.x, o.y-h*0.35); if(o.box==="stamp") g.rotate(-6*Math.PI/180);
+        g.strokeStyle=o.col; g.lineWidth=(o.box==="stamp"?2.5:1.5)*S; g.strokeRect(-w/2,-h/2,w,h); g.restore(); }
+      g.fillText(o.txt,o.x,o.y);
+    });
+    return cv;
+  }
+  // Partage le reçu en image (feuille de partage → WhatsApp → la cliente) ; sinon, texte sur WhatsApp
+  async function shareDocImage(d, name, txt, phone){
+    try{
+      const cv=docToPng(d);
+      const blob=await new Promise(r=>cv.toBlob(r,"image/png"));
+      if(blob && navigator.canShare){
+        const f=new File([blob], name+".png", { type:"image/png" });
+        if(navigator.canShare({ files:[f] })){ await navigator.share({ files:[f], text:txt }); return; }
+      }
+      if(blob){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name+".png"; document.body.appendChild(a); a.click(); a.remove(); }
+    }catch(e){ if(e && e.name==="AbortError") return; }
+    const num=waNumber(phone);
+    if(num){ openWa(num, txt); return; }
+    if(await copyText(txt)) alert(t("tkCopied"));
   }
   // Reçu de vente boutique : prix initial, réduction éventuelle, prix payé
   function showSaleReceipt(v){
@@ -4995,10 +5046,7 @@
     const bar=document.createElement("div"); bar.className="tk-bar";
     const mk=(lbl,fn)=>{ const b=document.createElement("button"); b.type="button"; b.textContent=lbl; b.addEventListener("click", fn); bar.appendChild(b); };
     mk(t("tkPrint"), ()=>{ document.body.classList.add("printticket"); setTimeout(()=>{ window.print(); setTimeout(()=>document.body.classList.remove("printticket"), 500); }, 200); });
-    mk(t("rcWa"), async ()=>{
-      if(navigator.share){ try{ await navigator.share({ text:txt }); }catch(e){} return; }
-      if(await copyText(txt)) alert(t("tkCopied"));
-    });
+    mk(t("rcWa"), ()=>shareDocImage(d, "recu-vente", txt, ""));
     mk(t("ptCamClose"), ()=>ov.remove());
     ov.appendChild(bar);
     ov.addEventListener("click", e=>{ if(e.target===ov) ov.remove(); });
@@ -5028,17 +5076,7 @@
     const mk=(lbl,fn)=>{ const b=document.createElement("button"); b.type="button"; b.textContent=lbl; b.addEventListener("click", fn); bar.appendChild(b); };
     let png="";
     mk(t("tkPrint"), ()=>{ document.body.classList.add("printticket"); setTimeout(()=>{ window.print(); setTimeout(()=>document.body.classList.remove("printticket"), 500); }, 200); });
-    mk(t("tkShare"), async ()=>{
-      const txt = trackMsg(o);
-      try{
-        if(png && navigator.canShare){
-          const blob = await (await fetch(png)).blob();
-          const f = new File([blob], "ticket-"+(o.numero||"")+".png", { type:"image/png" });
-          if(navigator.canShare({ files:[f] })){ await navigator.share({ files:[f], text:txt }); return; }
-        }
-      }catch(e){ if(e && e.name==="AbortError") return; }
-      const num=waNumber(o.clientePhone); if(num) openWa(num, txt); else if(await copyText(url)) alert(t("tkCopied"));
-    });
+    mk(t("tkShare"), ()=>shareDocImage(d, "ticket-"+(o.numero||""), trackMsg(o), o.clientePhone));
     mk(t("ptCamClose"), ()=>ov.remove());
     ov.appendChild(bar);
     ov.addEventListener("click", e=>{ if(e.target===ov) ov.remove(); });
