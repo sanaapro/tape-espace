@@ -1322,6 +1322,7 @@
       <div class="row" id="c-depot-row"><span class="k" data-i18n="depotLabel">Date de dépôt</span><span class="v" id="c-depot"></span></div>
       <div class="row" id="c-liv-row"><span class="k" data-i18n="delivery">Livraison prévue</span><span class="v" id="c-liv"></span></div>
       <div class="row" id="c-gift-row"><span class="k" data-i18n="giftFor">Cadeau pour</span><span class="v" id="c-gift"></span></div>
+      <div class="row" id="c-rel-row"><span class="k" data-i18n="relLabel">Relances</span><span class="v" id="c-rel"></span></div>
       <div class="row" id="c-notes-row"><span class="k" data-i18n="notes">Notes</span><span class="v" id="c-notes"></span></div>
     </div>
     <div class="card" id="c-ph-card">
@@ -1770,7 +1771,7 @@
       lineItem:"• {n} : {p} {cur}",
       dueTitle:"Impayés et vêtements à récupérer", dueTotal:"Total dû", dueLate:"En retard", dueReady:"Prêts à récupérer",
       dueLateDays:"en retard de {n} j", duePlanned:"prévu le {d}", duePaid:"Payé {a} / {b}", dueRemind:"Relancer", dueNone:"Rien à relancer.",
-      dueReadyTag:"prêt, pas encore récupéré", dueMore:"Voir les {n} autres",
+      dueReadyTag:"prêt, pas encore récupéré", relNone:"Pas encore relancé", relLine:"🔔 Relancé {n} fois · dernière : {d} par {w}", relOwner:"le patron", relMgr:"la manager", relLabel:"Relances", dueMore:"Voir les {n} autres",
       mRemind:"Bonjour {nom}, petit rappel de {boutique} concernant {article} (n° {num}).", mRemindReady:"Votre vêtement est prêt et vous attend.",
       thxTitle:"Remerciements à envoyer", thxHint:"Clients servis et payés : un petit merci sur WhatsApp les fait revenir.", thxBtn:"Remercier",
       thxDone:"Fait", thxAll:"Tout marquer comme fait",
@@ -2057,7 +2058,7 @@
       lineItem:"• {n}: {p} {cur}",
       dueTitle:"Unpaid and items to collect", dueTotal:"Total due", dueLate:"Late", dueReady:"Ready to collect",
       dueLateDays:"{n} days late", duePlanned:"due {d}", duePaid:"Paid {a} / {b}", dueRemind:"Remind", dueNone:"Nothing to chase.",
-      dueReadyTag:"ready, not yet collected", dueMore:"Show the {n} others",
+      dueReadyTag:"ready, not yet collected", relNone:"Not reminded yet", relLine:"🔔 Reminded {n} time(s) · last: {d} by {w}", relOwner:"the owner", relMgr:"the manager", relLabel:"Reminders", dueMore:"Show the {n} others",
       mRemind:"Hello {nom}, a quick reminder from {boutique} about {article} (no. {num}).", mRemindReady:"Your item is ready and waiting for you.",
       thxTitle:"Thank-you messages to send", thxHint:"Customers served and paid: a quick thank-you on WhatsApp brings them back.", thxBtn:"Thank",
       thxDone:"Done", thxAll:"Mark all as done",
@@ -3261,6 +3262,19 @@
     out.sort((a,b)=>(b.late-a.late) || (b.re-a.re));
     return out;
   }
+  // Journal des relances : chaque appui sur « Relancer » est noté sur la commande (date, heure, qui)
+  function logRelance(o){
+    if(!o || !o.id) return;
+    const r={ ms:Date.now(), by: isMgr() ? "manager" : "patron" };
+    o.relances = (Array.isArray(o.relances) ? o.relances : []).concat([r]).slice(-30);
+    setDoc(doc(db,"boutiques",BID,"commandes",o.id), { relances:o.relances }, { merge:true }).catch(function(){});
+  }
+  function relanceText(o){
+    const L=Array.isArray(o && o.relances) ? o.relances : [];
+    if(!L.length) return "";
+    const last=L[L.length-1];
+    return t("relLine").replace("{n}", L.length).replace("{d}", fmtWhen(last.ms)).replace("{w}", t(last.by==="manager" ? "relMgr" : "relOwner"));
+  }
   function remindMsg(it){
     const o=it.o;
     let msg=tm("mRemind").replace("{nom}", o.clienteName||"").replace("{boutique}", (BOUTIQUE&&BOUTIQUE.name)||"")
@@ -3299,6 +3313,9 @@
       el.appendChild(l2);
       const l3=document.createElement("div"); l3.className="ln"; l3.textContent=t("duePaid").replace("{a}", money(o.paye)).replace("{b}", money(o.prix));
       el.appendChild(l3);
+      const lr=document.createElement("div"); lr.className="ln"; const rt=relanceText(o);
+      lr.textContent = rt || t("relNone"); lr.style.color = rt ? "var(--gold)" : "var(--muted)";
+      el.appendChild(lr);
       const acts=document.createElement("div"); acts.className="pz-acts";
       const ph=phoneOfOrder(o);
       if(ph){
@@ -3307,7 +3324,7 @@
       }
       if(o.clientePhone){
         const b=document.createElement("button"); b.type="button"; b.textContent="💬 "+t("dueRemind"); b.style.color="var(--ok)";
-        b.addEventListener("click", ()=>sendWithTicket(o, remindMsg(it)));
+        b.addEventListener("click", ()=>{ logRelance(o); sendWithTicket(o, remindMsg(it)); renderDue(); });
         acts.appendChild(b);
       }
       if(it.kind==="atelier"){
@@ -6150,6 +6167,7 @@
     } else $("c-price-row").hidden=true;
     if(o.livraison){ $("c-liv").textContent = fmtDate(o.livraison, LANG_UI); $("c-liv-row").hidden=false; } else $("c-liv-row").hidden=true;
     if(o.notes){ $("c-notes").textContent=o.notes; $("c-notes-row").hidden=false; } else $("c-notes-row").hidden=true;
+    { const rt=relanceText(o); $("c-rel").textContent=rt; $("c-rel-row").hidden=!rt; }
     if(o.depot){ $("c-depot").textContent=fmtDate(o.depot, LANG_UI); $("c-depot-row").hidden=false; } else $("c-depot-row").hidden=true;
     if(o.beneficiaire){ $("c-gift").textContent=o.beneficiaire+(o.beneficiaireTel?" · "+o.beneficiaireTel:""); $("c-gift-row").hidden=false; } else $("c-gift-row").hidden=true;
     renderVt(o);
