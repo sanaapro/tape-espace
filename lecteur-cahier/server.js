@@ -374,6 +374,11 @@ http.createServer(async (req, res) => {
 
 // Au démarrage : vérifie que la clé fonctionne et quel modèle répond (visible dans les journaux Render)
 async function selfTest(){
+  try{ const out = await ffmpeg(Buffer.alloc(0), ["-version"]).catch(e => { throw e; }); console.log("AUTOTEST ffmpeg OK", out.length); }
+  catch(e){
+    // « -i pipe:0 -version » échoue sans entrée : on lance juste le binaire pour voir s'il existe
+    await new Promise(ok => { const p = spawn(ffmpegPath, ["-version"]); let t = ""; p.stdout.on("data", c => t += c); p.on("error", er => { console.log("AUTOTEST ffmpeg ABSENT", ffmpegPath, er.message); ok(); }); p.on("close", c => { if(c === 0) console.log("AUTOTEST ffmpeg OK", t.split("\n")[0]); ok(); }); });
+  }
   if(!KEY){ console.log("AUTOTEST : pas de clé GEMINI_API_KEY"); return; }
   for(const model of MODELS){
     try{
