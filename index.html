@@ -404,6 +404,7 @@
   #ais-said{ color:var(--gold); font-weight:700; margin-top:6px }
   #ai-sheet .ais-btns{ display:flex; gap:10px; margin-top:12px }
   #ai-sheet .ais-btns button{ flex:1; padding:14px; border-radius:12px; font:inherit; font-weight:800; border:1px solid var(--line2); background:none; color:inherit }
+  #ais-fix{ margin-top:10px; background:none; border:none; color:var(--muted); font:inherit; font-size:13px; text-decoration:underline; padding:4px 0; cursor:pointer }
   #ais-yes{ background:var(--gold) !important; color:#0E0E0F !important; border-color:var(--gold) !important }
   .vchip{ background:none; border:1px solid var(--gold); color:var(--gold); border-radius:10px; font:inherit; font-weight:800; font-size:13px; padding:4px 9px; margin-left:6px }
   #vt-heard{ color:var(--gold); font-weight:700; margin-top:4px; min-height:20px }
@@ -986,6 +987,16 @@
         <div class="seg" data-seg="auto" style="width:100%">
           <button data-v="1" data-i18n="yes" style="flex:1">Oui</button><button data-v="0" data-i18n="no" style="flex:1">Non</button>
         </div>
+      </div>
+      <div class="card" id="lex-card">
+        <h2 data-i18n="lexTitle">Lexique de l'atelier</h2>
+        <p style="margin:0 0 10px;font-size:13px;color:var(--muted)" data-i18n="lexHint">Quand l'assistant comprend mal un nom ou un mot, corrigez-le ici une fois : il ne se trompera plus. Vous pouvez aussi le dire au micro : « retiens, Rohey s'écrit R-O-H-E-Y ».</p>
+        <div id="lex-list"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <input id="lex-heard" type="text" data-i18n-ph="lexHeardPh" placeholder="Ce qu'il écrit (ex. Roki)" style="flex:1 1 130px;margin:0">
+          <input id="lex-good" type="text" data-i18n-ph="lexGoodPh" placeholder="Le bon mot (ex. Rohey)" style="flex:1 1 130px;margin:0">
+        </div>
+        <button class="ghost" id="lex-add" type="button" data-i18n="lexAdd" style="margin-top:8px;width:100%">+ Ajouter au lexique</button>
       </div>
       <div class="card">
         <h2 data-i18n="voiceSet">Assistant vocal</h2>
@@ -1728,6 +1739,7 @@
       newClientNamePh:"Ex. Awa Diallo", newPhonePh:"+220 …",
       rcvGarment:"vêtement",
       autoNotify:"Notification WhatsApp automatique",
+      lexTitle:"Lexique de l'atelier", lexHint:"Quand l'assistant comprend mal un nom ou un mot, corrigez-le ici une fois : il ne se trompera plus. Vous pouvez aussi le dire au micro : « retiens, Rohey s'écrit R-O-H-E-Y ».", lexHeardPh:"Ce qu'il écrit (ex. Roki)", lexGoodPh:"Le bon mot (ex. Rohey)", lexAdd:"+ Ajouter au lexique", lexEmpty:"Aucun mot pour l'instant.", lexFix:"✏️ Corriger un mot", lexAskHeard:"Quel mot l'assistant a-t-il mal compris ? (tel qu'il l'a écrit)", lexAskGood:"Quel est le bon mot ?",
       voiceSet:"Assistant vocal", voiceSetHint:"Un petit micro en haut de l'écran : on le touche et on parle pour créer une commande, une fiche ou ouvrir un écran. Réglage propre à ce téléphone.",
       autoNotifyHint:"À chaque changement d'étape, WhatsApp s'ouvre avec le message déjà écrit. Mettez « Non » pour prévenir vous-même.",
       yes:"Oui", no:"Non",
@@ -2016,6 +2028,7 @@
       newClientNamePh:"e.g. Awa Diallo", newPhonePh:"+220 …",
       rcvGarment:"garment",
       autoNotify:"Automatic WhatsApp notification",
+      lexTitle:"Workshop vocabulary", lexHint:"When the assistant gets a name or a word wrong, correct it here once: it won't make that mistake again. You can also say it into the microphone: “remember, Rohey is spelled R-O-H-E-Y”.", lexHeardPh:"What it writes (e.g. Roki)", lexGoodPh:"The right word (e.g. Rohey)", lexAdd:"+ Add to vocabulary", lexEmpty:"No words yet.", lexFix:"✏️ Correct a word", lexAskHeard:"Which word did the assistant get wrong? (as it wrote it)", lexAskGood:"What is the right word?",
       voiceSet:"Voice assistant", voiceSetHint:"A small microphone at the top of the screen: tap it and speak to create an order or a client card, or open a screen. Set on this phone only.",
       autoNotifyHint:"On every stage change, WhatsApp opens with the message ready. Set to No to notify yourself.",
       yes:"Yes", no:"No",
@@ -2317,6 +2330,7 @@
     if(onBtn && onBtn.scrollIntoView) onBtn.scrollIntoView({ block:"nearest", inline:"center" });
     window.scrollTo(0,0);
     if(name==="vitrine") loadVitrine();
+    if(name==="reglages") paintLexique();
     navSync();
   }
   $("tabs").querySelectorAll("button").forEach(b=>{
@@ -2442,6 +2456,37 @@
   function voixOn(){ try{ return localStorage.getItem("sanaapro_voix")!=="0"; }catch(e){ return true; } }
   function applyVoix(){ document.body.classList.toggle("novoice", !voixOn()); }
   applyVoix();
+  // Lexique de l'atelier : paires { entendu, correct } sur le document boutique (partagé par tous
+  // les téléphones de l'atelier). Envoyé à l'IA avec les noms des clients, et appliqué à sa réponse.
+  function lexique(){ return (BOUTIQUE && Array.isArray(BOUTIQUE.lexique)) ? BOUTIQUE.lexique.filter(x=>x && x.entendu && x.correct) : []; }
+  function saveLexique(l){ if(BOUTIQUE) BOUTIQUE.lexique=l; setDoc(doc(db,"boutiques",BID), { lexique:l, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){}); paintLexique(); }
+  function addLex(entendu, correct){
+    entendu=String(entendu||"").trim().slice(0,60); correct=String(correct||"").trim().slice(0,60);
+    if(!entendu || !correct || entendu.toLowerCase()===correct.toLowerCase()) return false;
+    const k=normNom(entendu), l=lexique().filter(x=>normNom(x.entendu)!==k);
+    l.unshift({ entendu, correct }); saveLexique(l.slice(0,200)); return true;
+  }
+  function applyLex(txt){
+    let out=String(txt||""); if(!out) return out;
+    lexique().forEach(x=>{ const e=x.entendu.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+      try{ out=out.replace(new RegExp("(^|[^\\p{L}])"+e+"(?=$|[^\\p{L}])","giu"), (m,p1)=>p1+x.correct); }catch(e2){} });
+    return out;
+  }
+  function vocabVoix(){
+    const seen={}, noms=[]; CLIENTES.forEach(c=>{ const n=String(c.name||"").trim(); const k=n.toLowerCase(); if(n && n.length<=40 && !seen[k]){ seen[k]=1; noms.push(n); } });
+    return { lexique:lexique().slice(0,150), noms:noms.slice(0,400) };
+  }
+  function paintLexique(){
+    const box=$("lex-list"); if(!box) return; box.innerHTML="";
+    const l=lexique();
+    if(!l.length){ const e=document.createElement("div"); e.className="empty"; e.style.padding="4px 0"; e.textContent=t("lexEmpty"); box.appendChild(e); return; }
+    l.forEach((x,i)=>{ const r=document.createElement("div"); r.style.cssText="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--line2)";
+      const tx=document.createElement("div"); tx.style.flex="1"; tx.textContent="« "+x.entendu+" »  →  "+x.correct;
+      const del=document.createElement("button"); del.type="button"; del.className="ghost"; del.textContent="✕"; del.style.cssText="width:auto;padding:6px 11px;margin:0";
+      del.addEventListener("click", ()=>{ const n=lexique().slice(); n.splice(i,1); saveLexique(n); });
+      r.appendChild(tx); r.appendChild(del); box.appendChild(r); });
+  }
+  $("lex-add").addEventListener("click", ()=>{ if(addLex($("lex-heard").value, $("lex-good").value)){ $("lex-heard").value=""; $("lex-good").value=""; } });
   function autoNotifyOn(){
     return !(BOUTIQUE && BOUTIQUE.autoNotify === false);
   }
@@ -7476,7 +7521,7 @@
           const tok = auth.currentUser ? await auth.currentUser.getIdToken() : "";
           const ac=new AbortController(), kill=setTimeout(()=>ac.abort(), 60000);
           const resp = await fetch(LECTEUR_URL+"/voix", { method:"POST", signal:ac.signal, headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+tok },
-            body: JSON.stringify({ audio:rec.wav, champs, genre:id==="in"?GENRE_FORM:GENRE_CF, kind:id==="cf"?"commande":"client", today:todayISO() }) });
+            body: JSON.stringify(Object.assign({ audio:rec.wav, champs, genre:id==="in"?GENRE_FORM:GENRE_CF, kind:id==="cf"?"commande":"client", today:todayISO() }, vocabVoix())) });
           clearTimeout(kill);
           r = await resp.json().catch(()=>null);
           if(!resp.ok){ state(resp.status===429 ? (EN?"Daily limit reached. Use simple mode.":"Limite du jour atteinte. Utilisez le mode simple.") : (EN?"Not understood, speak again.":"Pas compris, redites.")); vbeep(false); r=null; if(resp.status===429||resp.status===503){ on=false; break; } }
@@ -7785,7 +7830,8 @@
     const sh=document.createElement("div"); sh.id="ai-sheet"; sh.hidden=true;
     sh.innerHTML='<div class="ais-top"><span class="ais-dot"></span><b id="ais-state"></b><button type="button" id="ais-x" aria-label="Fermer">✕</button></div>'
       +'<div class="ais-meter"><i id="ais-lvl"></i></div><div id="ais-heard"></div><div id="ais-said"></div>'
-      +'<div class="ais-btns" id="ais-yn" hidden><button type="button" id="ais-yes"></button><button type="button" id="ais-no"></button></div>';
+      +'<div class="ais-btns" id="ais-yn" hidden><button type="button" id="ais-yes"></button><button type="button" id="ais-no"></button></div>'
+      +'<button type="button" id="ais-fix" hidden></button>';
     document.body.appendChild(b); document.body.appendChild(sh);
     let busy=false, control=null, PEND=null, ASKING=null, lastLang=VOICE_LANG, CONT=false, fails=0, idleSince=0;
     const L=(fr,en)=> (lastLang==="en") ? en : fr;
@@ -7796,6 +7842,16 @@
     const vis=()=>{ const logged = !!BID && $("login").hidden && $("loading").hidden; b.hidden = !logged || !!DICT; if(!logged && !sh.hidden) close(); };
     setInterval(vis, 500);
     $("ais-x").addEventListener("click", close);
+    // Corriger un mot mal compris : il part dans le lexique et ne sera plus mal écrit.
+    $("ais-fix").addEventListener("click", ()=>{
+      const was=CONT; CONT=false; if(control && control.cancel && !control.done) try{ control.cancel(); }catch(e){}
+      const e=prompt(t("lexAskHeard")); if(e===null || !e.trim()){ CONT=was; if(was && !busy) listen(); return; }
+      const c=prompt(t("lexAskGood")); if(c===null || !c.trim()){ CONT=was; if(was && !busy) listen(); return; }
+      if(addLex(e, c)){ const fx=x=>{ ["cf-new-name","in-name","cf-notes","in-notes"].forEach(id=>{ const el=$(id); if(el && el.value) el.value=applyLex(el.value); });
+          document.querySelectorAll("#cf-arts .art-row input:first-child").forEach(el=>{ el.value=applyLex(el.value); }); }; fx();
+        done(L("C'est noté : "+e.trim()+" s'écrit "+c.trim()+".","Noted: "+e.trim()+" is written "+c.trim()+".")); }
+      CONT=was; if(was) relisten();
+    });
     $("ais-yes").addEventListener("click", ()=>{ if(PEND){ if(control && control.cancel && !control.done) try{ control.cancel(); }catch(e){} act({ action:"confirmer" }); } });
     $("ais-no").addEventListener("click", ()=>{ if(PEND){ if(control && control.cancel && !control.done) try{ control.cancel(); }catch(e){} act({ action:"annuler" }); } });
     // Comme l'assistant de Claude : on touche une fois, il reste à l'écoute (il réécoute tout seul
@@ -7836,7 +7892,7 @@
         const ac=new AbortController(), kill=setTimeout(()=>ac.abort(), 45000);
         const onglets=TABS.filter(x=>!(isMgr() && ["finances","staff","reglages"].indexOf(x)>-1));
         const resp=await fetch(LECTEUR_URL+"/assistant", { method:"POST", signal:ac.signal, headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+tok },
-          body: JSON.stringify({ audio:rec.audio, champs:champs(), today:todayISO(), ecran:ecran(), attente:PEND ? PEND.q : (ASKING||""), langue:lastLang, onglets, manager:isMgr() }) });
+          body: JSON.stringify(Object.assign({ audio:rec.audio, champs:champs(), today:todayISO(), ecran:ecran(), attente:PEND ? PEND.q : (ASKING||""), langue:lastLang, onglets, manager:isMgr() }, vocabVoix())) });
         clearTimeout(kill);
         r=await resp.json().catch(()=>null);
         if(!resp.ok){ state(resp.status===429 ? L("Limite du jour atteinte. Réessayez plus tard.","Daily limit reached. Try again later.")
@@ -7848,6 +7904,9 @@
       if(!r){ if(CONT && ++fails<3) whenQuiet(()=>setTimeout(()=>{ if(CONT && !busy) listen(); }, 1500)); else if(CONT){ CONT=false; b.classList.remove("on"); } return; }
       fails=0;
       if(r.langue==="fr" || r.langue==="en") lastLang=r.langue;
+      ["nom","recherche","notes","transcription","reponse"].forEach(k=>{ if(r[k]) r[k]=applyLex(r[k]); });
+      if(Array.isArray(r.articles)) r.articles.forEach(x=>{ x.nom=applyLex(x.nom); });
+      $("ais-fix").textContent=t("lexFix"); $("ais-fix").hidden=false;
       $("ais-heard").textContent = r.transcription ? "« "+r.transcription+" »" : "";
       try{ act(r); }catch(e){ state(L("Erreur : ","Error: ")+((e&&e.message)||e)); vbeep(false); }
       // mode continu : on réécoute dès que l'app a fini de parler
@@ -7992,6 +8051,10 @@
         return;
       }
       PEND=null; ASKING=null; $("ais-yn").hidden=true;
+      if(a==="apprendre"){
+        if(r.entendu && r.correct && addLex(r.entendu, r.correct)) return done(L("C'est noté : quand j'entends "+r.entendu+", j'écris "+r.correct+".","Noted: when I hear "+r.entendu+", I write "+r.correct+"."));
+        vbeep(false); return say(L("Dites-moi le mot et comment il s'écrit, par exemple : retiens, Rohey s'écrit R-O-H-E-Y.","Tell me the word and how to spell it, for example: remember, Rohey is spelled R-O-H-E-Y."));
+      }
       if(a==="stop"){ say(L("D'accord, j'arrête d'écouter.","OK, I stop listening.")); setTimeout(close, 1800); CONT=false; return; }
       if(a==="commande") return remplirCommande(r);
       if(a==="client") return remplirClient(r);

@@ -213,8 +213,19 @@ function nettoieVoix(r, ok){
   o.transcription = String(r.transcription || "").slice(0, 600);
   return o;
 }
+// ---------- Vocabulaire propre à l'atelier : lexique corrigé par le propriétaire + noms des clients ----------
+function vocab(body){
+  const clean = v => String(v || "").replace(/["\n\r]/g, " ").replace(/\s+/g, " ").trim().slice(0, 60);
+  const lex = (Array.isArray(body.lexique) ? body.lexique : []).slice(0, 150).map(x => [clean(x && x.entendu), clean(x && x.correct)]).filter(x => x[0] && x[1]);
+  const noms = (Array.isArray(body.noms) ? body.noms : []).slice(0, 400).map(clean).filter(Boolean);
+  let t = "";
+  if(lex.length) t += `\n\nLEXIQUE DE CET ATELIER (corrections du propriétaire, à respecter TOUJOURS) :\n${lex.map(x => `- « ${x[0]} » → écris « ${x[1]} »`).join("\n")}`;
+  if(noms.length) t += `\n\nCLIENTS DÉJÀ ENREGISTRÉS dans cet atelier : ${noms.join(" ; ")}.\nSi le nom entendu ressemble à l'un d'eux, écris-le EXACTEMENT comme dans cette liste.`;
+  return t;
+}
+
 // ---------- Assistant vocal : une phrase libre → une action dans l'app ----------
-const ACTIONS = ["ouvrir", "commande", "client", "fiche", "chercher", "voir_commande", "question", "confirmer", "annuler", "retour", "aide", "stop", "rien"];
+const ACTIONS = ["ouvrir", "commande", "client", "fiche", "chercher", "voir_commande", "question", "confirmer", "annuler", "retour", "aide", "stop", "apprendre", "rien"];
 const SUJETS = ["recettes_jour", "recettes_semaine", "recettes_mois", "impayes", "retard", "pretes", "a_livrer_aujourdhui", "en_cours"];
 function promptAssistant(champs, today, ctx){
   const liste = champs.map(c => `"${c[0]}" (${c[1]})`).join(", ");
@@ -239,6 +250,7 @@ Si l'écran ouvert est « form » (fiche client), toute information dite → act
   (combien gagné aujourd'hui / cette semaine / ce mois ; qui doit de l'argent ; ce qui est en retard ; ce qui est prêt ; ce qu'il faut livrer aujourd'hui ; ce qui est en cours).
 - "confirmer" / "annuler" : réponse oui / non à la question posée par l'application.
 - "retour" : revenir en arrière. "aide" : la personne demande ce qu'elle peut dire. "stop" : la personne veut que l'assistant arrête d'écouter (« stop », « arrête », « c'est fini », « merci c'est tout », « that's all »).
+- "apprendre" : la personne corrige l'assistant ou lui apprend l'orthographe d'un mot (« retiens, Rohey s'écrit R-O-H-E-Y », « ce n'est pas Roki, c'est Rohey », « quand je dis bazin riche, écris basin riche »). Champs "entendu" (le mot mal écrit, tel que tu l'aurais écrit) et "correct" (la bonne orthographe ; épelé lettre par lettre → assemble les lettres).
 - "rien" : bruit, conversation qui ne s'adresse pas à l'application (clientes qui parlent entre elles, radio), phrase vide ou incompréhensible. Pour "rien", laisse "reponse" VIDE.
 
 Champs à extraire quand c'est dit (sinon ne mets pas la clé) :
@@ -262,7 +274,7 @@ Champs à extraire quand c'est dit (sinon ne mets pas la clé) :
 - "reponse" : ce que l'application va DIRE à voix haute, DANS LA LANGUE DE LA PERSONNE, une phrase courte et chaleureuse qui répète l'essentiel compris
   (ex. « Commande pour Awa Jallow, une robe sirène à 3000 dalasis, livraison vendredi. »). Pour "rien" : demande gentiment de répéter.
 Règles : n'invente rien ; les montants sont des nombres sans unité. Réponds UNIQUEMENT en JSON :
-{"action":"","onglet":"","sujet":"","nom":"","telephone":"","genre":"","articles":[],"prix":0,"avance":0,"livraison":"","type":"","recu":"","mesures":{},"notes":"","recherche":"","numero":0,"transcription":"","langue":"","reponse":""}`;
+{"action":"","onglet":"","sujet":"","nom":"","telephone":"","genre":"","articles":[],"prix":0,"avance":0,"livraison":"","type":"","recu":"","mesures":{},"notes":"","recherche":"","numero":0,"entendu":"","correct":"","transcription":"","langue":"","reponse":""}`;
 }
 const num = v => { if(v === null || v === undefined || v === "") return undefined; const n = typeof v === "number" ? v : parseFloat(String(v).replace(/[^0-9.,-]/g, "").replace(",", ".")); return isFinite(n) ? n : undefined; };
 function nettoieAssistant(r, ok, ctx){
@@ -290,6 +302,8 @@ function nettoieAssistant(r, ok, ctx){
   o.transcription = String(r.transcription || "").slice(0, 600);
   o.reponse = String(r.reponse || "").slice(0, 300);
   o.langue = r.langue === "en" || r.langue === "fr" ? r.langue : ctx.langue;
+  for(const k of ["entendu", "correct"]){ const v = String(r[k] || "").replace(/\s+/g, " ").trim(); if(v && v.length <= 60) o[k] = v; }
+  if(o.action === "apprendre" && !(o.entendu && o.correct)) o.action = "rien";
   return o;
 }
 
@@ -321,7 +335,7 @@ http.createServer(async (req, res) => {
     };
     try{
       const t0 = Date.now();
-      const r = await gemini(a.b64, a.mime, promptAssistant(champs, today, ctx), { rapide: true });
+      const r = await gemini(a.b64, a.mime, promptAssistant(champs, today, ctx) + vocab(body), { rapide: true });
       const out = nettoieAssistant(r || {}, new Set(champs.map(c => c[0])), ctx);
       send(res, 200, out);
       console.log("assistant", uid.slice(0, 6), out.action, r && r._model, a.mime, Math.round(a.b64.length * 0.75 / 1024) + " Ko", (Date.now() - t0) + " ms");
@@ -335,7 +349,7 @@ http.createServer(async (req, res) => {
     const today = /^\d{4}-\d{2}-\d{2}$/.test(String(body.today || "")) ? body.today : new Date().toISOString().slice(0, 10);
     try{
       const t0 = Date.now();
-      const r = await gemini(a.b64, a.mime, promptVoix(champs, body.genre, body.kind === "commande" ? "commande" : "client", today), { rapide: true });
+      const r = await gemini(a.b64, a.mime, promptVoix(champs, body.genre, body.kind === "commande" ? "commande" : "client", today) + vocab(body), { rapide: true });
       send(res, 200, nettoieVoix(r || {}, new Set(champs.map(c => c[0]))));
       console.log("voix", uid.slice(0, 6), r && r._model, a.mime, Math.round(a.b64.length * 0.75 / 1024) + " Ko", (Date.now() - t0) + " ms");
     }catch(e){ console.log("erreur voix", e.message); send(res, 502, { error: "read" }); }
