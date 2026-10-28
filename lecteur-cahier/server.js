@@ -78,7 +78,7 @@ Réponds UNIQUEMENT en JSON : {"nom":"","telephone":"","plusieurs":false,"mesure
 async function lire(b64, mime, champs, genre){ return gemini(b64, mime, prompt(champs, genre)); }
 
 async function gemini(b64, mime, texte, opts){
-  let lastErr = "no_model";
+  let lastErr = "no_model", quota = false;
   const list = (opts && opts.models) || MODELS;
   for(const model of list){
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
@@ -98,10 +98,11 @@ async function gemini(b64, mime, texte, opts){
     if(r.status === 503){ await new Promise(ok => setTimeout(ok, 800)); r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": KEY },
       body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: texte }, { inline_data: { mime_type: mime, data: b64 } }] }], generationConfig: tries[tries.length - 1] }) }); }
     // modèle absent, saturé (503) ou quota épuisé (429) : on passe au modèle suivant
+    if(r.status === 429) quota = true;
     if((r.status === 404 || r.status === 400 || r.status === 429 || r.status === 503) && model !== list[list.length - 1]){
       lastErr = "model_" + r.status + ":" + model; console.log("modèle indisponible", model, r.status); continue;
     }
-    if(!r.ok){ const t = await r.text(); console.log("gemini", r.status, t.slice(0, 300)); throw new Error("gemini_" + r.status); }
+    if(!r.ok){ const t = await r.text(); console.log("gemini", r.status, t.slice(0, 300)); throw new Error(quota ? "quota" : "gemini_" + r.status); }
     const j = await r.json();
     const txt = (((j.candidates || [])[0] || {}).content || {}).parts?.map(p => p.text || "").join("") || "{}";
     let out; try{ out = JSON.parse(txt.replace(/^```json|```$/g, "").trim()); }catch(e){ out = {}; }
@@ -339,7 +340,7 @@ http.createServer(async (req, res) => {
       const out = nettoieAssistant(r || {}, new Set(champs.map(c => c[0])), ctx);
       send(res, 200, out);
       console.log("assistant", uid.slice(0, 6), out.action, r && r._model, a.mime, Math.round(a.b64.length * 0.75 / 1024) + " Ko", (Date.now() - t0) + " ms");
-    }catch(e){ console.log("erreur assistant", e.message); send(res, 502, { error: "read" }); }
+    }catch(e){ console.log("erreur assistant", e.message); send(res, e.message === "quota" ? 429 : 502, { error: e.message === "quota" ? "quota" : "read" }); }
     return;
   }
   if(path === "/voix"){

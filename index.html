@@ -7895,7 +7895,7 @@
           body: JSON.stringify(Object.assign({ audio:rec.audio, champs:champs(), today:todayISO(), ecran:ecran(), attente:PEND ? PEND.q : (ASKING||""), langue:lastLang, onglets, manager:isMgr() }, vocabVoix())) });
         clearTimeout(kill);
         r=await resp.json().catch(()=>null);
-        if(!resp.ok){ state(resp.status===429 ? L("Limite du jour atteinte. Réessayez plus tard.","Daily limit reached. Try again later.")
+        if(!resp.ok){ state(resp.status===429 ? L("⚠️ La clé IA gratuite a atteint sa limite. Activez la facturation Gemini pour une voix sans arrêt.","⚠️ The free AI key reached its limit. Turn on Gemini billing for non-stop voice.")
           : resp.status===401 ? L("Reconnectez-vous pour utiliser l'assistant.","Sign in again to use the assistant.")
           : resp.status===503 ? L("L'assistant n'est pas encore activé.","The assistant isn't switched on yet.")
           : L("Je n'ai pas compris, redites.","I didn't understand, say it again.")); vbeep(false); r=null; }
