@@ -1771,7 +1771,7 @@
       lineItem:"• {n} : {p} {cur}",
       dueTitle:"Impayés et vêtements à récupérer", dueTotal:"Total dû", dueLate:"En retard", dueReady:"Prêts à récupérer",
       dueLateDays:"en retard de {n} j", duePlanned:"prévu le {d}", duePaid:"Payé {a} / {b}", dueRemind:"Relancer", dueNone:"Rien à relancer.",
-      dueReadyTag:"prêt, pas encore récupéré", relNone:"Client pas encore prévenu", relLine:"🔔 Client prévenu {n} fois · dernier : {d} par {w} ({k})", relKrappel:"rappel de paiement", relKpret:"vêtement prêt", relKmsg:"message", relOwner:"le patron", relMgr:"la manager", relLabel:"Client prévenu", dueMore:"Voir les {n} autres",
+      dueReadyTag:"prêt, pas encore récupéré", relNone:"Client pas encore prévenu", relLine:"🔔 Client prévenu {n} fois · dernier : {d} par {w} ({k})", relKrappel:"rappel de paiement", relKpret:"vêtement prêt", relKmsg:"message", relKappel:"appel", relOwner:"le patron", relMgr:"la manager", relLabel:"Client prévenu", dueMore:"Voir les {n} autres",
       mRemind:"Bonjour {nom}, petit rappel de {boutique} concernant {article} (n° {num}).", mRemindReady:"Votre vêtement est prêt et vous attend.",
       thxTitle:"Remerciements à envoyer", thxHint:"Clients servis et payés : un petit merci sur WhatsApp les fait revenir.", thxBtn:"Remercier",
       thxDone:"Fait", thxAll:"Tout marquer comme fait",
@@ -2058,7 +2058,7 @@
       lineItem:"• {n}: {p} {cur}",
       dueTitle:"Unpaid and items to collect", dueTotal:"Total due", dueLate:"Late", dueReady:"Ready to collect",
       dueLateDays:"{n} days late", duePlanned:"due {d}", duePaid:"Paid {a} / {b}", dueRemind:"Remind", dueNone:"Nothing to chase.",
-      dueReadyTag:"ready, not yet collected", relNone:"Client not contacted yet", relLine:"🔔 Client contacted {n} time(s) · last: {d} by {w} ({k})", relKrappel:"payment reminder", relKpret:"ready notice", relKmsg:"message", relOwner:"the owner", relMgr:"the manager", relLabel:"Client contacted", dueMore:"Show the {n} others",
+      dueReadyTag:"ready, not yet collected", relNone:"Client not contacted yet", relLine:"🔔 Client contacted {n} time(s) · last: {d} by {w} ({k})", relKrappel:"payment reminder", relKpret:"ready notice", relKmsg:"message", relKappel:"phone call", relOwner:"the owner", relMgr:"the manager", relLabel:"Client contacted", dueMore:"Show the {n} others",
       mRemind:"Hello {nom}, a quick reminder from {boutique} about {article} (no. {num}).", mRemindReady:"Your item is ready and waiting for you.",
       thxTitle:"Thank-you messages to send", thxHint:"Customers served and paid: a quick thank-you on WhatsApp brings them back.", thxBtn:"Thank",
       thxDone:"Done", thxAll:"Mark all as done",
@@ -3324,6 +3324,8 @@
       if(ph){
         const lp=document.createElement("div"); lp.className="ln"; lp.style.marginTop="6px";
         const pl=phoneLinks(ph); pl.style.justifyContent="flex-start"; lp.appendChild(pl); el.appendChild(lp);
+        // le lien WhatsApp ou l'appel compte aussi comme « client prévenu »
+        pl.querySelectorAll("a").forEach(a=>a.addEventListener("click", ()=>{ logRelance(o, /tel:/.test(a.getAttribute("href")||"") ? "appel" : "msg"); setTimeout(renderDue, 300); }));
       }
       if(o.clientePhone){
         const b=document.createElement("button"); b.type="button"; b.textContent="💬 "+t("dueRemind"); b.style.color="var(--ok)";
