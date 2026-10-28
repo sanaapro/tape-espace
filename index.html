@@ -1771,7 +1771,7 @@
       lineItem:"• {n} : {p} {cur}",
       dueTitle:"Impayés et vêtements à récupérer", dueTotal:"Total dû", dueLate:"En retard", dueReady:"Prêts à récupérer",
       dueLateDays:"en retard de {n} j", duePlanned:"prévu le {d}", duePaid:"Payé {a} / {b}", dueRemind:"Relancer", dueNone:"Rien à relancer.",
-      dueReadyTag:"prêt, pas encore récupéré", relNone:"Pas encore relancé", relLine:"🔔 Relancé {n} fois · dernière : {d} par {w}", relOwner:"le patron", relMgr:"la manager", relLabel:"Relances", dueMore:"Voir les {n} autres",
+      dueReadyTag:"prêt, pas encore récupéré", relNone:"Client pas encore prévenu", relLine:"🔔 Client prévenu {n} fois · dernier : {d} par {w} ({k})", relKrappel:"rappel de paiement", relKpret:"vêtement prêt", relKmsg:"message", relOwner:"le patron", relMgr:"la manager", relLabel:"Client prévenu", dueMore:"Voir les {n} autres",
       mRemind:"Bonjour {nom}, petit rappel de {boutique} concernant {article} (n° {num}).", mRemindReady:"Votre vêtement est prêt et vous attend.",
       thxTitle:"Remerciements à envoyer", thxHint:"Clients servis et payés : un petit merci sur WhatsApp les fait revenir.", thxBtn:"Remercier",
       thxDone:"Fait", thxAll:"Tout marquer comme fait",
@@ -2058,7 +2058,7 @@
       lineItem:"• {n}: {p} {cur}",
       dueTitle:"Unpaid and items to collect", dueTotal:"Total due", dueLate:"Late", dueReady:"Ready to collect",
       dueLateDays:"{n} days late", duePlanned:"due {d}", duePaid:"Paid {a} / {b}", dueRemind:"Remind", dueNone:"Nothing to chase.",
-      dueReadyTag:"ready, not yet collected", relNone:"Not reminded yet", relLine:"🔔 Reminded {n} time(s) · last: {d} by {w}", relOwner:"the owner", relMgr:"the manager", relLabel:"Reminders", dueMore:"Show the {n} others",
+      dueReadyTag:"ready, not yet collected", relNone:"Client not contacted yet", relLine:"🔔 Client contacted {n} time(s) · last: {d} by {w} ({k})", relKrappel:"payment reminder", relKpret:"ready notice", relKmsg:"message", relOwner:"the owner", relMgr:"the manager", relLabel:"Client contacted", dueMore:"Show the {n} others",
       mRemind:"Hello {nom}, a quick reminder from {boutique} about {article} (no. {num}).", mRemindReady:"Your item is ready and waiting for you.",
       thxTitle:"Thank-you messages to send", thxHint:"Customers served and paid: a quick thank-you on WhatsApp brings them back.", thxBtn:"Thank",
       thxDone:"Done", thxAll:"Mark all as done",
@@ -3263,17 +3263,20 @@
     return out;
   }
   // Journal des relances : chaque appui sur « Relancer » est noté sur la commande (date, heure, qui)
-  function logRelance(o){
-    if(!o || !o.id) return;
-    const r={ ms:Date.now(), by: isMgr() ? "manager" : "patron" };
+  function logRelance(o, kind){
+    const id = o && (o.id || (o===ORD ? ORDID : null));
+    if(!id) return;
+    const r={ ms:Date.now(), by: isMgr() ? "manager" : "patron", k: kind||"rappel" };
     o.relances = (Array.isArray(o.relances) ? o.relances : []).concat([r]).slice(-30);
-    setDoc(doc(db,"boutiques",BID,"commandes",o.id), { relances:o.relances }, { merge:true }).catch(function(){});
+    [COMMANDES, PRESS].forEach(L=>{ const x=L.find(y=>y.id===id); if(x && x!==o) x.relances=o.relances; });
+    if(ORD && ORDID===id && ORD!==o) ORD.relances=o.relances;
+    setDoc(doc(db,"boutiques",BID,"commandes",id), { relances:o.relances }, { merge:true }).catch(function(){});
   }
   function relanceText(o){
     const L=Array.isArray(o && o.relances) ? o.relances : [];
     if(!L.length) return "";
     const last=L[L.length-1];
-    return t("relLine").replace("{n}", L.length).replace("{d}", fmtWhen(last.ms)).replace("{w}", t(last.by==="manager" ? "relMgr" : "relOwner"));
+    return t("relLine").replace("{n}", L.length).replace("{d}", fmtWhen(last.ms)).replace("{w}", t(last.by==="manager" ? "relMgr" : "relOwner")).replace("{k}", t("relK"+(last.k||"rappel")));
   }
   function remindMsg(it){
     const o=it.o;
@@ -5382,7 +5385,7 @@
         syncSuivi(ORD, ORDID); renderCmd(ORD, ORDID); renderLists();
         if(upd.statut==="pret"){
           const m=$("p-msg"); m.textContent=t("vtAllDone"); m.className="msg ok show"; setTimeout(()=>m.classList.remove("show"), 5000);
-          if(autoNotifyOn()){ const num=waNumber(ORD.clientePhone); if(num) openWa(num, clientMessage(ORD)); }
+          if(autoNotifyOn()){ const num=waNumber(ORD.clientePhone); if(num){ logRelance(ORD, "pret"); openWa(num, clientMessage(ORD)); } }
         }
       });
       r.appendChild(l); r.appendChild(b); box.appendChild(r);
@@ -5940,6 +5943,7 @@
       const l2=document.createElement("div"); l2.className="ln";
       l2.textContent = fmtWhen(o.createdAtMs) + (o.retrait ? " · "+t("pzPickupOn").replace("{d}", fmtDate(o.retrait, LANG_UI)) : "");
       el.appendChild(l2);
+      { const rt=relanceText(o); if(rt){ const lr=document.createElement("div"); lr.className="ln"; lr.style.color="var(--gold)"; lr.textContent=rt; el.appendChild(lr); } }
       if(o.clientePhone){ const l3=document.createElement("div"); l3.className="ln"; l3.style.marginTop="6px"; const pl=phoneLinks(o.clientePhone); pl.style.justifyContent="flex-start"; l3.appendChild(pl); el.appendChild(l3); }
       const steps=document.createElement("div"); steps.className="pz-steps";
       const ci=PZ_STEPS.indexOf(o.statut||"recu");
@@ -5953,7 +5957,7 @@
             .catch(e=>{ o.statut=old; renderLists(); pzFail(e); });
           if(o.suiviToken) syncSuivi(o, o.id);
           renderLists();
-          if(autoNotifyOn() && o.clientePhone) openWa(waNumber(o.clientePhone), pzMessage(o));
+          if(autoNotifyOn() && o.clientePhone){ if(st==="pret") logRelance(o, "pret"); openWa(waNumber(o.clientePhone), pzMessage(o)); }
         });
         steps.appendChild(b);
       });
@@ -5977,7 +5981,7 @@
       }
       if(o.clientePhone){
         const wb=document.createElement("button"); wb.type="button"; wb.textContent=t("pzWaMsg");
-        wb.addEventListener("click", ()=>pzSend(o)); acts.appendChild(wb);
+        wb.addEventListener("click", ()=>{ logRelance(o, (o.statut==="pret") ? "pret" : "msg"); pzSend(o); renderLists(); }); acts.appendChild(wb);
         const tb=document.createElement("button"); tb.type="button"; tb.textContent=t("pzTrack");
         tb.addEventListener("click", ()=>{ syncSuivi(o, o.id); openWa(waNumber(o.clientePhone), trackMsg(o)); }); acts.appendChild(tb);
       }
@@ -6200,7 +6204,7 @@
       renderCmd(ORD, ORDID); renderLists();
       if(autoNotifyOn()){
         const num=waNumber(ORD.clientePhone);
-        if(num) openWa(num, clientMessage(ORD));
+        if(num){ if(st==="pret") logRelance(ORD, "pret"); openWa(num, clientMessage(ORD)); }
       }
     });
   });
@@ -6278,6 +6282,7 @@
     const num=waNumber(ORD.clientePhone);
     if(!num){ alert(t("noPhone")); return; }
     syncSuivi(ORD, ORDID);
+    logRelance(ORD, (ORD.statut==="pret") ? "pret" : "msg");
     openWa(num, clientMessage(ORD));
   });
 
