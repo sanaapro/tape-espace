@@ -95,6 +95,8 @@ async function gemini(b64, mime, texte, opts){
       if(r.status !== 400 || g === tries[tries.length - 1]) break;
       console.log("réglage refusé par", model, "— nouvel essai sans");
     }
+    if(r.status === 503){ await new Promise(ok => setTimeout(ok, 800)); r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": KEY },
+      body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: texte }, { inline_data: { mime_type: mime, data: b64 } }] }], generationConfig: tries[tries.length - 1] }) }); }
     // modèle absent, saturé (503) ou quota épuisé (429) : on passe au modèle suivant
     if((r.status === 404 || r.status === 400 || r.status === 429 || r.status === 503) && model !== list[list.length - 1]){
       lastErr = "model_" + r.status + ":" + model; console.log("modèle indisponible", model, r.status); continue;
@@ -212,7 +214,7 @@ function nettoieVoix(r, ok){
   return o;
 }
 // ---------- Assistant vocal : une phrase libre → une action dans l'app ----------
-const ACTIONS = ["ouvrir", "commande", "client", "fiche", "chercher", "voir_commande", "question", "confirmer", "annuler", "retour", "aide", "rien"];
+const ACTIONS = ["ouvrir", "commande", "client", "fiche", "chercher", "voir_commande", "question", "confirmer", "annuler", "retour", "aide", "stop", "rien"];
 const SUJETS = ["recettes_jour", "recettes_semaine", "recettes_mois", "impayes", "retard", "pretes", "a_livrer_aujourdhui", "en_cours"];
 function promptAssistant(champs, today, ctx){
   const liste = champs.map(c => `"${c[0]}" (${c[1]})`).join(", ");
@@ -236,7 +238,8 @@ Si l'écran ouvert est « form » (fiche client), toute information dite → act
 - "question" : la personne demande une information. Champ "sujet" parmi : ${SUJETS.join(", ")}
   (combien gagné aujourd'hui / cette semaine / ce mois ; qui doit de l'argent ; ce qui est en retard ; ce qui est prêt ; ce qu'il faut livrer aujourd'hui ; ce qui est en cours).
 - "confirmer" / "annuler" : réponse oui / non à la question posée par l'application.
-- "retour" : revenir en arrière. "aide" : la personne demande ce qu'elle peut dire. "rien" : bruit, phrase vide ou incompréhensible.
+- "retour" : revenir en arrière. "aide" : la personne demande ce qu'elle peut dire. "stop" : la personne veut que l'assistant arrête d'écouter (« stop », « arrête », « c'est fini », « merci c'est tout », « that's all »).
+- "rien" : bruit, conversation qui ne s'adresse pas à l'application (clientes qui parlent entre elles, radio), phrase vide ou incompréhensible. Pour "rien", laisse "reponse" VIDE.
 
 Champs à extraire quand c'est dit (sinon ne mets pas la clé) :
 - "nom" : nom du client, orthographe habituelle d'Afrique de l'Ouest (Fatou, Awa, Assatou, Aminata, Mariama, Isatou, Rohey, Kaddy, Ousmane, Lamin, Ebrima, Modou ; Ceesay, Jallow, Diallo, Njie, Touray, Sanneh, Jobe, Bah, Barry, Camara, Sowe, Jammeh, Bojang, Traoré…), sans « madame », « monsieur ».

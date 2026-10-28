@@ -7787,22 +7787,24 @@
       +'<div class="ais-meter"><i id="ais-lvl"></i></div><div id="ais-heard"></div><div id="ais-said"></div>'
       +'<div class="ais-btns" id="ais-yn" hidden><button type="button" id="ais-yes"></button><button type="button" id="ais-no"></button></div>';
     document.body.appendChild(b); document.body.appendChild(sh);
-    let busy=false, control=null, PEND=null, ASKING=null, lastLang=VOICE_LANG;
+    let busy=false, control=null, PEND=null, ASKING=null, lastLang=VOICE_LANG, CONT=false, fails=0, idleSince=0;
     const L=(fr,en)=> (lastLang==="en") ? en : fr;
     const state=x=>{ $("ais-state").textContent=x; };
     const lvl=(v,sp)=>{ $("ais-lvl").style.width=Math.round(v*100)+"%"; sh.classList.toggle("talk", !!sp); };
     function say(txt){ if(!txt) return; $("ais-said").textContent=txt; const keep=VOICE_LANG; VOICE_LANG=lastLang; try{ speak(txt); }finally{ VOICE_LANG=keep; } }
-    function close(){ if(control && control.cancel && !control.done){ try{ control.cancel(); }catch(e){} } busy=false; PEND=null; ASKING=null; sh.hidden=true; b.classList.remove("on","wait"); try{ speechSynthesis.cancel(); }catch(e){} dictWake(false); }
+    function close(){ CONT=false; if(control && control.cancel && !control.done){ try{ control.cancel(); }catch(e){} } busy=false; PEND=null; ASKING=null; sh.hidden=true; b.classList.remove("on","wait"); try{ speechSynthesis.cancel(); }catch(e){} dictWake(false); }
     const vis=()=>{ const logged = !!BID && $("login").hidden && $("loading").hidden; b.hidden = !logged || !!DICT; if(!logged && !sh.hidden) close(); };
     setInterval(vis, 500);
     $("ais-x").addEventListener("click", close);
     $("ais-yes").addEventListener("click", ()=>{ if(PEND){ if(control && control.cancel && !control.done) try{ control.cancel(); }catch(e){} act({ action:"confirmer" }); } });
     $("ais-no").addEventListener("click", ()=>{ if(PEND){ if(control && control.cancel && !control.done) try{ control.cancel(); }catch(e){} act({ action:"annuler" }); } });
+    // Comme l'assistant de Claude : on touche une fois, il reste à l'écoute (il réécoute tout seul
+    // après chaque réponse) jusqu'à ce qu'on le touche de nouveau, qu'on dise « stop » ou qu'on ferme.
+    // Le silence ne coûte rien : rien ne part tant que personne ne parle.
     b.addEventListener("click", ()=>{
-      if(busy && control && control.stop && !control.done){ control.stop(); return; }   // toucher pendant l'écoute = « j'ai fini »
-      if(busy) return;
+      if(CONT || busy){ close(); vbeep(false); return; }
       try{ speechSynthesis.cancel(); }catch(e){}
-      listen();
+      CONT=true; fails=0; idleSince=Date.now(); listen();
     });
     const ecran=()=>{ const v=["cform","form","fiche","cmd","coupe"].find(x=>$(x) && !$(x).hidden); return v || ("dash:"+TAB); };
     const champs=()=>{ const seen={}, out=[]; MESURES_F.concat(MESURES_H).forEach(mm=>{ if(!seen[mm[0]]){ seen[mm[0]]=1; out.push([mm[0], mm[1]+" / "+mm[2]]); } }); return out; };
@@ -7814,13 +7816,17 @@
       if(!PEND && !ASKING) $("ais-said").textContent="";
       $("ais-yn").hidden=!PEND; $("ais-yes").textContent=L("✓ Oui, enregistrer","✓ Yes, save"); $("ais-no").textContent=L("Non","No");
       dictWake(true); try{ wakeLecteur(); }catch(e){}
-      state(PEND ? L("🎙️ Oui ou non ?","🎙️ Yes or no?") : ASKING ? "🎙️ "+ASKING : L("🎙️ Parlez… je vous écoute","🎙️ Speak… I'm listening"));
+      state(PEND ? L("🎙️ Oui ou non ?","🎙️ Yes or no?") : ASKING ? "🎙️ "+ASKING : L("🎙️ Je vous écoute… (touchez le micro pour arrêter)","🎙️ Listening… (tap the microphone to stop)"));
       control={};
       let rec;
       try{ rec=await recordVoice({ control, stopSil:1300, idle:(PEND||ASKING)?9000:12000, level:lvl }); }
       catch(e){ busy=false; b.classList.remove("on"); state(L("Autorisez le micro pour SanaaPro dans les réglages du navigateur.","Allow the microphone for SanaaPro in the browser settings.")); return; }
-      control.done=true; lvl(0,false); b.classList.remove("on");
-      if(rec.empty){ busy=false; if(rec.why==="cancel") return; state(L("Touchez le micro et parlez.","Tap the microphone and speak.")); return; }
+      control.done=true; lvl(0,false); if(!CONT) b.classList.remove("on");
+      if(rec.empty){ busy=false; if(rec.why==="cancel") return;
+        if(CONT && Date.now()-idleSince < 180000){ setTimeout(()=>{ if(CONT && !busy) listen(); }, 150); return; }
+        if(CONT){ close(); return; }
+        state(L("Touchez le micro et parlez.","Tap the microphone and speak.")); return; }
+      idleSince=Date.now();
       if(!navigator.onLine){ busy=false; state(L("Pas de réseau : l'assistant a besoin d'Internet.","No network: the assistant needs internet.")); vbeep(false); return; }
       b.classList.add("wait"); state(L("⏳ Je comprends…","⏳ Understanding…"));
       const slow=setTimeout(()=>state(L("⏳ Je comprends… (réseau lent, patientez)","⏳ Understanding… (slow network, please wait)")), 7000);
@@ -7839,13 +7845,16 @@
           : L("Je n'ai pas compris, redites.","I didn't understand, say it again.")); vbeep(false); r=null; }
       }catch(e){ state(L("Pas de réponse (réseau ?). Touchez le micro et redites.","No answer (network?). Tap the microphone and say it again.")); vbeep(false); }
       clearTimeout(slow); b.classList.remove("wait"); busy=false;
-      if(!r) return;
+      if(!r){ if(CONT && ++fails<3) whenQuiet(()=>setTimeout(()=>{ if(CONT && !busy) listen(); }, 1500)); else if(CONT){ CONT=false; b.classList.remove("on"); } return; }
+      fails=0;
       if(r.langue==="fr" || r.langue==="en") lastLang=r.langue;
       $("ais-heard").textContent = r.transcription ? "« "+r.transcription+" »" : "";
       try{ act(r); }catch(e){ state(L("Erreur : ","Error: ")+((e&&e.message)||e)); vbeep(false); }
+      // mode continu : on réécoute dès que l'app a fini de parler
+      if(CONT && !PEND && !ASKING) whenQuiet(()=>setTimeout(()=>{ if(CONT && !busy && !sh.hidden) listen(); }, 250));
     }
     // L'app pose une question et réécoute toute seule dès qu'elle a fini de parler.
-    function relisten(){ whenQuiet(()=>setTimeout(()=>{ if((PEND||ASKING) && !busy && !sh.hidden) listen(); }, 250)); }
+    function relisten(){ whenQuiet(()=>setTimeout(()=>{ if((PEND||ASKING||CONT) && !busy && !sh.hidden) listen(); }, 250)); }
     function done(txt){ vbeep(true); state("✓ "+L("C'est fait","Done")); say(txt); }
     function confirmQ(txt, kind){ ASKING=null; PEND={ q:L("Je l'enregistre ?","Shall I save it?"), kind }; $("ais-yn").hidden=false;
       $("ais-yes").textContent=L("✓ Oui, enregistrer","✓ Yes, save"); $("ais-no").textContent=L("Non","No");
@@ -7983,6 +7992,7 @@
         return;
       }
       PEND=null; ASKING=null; $("ais-yn").hidden=true;
+      if(a==="stop"){ say(L("D'accord, j'arrête d'écouter.","OK, I stop listening.")); setTimeout(close, 1800); CONT=false; return; }
       if(a==="commande") return remplirCommande(r);
       if(a==="client") return remplirClient(r);
       if(a==="ouvrir"){
@@ -8017,6 +8027,8 @@
       }
       if(a==="aide") return done(L("Parlez-moi normalement. Par exemple : nouvelle commande pour Awa Jallow, une robe à 3000, avance 1000, livraison vendredi. Ou : ouvre le pressing. Ou : qui me doit de l'argent ?",
                                    "Just talk to me. For example: new order for Awa Jallow, a dress for 3000, 1000 advance, delivery Friday. Or: open the pressing. Or: who owes me money?"));
+      // en écoute continue, un bruit ou une conversation à côté ne doit pas faire parler l'app
+      if(CONT){ state(L("🎙️ Je vous écoute… (touchez le micro pour arrêter)","🎙️ Listening… (tap the microphone to stop)")); return; }
       vbeep(false); state(L("Pas compris","Not understood"));
       say(r.reponse || L("Je n'ai pas bien compris. Touchez le micro et redites, plus près du téléphone.","I didn't quite get that. Tap the microphone and say it again, closer to the phone."));
     }
