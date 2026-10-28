@@ -3306,7 +3306,7 @@
       }
       if(o.clientePhone){
         const b=document.createElement("button"); b.type="button"; b.textContent="💬 "+t("dueRemind"); b.style.color="var(--ok)";
-        b.addEventListener("click", ()=>openWa(waNumber(o.clientePhone), remindMsg(it)));
+        b.addEventListener("click", ()=>sendWithTicket(o, remindMsg(it)));
         acts.appendChild(b);
       }
       if(it.kind==="atelier"){
@@ -5070,12 +5070,27 @@
     ov.addEventListener("click", e=>{ if(e.target===ov) ov.remove(); });
     document.body.appendChild(ov);
   }
-  async function showTicket(o){
+  async function showTicket(o, txtOverride){
     if(!o || !o.id){ if(o===ORD && ORDID) o.id=ORDID; else return; }
     syncSuivi(o, o.id);
     const url = ticketUrl(o);
     if(!url){ alert(t("tkNoLink")); return; }
     const ov=document.createElement("div"); ov.className="tk-ov";
+    const tk=buildTicketDoc(o, url), d=tk.d, im=tk.im;
+    ov.appendChild(d);
+    const bar=document.createElement("div"); bar.className="tk-bar";
+    const mk=(lbl,fn)=>{ const b=document.createElement("button"); b.type="button"; b.textContent=lbl; b.addEventListener("click", fn); bar.appendChild(b); };
+    let png="";
+    mk(t("tkPrint"), ()=>{ document.body.classList.add("printticket"); setTimeout(()=>{ window.print(); setTimeout(()=>document.body.classList.remove("printticket"), 500); }, 200); });
+    mk(t("tkShare"), ()=>shareDocImage(d, "ticket-"+(o.numero||""), txtOverride || trackMsg(o), o.clientePhone));
+    mk(t("ptCamClose"), ()=>ov.remove());
+    ov.appendChild(bar);
+    ov.addEventListener("click", e=>{ if(e.target===ov) ov.remove(); });
+    document.body.appendChild(ov);
+    try{ png = await tk.ready; if(!png) throw 0; }catch(e){ im.replaceWith(Object.assign(document.createElement("div"),{ textContent:t("tkQrFail") })); }
+  }
+  // Le ticket blanc avec QR code (sert à l'écran, à l'impression et à l'envoi en image)
+  function buildTicketDoc(o, url){
     const d=document.createElement("div"); d.className="tk-doc";
     const row=(k,v)=>{ const r=document.createElement("div"); r.className="rw"; const a=document.createElement("span"); a.textContent=k; const b=document.createElement("b"); b.textContent=v; r.appendChild(a); r.appendChild(b); d.appendChild(r); };
     const sh=document.createElement("div"); sh.className="sh"; sh.textContent=(BOUTIQUE&&BOUTIQUE.name)||"SanaaPro"; d.appendChild(sh);
@@ -5089,17 +5104,14 @@
     if(o.prix||o.prix===0) row(t("tkTotal"), money(o.prix));
     row(t("tkPaid"), money(Number(o.paye)||0));
     row(t("tkLeft"), money(resteDe(o)));
-    ov.appendChild(d);
-    const bar=document.createElement("div"); bar.className="tk-bar";
-    const mk=(lbl,fn)=>{ const b=document.createElement("button"); b.type="button"; b.textContent=lbl; b.addEventListener("click", fn); bar.appendChild(b); };
-    let png="";
-    mk(t("tkPrint"), ()=>{ document.body.classList.add("printticket"); setTimeout(()=>{ window.print(); setTimeout(()=>document.body.classList.remove("printticket"), 500); }, 200); });
-    mk(t("tkShare"), ()=>shareDocImage(d, "ticket-"+(o.numero||""), trackMsg(o), o.clientePhone));
-    mk(t("ptCamClose"), ()=>ov.remove());
-    ov.appendChild(bar);
-    ov.addEventListener("click", e=>{ if(e.target===ov) ov.remove(); });
-    document.body.appendChild(ov);
-    try{ png = await qrDataUrl(url); im.src = png; }catch(e){ im.replaceWith(Object.assign(document.createElement("div"),{ textContent:t("tkQrFail") })); }
+    const ready=qrDataUrl(url).then(u=>new Promise(res=>{ im.onload=()=>res(u); im.onerror=()=>res(""); im.src=u; })).catch(()=>{ im.remove(); return ""; });
+    return { d, im, ready };
+  }
+  // Rappel : le ticket avec QR code s'ouvre, « Partager » l'envoie en image avec le texte du rappel
+  function sendWithTicket(o, txt){
+    if(o && o.id) syncSuivi(o, o.id);
+    if(!ticketUrl(o)){ openWa(waNumber(o.clientePhone), txt); return; }
+    showTicket(o, txt);
   }
   function tokenFrom(val){
     const v=String(val||"").trim();
