@@ -3138,9 +3138,15 @@
   const ART_ADJ={noir:"black",noire:"black",noirs:"black",noires:"black",blanc:"white",blanche:"white",blancs:"white",blanches:"white",rouge:"red",rouges:"red",bleu:"blue",bleue:"blue",bleus:"blue",vert:"green",verte:"green",jaune:"yellow",beige:"beige",marron:"brown",gris:"grey",grise:"grey",rose:"pink",violet:"purple",violette:"purple",orange:"orange",dore:"gold",doree:"gold",argent:"silver",bordeaux:"burgundy",cafe:"brown",lin:"linen",soie:"silk",coton:"cotton",wax:"wax",bazin:"bazin",dentelle:"lace",jean:"denim",velours:"velvet",homme:"men's",hommes:"men's",femme:"women's",femmes:"women's",enfant:"children's",enfants:"children's",fille:"girls'",garcon:"boys'",brode:"embroidered",brodee:"embroidered",long:"long",longue:"long",court:"short",courte:"short",nouveau:"new",nouvelle:"new",simple:"simple"};
   const ART_DROP={de:1,du:1,des:1,en:1,pour:1,avec:1,a:1,au:1,le:1,la:1,les:1,un:1,une:1,et:1};
   function artNorm(x){ return String(x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim(); }
+  // Mots qui montrent qu'un nom d'article est DÉJÀ en anglais (tarifs du pressing) : on ne le retraduit pas,
+  // sinon « Short sleeve T-shirt » devenait « sleeve T-shirt shorts »
+  const ART_EN_WORDS = new Set(["sleeve","sleeves","shirt","shirts","trouser","trousers","suit","suits","dress","dresses","only","and","with",
+    "men","man","women","woman","lady","ladies","white","full","jacket","jackets","jeans","blanket","blankets","towel","towels","curtain","curtains",
+    "kaftan","haftan","african","skirt","small","big","household","cotton","black","classic","colour","color","bed","sheet","duvet"]);
   function artEn(name){
     const orig=String(name||"").trim().split(/\s+/).filter(Boolean); if(!orig.length) return "";
     const nw=orig.map(artNorm), mods=[], nouns=[], other=[];
+    if(nw.some(w=>ART_EN_WORDS.has(w))) return orig.join(" ");
     for(let i=0;i<nw.length;i++){
       let hit=null;
       for(const ph of ART_PHRASES){ const L=ph[0].split(" ").length; if(nw.slice(i,i+L).join(" ")===ph[0]){ hit=[ph[1],L]; break; } }
