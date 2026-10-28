@@ -808,6 +808,9 @@
         <input id="pz-tel" type="tel" placeholder="+220 …">
         <div id="pz-grid"></div>
         <div class="pz-tot"><span data-i18n="pzTotal">Total</span><b id="pz-total">0</b></div>
+        <label data-i18n="discountOpt">Réduction accordée (optionnel)</label>
+        <input id="pz-remise" type="number" step="1" min="0" inputmode="decimal" placeholder="0">
+        <div class="pz-tot" id="pz-net-row" hidden><span data-i18n="netPrice">Prix final après réduction</span><b id="pz-net">0</b></div>
         <div class="mgrid">
           <div><label data-i18n="pzAdvance">Avance payée</label><input id="pz-avance" type="number" step="1" inputmode="decimal" placeholder="0"></div>
           <div><label data-i18n="pzPickup">Retrait prévu</label><input id="pz-retrait" type="date"></div>
@@ -1676,7 +1679,7 @@
       addStock:"Ajouter au stock", artAdded:"Article ajouté.", stockAdded:"Stock augmenté.",
       artNameRequired:"Le nom de l'article est obligatoire.",
       shopStock:"Stock de la boutique", noStock:"Aucun article en stock.",
-      sell:"Vendre", notEnoughStock:"Quantité supérieure au stock disponible.",
+      sell:"Vendre", sellDiscPh:"Réduction", notEnoughStock:"Quantité supérieure au stock disponible.",
       confirmDeleteArt:"Retirer cet article du stock ?",
       payment:"Paiement", paid:"Payé", due:"Reste à payer", cashIn:"Encaisser",
       cashedIn:"Encaissé :", amountRequired:"Indiquez un montant.",
@@ -1963,7 +1966,7 @@
       addStock:"Add to stock", artAdded:"Item added.", stockAdded:"Stock increased.",
       artNameRequired:"The item name is required.",
       shopStock:"Shop stock", noStock:"No item in stock.",
-      sell:"Sell", notEnoughStock:"Quantity higher than available stock.",
+      sell:"Sell", sellDiscPh:"Discount", notEnoughStock:"Quantity higher than available stock.",
       confirmDeleteArt:"Remove this item from stock?",
       payment:"Payment", paid:"Paid", due:"Left to pay", cashIn:"Collect",
       cashedIn:"Collected:", amountRequired:"Enter an amount.",
@@ -3474,18 +3477,26 @@
       const row=document.createElement("div"); row.className="selljs";
       const inp=document.createElement("input");
       inp.type="number"; inp.step="1"; inp.inputMode="numeric"; inp.placeholder="1"; inp.value="1";
+      const rmi=document.createElement("input");
+      rmi.type="number"; rmi.step="1"; rmi.min="0"; rmi.inputMode="decimal"; rmi.placeholder=t("sellDiscPh");
       const b=document.createElement("button"); b.textContent=t("sell");
       b.addEventListener("click", ()=>{
         const q=parseFloat(inp.value)||0;
         const dispo=Number(a.qte)||0;
         if(q<=0) return;
         if(q>dispo){ alert(t("notEnoughStock")); return; }
+        const brut=(Number(a.prix)||0)*q;
+        const rv=parseFloat(String(rmi.value||"").replace(",", "."));
+        const remise=(isNaN(rv)||rv<=0) ? 0 : Math.min(rv, brut);
         a.qte = dispo - q;
         setDoc(doc(db,"boutiques",BID,"stock",a.id), { qte:a.qte, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
-        addMouv("recette","boutique",(Number(a.prix)||0)*q, (a.nom||"")+" ×"+q, { articleId:a.id });
+        addMouv("recette","boutique",brut-remise, (a.nom||"")+" ×"+q+(remise>0 ? " ("+t("tkDiscount")+" "+money(remise)+")" : ""),
+                Object.assign({ articleId:a.id }, remise>0 ? { remise, prixInitial:brut } : {}));
+        rmi.value="";
         renderLists();
+        showSaleReceipt({ nom:a.nom||"", qte:q, pu:Number(a.prix)||0, brut, remise, net:brut-remise });
       });
-      row.appendChild(inp); row.appendChild(b);
+      row.appendChild(inp); row.appendChild(rmi); row.appendChild(b);
       el.appendChild(row);
 
       const rm=document.createElement("button"); rm.className="rm"; rm.textContent=t("remove");
@@ -4959,6 +4970,40 @@
     ov.addEventListener("click", e=>{ if(e.target===ov) ov.remove(); });
     document.body.appendChild(ov);
   }
+  // Reçu de vente boutique : prix initial, réduction éventuelle, prix payé
+  function showSaleReceipt(v){
+    const ov=document.createElement("div"); ov.className="tk-ov";
+    const d=document.createElement("div"); d.className="tk-doc";
+    const add=(cls,txt)=>{ const e=document.createElement("div"); e.className=cls; e.textContent=txt; d.appendChild(e); return e; };
+    const row=(k,val)=>{ const r=document.createElement("div"); r.className="rw"; const a=document.createElement("span"); a.textContent=k; const b=document.createElement("b"); b.textContent=val; r.appendChild(a); r.appendChild(b); d.appendChild(r); };
+    add("sh",(BOUTIQUE&&BOUTIQUE.name)||"SanaaPro");
+    if(BOUTIQUE&&BOUTIQUE.whatsapp) add("nb","WhatsApp "+BOUTIQUE.whatsapp);
+    add("rct",t("rcTitle"));
+    add("nb",nowLabel(LANG_UI));
+    add("hint",t("rcAmt")); const am=add("amt",money(v.net)); am.style.marginTop="-6px";
+    row(t("tkItem"), String(v.nom).slice(0,60)+" ×"+v.qte);
+    if(v.remise>0){ row(t("tkInitial"), money(v.brut)); row(t("tkDiscount"), "− "+money(v.remise)); }
+    row(t("tkTotal"), money(v.net));
+    add("stamp",t("rcPaidAll"));
+    add("thx",t("rcThanks"));
+    ov.appendChild(d);
+    const L=LANG_MSG;
+    const txt=["🧾 "+tt("rcTitle",L)+" — "+((BOUTIQUE&&BOUTIQUE.name)||""), nowLabel(L),
+      tt("tkItem",L)+" : "+v.nom+" ×"+v.qte]
+      .concat(v.remise>0 ? [tt("tkInitial",L)+" : "+money(v.brut), tt("tkDiscount",L)+" : − "+money(v.remise)] : [])
+      .concat([tt("tkTotal",L)+" : *"+money(v.net)+"*", "✅ "+tt("rcPaidAll",L), tt("rcThanks",L)+" 🙏"]).join("\n");
+    const bar=document.createElement("div"); bar.className="tk-bar";
+    const mk=(lbl,fn)=>{ const b=document.createElement("button"); b.type="button"; b.textContent=lbl; b.addEventListener("click", fn); bar.appendChild(b); };
+    mk(t("tkPrint"), ()=>{ document.body.classList.add("printticket"); setTimeout(()=>{ window.print(); setTimeout(()=>document.body.classList.remove("printticket"), 500); }, 200); });
+    mk(t("rcWa"), async ()=>{
+      if(navigator.share){ try{ await navigator.share({ text:txt }); }catch(e){} return; }
+      if(await copyText(txt)) alert(t("tkCopied"));
+    });
+    mk(t("ptCamClose"), ()=>ov.remove());
+    ov.appendChild(bar);
+    ov.addEventListener("click", e=>{ if(e.target===ov) ov.remove(); });
+    document.body.appendChild(ov);
+  }
   async function showTicket(o){
     if(!o || !o.id){ if(o===ORD && ORDID) o.id=ORDID; else return; }
     syncSuivi(o, o.id);
@@ -5688,14 +5733,21 @@
     });
     pzTotal();
   }
+  let PZ_REMISE=0;
   function pzTotal(){
     let tot=0; Object.values(PZ_CART).forEach(it=>{ tot += it.prix*it.qte; });
     const av=Math.max(0, parseFloat($("pz-avance").value)||0);
+    const rv=parseFloat(String($("pz-remise").value||"").replace(",", "."));
+    const rm=(isNaN(rv)||rv<=0) ? 0 : Math.min(rv, tot);
+    PZ_REMISE=rm;
     $("pz-total").textContent=money(tot);
-    $("pz-reste").textContent=money(Math.max(0, tot-av));
+    $("pz-net-row").hidden = !(rm>0);
+    $("pz-net").textContent=money(tot-rm);
+    $("pz-reste").textContent=money(Math.max(0, tot-rm-av));
     return tot;
   }
   $("pz-avance").addEventListener("input", pzTotal);
+  $("pz-remise").addEventListener("input", pzTotal);
   function pzMessage(o){
     const st=o.statut||"recu";
     const key="pm"+st.charAt(0).toUpperCase()+st.slice(1);
@@ -5704,6 +5756,7 @@
     if(st!=="recupere") msg += "\n" + tm("pmTicket").replace("{v}", fmtNum(o.numero));
     if(st==="recu"){
       if(o.resume) msg += "\n" + tm("pmItems").replace("{v}", artMsg(o.resume));
+      remiseRows(o, LANG_MSG).forEach(r=>{ msg += "\n" + r[0]+" : "+r[1]; });
       msg += "\n" + tm("pmTotal").replace("{v}", money(o.prix));
       if(Number(o.paye)>0) msg += "\n" + tm("pmAdvance").replace("{v}", money(o.paye));
       if(o.retrait) msg += "\n" + tm("pzPickupOn").replace("{d}", fmtDate(o.retrait, LANG_MSG));
@@ -5727,7 +5780,9 @@
     if(!nom){ msg.textContent=t("pzNeedName"); msg.className="msg err show"; return; }
     const items=Object.values(PZ_CART).filter(x=>x.qte>0);
     if(!items.length){ msg.textContent=t("pzNeedItem"); msg.className="msg err show"; return; }
-    const total=pzTotal();
+    const brut=pzTotal();
+    const remise=PZ_REMISE;
+    const total=brut-remise;
     const avance=Math.min(total, Math.max(0, parseFloat($("pz-avance").value)||0));
     let mx=0; PRESS.forEach(o=>{ const n=Number(o.numero)||0; if(n>mx) mx=n; });
     const data={
@@ -5735,6 +5790,7 @@
       clienteName:nom, clientePhone:$("pz-tel").value.trim(),
       articles:items, resume:items.map(x=>x.qte+"× "+x.nom).join(", "),
       prix:total, paye:avance, statut:"recu", retrait:$("pz-retrait").value||"",
+      remise: remise>0 ? remise : 0, prixInitial: remise>0 ? brut : null,
       createdAtMs:Date.now(), createdAt:serverTimestamp()
     };
     const ref=doc(collection(db,"boutiques",BID,"commandes"));
@@ -5742,7 +5798,7 @@
     const o=Object.assign({ id:ref.id }, data);
     PRESS.unshift(o);
     if(avance>0) addMouv("recette","pressing",avance, t("pzTicket")+" "+fmtNum(o.numero)+" — "+nom, { commandeId:ref.id });
-    PZ_CART={}; ["pz-nom","pz-tel","pz-avance","pz-retrait"].forEach(id=>{ $(id).value=""; });
+    PZ_CART={}; ["pz-nom","pz-tel","pz-avance","pz-remise","pz-retrait"].forEach(id=>{ $(id).value=""; });
     buildPzGrid();
     msg.textContent=t("pzCreated").replace("{n}", fmtNum(o.numero)); msg.className="msg ok show";
     setTimeout(()=>{ msg.classList.remove("show"); }, 4000);
@@ -5859,8 +5915,8 @@
         if(v2===null) return;
         const nv=parseFloat(String(v2).replace(",", "."));
         if(isNaN(nv) || nv<0){ alert(t("amountRequired")); return; }
-        o.prix=np; o.paye=nv;
-        setDoc(doc(db,"boutiques",BID,"commandes",o.id), { prix:np, paye:nv, updatedAt:serverTimestamp() }, { merge:true }).catch(pzFail);
+        o.prix=np; o.paye=nv; o.remise=0; o.prixInitial=null;
+        setDoc(doc(db,"boutiques",BID,"commandes",o.id), { prix:np, paye:nv, remise:0, prixInitial:null, updatedAt:serverTimestamp() }, { merge:true }).catch(pzFail);
         if(nv!==old && !o.importe) addMouv("recette","pressing", nv-old, t("qFixLabel")+" "+fmtNum(o.numero)+" — "+(o.clienteName||""), { commandeId:o.id });
         renderLists();
       });
