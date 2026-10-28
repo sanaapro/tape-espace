@@ -2530,6 +2530,18 @@
   window.addEventListener("online", updateOffline);
   window.addEventListener("offline", updateOffline);
 
+  // Quand une commande ou un ticket est supprimé, son argent (avance, encaissements) disparaît aussi des Finances
+  function purgeMouvsOf(cid){
+    if(!cid) return;
+    const ids=new Set();
+    MOUV.forEach(m=>{ if(m.commandeId===cid && m.id) ids.add(m.id); });
+    MOUV = MOUV.filter(m=>m.commandeId!==cid);
+    ids.forEach(id=>deleteDoc(doc(db,"boutiques",BID,"mouvements",id)).catch(function(){}));
+    getDocs(query(collection(db,"boutiques",BID,"mouvements"), where("commandeId","==",cid))).then(snap=>{
+      snap.forEach(d=>{ if(!ids.has(d.id)) deleteDoc(d.ref).catch(function(){}); });
+    }).catch(function(){});
+    try{ renderFinances(); }catch(e){}
+  }
   function addMouv(type, source, montant, label, extra){
     const m = Object.assign({
       type, source, montant: Number(montant)||0, label: label||"",
@@ -5963,8 +5975,9 @@
       db_.addEventListener("click", async ()=>{
         if(!confirm(t("pzDeleteQ").replace("{n}", fmtNum(o.numero)).replace("{c}", o.clienteName||""))) return;
         if(!await askCode()) return;
-        PRESS=PRESS.filter(x=>x.id!==o.id); renderLists();
-        deleteDoc(doc(db,"boutiques",BID,"commandes",o.id)).catch(e=>{ PRESS.push(o); renderLists(); pzFail(e); });
+        PRESS=PRESS.filter(x=>x.id!==o.id);
+        deleteDoc(doc(db,"boutiques",BID,"commandes",o.id)).then(()=>{ if(o.suiviToken) _deleteDoc(doc(db,"suivi",o.suiviToken)).catch(function(){}); }).catch(e=>{ PRESS.push(o); renderLists(); pzFail(e); });
+        purgeMouvsOf(o.id); renderLists();
       });
       acts.appendChild(db_);
       el.appendChild(acts);
@@ -6415,6 +6428,7 @@
     if(!await askCode()) return;
     if(!confirm(t("confirmDeleteOrder"))) return;
     deleteDoc(doc(db,"boutiques",BID,"commandes",ORDID)).catch(function(){});
+    purgeMouvsOf(ORDID);
     if(ORD && ORD.suiviToken) _deleteDoc(doc(db,"suivi",ORD.suiviToken)).catch(function(){});
     COMMANDES = COMMANDES.filter(x=>x.id!==ORDID);
     ORD=null; ORDID=null;
