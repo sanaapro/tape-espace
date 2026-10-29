@@ -240,6 +240,14 @@
   body.mgr #settings-btn, body.mgr #logout-btn, body.mgr #clo-hist-btn, body.mgr #clo-hist, body.mgr #clo-owner-btn,
   body.mgr #cmd-month, body.mgr #pz-tarifs, body.mgr #pz-tedit, body.mgr #pt-addstaff, body.mgr #sub-card,
   body.mgr #pane-finances, body.mgr #pane-staff, body.mgr #pane-reglages{ display:none !important; }
+  body.mgr #ar-card, body.mgr #stock-list .rm{ display:none !important; }
+  .sc-box{ background:var(--panel); border:1px solid var(--gold); border-radius:16px; padding:18px 16px; width:100%; max-width:340px; color:var(--ink,#eee) }
+  .sc-box h3{ margin:0 0 12px; font-size:19px; color:var(--gold) }
+  .sc-box .rw{ display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px solid var(--line2); font-size:16px }
+  .sc-box .tot{ font-size:24px; font-weight:800; color:var(--gold); text-align:center; margin:14px 0 4px }
+  .sc-btns{ display:flex; gap:10px; margin-top:14px }
+  .sc-btns button{ flex:1; padding:14px; border-radius:12px; font:inherit; font-weight:800; border:1px solid var(--line2); background:none; color:inherit; cursor:pointer }
+  .sc-btns .ok{ background:var(--gold); color:#0E0E0F; border-color:var(--gold) }
   /* Totaux globaux de ce que doivent les clients : cachés au manager (la liste client par client reste visible) */
   body.mgr .mgr-mask{ font-size:0 !important; }
   /* Coffre (épargne) : fermé au manager */
@@ -1035,7 +1043,7 @@
       <div class="stats3">
         <div class="stat"><div class="n" id="b-arts">0</div><div class="l" data-i18n="statArticles">Articles</div></div>
         <div class="stat"><div class="n" id="b-qte">0</div><div class="l" data-i18n="statInStock">En stock</div></div>
-        <div class="stat"><div class="n" id="b-rec">0</div><div class="l" data-i18n="statTodaySales">Recette du jour</div></div>
+        <div class="stat"><div class="n mgr-mask" id="b-rec">0</div><div class="l" data-i18n="statTodaySales">Recette du jour</div></div>
       </div>
       <div class="card">
         <h2 data-i18n="quickExpenseShop">Dépense rapide — Boutique</h2>
@@ -1045,7 +1053,7 @@
         <button class="ghost" id="db-save" data-i18n="saveExpense">Enregistrer la dépense</button>
         <div class="msg" id="db-msg"></div>
       </div>
-      <div class="card">
+      <div class="card" id="ar-card">
         <h2 data-i18n="newArticle">Nouvel article</h2>
         <label data-i18n="artName">Nom de l'article</label>
         <input id="ar-name" type="text" data-i18n-ph="artNamePh" placeholder="Ex. Bazin riche 6 yards">
@@ -1723,7 +1731,7 @@
       addStock:"Ajouter au stock", artAdded:"Article ajouté.", stockAdded:"Stock augmenté.",
       artNameRequired:"Le nom de l'article est obligatoire.",
       shopStock:"Stock de la boutique", noStock:"Aucun article en stock.",
-      sell:"Vendre", sellDiscPh:"Réduction", notEnoughStock:"Quantité supérieure au stock disponible.",
+      sell:"Vendre", sellDiscPh:"Réduction", scTitle:"Confirmer la vente", scOk:"✓ Confirmer la vente", scQte:"Quantité", scPu:"Prix unitaire", scDiscCode:"Une réduction demande le code du propriétaire.", notEnoughStock:"Quantité supérieure au stock disponible.",
       confirmDeleteArt:"Retirer cet article du stock ?",
       payment:"Paiement", paid:"Payé", due:"Reste à payer", cashIn:"Encaisser",
       cashedIn:"Encaissé :", amountRequired:"Indiquez un montant.",
@@ -2012,7 +2020,7 @@
       addStock:"Add to stock", artAdded:"Item added.", stockAdded:"Stock increased.",
       artNameRequired:"The item name is required.",
       shopStock:"Shop stock", noStock:"No item in stock.",
-      sell:"Sell", sellDiscPh:"Discount", notEnoughStock:"Quantity higher than available stock.",
+      sell:"Sell", sellDiscPh:"Discount", scTitle:"Confirm the sale", scOk:"✓ Confirm the sale", scQte:"Quantity", scPu:"Unit price", scDiscCode:"A discount needs the owner's code.", notEnoughStock:"Quantity higher than available stock.",
       confirmDeleteArt:"Remove this item from stock?",
       payment:"Payment", paid:"Paid", due:"Left to pay", cashIn:"Collect",
       cashedIn:"Collected:", amountRequired:"Enter an amount.",
@@ -3613,7 +3621,8 @@
       const rmi=document.createElement("input");
       rmi.type="number"; rmi.step="1"; rmi.min="0"; rmi.inputMode="decimal"; rmi.placeholder=t("sellDiscPh");
       const b=document.createElement("button"); b.textContent=t("sell");
-      b.addEventListener("click", ()=>{
+      b.addEventListener("click", async ()=>{
+        if(b.disabled) return;
         const q=parseFloat(inp.value)||0;
         const dispo=Number(a.qte)||0;
         if(q<=0) return;
@@ -3621,11 +3630,16 @@
         const brut=(Number(a.prix)||0)*q;
         const rv=parseFloat(String(rmi.value||"").replace(",", "."));
         const remise=(isNaN(rv)||rv<=0) ? 0 : Math.min(rv, brut);
-        a.qte = dispo - q;
+        // Le manager ne peut accorder une réduction qu'avec le code du propriétaire
+        if(remise>0 && isMgr()){ alert(t("scDiscCode")); if(!await askCode()) return; }
+        // Une seule touche ne vend plus rien : on montre la vente en grand et on demande de confirmer
+        if(!await confirmSale({ nom:a.nom||"", qte:q, pu:Number(a.prix)||0, brut, remise, net:brut-remise })) return;
+        if((Number(a.qte)||0) < q){ alert(t("notEnoughStock")); return; }
+        a.qte = (Number(a.qte)||0) - q;
         setDoc(doc(db,"boutiques",BID,"stock",a.id), { qte:a.qte, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
         addMouv("recette","boutique",brut-remise, (a.nom||"")+" ×"+q+(remise>0 ? " ("+t("tkDiscount")+" "+money(remise)+")" : ""),
-                Object.assign({ articleId:a.id }, remise>0 ? { remise, prixInitial:brut } : {}));
-        rmi.value="";
+                Object.assign({ articleId:a.id, qte:q }, remise>0 ? { remise, prixInitial:brut } : {}, isMgr() ? { parManager:true } : {}));
+        rmi.value=""; inp.value="1";
         renderLists();
         showSaleReceipt({ nom:a.nom||"", qte:q, pu:Number(a.prix)||0, brut, remise, net:brut-remise });
       });
@@ -5155,6 +5169,25 @@
     if(await copyText(txt)) alert(t("tkCopied"));
   }
   // Reçu de vente boutique : prix initial, réduction éventuelle, prix payé
+  // Fenêtre de confirmation d'une vente (article, quantité, prix, réduction, total)
+  function confirmSale(v){
+    return new Promise(res=>{
+      const ov=document.createElement("div"); ov.className="tk-ov";
+      const bx=document.createElement("div"); bx.className="sc-box";
+      const h=document.createElement("h3"); h.textContent=t("scTitle"); bx.appendChild(h);
+      const row=(k,val)=>{ const r=document.createElement("div"); r.className="rw"; const x=document.createElement("span"); x.textContent=k; const y=document.createElement("b"); y.textContent=val; r.appendChild(x); r.appendChild(y); bx.appendChild(r); };
+      row(t("tkItem"), v.nom); row(t("scQte"), String(v.qte)); row(t("scPu"), money(v.pu));
+      if(v.remise>0){ row(t("tkInitial"), money(v.brut)); row(t("tkDiscount"), "− "+money(v.remise)); }
+      const tot=document.createElement("div"); tot.className="tot"; tot.textContent=money(v.net); bx.appendChild(tot);
+      const bt=document.createElement("div"); bt.className="sc-btns";
+      let done=false; const end=ok=>{ if(done) return; done=true; ov.remove(); res(ok); };
+      const no=document.createElement("button"); no.type="button"; no.textContent=t("cancel").replace(/^‹\s*/,""); no.addEventListener("click", ()=>end(false));
+      const yes=document.createElement("button"); yes.type="button"; yes.className="ok"; yes.textContent=t("scOk"); yes.addEventListener("click", ()=>end(true));
+      bt.appendChild(no); bt.appendChild(yes); bx.appendChild(bt);
+      ov.appendChild(bx); ov.addEventListener("click", e=>{ if(e.target===ov) end(false); });
+      document.body.appendChild(ov);
+    });
+  }
   function showSaleReceipt(v){
     const ov=document.createElement("div"); ov.className="tk-ov";
     const d=document.createElement("div"); d.className="tk-doc";
@@ -6193,7 +6226,9 @@
   bindExpense("db","boutique");
   bindExpense("dp","pressing");
 
-  $("ar-add").addEventListener("click", ()=>{
+  $("ar-add").addEventListener("click", async ()=>{
+    // Sur le téléphone du manager, ajouter ou réapprovisionner un article demande le code du propriétaire
+    if(isMgr() && !await askCode()) return;
     const msg=$("ar-msg");
     const nom=$("ar-name").value.trim();
     if(!nom){ msg.textContent=t("artNameRequired"); msg.className="msg err show"; return; }
