@@ -69,6 +69,10 @@
   .fab-quick button{ flex:1 1 0; min-width:44px; padding:10px 0; border-radius:9px; border:1px solid var(--line2); background:none; color:inherit; font:inherit; font-weight:800; cursor:pointer }
   .fab-quick button.on{ border-color:var(--gold); color:var(--gold) }
   .st-row{ display:flex; gap:10px; align-items:flex-start }
+  .st-badge.low{ border-color:var(--err,#e0533d); color:var(--err,#e0533d) }
+  .stat.warn .n{ color:var(--err,#e0533d) }
+  #pane-materiel .stats3{ grid-template-columns:1fr 1fr }
+  #mat-unit button{ flex:1 1 30%; }
   .st-row img{ width:52px; height:52px; object-fit:cover; border-radius:9px; flex:none; border:1px solid var(--line2) }
   .st-badge{ display:inline-block; font-size:11px; font-weight:800; padding:2px 7px; border-radius:6px; border:1px solid var(--gold); color:var(--gold); margin-right:6px; vertical-align:1px }
   #stock-list .rm.fin{ background:none !important; color:var(--gold) !important; border:1px solid var(--line2) !important }
@@ -249,7 +253,7 @@
   body.mgr #settings-btn, body.mgr #logout-btn, body.mgr #clo-hist-btn, body.mgr #clo-hist, body.mgr #clo-owner-btn,
   body.mgr #cmd-month, body.mgr #pz-tarifs, body.mgr #pz-tedit, body.mgr #pt-addstaff, body.mgr #sub-card,
   body.mgr #pane-finances, body.mgr #pane-staff, body.mgr #pane-reglages{ display:none !important; }
-  body.mgr #ar-card, body.mgr #stock-list .rm{ display:none !important; }
+  body.mgr #ar-card, body.mgr #stock-list .rm, body.mgr #mat-list .rm{ display:none !important; }
   .sc-box{ background:var(--panel); border:1px solid var(--gold); border-radius:16px; padding:18px 16px; width:100%; max-width:340px; color:var(--ink,#eee) }
   .sc-box h3{ margin:0 0 12px; font-size:19px; color:var(--gold) }
   .sc-box .rw{ display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px solid var(--line2); font-size:16px }
@@ -710,6 +714,7 @@
       <button data-tab="pressing" data-i18n="tabPressing">Pressing</button>
       <button data-tab="charge" data-i18n="tabCharge">Charge</button>
       <button data-tab="boutique" data-i18n="tabBoutique">Boutique</button>
+      <button data-tab="materiel" data-i18n="tabMateriel">Matériel</button>
       <button data-tab="vitrine" data-i18n="tabVitrine">Vitrine</button>
       <button data-tab="mesures" data-i18n="tabMesures">Mesures</button>
       <button data-tab="finances" data-i18n="tabFinances">Finances</button>
@@ -1301,6 +1306,35 @@
       </div>
     </div>
 
+    <div id="pane-materiel" hidden>
+      <div class="stats3">
+        <div class="stat"><div class="n" id="mat-n">0</div><div class="l" data-i18n="matStatItems">Fournitures</div></div>
+        <div class="stat"><div class="n" id="mat-low">0</div><div class="l" data-i18n="matStatLow">À racheter</div></div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="matNew">Nouvel achat de matériel</h2>
+        <p class="sub" style="margin:0 0 8px;font-size:12.5px;color:var(--muted)" data-i18n="matHint">Fil, boutons, fermetures, thermocollant, tissu pour le prêt-à-porter… Ce matériel sert à l'atelier : il n'est pas vendu en boutique.</p>
+        <label data-i18n="matName">Matériel</label>
+        <input id="mat-name" type="text" data-i18n-ph="matNamePh" placeholder="Ex. Thermocollant blanc, fil noir, fermeture 20 cm">
+        <label data-i18n="fabUnit">Unité</label>
+        <div class="seg" id="mat-unit" style="width:100%;flex-wrap:wrap">
+          <button type="button" data-u="piece" data-i18n="mu_piece">pièce</button><button type="button" data-u="m" data-i18n="mu_m">mètre</button><button type="button" data-u="yd" data-i18n="mu_yd">yard</button><button type="button" data-u="bobine" data-i18n="mu_bobine">bobine</button><button type="button" data-u="paquet" data-i18n="mu_paquet">paquet</button><button type="button" data-u="kg" data-i18n="mu_kg">kg</button>
+        </div>
+        <div class="mgrid">
+          <div><label data-i18n="artQte">Quantité</label><input id="mat-qte" type="number" step="0.5" inputmode="decimal" placeholder="0"></div>
+          <div><label data-i18n="matCost">Prix payé (total)</label><input id="mat-cost" type="number" step="1" inputmode="decimal" placeholder="0"></div>
+        </div>
+        <label data-i18n="matSeuil">Me prévenir quand il reste</label>
+        <input id="mat-seuil" type="number" step="0.5" inputmode="decimal" data-i18n-ph="matSeuilPh" placeholder="Ex. 2 (facultatif)">
+        <button class="primary" id="mat-add" data-i18n="matAdd">Enregistrer l'achat</button>
+        <div class="msg" id="mat-msg"></div>
+      </div>
+      <div class="secttl" data-i18n="matStock">Stock de l'atelier</div>
+      <input id="q-mat" type="search" data-i18n-ph="matSearchPh" placeholder="Chercher un matériel…" style="margin:0 0 10px">
+      <div id="mat-list"></div>
+      <div id="mat-empty" class="empty" data-i18n="matEmpty" hidden>Aucun matériel enregistré.</div>
+    </div>
+
     <div id="pane-vitrine" hidden>
       <div class="card">
         <h2 data-i18n="vtTitle">Ma vitrine</h2>
@@ -1646,7 +1680,7 @@
   const PRICE_STD = 500, PRICE_PREM = 750;
   const SANAAPRO_WA = "2207628683";
   const STEPS = ["recu","coupe","essayage","pret","livre"];
-  const TABS = ["apercu","atelier","pressing","charge","boutique","vitrine","mesures","finances","staff","pointage","visits","reglages"];
+  const TABS = ["apercu","atelier","pressing","charge","boutique","materiel","vitrine","mesures","finances","staff","pointage","visits","reglages"];
   const PERIODES = ["jour","semaine","mois","annee"];
   const ROLES = ["roleCouturier","roleCouturiere","roleManager","roleVendeuse","roleApprenti","roleMenagere"];
 
@@ -1725,7 +1759,8 @@
       tagline:"votre atelier, en ligne", foot:"SanaaPro — propulsé par votre atelier",
       uiLabel:"Interface", msgLabel:"Messages clients",
       online:"En ligne — synchronisé", offlineShort:"Hors ligne",
-      tabApercu:"Aperçu", tabAtelier:"Atelier", tabBoutique:"Boutique", tabMesures:"Mesures",
+      tabApercu:"Aperçu", tabAtelier:"Atelier", tabBoutique:"Boutique", tabMateriel:"Matériel",
+      matStatItems:"Fournitures", matStatLow:"À racheter", matNew:"Nouvel achat de matériel", matHint:"Fil, boutons, fermetures, thermocollant, tissu pour le prêt-à-porter… Ce matériel sert à l\u2019atelier : il n\u2019est pas vendu en boutique.", matName:"Matériel", matNamePh:"Ex. Thermocollant blanc, fil noir, fermeture 20 cm", matCost:"Prix payé (total)", matSeuil:"Me prévenir quand il reste", matSeuilPh:"Ex. 2 (facultatif)", matAdd:"Enregistrer l\u2019achat", matStock:"Stock de l\u2019atelier", matSearchPh:"Chercher un matériel…", matEmpty:"Aucun matériel enregistré.", mu_piece:"pièce", mu_m:"mètre", mu_yd:"yard", mu_bobine:"bobine", mu_paquet:"paquet", mu_kg:"kg", matLeft:"Reste {n}", matAlertAt:"alerte à {n}", matLowBadge:"À racheter", matUse:"Utiliser", matBuy:"Racheter", matUseQ:"Utiliser {q} de « {n} » ?", matNotEnough:"Il ne reste que {n}.", matBuyQ:"Combien en avez-vous acheté ? ({u})", matBuyCost:"Prix payé en tout (0 si déjà compté)", matExpLabel:"Achat matériel", matCat:"Matériel atelier", tabMesures:"Mesures",
       tabVitrine:"Vitrine", vtTitle:"Ma vitrine",
       vtHint:"Vos modèles apparaissent dans le catalogue SanaaPro, que toutes les clientes peuvent consulter.",
       vtQuartier:"Quartier de l'atelier", vtOpen:"Voir le catalogue public ›", vtNoWave:"Votre numéro Wave n'est pas rempli : les clientes ne voient pas l'option « Payer l'acompte par Wave » sur vos modèles.", vtNoWa:"Votre numéro WhatsApp n'est pas rempli : les clientes ne voient pas le bouton « Commander sur WhatsApp ».", vtWarnGo:"Ouvrir les Réglages ›", vtWaveBtn:"Envoyer mon lien de paiement Wave", vtSyncFail:"Le catalogue a refusé la mise à jour de vos modèles : envoyez une capture de ce message à SanaaPro.", vtAdd:"Ajouter un modèle",
@@ -2015,7 +2050,8 @@
       tagline:"your workshop, online", foot:"SanaaPro — powered by your workshop",
       uiLabel:"Interface", msgLabel:"Client messages",
       online:"Online — synced", offlineShort:"Offline",
-      tabApercu:"Overview", tabAtelier:"Workshop", tabBoutique:"Shop", tabMesures:"Measurements",
+      tabApercu:"Overview", tabAtelier:"Workshop", tabBoutique:"Shop", tabMateriel:"Supplies",
+      matStatItems:"Supplies", matStatLow:"To rebuy", matNew:"New supply purchase", matHint:"Thread, buttons, zips, fusible interfacing, fabric for ready-to-wear… These supplies are for the workshop: they are not sold in the shop.", matName:"Supply", matNamePh:"e.g. White fusible, black thread, 20 cm zip", matCost:"Price paid (total)", matSeuil:"Warn me when only this is left", matSeuilPh:"e.g. 2 (optional)", matAdd:"Save the purchase", matStock:"Workshop stock", matSearchPh:"Search a supply…", matEmpty:"No supplies recorded.", mu_piece:"piece", mu_m:"metre", mu_yd:"yard", mu_bobine:"spool", mu_paquet:"pack", mu_kg:"kg", matLeft:"{n} left", matAlertAt:"alert at {n}", matLowBadge:"To rebuy", matUse:"Use", matBuy:"Rebuy", matUseQ:"Use {q} of “{n}”?", matNotEnough:"Only {n} left.", matBuyQ:"How much did you buy? ({u})", matBuyCost:"Total price paid (0 if already counted)", matExpLabel:"Supplies purchase", matCat:"Workshop supplies", tabMesures:"Measurements",
       tabVitrine:"Showcase", vtTitle:"My showcase",
       vtHint:"Your designs appear in the SanaaPro catalogue, which every client can browse.",
       vtQuartier:"Workshop area", vtOpen:"See the public catalogue ›", vtNoWave:"Your Wave number is empty: clients don't see the “Pay a deposit with Wave” option on your designs.", vtNoWa:"Your WhatsApp number is empty: clients don't see the “Order on WhatsApp” button.", vtWarnGo:"Open Settings ›", vtWaveBtn:"Send my Wave payment link", vtSyncFail:"The catalogue refused to update your designs: send a screenshot of this message to SanaaPro.", vtAdd:"Add a design",
@@ -3259,6 +3295,7 @@
     renderPointage();
     renderVisits();
     renderStock();
+    try{ renderMateriel(); }catch(e){}
     renderAlerts();
     try{ renderDue(); renderThx(); }catch(e){}
     renderAtelierStats();
@@ -3643,7 +3680,7 @@
   }
   function renderStock(){
     const box=$("stock-list"); box.innerHTML="";
-    const live=STOCK.filter(a=>!a.fini);
+    const live=STOCK.filter(a=>!a.fini && a.usage!=="atelier");
     let totQ=0, rolls=0;
     live.forEach(a=>{ if(kindOf(a)==="rouleau") rolls++; else totQ += Number(a.qte)||0; });
     $("b-arts").textContent = live.length;
@@ -3810,7 +3847,7 @@
       create({ nom, type, kind:"rouleau", unite:AR_UNIT, prix:p, entame, longueur: entame ? null : len, vendu:0, qte:0 });
       return done("artAdded");
     }
-    const exist = STOCK.find(x => !x.fini && kindOf(x)===k && (x.nom||"").toLowerCase() === nom.toLowerCase());
+    const exist = STOCK.find(x => !x.fini && x.usage!=="atelier" && kindOf(x)===k && (x.nom||"").toLowerCase() === nom.toLowerCase());
     if(exist){
       exist.qte = (Number(exist.qte)||0) + q;
       if(p>0) exist.prix = p;
@@ -3825,6 +3862,108 @@
       create({ nom, type, kind:"lot", unite:AR_UNIT, lotLen:ll, qte:q, prix:p });
     } else create({ nom, type, qte:q, prix:p });
     done("artAdded");
+  });
+
+  // =================== MATÉRIEL DE L'ATELIER (fournitures, pas à vendre) ===================
+  // Rangé dans la même collection « stock » avec usage:"atelier" (déjà autorisée par les règles),
+  // et donc jamais montré dans la Boutique. Achat = entrée + dépense atelier ; Utiliser = sortie.
+  // Journal court (30 derniers mouvements) sur la fiche. Manager : il peut UTILISER, pas acheter
+  // ni supprimer sans le code du propriétaire.
+  const isMat = a => a && a.usage==="atelier";
+  const MAT_UNITS = ["piece","m","yd","bobine","paquet","kg"];
+  const matU = u => t("mu_"+(MAT_UNITS.indexOf(u)>-1 ? u : "piece"));
+  let MAT_UNIT="piece";
+  function matJournal(a, e){ const j=Array.isArray(a.journal) ? a.journal.slice(-29) : []; j.push(e); a.journal=j; return j; }
+  function renderMateriel(){
+    const box=$("mat-list"); if(!box) return; box.innerHTML="";
+    const all=STOCK.filter(isMat);
+    const low=all.filter(a=>(Number(a.seuil)||0)>0 && (Number(a.qte)||0)<=(Number(a.seuil)||0));
+    $("mat-n").textContent=all.length; $("mat-low").textContent=low.length;
+    $("mat-low").parentElement.classList.toggle("warn", low.length>0);
+    $("mat-empty").hidden=all.length>0;
+    const q=normNom($("q-mat").value||"");
+    all.filter(a=>!q || normNom(a.nom).indexOf(q)>-1)
+      .sort((x,y)=>{ const lx=low.indexOf(x)>-1, ly=low.indexOf(y)>-1; return (ly-lx) || (x.nom||"").localeCompare(y.nom||""); })
+      .forEach(a=>{
+        const el=document.createElement("div"); el.className="rec";
+        const nm=document.createElement("div"); nm.className="nm";
+        if(low.indexOf(a)>-1){ const bd=document.createElement("span"); bd.className="st-badge low"; bd.textContent=t("matLowBadge"); nm.appendChild(bd); }
+        nm.appendChild(document.createTextNode(a.nom||"—"));
+        const l1=document.createElement("div"); l1.className="ln";
+        l1.textContent = t("matLeft").replace("{n}", fmtL(a.qte)+" "+matU(a.unite))
+          + ((Number(a.seuil)||0)>0 ? " · "+t("matAlertAt").replace("{n}", fmtL(a.seuil)) : "")
+          + ((Number(a.cout)||0)>0 ? " · "+money(a.cout)+" / "+matU(a.unite) : "");
+        el.appendChild(nm); el.appendChild(l1);
+        const row=document.createElement("div"); row.className="selljs";
+        const inp=document.createElement("input"); inp.type="number"; inp.step="0.5"; inp.inputMode="decimal"; inp.placeholder=matU(a.unite);
+        const use=document.createElement("button"); use.textContent=t("matUse");
+        use.addEventListener("click", ()=>{
+          const qv=parseFloat(String(inp.value||"").replace(",", "."))||0; if(qv<=0){ inp.focus(); return; }
+          if(qv>(Number(a.qte)||0)+1e-9){ alert(t("matNotEnough").replace("{n}", fmtL(a.qte)+" "+matU(a.unite))); return; }
+          if(!confirm(t("matUseQ").replace("{q}", fmtL(qv)+" "+matU(a.unite)).replace("{n}", a.nom||""))) return;
+          a.qte=Math.round(((Number(a.qte)||0)-qv)*100)/100;
+          setDoc(doc(db,"boutiques",BID,"stock",a.id), { qte:a.qte, journal:matJournal(a,{ ms:Date.now(), q:-qv, mgr:isMgr()||undefined }), updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+          inp.value=""; renderMateriel();
+        });
+        const buy=document.createElement("button"); buy.textContent=t("matBuy");
+        buy.addEventListener("click", async ()=>{
+          if(isMgr() && !await askCode()) return;
+          const qs=prompt(t("matBuyQ").replace("{u}", matU(a.unite))); if(qs===null) return;
+          const qv=parseFloat(String(qs).replace(",", "."))||0; if(qv<=0) return;
+          const ps=prompt(t("matBuyCost")); if(ps===null) return;
+          const pv=parseFloat(String(ps).replace(",", "."))||0;
+          a.qte=Math.round(((Number(a.qte)||0)+qv)*100)/100;
+          const ch={ qte:a.qte, journal:matJournal(a,{ ms:Date.now(), q:qv, cout:pv||undefined }), updatedAt:serverTimestamp() };
+          if(pv>0){ a.cout=Math.round(pv/qv); ch.cout=a.cout; addMouv("depense","atelier",pv, t("matExpLabel")+" — "+(a.nom||"")+" ×"+fmtL(qv)+" "+matU(a.unite), { categorie:t("matCat"), articleId:a.id }); }
+          setDoc(doc(db,"boutiques",BID,"stock",a.id), ch, { merge:true }).catch(function(){});
+          renderMateriel();
+        });
+        row.appendChild(inp); row.appendChild(use); row.appendChild(buy); el.appendChild(row);
+        // derniers mouvements
+        const j=Array.isArray(a.journal) ? a.journal.slice(-3).reverse() : [];
+        if(j.length){ const h=document.createElement("div"); h.className="ln"; h.style.cssText="margin-top:8px;font-size:12.5px;color:var(--muted)";
+          h.textContent=j.map(e=>(e.q>0?"+":"−")+fmtL(Math.abs(e.q))+" · "+fmtWhen(e.ms)).join("  |  "); el.appendChild(h); }
+        const rm=document.createElement("button"); rm.className="rm"; rm.textContent=t("remove");
+        rm.addEventListener("click", async ()=>{
+          if(!await askCode()) return;
+          if(!confirm(t("confirmDeleteArt"))) return;
+          deleteDoc(doc(db,"boutiques",BID,"stock",a.id)).catch(function(){});
+          STOCK=STOCK.filter(x=>x.id!==a.id); renderMateriel();
+        });
+        el.appendChild(rm);
+        box.appendChild(el);
+      });
+  }
+  $("q-mat").addEventListener("input", renderMateriel);
+  function paintMatUnits(){ $("mat-unit").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.getAttribute("data-u")===MAT_UNIT)); }
+  $("mat-unit").querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{ MAT_UNIT=b.getAttribute("data-u"); paintMatUnits(); }));
+  paintMatUnits();
+  $("mat-add").addEventListener("click", async ()=>{
+    if(isMgr() && !await askCode()) return;
+    const msg=$("mat-msg"), nom=$("mat-name").value.trim();
+    if(!nom){ msg.textContent=t("artNameRequired"); msg.className="msg err show"; return; }
+    const q=parseFloat(String($("mat-qte").value||"").replace(",", "."))||0;
+    const pv=parseFloat(String($("mat-cost").value||"").replace(",", "."))||0;
+    const seuil=parseFloat(String($("mat-seuil").value||"").replace(",", "."))||0;
+    const ex=STOCK.find(x=>isMat(x) && normNom(x.nom)===normNom(nom));
+    let id;
+    if(ex){
+      ex.qte=Math.round(((Number(ex.qte)||0)+q)*100)/100; if(seuil>0) ex.seuil=seuil;
+      const ch={ qte:ex.qte, seuil:ex.seuil||0, journal:matJournal(ex,{ ms:Date.now(), q, cout:pv||undefined }), updatedAt:serverTimestamp() };
+      if(pv>0 && q>0){ ex.cout=Math.round(pv/q); ch.cout=ex.cout; }
+      setDoc(doc(db,"boutiques",BID,"stock",ex.id), ch, { merge:true }).catch(function(){});
+      id=ex.id;
+    } else {
+      const ref=doc(collection(db,"boutiques",BID,"stock"));
+      const data={ nom, usage:"atelier", unite:MAT_UNIT, qte:q, seuil, cout: (pv>0 && q>0) ? Math.round(pv/q) : 0, prix:0,
+        journal: q>0 ? [{ ms:Date.now(), q, cout:pv||undefined }] : [], createdAtMs:Date.now(), updatedAt:serverTimestamp() };
+      setDoc(ref, data, { merge:true }).catch(function(){});
+      STOCK.push(Object.assign({ id:ref.id }, data)); id=ref.id;
+    }
+    if(pv>0) addMouv("depense","atelier",pv, t("matExpLabel")+" — "+nom+(q>0 ? " ×"+fmtL(q)+" "+matU(ex ? ex.unite : MAT_UNIT) : ""), { categorie:t("matCat"), articleId:id });
+    msg.textContent=t(ex ? "stockAdded" : "artAdded"); msg.className="msg ok show"; setTimeout(()=>msg.classList.remove("show"), 4000);
+    ["mat-name","mat-qte","mat-cost","mat-seuil"].forEach(i=>{ $(i).value=""; });
+    renderMateriel();
   });
 
   // =================== FINANCES ===================
@@ -5119,7 +5258,7 @@
   $("q-cli").addEventListener("input", renderLists);
 
   // =================== ACTIVITÉS (couture / pressing / boutique) ===================
-  const ACT_TABS = { couture:["atelier","charge","mesures","vitrine"], pressing:["pressing"], boutique:["boutique"], tissu:["boutique"] };
+  const ACT_TABS = { couture:["atelier","charge","mesures","vitrine","materiel"], pressing:["pressing"], boutique:["boutique"], tissu:["boutique"] };
   function activites(){
     const a = BOUTIQUE && BOUTIQUE.activites;
     return (Array.isArray(a) && a.length) ? a : ["couture","boutique"];
