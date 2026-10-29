@@ -65,6 +65,9 @@ Les couturiers utilisent souvent des abréviations, par exemple : Ep = épaule, 
 B ou Bas = bassin, LM ou L.manche = longueur manche, TM = tour de manche, MC = manche courte, Cou, Poig = poignet,
 LR = longueur robe, LJ = longueur jupe, LB = longueur boubou, LP ou L.pant = longueur pantalon, Ceint = ceinture,
 Cuis = cuisse, Gen = genou, BP = bas du pantalon, Carr = carrure, LT = longueur de taille, LC = longueur corsage.
+Notations de l'atelier Chez Djamil (à appliquer aussi) : E = épaule, et « E = 44 - 21 » = épaule 44 puis carrure 21 ;
+LM = « 69 - 25 » = manche longue 69 puis manche courte 25 ; LH = longueur haut ; TT = tour de taille ; SET = ceinture ;
+BAS = bassin ; SE = cuisse ; F = fond (montant) ; BH = bas du pantalon ; LPT = longueur pantalon.
 Associe chaque mesure lue à UNE des clés suivantes (et seulement celles-ci) :
 ${liste}
 Règles :
