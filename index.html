@@ -3292,12 +3292,15 @@
       cl.appendChild(carteCommande(o));
     });
 
-    const qk=$("q-cli").value.trim().toLowerCase();
+    // Recherche : on cherche dans TOUTES les fiches (femmes et hommes), sans accents ni espaces,
+    // pour qu'un client ne « disparaisse » pas parce que le mauvais onglet Femme/Homme est choisi.
+    const nz = s => String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\s+/g," ").trim();
+    const qk=nz($("q-cli").value), qd=qk.replace(/\D/g,"");
     const kl=$("cli-list"); kl.innerHTML="";
     const cliShown = CLIENTES.filter(c=>{
-      if(((c.genre==="homme") ? "homme" : "femme") !== GENRE_MES) return false;
-      if(!qk) return true;
-      return ((c.name||"")+" "+(c.phone||"")).toLowerCase().indexOf(qk)!==-1;
+      if(!qk) return ((c.genre==="homme") ? "homme" : "femme") === GENRE_MES;
+      if(nz(c.name).indexOf(qk)!==-1) return true;
+      return qd.length>=3 && String(c.phone||"").replace(/\D/g,"").indexOf(qd)!==-1;
     });
     $("cli-empty").hidden = cliShown.length>0;
     cliShown.forEach(c=>{
@@ -3305,7 +3308,7 @@
       el.className="cli-item";
       el.innerHTML='<div><div class="nm"></div><div class="ph"></div></div><span class="chev">›</span>';
       el.querySelector(".nm").textContent=c.name||t("noName");
-      el.querySelector(".ph").textContent=c.phone||"—";
+      el.querySelector(".ph").textContent=(c.phone||"—") + (qk ? " · "+t(c.genre==="homme" ? "gHomme" : "gFemme") : "");
       el.addEventListener("click", ()=>openFiche(c.id));
       kl.appendChild(el);
     });
