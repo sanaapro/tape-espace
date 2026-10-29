@@ -971,6 +971,7 @@
           <button type="button" data-act="boutique" data-i18n="actBoutique">Boutique</button>
           <button type="button" data-act="tissu" data-i18n="actTissu">Vente de tissu</button>
         </div>
+        <div class="msg ok" id="act-msg"></div>
       </div>
       <div class="card">
         <h2 data-i18n="toolTitle">Outils avancés</h2>
@@ -1936,7 +1937,7 @@
       pzDeleteQ:"Supprimer le ticket n° {n} de {c} ?", pzPaidAll:"Payé", pzDueShort:"Reste {v}",
       pzWaMsg:"WhatsApp", noPhonePz:"Pas de numéro pour ce client.",
       actTitle:"Mes activités", actHint:"Choisissez ce que fait votre commerce. Seuls les onglets utiles s'affichent.",
-      actCouture:"Couture", actPressing:"Pressing", actBoutique:"Boutique", actTissu:"Vente de tissu",
+      actCouture:"Couture", actPressing:"Pressing", actBoutique:"Boutique", actTissu:"Vente de tissu", tabTissu:"Tissus", tabBoutiqueTissu:"Boutique · Tissus", actTissuOn:"✅ Vente de tissu activée. Dans l\u2019onglet « Boutique · Tissus », le formulaire « Nouvel article » propose maintenant Rouleau et Lot / coupon.", actTissuGo:"Ajouter un rouleau maintenant", actSaveFail:"Réglage non enregistré : {e}",
       kArticle:"Article", kRouleau:"Rouleau", kLot:"Lot / coupon", kHintArticle:"Un article vendu à la pièce (chemise, sac, bazin plié…).", kHintRouleau:"Un rouleau vendu au mètre ou au yard. Déjà entamé ? Cochez la case : pas besoin de le mesurer.", kHintLot:"Des lots déjà coupés (ex. 5 mètres), vendus entiers.", fabUnit:"Unité", uMetre:"Mètre", uYard:"Yard", fabLen:"Longueur du rouleau", fabEntame:"Rouleau déjà entamé (longueur inconnue)", fabLotLen:"Longueur d\u2019un lot", fabPhoto:"📷 Photo du tissu (facultatif)", fabNbLots:"Nombre de lots", fabPrixLot:"Prix d\u2019un lot", fabPrixU:"Prix par {u}", fabLenNeed:"Indiquez la longueur, ou cochez « déjà entamé ».", fabEntameShort:"entamé", fabLeft:"reste {n}", fabUnknown:"longueur inconnue", fabDone:"Terminé", fabDoneQ:"Ce rouleau est fini ? Il disparaîtra de la liste.", fabTooMuch:"Il ne reste que {n} sur ce rouleau.", fabRollsLbl:"rouleau(x)", stockSearchPh:"Chercher un article ou un tissu…", lotOf:"lot de {n}", actNeedOne:"Gardez au moins une activité.", callBtn:"Appeler",
       toolTitle:"Outils avancés", toolHint:"Activez seulement ce dont vous avez besoin. Les onglets s'ajoutent en haut de l'écran.",
       pmRecu:"Bonjour {nom}, voici votre reçu de dépôt chez {boutique}.", pmLavage:"Bonjour {nom}, vos vêtements sont en cours de lavage chez {boutique}.",
@@ -2227,7 +2228,7 @@
       pzDeleteQ:"Delete ticket no. {n} for {c}?", pzPaidAll:"Paid", pzDueShort:"Due {v}",
       pzWaMsg:"WhatsApp", noPhonePz:"No phone number for this customer.",
       actTitle:"My activities", actHint:"Choose what your business does. Only the useful tabs are shown.",
-      actCouture:"Tailoring", actPressing:"Dry cleaning", actBoutique:"Shop", actTissu:"Fabric sales",
+      actCouture:"Tailoring", actPressing:"Dry cleaning", actBoutique:"Shop", actTissu:"Fabric sales", tabTissu:"Fabrics", tabBoutiqueTissu:"Shop · Fabrics", actTissuOn:"✅ Fabric sales switched on. In the “Shop · Fabrics” tab, the “New item” form now offers Roll and Lot / cut piece.", actTissuGo:"Add a roll now", actSaveFail:"Setting not saved: {e}",
       kArticle:"Item", kRouleau:"Roll", kLot:"Lot / cut piece", kHintArticle:"An item sold by the piece (shirt, bag, folded bazin…).", kHintRouleau:"A roll sold by the metre or yard. Already started? Tick the box: no need to measure it.", kHintLot:"Pieces already cut (e.g. 5 metres), sold whole.", fabUnit:"Unit", uMetre:"Metre", uYard:"Yard", fabLen:"Roll length", fabEntame:"Roll already started (length unknown)", fabLotLen:"Length of one lot", fabPhoto:"📷 Fabric photo (optional)", fabNbLots:"Number of lots", fabPrixLot:"Price of one lot", fabPrixU:"Price per {u}", fabLenNeed:"Enter the length, or tick “already started”.", fabEntameShort:"started", fabLeft:"{n} left", fabUnknown:"length unknown", fabDone:"Finished", fabDoneQ:"Is this roll finished? It will leave the list.", fabTooMuch:"Only {n} left on this roll.", fabRollsLbl:"roll(s)", stockSearchPh:"Search an item or fabric…", lotOf:"lot of {n}", actNeedOne:"Keep at least one activity.", callBtn:"Call",
       toolTitle:"Advanced tools", toolHint:"Turn on only what you need. The tabs appear at the top of the screen.",
       pmRecu:"Hello {nom}, here is your drop-off receipt from {boutique}.", pmLavage:"Hello {nom}, your clothes are being washed at {boutique}.",
@@ -5281,6 +5282,7 @@
     Object.keys(ACT_TABS).forEach(k=>{ if(!hasAct(k)) ACT_TABS[k].forEach(x=>hide.add(x)); });
     Object.keys(ACT_TABS).forEach(k=>{ if(hasAct(k)) ACT_TABS[k].forEach(x=>{ if(TOOL_TABS.indexOf(x)===-1) hide.delete(x); }); });
     document.body.classList.toggle("act-tissu", hasAct("tissu"));
+    { const tb=$("tabs").querySelector('button[data-tab="boutique"]'); if(tb){ const lbl = hasAct("tissu") ? (hasAct("boutique") ? "tabBoutiqueTissu" : "tabTissu") : "tabBoutique"; tb.setAttribute("data-i18n", lbl); tb.textContent=t(lbl); } }
     TOOL_TABS.forEach(x=>{ if(!hasTool(x)) hide.add(x); });
     $("tool-chips").querySelectorAll("button").forEach(b=>b.classList.toggle("on", hasTool(b.getAttribute("data-tool"))));
     $("tabs").querySelectorAll("button").forEach(b=>{ b.style.display = hide.has(b.getAttribute("data-tab")) ? "none" : ""; });
@@ -5299,7 +5301,15 @@
       if(!a.length){ alert(t("actNeedOne")); return; }
       if(BOUTIQUE) BOUTIQUE.activites=a;
       applyActivities();
-      setDoc(doc(db,"boutiques",BID), { activites:a, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+      setDoc(doc(db,"boutiques",BID), { activites:a, updatedAt:serverTimestamp() }, { merge:true })
+        .catch(e=>{ const m=$("act-msg"); m.textContent=t("actSaveFail").replace("{e}", (e&&(e.code||e.message))||"?"); m.className="msg err show"; });
+      if(k==="tissu" && a.indexOf("tissu")!==-1){
+        AR_KIND="rouleau"; paintArForm();
+        const m=$("act-msg"); m.textContent=t("actTissuOn"); m.className="msg ok show";
+        const go=document.createElement("button"); go.type="button"; go.className="ghost"; go.style.marginTop="8px"; go.textContent=t("actTissuGo");
+        go.addEventListener("click", ()=>{ setTab("boutique"); try{ $("ar-card").scrollIntoView({ block:"start" }); }catch(e){} });
+        m.appendChild(document.createElement("br")); m.appendChild(go);
+      } else { $("act-msg").classList.remove("show"); }
     });
   });
   $("tool-chips").querySelectorAll("button").forEach(b=>{
