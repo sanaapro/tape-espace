@@ -971,6 +971,12 @@
         <div class="row"><span class="k" data-i18n="shopSlug">Identifiant</span><span class="v" id="d-slug"></span></div>
         <p style="margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.5" data-i18n="idNote">L'email de connexion et l'identifiant ne se modifient pas ici.</p>
       </div>
+      <div class="card" id="cof-set" style="border-color:var(--gold)">
+        <h2 data-i18n="cofSetTitle">🔒 Mon coffre (épargne)</h2>
+        <p style="margin:0 0 8px;font-size:13px;color:var(--muted)" data-i18n="cofSetHint">À chaque paiement d'un client, une part (vous choisissez le pourcentage) est mise de côté pour vos projets, et une autre peut être réservée aux salaires.</p>
+        <div id="cof-set-state" style="font-size:14px;margin-bottom:8px"></div>
+        <button class="primary" type="button" id="cof-set-go" data-i18n="cofSetGo">Activer ou régler mon coffre</button>
+      </div>
       <div class="card">
         <h2 data-i18n="actTitle">Mes activités</h2>
         <p style="margin:0 0 6px;font-size:13px;color:var(--muted)" data-i18n="actHint">Choisissez ce que fait votre commerce. Seuls les onglets utiles s'affichent.</p>
@@ -1946,7 +1952,7 @@
       pzDeleteQ:"Supprimer le ticket n° {n} de {c} ?", pzPaidAll:"Payé", pzDueShort:"Reste {v}",
       pzWaMsg:"WhatsApp", noPhonePz:"Pas de numéro pour ce client.",
       actTitle:"Mes activités", actHint:"Choisissez ce que fait votre commerce. Seuls les onglets utiles s'affichent.",
-      actCouture:"Couture", actPressing:"Pressing", actBoutique:"Boutique", actTissu:"Vente de tissu", tabTissu:"Tissus", tabBoutiqueTissu:"Boutique · Tissus", actTissuOn:"✅ Vente de tissu activée : un onglet « Tissus » est apparu, pour les rouleaux et les lots.", actTissuGo:"Ouvrir l\u2019onglet Tissus", fabStock:"Stock de tissu", fabNew:"Nouveau tissu", apSalesN:"Ventes du jour", apSalesD:"Recette du jour", apInStock:"En stock", actSaveFail:"Réglage non enregistré : {e}",
+      actCouture:"Couture", actPressing:"Pressing", actBoutique:"Boutique", actTissu:"Vente de tissu", cofSetTitle:"🔒 Mon coffre (épargne)", cofSetHint:"À chaque paiement d\u2019un client, une part (vous choisissez le pourcentage) est mise de côté pour vos projets, et une autre peut être réservée aux salaires.", cofSetGo:"Activer ou régler mon coffre", cofSetSee:"Voir et régler mon coffre", cofSetOff:"Pas encore activé.", cofSetOn:"Coffre activé : {p} % de chaque recette", cofSetSal:"Salaires : {p} %", tabTissu:"Tissus", tabBoutiqueTissu:"Boutique · Tissus", actTissuOn:"✅ Vente de tissu activée : un onglet « Tissus » est apparu, pour les rouleaux et les lots.", actTissuGo:"Ouvrir l\u2019onglet Tissus", fabStock:"Stock de tissu", fabNew:"Nouveau tissu", apSalesN:"Ventes du jour", apSalesD:"Recette du jour", apInStock:"En stock", actSaveFail:"Réglage non enregistré : {e}",
       kArticle:"Article", kRouleau:"Rouleau", kLot:"Lot / coupon", kHintArticle:"Un article vendu à la pièce (chemise, sac, bazin plié…).", kHintRouleau:"Un rouleau vendu au mètre ou au yard. Déjà entamé ? Cochez la case : pas besoin de le mesurer.", kHintLot:"Des lots déjà coupés (ex. 5 mètres), vendus entiers.", fabUnit:"Unité", uMetre:"Mètre", uYard:"Yard", fabLen:"Longueur du rouleau", fabEntame:"Rouleau déjà entamé (longueur inconnue)", fabLotLen:"Longueur d\u2019un lot", fabPhoto:"📷 Photo du tissu (facultatif)", fabNbLots:"Nombre de lots", fabPrixLot:"Prix d\u2019un lot", fabPrixU:"Prix par {u}", fabLenNeed:"Indiquez la longueur, ou cochez « déjà entamé ».", fabEntameShort:"entamé", fabLeft:"reste {n}", fabUnknown:"longueur inconnue", fabDone:"Terminé", fabDoneQ:"Ce rouleau est fini ? Il disparaîtra de la liste.", fabTooMuch:"Il ne reste que {n} sur ce rouleau.", fabRollsLbl:"rouleau(x)", stockSearchPh:"Chercher un article ou un tissu…", lotOf:"lot de {n}", actNeedOne:"Gardez au moins une activité.", callBtn:"Appeler",
       toolTitle:"Outils avancés", toolHint:"Activez seulement ce dont vous avez besoin. Les onglets s'ajoutent en haut de l'écran.",
       pmRecu:"Bonjour {nom}, voici votre reçu de dépôt chez {boutique}.", pmLavage:"Bonjour {nom}, vos vêtements sont en cours de lavage chez {boutique}.",
@@ -2237,7 +2243,7 @@
       pzDeleteQ:"Delete ticket no. {n} for {c}?", pzPaidAll:"Paid", pzDueShort:"Due {v}",
       pzWaMsg:"WhatsApp", noPhonePz:"No phone number for this customer.",
       actTitle:"My activities", actHint:"Choose what your business does. Only the useful tabs are shown.",
-      actCouture:"Tailoring", actPressing:"Dry cleaning", actBoutique:"Shop", actTissu:"Fabric sales", tabTissu:"Fabrics", tabBoutiqueTissu:"Shop · Fabrics", actTissuOn:"✅ Fabric sales switched on: a “Fabrics” tab has appeared, for rolls and lots.", actTissuGo:"Open the Fabrics tab", fabStock:"Fabric stock", fabNew:"New fabric", apSalesN:"Sales today", apSalesD:"Today\u2019s takings", apInStock:"In stock", actSaveFail:"Setting not saved: {e}",
+      actCouture:"Tailoring", actPressing:"Dry cleaning", actBoutique:"Shop", actTissu:"Fabric sales", cofSetTitle:"🔒 My savings vault", cofSetHint:"Every time a client pays, a share (you choose the percentage) is put aside for your projects, and another can be kept for wages.", cofSetGo:"Turn on or set my vault", cofSetSee:"See and set my vault", cofSetOff:"Not turned on yet.", cofSetOn:"Vault on: {p} % of every payment", cofSetSal:"Wages: {p} %", tabTissu:"Fabrics", tabBoutiqueTissu:"Shop · Fabrics", actTissuOn:"✅ Fabric sales switched on: a “Fabrics” tab has appeared, for rolls and lots.", actTissuGo:"Open the Fabrics tab", fabStock:"Fabric stock", fabNew:"New fabric", apSalesN:"Sales today", apSalesD:"Today\u2019s takings", apInStock:"In stock", actSaveFail:"Setting not saved: {e}",
       kArticle:"Item", kRouleau:"Roll", kLot:"Lot / cut piece", kHintArticle:"An item sold by the piece (shirt, bag, folded bazin…).", kHintRouleau:"A roll sold by the metre or yard. Already started? Tick the box: no need to measure it.", kHintLot:"Pieces already cut (e.g. 5 metres), sold whole.", fabUnit:"Unit", uMetre:"Metre", uYard:"Yard", fabLen:"Roll length", fabEntame:"Roll already started (length unknown)", fabLotLen:"Length of one lot", fabPhoto:"📷 Fabric photo (optional)", fabNbLots:"Number of lots", fabPrixLot:"Price of one lot", fabPrixU:"Price per {u}", fabLenNeed:"Enter the length, or tick “already started”.", fabEntameShort:"started", fabLeft:"{n} left", fabUnknown:"length unknown", fabDone:"Finished", fabDoneQ:"Is this roll finished? It will leave the list.", fabTooMuch:"Only {n} left on this roll.", fabRollsLbl:"roll(s)", stockSearchPh:"Search an item or fabric…", lotOf:"lot of {n}", actNeedOne:"Keep at least one activity.", callBtn:"Call",
       toolTitle:"Advanced tools", toolHint:"Turn on only what you need. The tabs appear at the top of the screen.",
       pmRecu:"Hello {nom}, here is your drop-off receipt from {boutique}.", pmLavage:"Hello {nom}, your clothes are being washed at {boutique}.",
@@ -2419,7 +2425,7 @@
     if(onBtn && onBtn.scrollIntoView) onBtn.scrollIntoView({ block:"nearest", inline:"center" });
     window.scrollTo(0,0);
     if(name==="vitrine") loadVitrine();
-    if(name==="reglages") paintLexique();
+    if(name==="reglages"){ paintLexique(); try{ paintCofSet(); }catch(e){} }
     navSync();
   }
   $("tabs").querySelectorAll("button").forEach(b=>{
@@ -4031,6 +4037,16 @@
   // coffreVers : [{ ms, montant }] = dépôts réellement faits (Wave, banque, tirelire…).
   const COF_SAFE='<svg viewBox="0 0 64 64" width="56" height="56" aria-hidden="true"><rect x="6" y="8" width="52" height="46" rx="7" fill="#2a2416" stroke="#C9A227" stroke-width="3"/><rect x="13" y="15" width="38" height="32" rx="4" fill="none" stroke="#C9A227" stroke-width="2"/><circle cx="32" cy="31" r="9" fill="none" stroke="#C9A227" stroke-width="3"/><path d="M32 22v4M32 36v4M23 31h4M37 31h4" stroke="#C9A227" stroke-width="2.5" stroke-linecap="round"/><rect x="12" y="54" width="8" height="5" rx="1.5" fill="#C9A227"/><rect x="44" y="54" width="8" height="5" rx="1.5" fill="#C9A227"/></svg>';
   function coffreActif(){ return !!(BOUTIQUE && BOUTIQUE.coffreActif); }
+  // Carte « Mon coffre » des Réglages : montre l'état et ouvre le coffre (en haut des Finances)
+  function paintCofSet(){
+    const el=$("cof-set-state"); if(!el) return;
+    const on=coffreActif(), so=salActif();
+    el.textContent = (on||so)
+      ? "✅ "+(on ? t("cofSetOn").replace("{p}", coffrePct()) : "")+(on&&so ? " · " : "")+(so ? t("cofSetSal").replace("{p}", salPct()) : "")
+      : t("cofSetOff");
+    $("cof-set-go").textContent = t((on||so) ? "cofSetSee" : "cofSetGo");
+  }
+  $("cof-set-go").addEventListener("click", ()=>{ setTab("finances"); setTimeout(()=>{ try{ $("coffre-card").scrollIntoView({ block:"start", behavior:"smooth" }); }catch(e){} }, 120); });
   function coffrePct(){ return Math.min(100, Math.max(0, Number(BOUTIQUE && BOUTIQUE.coffrePct!=null ? BOUTIQUE.coffrePct : 25)||0)); }
   // Compartiment SALAIRES du même coffre : une part de chaque recette réservée à la paie des employés.
   // Doc boutique : salActif, salPct, salDepuis (ms), salFixes (autres charges fixes par mois : loyer…),
