@@ -63,6 +63,15 @@
   .secttl{ font-family:var(--serif); font-size:16px; color:var(--gold); font-weight:700;
     margin:22px 0 2px; padding-bottom:9px; border-bottom:1px solid var(--line); }
   .selljs{ display:flex; gap:8px; margin-top:11px; }
+  #ar-kind, #ar-kind-hint{ display:none }
+  body.act-tissu #ar-kind{ display:flex } body.act-tissu #ar-kind-hint{ display:block }
+  .fab-quick{ display:flex; gap:6px; margin-top:10px; flex-wrap:wrap }
+  .fab-quick button{ flex:1 1 0; min-width:44px; padding:10px 0; border-radius:9px; border:1px solid var(--line2); background:none; color:inherit; font:inherit; font-weight:800; cursor:pointer }
+  .fab-quick button.on{ border-color:var(--gold); color:var(--gold) }
+  .st-row{ display:flex; gap:10px; align-items:flex-start }
+  .st-row img{ width:52px; height:52px; object-fit:cover; border-radius:9px; flex:none; border:1px solid var(--line2) }
+  .st-badge{ display:inline-block; font-size:11px; font-weight:800; padding:2px 7px; border-radius:6px; border:1px solid var(--gold); color:var(--gold); margin-right:6px; vertical-align:1px }
+  #stock-list .rm.fin{ background:none !important; color:var(--gold) !important; border:1px solid var(--line2) !important }
   .selljs input{ flex:1; }
   .selljs button{ flex:0 0 auto; width:auto; margin:0; padding:11px 16px; border:1px solid var(--gold);
     border-radius:9px; background:transparent; color:var(--gold); font-size:13px; font-weight:700;
@@ -955,6 +964,7 @@
           <button type="button" data-act="couture" data-i18n="actCouture">Couture</button>
           <button type="button" data-act="pressing" data-i18n="actPressing">Pressing</button>
           <button type="button" data-act="boutique" data-i18n="actBoutique">Boutique</button>
+          <button type="button" data-act="tissu" data-i18n="actTissu">Vente de tissu</button>
         </div>
       </div>
       <div class="card">
@@ -1055,18 +1065,38 @@
       </div>
       <div class="card" id="ar-card">
         <h2 data-i18n="newArticle">Nouvel article</h2>
+        <div class="seg" id="ar-kind" style="width:100%;margin-bottom:6px">
+          <button type="button" data-k="article" class="on" style="flex:1" data-i18n="kArticle">Article</button><button type="button" data-k="rouleau" style="flex:1" data-i18n="kRouleau">Rouleau</button><button type="button" data-k="lot" style="flex:1" data-i18n="kLot">Lot / coupon</button>
+        </div>
+        <p class="sub" id="ar-kind-hint" data-x style="margin:0 0 6px;font-size:12.5px;color:var(--muted)"></p>
         <label data-i18n="artName">Nom de l'article</label>
         <input id="ar-name" type="text" data-i18n-ph="artNamePh" placeholder="Ex. Bazin riche 6 yards">
         <label data-i18n="artType">Type</label>
         <input id="ar-type" type="text" data-i18n-ph="artTypePh" placeholder="Ex. Tissu, prêt-à-porter">
+        <div id="ar-fab" hidden>
+          <label data-i18n="fabUnit">Unité</label>
+          <div class="seg" id="ar-unit" style="width:100%"><button type="button" data-u="m" style="flex:1" data-i18n="uMetre">Mètre</button><button type="button" data-u="yd" style="flex:1" data-i18n="uYard">Yard</button></div>
+          <div id="ar-roll-box">
+            <label id="ar-len-lbl">Longueur du rouleau</label>
+            <input id="ar-len" type="number" step="0.5" inputmode="decimal" placeholder="0">
+            <label style="display:flex;gap:8px;align-items:center;margin-top:8px;text-transform:none;letter-spacing:0;font-size:14px"><input type="checkbox" id="ar-entame" style="width:auto;margin:0"><span data-i18n="fabEntame">Rouleau déjà entamé (longueur inconnue)</span></label>
+          </div>
+          <div id="ar-lot-box" hidden>
+            <label data-i18n="fabLotLen">Longueur d'un lot</label>
+            <input id="ar-lotlen" type="number" step="0.5" inputmode="decimal" placeholder="5">
+          </div>
+          <div class="ph-btns"><label><input type="file" id="ar-photo" accept="image/*" capture="environment"><span data-i18n="fabPhoto">📷 Photo du tissu (facultatif)</span></label></div>
+          <img id="ar-photo-prev" alt="" hidden style="width:64px;height:64px;object-fit:cover;border-radius:10px;margin-top:8px;border:1px solid var(--line2)">
+        </div>
         <div class="mgrid">
-          <div><label data-i18n="artQte">Quantité</label><input id="ar-qte" type="number" step="1" inputmode="numeric" placeholder="0"></div>
-          <div><label data-i18n="artPrix">Prix de vente</label><input id="ar-prix" type="number" step="1" inputmode="decimal" placeholder="0"></div>
+          <div id="ar-qte-box"><label id="ar-qte-lbl">Quantité</label><input id="ar-qte" type="number" step="1" inputmode="numeric" placeholder="0"></div>
+          <div><label id="ar-prix-lbl">Prix de vente</label><input id="ar-prix" type="number" step="1" inputmode="decimal" placeholder="0"></div>
         </div>
         <button class="primary" id="ar-add" data-i18n="addStock">Ajouter au stock</button>
         <div class="msg" id="ar-msg"></div>
       </div>
       <div id="st-title" class="secttl" data-i18n="shopStock">Stock de la boutique</div>
+      <input id="q-stock" type="search" data-i18n-ph="stockSearchPh" placeholder="Chercher un article ou un tissu…" style="margin:0 0 10px">
       <div id="stock-list"></div>
       <div id="stock-empty" class="empty" data-i18n="noStock" hidden>Aucun article en stock.</div>
       </div>
@@ -1871,7 +1901,8 @@
       pzDeleteQ:"Supprimer le ticket n° {n} de {c} ?", pzPaidAll:"Payé", pzDueShort:"Reste {v}",
       pzWaMsg:"WhatsApp", noPhonePz:"Pas de numéro pour ce client.",
       actTitle:"Mes activités", actHint:"Choisissez ce que fait votre commerce. Seuls les onglets utiles s'affichent.",
-      actCouture:"Couture", actPressing:"Pressing", actBoutique:"Boutique", actNeedOne:"Gardez au moins une activité.", callBtn:"Appeler",
+      actCouture:"Couture", actPressing:"Pressing", actBoutique:"Boutique", actTissu:"Vente de tissu",
+      kArticle:"Article", kRouleau:"Rouleau", kLot:"Lot / coupon", kHintArticle:"Un article vendu à la pièce (chemise, sac, bazin plié…).", kHintRouleau:"Un rouleau vendu au mètre ou au yard. Déjà entamé ? Cochez la case : pas besoin de le mesurer.", kHintLot:"Des lots déjà coupés (ex. 5 mètres), vendus entiers.", fabUnit:"Unité", uMetre:"Mètre", uYard:"Yard", fabLen:"Longueur du rouleau", fabEntame:"Rouleau déjà entamé (longueur inconnue)", fabLotLen:"Longueur d\u2019un lot", fabPhoto:"📷 Photo du tissu (facultatif)", fabNbLots:"Nombre de lots", fabPrixLot:"Prix d\u2019un lot", fabPrixU:"Prix par {u}", fabLenNeed:"Indiquez la longueur, ou cochez « déjà entamé ».", fabEntameShort:"entamé", fabLeft:"reste {n}", fabUnknown:"longueur inconnue", fabDone:"Terminé", fabDoneQ:"Ce rouleau est fini ? Il disparaîtra de la liste.", fabTooMuch:"Il ne reste que {n} sur ce rouleau.", fabRollsLbl:"rouleau(x)", stockSearchPh:"Chercher un article ou un tissu…", lotOf:"lot de {n}", actNeedOne:"Gardez au moins une activité.", callBtn:"Appeler",
       toolTitle:"Outils avancés", toolHint:"Activez seulement ce dont vous avez besoin. Les onglets s'ajoutent en haut de l'écran.",
       pmRecu:"Bonjour {nom}, voici votre reçu de dépôt chez {boutique}.", pmLavage:"Bonjour {nom}, vos vêtements sont en cours de lavage chez {boutique}.",
       pmRepassage:"Bonjour {nom}, vos vêtements sont en cours de repassage chez {boutique}.",
@@ -2160,7 +2191,8 @@
       pzDeleteQ:"Delete ticket no. {n} for {c}?", pzPaidAll:"Paid", pzDueShort:"Due {v}",
       pzWaMsg:"WhatsApp", noPhonePz:"No phone number for this customer.",
       actTitle:"My activities", actHint:"Choose what your business does. Only the useful tabs are shown.",
-      actCouture:"Tailoring", actPressing:"Dry cleaning", actBoutique:"Shop", actNeedOne:"Keep at least one activity.", callBtn:"Call",
+      actCouture:"Tailoring", actPressing:"Dry cleaning", actBoutique:"Shop", actTissu:"Fabric sales",
+      kArticle:"Item", kRouleau:"Roll", kLot:"Lot / cut piece", kHintArticle:"An item sold by the piece (shirt, bag, folded bazin…).", kHintRouleau:"A roll sold by the metre or yard. Already started? Tick the box: no need to measure it.", kHintLot:"Pieces already cut (e.g. 5 metres), sold whole.", fabUnit:"Unit", uMetre:"Metre", uYard:"Yard", fabLen:"Roll length", fabEntame:"Roll already started (length unknown)", fabLotLen:"Length of one lot", fabPhoto:"📷 Fabric photo (optional)", fabNbLots:"Number of lots", fabPrixLot:"Price of one lot", fabPrixU:"Price per {u}", fabLenNeed:"Enter the length, or tick “already started”.", fabEntameShort:"started", fabLeft:"{n} left", fabUnknown:"length unknown", fabDone:"Finished", fabDoneQ:"Is this roll finished? It will leave the list.", fabTooMuch:"Only {n} left on this roll.", fabRollsLbl:"roll(s)", stockSearchPh:"Search an item or fabric…", lotOf:"lot of {n}", actNeedOne:"Keep at least one activity.", callBtn:"Call",
       toolTitle:"Advanced tools", toolHint:"Turn on only what you need. The tabs appear at the top of the screen.",
       pmRecu:"Hello {nom}, here is your drop-off receipt from {boutique}.", pmLavage:"Hello {nom}, your clothes are being washed at {boutique}.",
       pmRepassage:"Hello {nom}, your clothes are being ironed at {boutique}.",
@@ -2557,6 +2589,7 @@
     document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent = t(el.getAttribute("data-i18n")); });
     document.querySelectorAll("[data-i18n-ph]").forEach(el=>{ el.placeholder = t(el.getAttribute("data-i18n-ph")); });
     paintSegs();
+    try{ paintArForm(); }catch(e){}
     paintTypes();
     paintLocks();
     updateOffline();
@@ -3596,64 +3629,117 @@
     $("a-du").textContent = du;
   }
 
+  // =================== STOCK : articles, rouleaux de tissu, lots ===================
+  // kind : "article" (à la pièce, comme avant), "rouleau" (vendu au mètre ou au yard ; longueur
+  // connue, ou « entamé » = longueur inconnue, on compte seulement ce qui est vendu), "lot"
+  // (coupon déjà coupé, ex. 5 m, vendu entier). Un rouleau fini (fini:true) quitte la liste.
+  const kindOf = a => a.kind==="rouleau" || a.kind==="lot" ? a.kind : "article";
+  const uLbl = u => u==="yd" ? "yd" : "m";
+  const fmtL = n => { const v=Math.round((Number(n)||0)*100)/100; return String(v); };
+  function stockReste(a){
+    const k=kindOf(a);
+    if(k==="rouleau") return a.entame ? t("fabEntameShort")+" · "+t("fabUnknown") : t("fabLeft").replace("{n}", fmtL(a.longueur)+" "+uLbl(a.unite));
+    return String(Number(a.qte)||0);
+  }
   function renderStock(){
     const box=$("stock-list"); box.innerHTML="";
-    let totQ=0;
-    STOCK.forEach(a=>{ totQ += Number(a.qte)||0; });
-    $("b-arts").textContent = STOCK.length;
-    $("b-qte").textContent = totQ;
+    const live=STOCK.filter(a=>!a.fini);
+    let totQ=0, rolls=0;
+    live.forEach(a=>{ if(kindOf(a)==="rouleau") rolls++; else totQ += Number(a.qte)||0; });
+    $("b-arts").textContent = live.length;
+    $("b-qte").textContent = totQ + rolls;
     const d0=periodStart("jour");
     let rec=0;
     MOUV.forEach(m=>{ if(m.type==="recette" && m.source==="boutique" && Number(m.ms)>=d0) rec += Number(m.montant)||0; });
     $("b-rec").textContent = rec;
-    $("stock-empty").hidden = STOCK.length>0;
-
-    STOCK.forEach(a=>{
+    $("stock-empty").hidden = live.length>0;
+    const q=normNom(($("q-stock")||{}).value||"");
+    live.filter(a=>!q || normNom((a.nom||"")+" "+(a.type||"")).indexOf(q)>-1).forEach(a=>{
+      const k=kindOf(a), u=uLbl(a.unite);
       const el=document.createElement("div"); el.className="rec";
-      const nm=document.createElement("div"); nm.className="nm"; nm.textContent=a.nom||"—";
+      const top=document.createElement("div"); top.className="st-row";
+      if(a.vignette){ const im=document.createElement("img"); im.src=a.vignette; im.alt="";
+        im.addEventListener("click", ()=>{ const v=document.createElement("div"); v.className="ph-view"; const i2=document.createElement("img"); i2.src=a.vignette; v.appendChild(i2); v.addEventListener("click", ()=>v.remove()); document.body.appendChild(v); });
+        top.appendChild(im); }
+      const txt=document.createElement("div"); txt.style.flex="1";
+      const nm=document.createElement("div"); nm.className="nm";
+      if(k!=="article"){ const bd=document.createElement("span"); bd.className="st-badge"; bd.textContent = k==="rouleau" ? t("kRouleau") : t("lotOf").replace("{n}", fmtL(a.lotLen)+" "+u); nm.appendChild(bd); }
+      nm.appendChild(document.createTextNode(a.nom||"—"));
       const l1=document.createElement("div"); l1.className="ln";
-      l1.textContent = (a.type ? a.type+" · " : "") + t("artQte")+" : "+(Number(a.qte)||0) + " · " + money(a.prix);
-      el.appendChild(nm); el.appendChild(l1);
+      l1.textContent = k==="rouleau"
+        ? (a.type ? a.type+" · " : "") + stockReste(a) + " · " + money(a.prix)+" / "+u
+        : (a.type ? a.type+" · " : "") + t("artQte")+" : "+(Number(a.qte)||0) + " · " + money(a.prix);
+      txt.appendChild(nm); txt.appendChild(l1); top.appendChild(txt); el.appendChild(top);
 
       const row=document.createElement("div"); row.className="selljs";
       const inp=document.createElement("input");
-      inp.type="number"; inp.step="1"; inp.inputMode="numeric"; inp.placeholder="1"; inp.value="1";
+      if(k==="rouleau"){ inp.type="number"; inp.step="0.5"; inp.inputMode="decimal"; inp.placeholder=u; inp.value=""; }
+      else { inp.type="number"; inp.step="1"; inp.inputMode="numeric"; inp.placeholder="1"; inp.value="1"; }
       const rmi=document.createElement("input");
       rmi.type="number"; rmi.step="1"; rmi.min="0"; rmi.inputMode="decimal"; rmi.placeholder=t("sellDiscPh");
       const b=document.createElement("button"); b.textContent=t("sell");
+      if(k==="rouleau"){
+        // boutons rapides : on touche au lieu d'écrire
+        const qk=document.createElement("div"); qk.className="fab-quick";
+        [1,2,3,4,5,6,12].forEach(n=>{ const x=document.createElement("button"); x.type="button"; x.textContent=n;
+          x.addEventListener("click", ()=>{ inp.value=n; qk.querySelectorAll("button").forEach(y=>y.classList.toggle("on", y===x)); });
+          qk.appendChild(x); });
+        inp.addEventListener("input", ()=>qk.querySelectorAll("button").forEach(y=>y.classList.toggle("on", y.textContent===inp.value)));
+        el.appendChild(qk);
+      }
       b.addEventListener("click", async ()=>{
-        if(b.disabled) return;
-        const q=parseFloat(inp.value)||0;
-        const dispo=Number(a.qte)||0;
-        if(q<=0) return;
-        if(q>dispo){ alert(t("notEnoughStock")); return; }
-        const brut=(Number(a.prix)||0)*q;
+        const qv=parseFloat(String(inp.value||"").replace(",", "."))||0;
+        if(qv<=0){ inp.focus(); return; }
+        if(k==="rouleau"){ if(!a.entame && qv>(Number(a.longueur)||0)+1e-9){ alert(t("fabTooMuch").replace("{n}", fmtL(a.longueur)+" "+u)); return; } }
+        else if(qv>(Number(a.qte)||0)){ alert(t("notEnoughStock")); return; }
+        const brut=Math.round((Number(a.prix)||0)*qv);
         const rv=parseFloat(String(rmi.value||"").replace(",", "."));
         const remise=(isNaN(rv)||rv<=0) ? 0 : Math.min(rv, brut);
         // Le manager ne peut accorder une réduction qu'avec le code du propriétaire
         if(remise>0 && isMgr()){ alert(t("scDiscCode")); if(!await askCode()) return; }
+        const qLbl = k==="rouleau" ? fmtL(qv)+" "+u : String(qv);
+        const puLbl = k==="rouleau" ? money(a.prix)+" / "+u : null;
+        const nomV = k==="lot" ? (a.nom||"")+" ("+t("lotOf").replace("{n}", fmtL(a.lotLen)+" "+u)+")" : (a.nom||"");
         // Une seule touche ne vend plus rien : on montre la vente en grand et on demande de confirmer
-        if(!await confirmSale({ nom:a.nom||"", qte:q, pu:Number(a.prix)||0, brut, remise, net:brut-remise })) return;
-        if((Number(a.qte)||0) < q){ alert(t("notEnoughStock")); return; }
-        a.qte = (Number(a.qte)||0) - q;
-        setDoc(doc(db,"boutiques",BID,"stock",a.id), { qte:a.qte, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
-        addMouv("recette","boutique",brut-remise, (a.nom||"")+" ×"+q+(remise>0 ? " ("+t("tkDiscount")+" "+money(remise)+")" : ""),
-                Object.assign({ articleId:a.id, qte:q }, remise>0 ? { remise, prixInitial:brut } : {}, isMgr() ? { parManager:true } : {}));
-        rmi.value=""; inp.value="1";
+        if(!await confirmSale({ nom:nomV, qte:qv, qteLbl:qLbl, pu:Number(a.prix)||0, puLbl, brut, remise, net:brut-remise })) return;
+        const ch={ updatedAt:serverTimestamp() };
+        if(k==="rouleau"){
+          if(!a.entame){ if((Number(a.longueur)||0) < qv-1e-9){ alert(t("fabTooMuch").replace("{n}", fmtL(a.longueur)+" "+u)); return; }
+            a.longueur = Math.max(0, Math.round(((Number(a.longueur)||0)-qv)*100)/100); ch.longueur=a.longueur; if(a.longueur<=0){ a.fini=true; ch.fini=true; } }
+          a.vendu = Math.round(((Number(a.vendu)||0)+qv)*100)/100; ch.vendu=a.vendu;
+        } else {
+          if((Number(a.qte)||0) < qv){ alert(t("notEnoughStock")); return; }
+          a.qte = (Number(a.qte)||0) - qv; ch.qte=a.qte;
+        }
+        setDoc(doc(db,"boutiques",BID,"stock",a.id), ch, { merge:true }).catch(function(){});
+        addMouv("recette","boutique",brut-remise, nomV+" ×"+qLbl+(remise>0 ? " ("+t("tkDiscount")+" "+money(remise)+")" : ""),
+                Object.assign({ articleId:a.id, qte:qv }, k==="rouleau" ? { unite:u } : {}, remise>0 ? { remise, prixInitial:brut } : {}, isMgr() ? { parManager:true } : {}));
+        rmi.value=""; inp.value = k==="rouleau" ? "" : "1";
         renderLists();
         // Sur le téléphone du manager, à la fermeture du reçu, WhatsApp s'ouvre avec le message de la vente pour le propriétaire
         const onClose = isMgr() && ownerNum() ? ()=>{
           const L=LANG_UI, m=tt("saleOwnerMsg",L).replace("{shop}", (BOUTIQUE&&BOUTIQUE.name)||"").replace("{when}", nowLabel(L))
-            .replace("{art}", a.nom||"").replace("{q}", String(q))
+            .replace("{art}", nomV).replace("{q}", qLbl)
             .replace("{disc}", remise>0 ? tt("tkInitial",L)+" : "+money(brut)+"\n"+tt("tkDiscount",L)+" : − "+money(remise)+"\n" : "")
-            .replace("{net}", money(brut-remise)).replace("{left}", String(a.qte));
+            .replace("{net}", money(brut-remise)).replace("{left}", stockReste(a));
           openWa(ownerNum(), m);
         } : null;
-        showSaleReceipt({ nom:a.nom||"", qte:q, pu:Number(a.prix)||0, brut, remise, net:brut-remise, onClose });
+        showSaleReceipt({ nom:nomV, qte:qv, qteLbl:qLbl, pu:Number(a.prix)||0, brut, remise, net:brut-remise, onClose });
       });
       row.appendChild(inp); row.appendChild(rmi); row.appendChild(b);
       el.appendChild(row);
 
+      if(k==="rouleau"){
+        // « Terminé » : le rouleau est fini (surtout pour les rouleaux entamés). Code demandé au manager.
+        const fin=document.createElement("button"); fin.className="rm fin"; fin.textContent=t("fabDone");
+        fin.addEventListener("click", async ()=>{
+          if(isMgr() && !await askCode()) return;
+          if(!confirm(t("fabDoneQ"))) return;
+          a.fini=true; setDoc(doc(db,"boutiques",BID,"stock",a.id), { fini:true, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+          renderLists();
+        });
+        el.appendChild(fin);
+      }
       const rm=document.createElement("button"); rm.className="rm"; rm.textContent=t("remove");
       rm.addEventListener("click", async ()=>{
         if(!await askCode()) return;
@@ -3666,6 +3752,80 @@
       box.appendChild(el);
     });
   }
+  $("q-stock").addEventListener("input", renderStock);
+
+  // ---- formulaire « Nouvel article » : article / rouleau / lot ----
+  let AR_KIND="article", AR_UNIT="m", AR_PHOTO=null;
+  try{ AR_UNIT = localStorage.getItem("sanaapro_fab_unit")==="yd" ? "yd" : "m"; }catch(e){}
+  function paintArForm(){
+    const k = hasAct("tissu") ? AR_KIND : "article";
+    $("ar-kind").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.getAttribute("data-k")===k));
+    $("ar-unit").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.getAttribute("data-u")===AR_UNIT));
+    $("ar-kind-hint").textContent = t(k==="rouleau" ? "kHintRouleau" : k==="lot" ? "kHintLot" : "kHintArticle");
+    $("ar-fab").hidden = k==="article";
+    $("ar-roll-box").hidden = k!=="rouleau";
+    $("ar-lot-box").hidden = k!=="lot";
+    $("ar-qte-box").hidden = k==="rouleau";
+    $("ar-len").disabled = $("ar-entame").checked;
+    const u = AR_UNIT==="yd" ? t("uYard").toLowerCase() : t("uMetre").toLowerCase();
+    $("ar-qte-lbl").textContent = k==="lot" ? t("fabNbLots") : t("artQte");
+    $("ar-prix-lbl").textContent = k==="rouleau" ? t("fabPrixU").replace("{u}", u) : k==="lot" ? t("fabPrixLot") : t("artPrix");
+    $("ar-len-lbl").textContent = t("fabLen")+" ("+uLbl(AR_UNIT)+")";
+  }
+  $("ar-kind").querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{ AR_KIND=b.getAttribute("data-k"); paintArForm(); }));
+  $("ar-unit").querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{ AR_UNIT=b.getAttribute("data-u"); try{ localStorage.setItem("sanaapro_fab_unit", AR_UNIT); }catch(e){} paintArForm(); }));
+  $("ar-entame").addEventListener("change", paintArForm);
+  $("ar-photo").addEventListener("change", async e=>{
+    const f=e.target.files && e.target.files[0]; e.target.value=""; if(!f) return;
+    try{ AR_PHOTO = await compressImage(f, 220, 0.6); $("ar-photo-prev").src=AR_PHOTO; $("ar-photo-prev").hidden=false; }catch(err){}
+  });
+  paintArForm();
+
+  $("ar-add").addEventListener("click", async ()=>{
+    // Sur le téléphone du manager, ajouter ou réapprovisionner un article demande le code du propriétaire
+    if(isMgr() && !await askCode()) return;
+    const msg=$("ar-msg");
+    const nom=$("ar-name").value.trim();
+    if(!nom){ msg.textContent=t("artNameRequired"); msg.className="msg err show"; return; }
+    const k = hasAct("tissu") ? AR_KIND : "article";
+    const q=parseFloat($("ar-qte").value)||0;
+    const p=parseFloat($("ar-prix").value)||0;
+    const type=$("ar-type").value.trim();
+    const done=(key)=>{ msg.textContent=t(key); msg.className="msg ok show";
+      $("ar-name").value=""; $("ar-type").value=""; $("ar-qte").value=""; $("ar-prix").value=""; $("ar-len").value=""; $("ar-lotlen").value="";
+      $("ar-entame").checked=false; AR_PHOTO=null; $("ar-photo-prev").hidden=true; paintArForm();
+      setTimeout(()=>{ msg.classList.remove("show"); }, 4000); renderLists(); };
+    const create=(data)=>{
+      const ref=doc(collection(db,"boutiques",BID,"stock"));
+      data=Object.assign(data, { createdAtMs:Date.now(), updatedAt:serverTimestamp() });
+      if(AR_PHOTO) data.vignette=AR_PHOTO;
+      setDoc(ref, data, { merge:true }).catch(function(){});
+      STOCK.push(Object.assign({ id:ref.id }, data));
+      STOCK.sort((a,b)=>(a.nom||"").localeCompare(b.nom||""));
+    };
+    if(k==="rouleau"){
+      // chaque rouleau est une ligne à part, même si le tissu porte le même nom
+      const entame=$("ar-entame").checked, len=parseFloat(String($("ar-len").value||"").replace(",", "."))||0;
+      if(!entame && len<=0){ msg.textContent=t("fabLenNeed"); msg.className="msg err show"; return; }
+      create({ nom, type, kind:"rouleau", unite:AR_UNIT, prix:p, entame, longueur: entame ? null : len, vendu:0, qte:0 });
+      return done("artAdded");
+    }
+    const exist = STOCK.find(x => !x.fini && kindOf(x)===k && (x.nom||"").toLowerCase() === nom.toLowerCase());
+    if(exist){
+      exist.qte = (Number(exist.qte)||0) + q;
+      if(p>0) exist.prix = p;
+      if(type) exist.type = type;
+      const ch={ qte:exist.qte, prix:exist.prix, type:exist.type||"", updatedAt:serverTimestamp() };
+      if(AR_PHOTO){ exist.vignette=AR_PHOTO; ch.vignette=AR_PHOTO; }
+      setDoc(doc(db,"boutiques",BID,"stock",exist.id), ch, { merge:true }).catch(function(){});
+      return done("stockAdded");
+    }
+    if(k==="lot"){
+      const ll=parseFloat(String($("ar-lotlen").value||"").replace(",", "."))||0;
+      create({ nom, type, kind:"lot", unite:AR_UNIT, lotLen:ll, qte:q, prix:p });
+    } else create({ nom, type, qte:q, prix:p });
+    done("artAdded");
+  });
 
   // =================== FINANCES ===================
   let MV_FILTER="recette";
@@ -4959,7 +5119,7 @@
   $("q-cli").addEventListener("input", renderLists);
 
   // =================== ACTIVITÉS (couture / pressing / boutique) ===================
-  const ACT_TABS = { couture:["atelier","charge","mesures","vitrine"], pressing:["pressing"], boutique:["boutique"] };
+  const ACT_TABS = { couture:["atelier","charge","mesures","vitrine"], pressing:["pressing"], boutique:["boutique"], tissu:["boutique"] };
   function activites(){
     const a = BOUTIQUE && BOUTIQUE.activites;
     return (Array.isArray(a) && a.length) ? a : ["couture","boutique"];
@@ -4980,14 +5140,17 @@
   function applyActivities(){
     const hide = new Set();
     Object.keys(ACT_TABS).forEach(k=>{ if(!hasAct(k)) ACT_TABS[k].forEach(x=>hide.add(x)); });
+    Object.keys(ACT_TABS).forEach(k=>{ if(hasAct(k)) ACT_TABS[k].forEach(x=>{ if(TOOL_TABS.indexOf(x)===-1) hide.delete(x); }); });
+    document.body.classList.toggle("act-tissu", hasAct("tissu"));
     TOOL_TABS.forEach(x=>{ if(!hasTool(x)) hide.add(x); });
     $("tool-chips").querySelectorAll("button").forEach(b=>b.classList.toggle("on", hasTool(b.getAttribute("data-tool"))));
     $("tabs").querySelectorAll("button").forEach(b=>{ b.style.display = hide.has(b.getAttribute("data-tab")) ? "none" : ""; });
     $("act-chips").querySelectorAll("button").forEach(b=>b.classList.toggle("on", hasAct(b.getAttribute("data-act"))));
     $("fi-row-atelier").style.display  = hasAct("couture")  ? "" : "none";
     $("fi-row-pressing").style.display = hasAct("pressing") ? "" : "none";
-    $("fi-row-boutique").style.display = hasAct("boutique") ? "" : "none";
+    $("fi-row-boutique").style.display = (hasAct("boutique")||hasAct("tissu")) ? "" : "none";
     if(hide.has(TAB)) setTab("apercu");
+    try{ renderStock(); paintArForm(); }catch(e){}
   }
   $("act-chips").querySelectorAll("button").forEach(b=>{
     b.addEventListener("click", ()=>{
@@ -5184,7 +5347,7 @@
       const bx=document.createElement("div"); bx.className="sc-box";
       const h=document.createElement("h3"); h.textContent=t("scTitle"); bx.appendChild(h);
       const row=(k,val)=>{ const r=document.createElement("div"); r.className="rw"; const x=document.createElement("span"); x.textContent=k; const y=document.createElement("b"); y.textContent=val; r.appendChild(x); r.appendChild(y); bx.appendChild(r); };
-      row(t("tkItem"), v.nom); row(t("scQte"), String(v.qte)); row(t("scPu"), money(v.pu));
+      row(t("tkItem"), v.nom); row(t("scQte"), String(v.qteLbl||v.qte)); row(t("scPu"), v.puLbl || money(v.pu));
       if(v.remise>0){ row(t("tkInitial"), money(v.brut)); row(t("tkDiscount"), "− "+money(v.remise)); }
       const tot=document.createElement("div"); tot.className="tot"; tot.textContent=money(v.net); bx.appendChild(tot);
       const bt=document.createElement("div"); bt.className="sc-btns";
@@ -5206,7 +5369,7 @@
     add("rct",t("rcTitle"));
     add("nb",nowLabel(LANG_UI));
     add("hint",t("rcAmt")); const am=add("amt",money(v.net)); am.style.marginTop="-6px";
-    row(t("tkItem"), String(v.nom).slice(0,60)+" ×"+v.qte);
+    row(t("tkItem"), String(v.nom).slice(0,60)+" ×"+(v.qteLbl||v.qte));
     if(v.remise>0){ row(t("tkInitial"), money(v.brut)); row(t("tkDiscount"), "− "+money(v.remise)); }
     row(t("tkTotal"), money(v.net));
     add("stamp",t("rcPaidAll"));
@@ -5214,7 +5377,7 @@
     ov.appendChild(d);
     const L=LANG_MSG;
     const txt=["🧾 "+tt("rcTitle",L)+" — "+((BOUTIQUE&&BOUTIQUE.name)||""), nowLabel(L),
-      tt("tkItem",L)+" : "+v.nom+" ×"+v.qte]
+      tt("tkItem",L)+" : "+v.nom+" ×"+(v.qteLbl||v.qte)]
       .concat(v.remise>0 ? [tt("tkInitial",L)+" : "+money(v.brut), tt("tkDiscount",L)+" : − "+money(v.remise)] : [])
       .concat([tt("tkTotal",L)+" : *"+money(v.net)+"*", "✅ "+tt("rcPaidAll",L), tt("rcThanks",L)+" 🙏"]).join("\n");
     const bar=document.createElement("div"); bar.className="tk-bar";
@@ -6234,37 +6397,6 @@
   bindExpense("da","atelier");
   bindExpense("db","boutique");
   bindExpense("dp","pressing");
-
-  $("ar-add").addEventListener("click", async ()=>{
-    // Sur le téléphone du manager, ajouter ou réapprovisionner un article demande le code du propriétaire
-    if(isMgr() && !await askCode()) return;
-    const msg=$("ar-msg");
-    const nom=$("ar-name").value.trim();
-    if(!nom){ msg.textContent=t("artNameRequired"); msg.className="msg err show"; return; }
-    const q=parseFloat($("ar-qte").value)||0;
-    const p=parseFloat($("ar-prix").value)||0;
-    const type=$("ar-type").value.trim();
-    const exist = STOCK.find(x => (x.nom||"").toLowerCase() === nom.toLowerCase());
-    if(exist){
-      exist.qte = (Number(exist.qte)||0) + q;
-      if(p>0) exist.prix = p;
-      if(type) exist.type = type;
-      setDoc(doc(db,"boutiques",BID,"stock",exist.id),
-             { qte:exist.qte, prix:exist.prix, type:exist.type||"", updatedAt:serverTimestamp() },
-             { merge:true }).catch(function(){});
-      msg.textContent=t("stockAdded"); msg.className="msg ok show";
-    } else {
-      const data={ nom, type, qte:q, prix:p, createdAtMs:Date.now(), updatedAt:serverTimestamp() };
-      const ref=doc(collection(db,"boutiques",BID,"stock"));
-      setDoc(ref, data, { merge:true }).catch(function(){});
-      STOCK.push(Object.assign({ id:ref.id }, data));
-      STOCK.sort((a,b)=>(a.nom||"").localeCompare(b.nom||""));
-      msg.textContent=t("artAdded"); msg.className="msg ok show";
-    }
-    $("ar-name").value=""; $("ar-type").value=""; $("ar-qte").value=""; $("ar-prix").value="";
-    setTimeout(()=>{ msg.classList.remove("show"); }, 4000);
-    renderLists();
-  });
 
   $("cmd-add").addEventListener("click", ()=>openCmdForm(null));
   $("cli-add").addEventListener("click", ()=>openForm(null));
