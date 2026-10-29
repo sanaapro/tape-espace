@@ -1731,7 +1731,7 @@
       addStock:"Ajouter au stock", artAdded:"Article ajouté.", stockAdded:"Stock augmenté.",
       artNameRequired:"Le nom de l'article est obligatoire.",
       shopStock:"Stock de la boutique", noStock:"Aucun article en stock.",
-      sell:"Vendre", sellDiscPh:"Réduction", scTitle:"Confirmer la vente", scOk:"✓ Confirmer la vente", scQte:"Quantité", scPu:"Prix unitaire", scDiscCode:"Une réduction demande le code du propriétaire.", notEnoughStock:"Quantité supérieure au stock disponible.",
+      sell:"Vendre", sellDiscPh:"Réduction", scTitle:"Confirmer la vente", scOk:"✓ Confirmer la vente", scQte:"Quantité", scPu:"Prix unitaire", scDiscCode:"Une réduction demande le code du propriétaire.", saleOwnerMsg:"🛍️ Vente boutique — {shop}\n{when}\nArticle : {art} ×{q}\n{disc}Montant encaissé : *{net}*\nStock restant : {left}\nFaite sur le téléphone du manager.", notEnoughStock:"Quantité supérieure au stock disponible.",
       confirmDeleteArt:"Retirer cet article du stock ?",
       payment:"Paiement", paid:"Payé", due:"Reste à payer", cashIn:"Encaisser",
       cashedIn:"Encaissé :", amountRequired:"Indiquez un montant.",
@@ -2020,7 +2020,7 @@
       addStock:"Add to stock", artAdded:"Item added.", stockAdded:"Stock increased.",
       artNameRequired:"The item name is required.",
       shopStock:"Shop stock", noStock:"No item in stock.",
-      sell:"Sell", sellDiscPh:"Discount", scTitle:"Confirm the sale", scOk:"✓ Confirm the sale", scQte:"Quantity", scPu:"Unit price", scDiscCode:"A discount needs the owner's code.", notEnoughStock:"Quantity higher than available stock.",
+      sell:"Sell", sellDiscPh:"Discount", scTitle:"Confirm the sale", scOk:"✓ Confirm the sale", scQte:"Quantity", scPu:"Unit price", scDiscCode:"A discount needs the owner's code.", saleOwnerMsg:"🛍️ Shop sale — {shop}\n{when}\nItem: {art} ×{q}\n{disc}Amount received: *{net}*\nStock left: {left}\nMade on the manager's phone.", notEnoughStock:"Quantity higher than available stock.",
       confirmDeleteArt:"Remove this item from stock?",
       payment:"Payment", paid:"Paid", due:"Left to pay", cashIn:"Collect",
       cashedIn:"Collected:", amountRequired:"Enter an amount.",
@@ -3641,7 +3641,15 @@
                 Object.assign({ articleId:a.id, qte:q }, remise>0 ? { remise, prixInitial:brut } : {}, isMgr() ? { parManager:true } : {}));
         rmi.value=""; inp.value="1";
         renderLists();
-        showSaleReceipt({ nom:a.nom||"", qte:q, pu:Number(a.prix)||0, brut, remise, net:brut-remise });
+        // Sur le téléphone du manager, à la fermeture du reçu, WhatsApp s'ouvre avec le message de la vente pour le propriétaire
+        const onClose = isMgr() && ownerNum() ? ()=>{
+          const L=LANG_UI, m=tt("saleOwnerMsg",L).replace("{shop}", (BOUTIQUE&&BOUTIQUE.name)||"").replace("{when}", nowLabel(L))
+            .replace("{art}", a.nom||"").replace("{q}", String(q))
+            .replace("{disc}", remise>0 ? tt("tkInitial",L)+" : "+money(brut)+"\n"+tt("tkDiscount",L)+" : − "+money(remise)+"\n" : "")
+            .replace("{net}", money(brut-remise)).replace("{left}", String(a.qte));
+          openWa(ownerNum(), m);
+        } : null;
+        showSaleReceipt({ nom:a.nom||"", qte:q, pu:Number(a.prix)||0, brut, remise, net:brut-remise, onClose });
       });
       row.appendChild(inp); row.appendChild(rmi); row.appendChild(b);
       el.appendChild(row);
@@ -5213,9 +5221,10 @@
     const mk=(lbl,fn)=>{ const b=document.createElement("button"); b.type="button"; b.textContent=lbl; b.addEventListener("click", fn); bar.appendChild(b); };
     mk(t("tkPrint"), ()=>{ document.body.classList.add("printticket"); setTimeout(()=>{ window.print(); setTimeout(()=>document.body.classList.remove("printticket"), 500); }, 200); });
     mk(t("rcWa"), ()=>shareDocImage(d, "recu-vente", txt, ""));
-    mk(t("ptCamClose"), ()=>ov.remove());
+    let closed=false; const close=()=>{ if(closed) return; closed=true; ov.remove(); if(typeof v.onClose==="function") setTimeout(v.onClose, 150); };
+    mk(t("ptCamClose"), close);
     ov.appendChild(bar);
-    ov.addEventListener("click", e=>{ if(e.target===ov) ov.remove(); });
+    ov.addEventListener("click", e=>{ if(e.target===ov) close(); });
     document.body.appendChild(ov);
   }
   async function showTicket(o, txtOverride){
