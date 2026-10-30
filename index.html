@@ -5459,8 +5459,13 @@
     lines.push(tt("rcThanks",L)+" 🙏");
     return lines.join("\n");
   }
+  // Légende courte envoyée avec l'image du reçu : l'image contient déjà tout le détail
+  function receiptCaption(o){
+    const L=LANG_MSG;
+    return "🧾 "+tt("rcTitle",L)+" — "+((BOUTIQUE&&BOUTIQUE.name)||"")+" · "+(isPz(o)?tt("pzTicket",L):tt("tkOrder",L))+" "+fmtNum(o.numero)+"\n"+tt("rcThanks",L)+" 🙏";
+  }
   // Reçu affiché juste après un encaissement : imprimable (ticket 58 mm) ou envoyé sur WhatsApp
-  function showReceipt(o, amt){
+  function showReceipt(o, amt, cap){
     if(!o) return;
     if(o.id) syncSuivi(o, o.id);
     const ov=document.createElement("div"); ov.className="tk-ov";
@@ -5486,7 +5491,7 @@
     const bar=document.createElement("div"); bar.className="tk-bar";
     const mk=(lbl,fn)=>{ const b=document.createElement("button"); b.type="button"; b.textContent=lbl; b.addEventListener("click", fn); bar.appendChild(b); };
     mk(t("tkPrint"), ()=>{ document.body.classList.add("printticket"); setTimeout(()=>{ window.print(); setTimeout(()=>document.body.classList.remove("printticket"), 500); }, 200); });
-    mk(t("rcWa"), ()=>shareDocImage(d, "recu-"+(o.numero||""), receiptMsg(o, amt), o.clientePhone));
+    mk(t("rcWa"), ()=>shareDocImage(d, "recu-"+(o.numero||""), receiptMsg(o, amt), o.clientePhone, cap||receiptCaption(o)));
     mk(t("ptCamClose"), ()=>ov.remove());
     ov.appendChild(bar);
     ov.addEventListener("click", e=>{ if(e.target===ov) ov.remove(); });
@@ -5532,13 +5537,13 @@
     return cv;
   }
   // Partage le reçu en image (feuille de partage → WhatsApp → la cliente) ; sinon, texte sur WhatsApp
-  async function shareDocImage(d, name, txt, phone){
+  async function shareDocImage(d, name, txt, phone, cap){
     try{
       const cv=docToPng(d);
       const blob=await new Promise(r=>cv.toBlob(r,"image/png"));
       if(blob && navigator.canShare){
         const f=new File([blob], name+".png", { type:"image/png" });
-        if(navigator.canShare({ files:[f] })){ await navigator.share({ files:[f], text:txt }); return; }
+        if(navigator.canShare({ files:[f] })){ await navigator.share({ files:[f], text:cap||txt }); return; }
       }
       if(blob){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name+".png"; document.body.appendChild(a); a.click(); a.remove(); }
     }catch(e){ if(e && e.name==="AbortError") return; }
@@ -6701,7 +6706,16 @@
       renderCmd(ORD, ORDID); renderLists();
       if(autoNotifyOn()){
         const num=waNumber(ORD.clientePhone);
-        if(num){ if(st==="pret") logRelance(ORD, "pret"); openWa(num, clientMessage(ORD)); }
+        if(num){
+          // Remise d'une commande déjà soldée : on envoie directement le reçu (un seul message) au lieu du texte « remis » + un reçu
+          if(st==="livre" && Number(ORD.prix)>0 && resteDe(ORD)<=0){
+            const cap=tm("mLivre").replace("{nom}", ORD.clienteName||"").replace("{article}", artMsg(ORD.article)).replace("{boutique}", (BOUTIQUE && BOUTIQUE.name) || "")
+              +"\n"+receiptCaption(ORD);
+            showReceipt(Object.assign({ id:ORDID }, ORD), Number(ORD.paye)||0, cap);
+            return;
+          }
+          if(st==="pret") logRelance(ORD, "pret"); openWa(num, clientMessage(ORD));
+        }
       }
     });
   });
