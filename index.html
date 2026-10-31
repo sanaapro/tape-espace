@@ -750,6 +750,7 @@
 
     <div id="pane-apercu">
       <div class="greet"><span data-i18n="hello">Bonjour</span> <span id="d-owner"></span><div class="sub" id="d-name"></div></div>
+      <div id="ferm-banner" class="card" hidden style="border-color:#5a5a5a;background:#1E1F22"></div>
 
       <div class="card">
         <h2 data-i18n="search">Recherche globale</h2>
@@ -1037,6 +1038,22 @@
         <h2 data-i18n="mgrTitle">Téléphone du manager</h2>
         <p style="margin:0 0 8px;font-size:13px;color:var(--muted)" data-i18n="mgrHint">Sur ce téléphone, le manager enregistre les commandes, les dépôts, les paiements et les dépenses. Il ne voit ni les Finances, ni les salaires, ni les Réglages, ni l'historique des clôtures. Pour modifier ou supprimer, il lui faut votre code.</p>
         <button class="primary" id="mgr-on" type="button" data-i18n="mgrOn">🔒 Activer le mode manager sur ce téléphone</button>
+      </div>
+      <div class="card" id="ferm-card">
+        <h2 data-i18n="fermTitle">Jours de fermeture</h2>
+        <p style="margin:0 0 10px;font-size:13px;color:var(--muted)" data-i18n="fermHint">Les jours où l'atelier ne travaille pas. Ce jour-là, rien n'est compté : l'argent reçu est enregistré le prochain jour ouvert.</p>
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px" data-i18n="fermWeekly">Fermé chaque semaine le :</div>
+        <div id="ferm-week" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+        <button class="ghost" id="ferm-today" type="button" data-i18n="fermToday" style="margin-top:14px;width:100%">🔒 Fermer aujourd'hui</button>
+        <div style="font-size:13px;font-weight:600;margin:14px 0 6px" data-i18n="fermPeriods">Fêtes, vacances, rénovation :</div>
+        <div id="ferm-list"></div>
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <div style="flex:1 1 120px"><label data-i18n="fermFrom">Du</label><input id="ferm-du" type="date"></div>
+          <div style="flex:1 1 120px"><label data-i18n="fermTo">Au (inclus)</label><input id="ferm-au" type="date"></div>
+        </div>
+        <input id="ferm-motif" type="text" list="ferm-motifs" data-i18n-ph="fermMotifPh" placeholder="Motif (ex. Tabaski, vacances, rénovation)" style="margin-top:8px">
+        <datalist id="ferm-motifs"><option value="Tabaski"><option value="Korité"><option value="Gamo / Maouloud"><option value="Noël"><option value="Vacances"><option value="Rénovation"></datalist>
+        <button class="primary" id="ferm-add" type="button" data-i18n="fermAdd" style="margin-top:8px;width:100%">+ Ajouter cette fermeture</button>
       </div>
       <div class="card">
         <h2 data-i18n="autoNotify">Notification WhatsApp automatique</h2>
@@ -1792,6 +1809,7 @@
     fr:{
       tagline:"votre atelier, en ligne", foot:"SanaaPro — propulsé par votre atelier",
       uiLabel:"Interface", msgLabel:"Messages clients",
+      fermTitle:"Jours de fermeture", fermHint:"Les jours où l\u2019atelier ne travaille pas. Ce jour-là, rien n\u2019est compté : l\u2019argent reçu est enregistré le prochain jour ouvert.", fermWeekly:"Fermé chaque semaine le :", fermToday:"🔒 Fermer aujourd\u2019hui", fermReopen:"🔓 Rouvrir aujourd\u2019hui", fermPeriods:"Fêtes, vacances, rénovation :", fermFrom:"Du", fermTo:"Au (inclus)", fermMotifPh:"Motif (ex. Tabaski, vacances, rénovation)", fermAdd:"+ Ajouter cette fermeture", fermNone:"Aucune fermeture prévue.", fermBadDates:"Choisissez au moins la date de début.", fermTodayQ:"Fermer l\u2019atelier aujourd\u2019hui ? L\u2019argent reçu sera compté le prochain jour ouvert.", fermMotifToday:"Fermé exceptionnellement", fermDelQ:"Supprimer cette fermeture ?", fermBanner:"🔒 Fermé aujourd\u2019hui{m}. Ce qui est encaissé aujourd\u2019hui sera compté le {d}.", fermWeeklyLbl:"jour de fermeture", fermDayQ:"Le {d}, l\u2019atelier est fermé ({m}). Garder quand même cette date ?", fermShort:"Fermé", fermTodayFin:"Aujourd\u2019hui — fermé{m}", fermTodayFin2:"Ce qui est encaissé aujourd\u2019hui sera compté le {d}.", fermShifted:"compté le {d}", fermTrend:"(jours de fermeture non comptés)",
       online:"En ligne — synchronisé", offlineShort:"Hors ligne",
       tabApercu:"Aperçu", tabAtelier:"Atelier", tabBoutique:"Boutique", tabMateriel:"Matériel",
       matStatItems:"Fournitures", matStatLow:"À racheter", matNew:"Nouvel achat de matériel", matHint:"Fil, boutons, fermetures, thermocollant, tissu pour le prêt-à-porter… Ce matériel sert à l\u2019atelier : il n\u2019est pas vendu en boutique.", matName:"Matériel", matNamePh:"Ex. Thermocollant blanc, fil noir, fermeture 20 cm", matCost:"Prix payé (total)", matSeuil:"Me prévenir quand il reste", matSeuilPh:"Ex. 2 (facultatif)", matAdd:"Enregistrer l\u2019achat", matStock:"Stock de l\u2019atelier", matSearchPh:"Chercher un matériel…", matEmpty:"Aucun matériel enregistré.", mu_piece:"pièce", mu_m:"mètre", mu_yd:"yard", mu_bobine:"bobine", mu_paquet:"paquet", mu_kg:"kg", matLeft:"Reste {n}", matAlertAt:"alerte à {n}", matLowBadge:"À racheter", matUse:"Utiliser", matBuy:"Racheter", matUseQ:"Utiliser {q} de « {n} » ?", matNotEnough:"Il ne reste que {n}.", matBuyQ:"Combien en avez-vous acheté ? ({u})", matBuyCost:"Prix payé en tout (0 si déjà compté)", matExpLabel:"Achat matériel", matCat:"Matériel atelier", tabMesures:"Mesures",
@@ -2083,6 +2101,7 @@
     en:{
       tagline:"your workshop, online", foot:"SanaaPro — powered by your workshop",
       uiLabel:"Interface", msgLabel:"Client messages",
+      fermTitle:"Closing days", fermHint:"Days when the workshop does not work. Nothing is counted on those days: money received is recorded on the next open day.", fermWeekly:"Closed every week on:", fermToday:"🔒 Close today", fermReopen:"🔓 Reopen today", fermPeriods:"Holidays, vacation, renovation:", fermFrom:"From", fermTo:"To (included)", fermMotifPh:"Reason (e.g. Tobaski, vacation, renovation)", fermAdd:"+ Add this closing", fermNone:"No closing planned.", fermBadDates:"Choose at least the start date.", fermTodayQ:"Close the workshop today? Money received will be counted on the next open day.", fermMotifToday:"Exceptionally closed", fermDelQ:"Delete this closing?", fermBanner:"🔒 Closed today{m}. What is cashed today will be counted on {d}.", fermWeeklyLbl:"closing day", fermDayQ:"On {d} the workshop is closed ({m}). Keep this date anyway?", fermShort:"Closed", fermTodayFin:"Today — closed{m}", fermTodayFin2:"What is cashed today will be counted on {d}.", fermShifted:"counted on {d}", fermTrend:"(closing days not counted)",
       online:"Online — synced", offlineShort:"Offline",
       tabApercu:"Overview", tabAtelier:"Workshop", tabBoutique:"Shop", tabMateriel:"Supplies",
       matStatItems:"Supplies", matStatLow:"To rebuy", matNew:"New supply purchase", matHint:"Thread, buttons, zips, fusible interfacing, fabric for ready-to-wear… These supplies are for the workshop: they are not sold in the shop.", matName:"Supply", matNamePh:"e.g. White fusible, black thread, 20 cm zip", matCost:"Price paid (total)", matSeuil:"Warn me when only this is left", matSeuilPh:"e.g. 2 (optional)", matAdd:"Save the purchase", matStock:"Workshop stock", matSearchPh:"Search a supply…", matEmpty:"No supplies recorded.", mu_piece:"piece", mu_m:"metre", mu_yd:"yard", mu_bobine:"spool", mu_paquet:"pack", mu_kg:"kg", matLeft:"{n} left", matAlertAt:"alert at {n}", matLowBadge:"To rebuy", matUse:"Use", matBuy:"Rebuy", matUseQ:"Use {q} of “{n}”?", matNotEnough:"Only {n} left.", matBuyQ:"How much did you buy? ({u})", matBuyCost:"Total price paid (0 if already counted)", matExpLabel:"Supplies purchase", matCat:"Workshop supplies", tabMesures:"Measurements",
@@ -2755,6 +2774,8 @@
       type, source, montant: Number(montant)||0, label: label||"",
       ms: Date.now(), createdAt: serverTimestamp()
     }, extra||{});
+    // jour fermé : compté le prochain jour ouvert (seulement pour une date non choisie à la main)
+    if(!(extra && extra.ms!=null)){ const mc=msCompte(m.ms); if(mc!==m.ms){ m.msReel=m.ms; m.ms=mc; } }
     const ref = doc(collection(db,"boutiques",BID,"mouvements"));
     setDoc(ref, m, { merge:true }).catch(function(){});
     MOUV.unshift(Object.assign({ id:ref.id }, m));
@@ -2770,6 +2791,109 @@
     if(p==="mois"){ return new Date(d.getFullYear(), d.getMonth(), 1).getTime(); }
     return new Date(d.getFullYear(), 0, 1).getTime();
   }
+  // =================== JOURS DE FERMETURE ===================
+  // Doc boutique : joursFermes = [0..6] (getDay, 0 = dimanche), fermetures = [{ du, au, motif }] (AAAA-MM-JJ).
+  // Un jour fermé ne compte pas : une recette ou une dépense saisie ce jour-là est datée du prochain jour ouvert.
+  function isoOf(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+  function joursFermes(){ const j=BOUTIQUE && BOUTIQUE.joursFermes; return Array.isArray(j) ? j.map(Number).filter(x=>x>=0&&x<=6) : []; }
+  function fermetures(){ const f=BOUTIQUE && BOUTIQUE.fermetures; return Array.isArray(f) ? f.filter(x=>x && x.du) : []; }
+  // renvoie null si ouvert, sinon le motif (texte, éventuellement vide)
+  function motifFerme(d){
+    const iso=isoOf(d);
+    const f=fermetures().find(x=> iso>=x.du && iso<=(x.au||x.du));
+    if(f) return f.motif || t("fermShort");
+    if(joursFermes().indexOf(d.getDay())>=0) return d.toLocaleDateString(LANG_UI==="en"?"en-GB":"fr-FR",{weekday:"long"}) || t("fermWeeklyLbl");
+    return null;
+  }
+  function estFerme(d){ return motifFerme(d)!==null; }
+  function isoFerme(iso){ const p=String(iso||"").slice(0,10).split("-"); if(p.length!==3) return null; const d=new Date(+p[0],+p[1]-1,+p[2]); return isNaN(d.getTime()) ? null : motifFerme(d); }
+  // premier jour ouvert à partir de d (inclus) ; si tout est fermé on rend d
+  function prochainOuvert(d){
+    const x=new Date(d); x.setHours(0,0,0,0);
+    for(let i=0;i<400;i++){ if(!estFerme(x)) return x; x.setDate(x.getDate()+1); }
+    return new Date(d);
+  }
+  function msCompte(ms){
+    const d=new Date(ms); if(!estFerme(d)) return ms;
+    const o=prochainOuvert(d); o.setHours(8,0,0,0); return o.getTime();
+  }
+  function saveFerm(ch){
+    if(BOUTIQUE) Object.assign(BOUTIQUE, ch);
+    setDoc(doc(db,"boutiques",BID), Object.assign({}, ch, { updatedAt:serverTimestamp() }), { merge:true }).catch(function(){});
+    renderFermeture();
+    try{ renderFinances(); }catch(e){}
+    try{ renderCharge(); }catch(e){}
+    try{ renderChargeTeaser(); }catch(e){}
+  }
+  function renderFermeture(){
+    const loc=LANG_UI==="en"?"en-GB":"fr-FR";
+    // bandeau de l'Aperçu
+    const bn=$("ferm-banner");
+    if(bn){
+      const now=new Date(), m=motifFerme(now);
+      if(m===null){ bn.hidden=true; }
+      else{
+        const nx=prochainOuvert(now);
+        bn.textContent=t("fermBanner").replace("{m}", m ? " ("+m+")" : "").replace("{d}", nx.toLocaleDateString(loc,{weekday:"long",day:"numeric",month:"long"}));
+        bn.hidden=false;
+      }
+    }
+    // réglages
+    const wk=$("ferm-week"); if(!wk) return;
+    wk.innerHTML="";
+    const noms=t("chDays").split(","), on=joursFermes();
+    [1,2,3,4,5,6,0].forEach(j=>{
+      const b=document.createElement("button"); b.type="button"; b.textContent=noms[j]||String(j);
+      const sel=on.indexOf(j)>=0;
+      b.style.cssText="flex:1 1 40px;padding:9px 4px;border-radius:10px;font-weight:700;font-size:13px;border:1px solid "+(sel?"#A6434B":"#3A3D42")+";background:"+(sel?"#3a1f22":"#1E1F22")+";color:"+(sel?"#f2b8be":"var(--txt)");
+      b.addEventListener("click", ()=>{
+        const cur=joursFermes(), k=cur.indexOf(j);
+        if(k>=0) cur.splice(k,1); else cur.push(j);
+        saveFerm({ joursFermes:cur.sort() });
+      });
+      wk.appendChild(b);
+    });
+    const todayIso=isoOf(new Date());
+    const todayEntry=fermetures().find(x=>x.du===todayIso && (x.au||x.du)===todayIso && x.auj);
+    $("ferm-today").textContent = todayEntry ? t("fermReopen") : t("fermToday");
+    const box=$("ferm-list"); box.innerHTML="";
+    const list=fermetures().filter(x=>(x.au||x.du)>=todayIso).sort((a,b)=>a.du<b.du?-1:1);
+    if(!list.length){ const e=document.createElement("div"); e.className="empty"; e.textContent=t("fermNone"); box.appendChild(e); }
+    list.forEach(x=>{
+      const r=document.createElement("div"); r.className="row"; r.style.cssText="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #2A2C30";
+      const tx=document.createElement("div"); tx.style.flex="1";
+      const au=x.au||x.du;
+      tx.textContent=(x.motif||t("fermShort"))+" — "+fmtDate(x.du, LANG_UI)+(au!==x.du ? " → "+fmtDate(au, LANG_UI) : "");
+      const del=document.createElement("button"); del.type="button"; del.className="ghost"; del.textContent="✕"; del.style.cssText="width:auto;padding:6px 12px;margin:0";
+      del.addEventListener("click", ()=>{
+        if(!confirm(t("fermDelQ"))) return;
+        saveFerm({ fermetures:fermetures().filter(y=>!(y.du===x.du && (y.au||y.du)===au && (y.motif||"")===(x.motif||""))) });
+      });
+      r.appendChild(tx); r.appendChild(del); box.appendChild(r);
+    });
+  }
+  $("ferm-add").addEventListener("click", ()=>{
+    const du=$("ferm-du").value, au=$("ferm-au").value||du, motif=$("ferm-motif").value.trim().slice(0,60);
+    if(!du){ alert(t("fermBadDates")); return; }
+    const a=du<=au?du:au, b=du<=au?au:du;
+    saveFerm({ fermetures:fermetures().concat([{ du:a, au:b, motif }]).slice(-200) });
+    $("ferm-du").value=""; $("ferm-au").value=""; $("ferm-motif").value="";
+  });
+  $("ferm-today").addEventListener("click", ()=>{
+    const iso=isoOf(new Date());
+    const cur=fermetures(), k=cur.findIndex(x=>x.du===iso && (x.au||x.du)===iso && x.auj);
+    if(k>=0){ cur.splice(k,1); saveFerm({ fermetures:cur }); return; }
+    if(!confirm(t("fermTodayQ"))) return;
+    saveFerm({ fermetures:cur.concat([{ du:iso, au:iso, motif:t("fermMotifToday"), auj:true }]).slice(-200) });
+  });
+  // date de livraison / de retrait posée sur un jour fermé : on prévient
+  ["cf-liv","pz-retrait"].forEach(id=>{
+    const el=$(id); if(!el) return;
+    el.addEventListener("change", ()=>{
+      const m=isoFerme(el.value); if(m===null) return;
+      if(!confirm(t("fermDayQ").replace("{d}", fmtDate(el.value, LANG_UI)).replace("{m}", m))) el.value="";
+    });
+  });
   function okWaveLink(u){
     try{ const x = new URL(String(u||"").trim()); return (x.protocol==="https:" && /(^|\.)wave\.com$/.test(x.hostname)) ? x.href : ""; }catch(e){ return ""; }
   }
@@ -2910,6 +3034,7 @@
     BOUTIQUE=b;
     try{ applyPtMode(); }catch(e){}
     try{ applyActivities(); buildPzGrid(); }catch(e){}
+    try{ renderFermeture(); }catch(e){}
     $("d-brand").textContent = b.name || "SanaaPro";
     $("d-owner").textContent = b.ownerName||"";
     $("d-name").textContent = b.name||"";
@@ -3103,14 +3228,16 @@
       const d = new Date(lundi.getTime() + i*86400000), k = key(d);
       const n = (byDay[k]||[]).length;
       const cell = document.createElement("div");
-      cell.style.cssText = "flex:1;text-align:center;padding:8px 2px;border-radius:10px;background:#1E1F22;border:1px solid "+(k===tK ? "#C9A227" : "#3A3D42");
+      const fz = estFerme(d);
+      cell.style.cssText = "flex:1;text-align:center;padding:8px 2px;border-radius:10px;background:"+(fz?"#141416":"#1E1F22")+";border:1px solid "+(k===tK ? "#C9A227" : "#3A3D42")+(fz?";opacity:.55":"");
+      if(fz) cell.title = t("fermShort");
       const a = document.createElement("div");
       a.style.cssText = "font-size:11px;color:#98948C"; a.textContent = noms[d.getDay()]||"";
       const b = document.createElement("div");
       b.style.cssText = "font-family:Georgia,serif;font-size:20px;margin-top:3px;color:"+tone(n);
       b.textContent = String(n);
       const c = document.createElement("div");
-      c.style.cssText = "font-size:10px;color:#98948C"; c.textContent = String(d.getDate());
+      c.style.cssText = "font-size:10px;color:#98948C"; c.textContent = fz ? t("fermShort") : String(d.getDate());
       cell.appendChild(a); cell.appendChild(b); cell.appendChild(c);
       zone.appendChild(cell);
     }
@@ -3244,7 +3371,7 @@
       const d = new Date(lundi.getTime()+i*86400000), k = key(d);
       const n = (byDay[k]||[]).length;
       const cell = document.createElement("div");
-      cell.style.cssText = "flex:1;text-align:center;padding:6px 2px;border-radius:8px;background:#1E1F22;border:1px solid "+(k===key(today)?"#C9A227":"#3A3D42");
+      cell.style.cssText = "flex:1;text-align:center;padding:6px 2px;border-radius:8px;background:"+(estFerme(d)?"#141416":"#1E1F22")+";border:1px solid "+(k===key(today)?"#C9A227":"#3A3D42")+(estFerme(d)?";opacity:.55":"");
       const b = document.createElement("div");
       b.style.cssText = "font-family:Georgia,serif;font-size:15px;color:"+tone(n);
       b.textContent = String(n);
@@ -3646,7 +3773,7 @@
     const d0=new Date(); d0.setHours(0,0,0,0); const from=d0.getTime();
     const by={ atelier:[0,0], pressing:[0,0], boutique:[0,0], general:[0,0] }; let dep=0; const rows=[];
     MOUV.forEach(m=>{
-      if((Number(m.ms)||0)<from) return;
+      const ms0=Number(m.ms)||0; if(ms0<from || ms0>=from+86400000) return;
       const v=Number(m.montant)||0;
       if(m.type==="recette"){ const k=by[m.source]?m.source:"atelier"; by[k][0]++; by[k][1]+=v; rows.push(m); }
       else dep+=v;
@@ -4320,16 +4447,26 @@
     const FAR=8.64e15;
     const fb=$("fb-blocks"); fb.innerHTML="";
     const sd=d=>d.toLocaleDateString(loc,{day:"2-digit",month:"2-digit"});
-    fb.appendChild(finBlock(t("fBlkToday").replace("{d}", d0.toLocaleDateString(loc)), d0.getTime(), d0.getTime()+86400000, SRC_COLORS.jour));
+    const mF=motifFerme(d0);
+    if(mF===null) fb.appendChild(finBlock(t("fBlkToday").replace("{d}", d0.toLocaleDateString(loc)), d0.getTime(), d0.getTime()+86400000, SRC_COLORS.jour));
+    else{
+      const el=document.createElement("div"); el.className="rec fblk"; el.style.setProperty("--c", "#5a5a5a");
+      const h=document.createElement("div"); h.className="nm"; h.textContent=t("fermTodayFin").replace("{m}", mF ? " ("+mF+")" : ""); el.appendChild(h);
+      const l=document.createElement("div"); l.className="ln"; l.style.color="var(--muted)";
+      l.textContent=t("fermTodayFin2").replace("{d}", prochainOuvert(d0).toLocaleDateString(loc,{weekday:"long",day:"numeric",month:"long"}));
+      el.appendChild(l); fb.appendChild(el);
+    }
     fb.appendChild(finBlock(t("fBlkWeek").replace("{a}", sd(w0)).replace("{b}", w1.toLocaleDateString(loc)), w0.getTime(), w0.getTime()+7*86400000, SRC_COLORS.semaine));
     fb.appendChild(finBlock(t("fBlkMonth").replace("{m}", now.toLocaleDateString(loc,{month:"long",year:"numeric"})), m0.getTime(), new Date(now.getFullYear(), now.getMonth()+1, 1).getTime(), SRC_COLORS.mois));
     fb.appendChild(finBlock(t("fBlkYear").replace("{y}", now.getFullYear()), y0.getTime(), new Date(now.getFullYear()+1,0,1).getTime(), "#fb7185"));
     // tendance 14 jours
-    const days=[]; for(let i=13;i>=0;i--){ const d=new Date(d0); d.setDate(d.getDate()-i); days.push({ t:d.getTime(), v:0 }); }
+    // 14 derniers jours OUVERTS (les jours de fermeture ne sont pas comptés ; aujourd'hui fermé = on part du dernier jour ouvert)
+    const days=[]; { const d=new Date(d0); let g=0; while(days.length<14 && g<400){ if(!estFerme(d)) days.unshift({ t:d.getTime(), v:0 }); d.setDate(d.getDate()-1); g++; } }
+    while(days.length<14){ const d=new Date(days.length ? days[0].t : d0.getTime()); d.setDate(d.getDate()-1); days.unshift({ t:d.getTime(), v:0 }); }
     MOUV.forEach(m=>{ if(m.type!=="recette") return; const ms=Number(m.ms)||0; const k=days.findIndex(x=>ms>=x.t && ms<x.t+86400000); if(k>=0) days[k].v+=Number(m.montant)||0; });
     const mx=Math.max(1, ...days.map(x=>x.v));
     const tr=$("ftrend"); tr.innerHTML="";
-    const big=document.createElement("div"); big.innerHTML='<span style="font:700 26px Georgia,serif;color:var(--ok)">'+escH(money(days[13].v))+'</span> <span style="color:var(--muted);font-size:13px">'+escH(t("fTodayAmt"))+'</span>'; tr.appendChild(big);
+    const big=document.createElement("div"); big.innerHTML='<span style="font:700 26px Georgia,serif;color:var(--ok)">'+escH(money(days[13].v))+'</span> <span style="color:var(--muted);font-size:13px">'+escH(days[13].t===d0.getTime() ? t("fTodayAmt") : new Date(days[13].t).toLocaleDateString(loc,{weekday:"long",day:"numeric",month:"long"}))+'</span>'+(joursFermes().length||fermetures().length ? ' <span style="color:var(--muted);font-size:11px">'+escH(t("fermTrend"))+'</span>' : ''); tr.appendChild(big);
     const W=300, H=110, px=i=>6+i*(W-12)/13, py=v=>H-8-(H-22)*v/mx;
     const pts=days.map((x,i)=>px(i).toFixed(1)+","+py(x.v).toFixed(1)).join(" ");
     let svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:130px;margin-top:10px;display:block">'
