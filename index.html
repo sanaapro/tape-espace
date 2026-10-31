@@ -873,7 +873,7 @@
       <div class="stats3">
         <div class="stat"><div class="n" id="pz-n-cours">0</div><div class="l" data-i18n="pzInProgress">En cours</div></div>
         <div class="stat"><div class="n" id="pz-n-prets">0</div><div class="l" data-i18n="pzReadyN">Prêts</div></div>
-        <div class="stat"><div class="n mgr-mask" id="pz-n-du">0</div><div class="l" data-i18n="statDue">À encaisser</div></div>
+        <div class="stat" id="pz-stat-du" style="cursor:pointer"><div class="n mgr-mask" id="pz-n-du">0</div><div class="l" data-i18n="statDue">À encaisser</div></div>
       </div>
       <div class="card">
         <h2 data-i18n="pzNew">Nouveau dépôt</h2>
@@ -930,6 +930,7 @@
       <div class="chips" id="pz-filter" style="margin-top:10px">
         <button data-f="encours" data-i18n="pzInProgress">En cours</button>
         <button data-f="pret" data-i18n="pzReadyN">Prêts</button>
+        <button data-f="du" data-i18n="statDue">À encaisser</button>
         <button data-f="recupere" data-i18n="pzPicked">Récupérés</button>
         <button data-f="tous" data-i18n="pzAll">Tous</button>
       </div>
@@ -6564,10 +6565,15 @@
   });
   function pzMatch(o){
     const st=o.statut||"recu";
+    const q0=$("q-pz").value.trim();
+    // une recherche (nom, téléphone, n°) trouve le ticket quel que soit son état, même récupéré
+    if(!q0){
+    if(PZ_FILTER==="du" && !(resteDe(o)>0)) return false;
     if(PZ_FILTER==="encours" && (st==="pret" || st==="recupere")) return false;
     if(PZ_FILTER==="pret" && st!=="pret") return false;
     if(PZ_FILTER==="recupere" && st!=="recupere") return false;
-    const q=$("q-pz").value.trim().toLowerCase();
+    }
+    const q=q0.toLowerCase();
     if(!q) return true;
     return (fmtNum(o.numero)+" "+(o.clienteName||"")+" "+(o.clientePhone||"")+" "+(o.resume||"")).toLowerCase().indexOf(q)!==-1;
   }
@@ -6712,6 +6718,8 @@
     });
   }
   $("pz-filter").querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{ PZ_FILTER=b.getAttribute("data-f"); renderPressing(); }));
+  // toucher « À encaisser » en haut montre tous les tickets qui doivent encore de l'argent
+  $("pz-stat-du").addEventListener("click", ()=>{ PZ_FILTER="du"; $("q-pz").value=""; renderPressing(); });
   $("q-pz").addEventListener("input", renderPressing);
   // ---- éditeur de tarifs ----
   function pzEditRow(r){
