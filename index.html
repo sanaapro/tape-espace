@@ -737,7 +737,7 @@
       <button data-tab="boutique" data-i18n="tabBoutique">Boutique</button>
       <button data-tab="tissus" data-i18n="tabTissu">Tissus</button>
       <button data-tab="materiel" data-i18n="tabMateriel">Matériel</button>
-      <button data-tab="vitrine" data-i18n="tabVitrine">Vitrine</button>
+      <button data-tab="vitrine" data-i18n="tabVitrine">Catalogue</button>
       <button data-tab="mesures" data-i18n="tabMesures">Mesures</button>
       <button data-tab="finances" data-i18n="tabFinances">Finances</button>
       <button data-tab="staff" data-i18n="tabStaff">Salariés</button>
@@ -1012,7 +1012,7 @@
         <p style="margin:0 0 6px;font-size:13px;color:var(--muted)" data-i18n="toolHint">Activez seulement ce dont vous avez besoin. Les onglets s'ajoutent en haut de l'écran.</p>
         <div class="chips" id="tool-chips">
           <button type="button" data-tool="charge" data-i18n="tabCharge">Charge</button>
-          <button type="button" data-tool="vitrine" data-i18n="tabVitrine">Vitrine</button>
+          <button type="button" data-tool="vitrine" data-i18n="tabVitrine">Catalogue</button>
           <button type="button" data-tool="staff" data-i18n="tabStaff">Salariés</button>
           <button type="button" data-tool="pointage" data-i18n="tabPointage">Pointage</button>
           <button type="button" data-tool="visits" data-i18n="tabVisitors">Visiteurs</button>
@@ -1388,7 +1388,7 @@
 
     <div id="pane-vitrine" hidden>
       <div class="card">
-        <h2 data-i18n="vtTitle">Ma vitrine</h2>
+        <h2 data-i18n="vtTitle">Mon catalogue</h2>
         <p style="margin:0 0 10px;font-size:13px;color:var(--muted)" data-i18n="vtHint">Vos modèles apparaissent dans le catalogue SanaaPro, que toutes les clientes peuvent consulter.</p>
         <label data-i18n="vtQuartier">Quartier de l'atelier</label>
         <input id="vt-quartier" type="text" placeholder="Bakau, Serrekunda…">
@@ -1400,7 +1400,7 @@
         </div>
       </div>
       <div class="card">
-        <h2 data-i18n="vtShareT">Envoyer ma vitrine aux clientes</h2>
+        <h2 data-i18n="vtShareT">Envoyer mon catalogue aux clientes</h2>
         <p style="margin:0 0 4px;font-size:13px;color:var(--muted)" data-i18n="vtShareH">Le lien ouvre le catalogue directement sur vos modèles. Envoyez-le à une cliente, à une liste de diffusion ou mettez-le en statut.</p>
         <button class="primary" id="vt-share" data-i18n="vtShareBtn">Partager sur WhatsApp</button>
         <button class="ghost" id="vt-copy" data-i18n="vtCopy">Copier le lien</button>
@@ -1813,7 +1813,7 @@
       online:"En ligne — synchronisé", offlineShort:"Hors ligne",
       tabApercu:"Aperçu", tabAtelier:"Atelier", tabBoutique:"Boutique", tabMateriel:"Matériel",
       matStatItems:"Fournitures", matStatLow:"À racheter", matNew:"Nouvel achat de matériel", matHint:"Fil, boutons, fermetures, thermocollant, tissu pour le prêt-à-porter… Ce matériel sert à l\u2019atelier : il n\u2019est pas vendu en boutique.", matName:"Matériel", matNamePh:"Ex. Thermocollant blanc, fil noir, fermeture 20 cm", matCost:"Prix payé (total)", matSeuil:"Me prévenir quand il reste", matSeuilPh:"Ex. 2 (facultatif)", matAdd:"Enregistrer l\u2019achat", matStock:"Stock de l\u2019atelier", matSearchPh:"Chercher un matériel…", matEmpty:"Aucun matériel enregistré.", mu_piece:"pièce", mu_m:"mètre", mu_yd:"yard", mu_bobine:"bobine", mu_paquet:"paquet", mu_kg:"kg", matLeft:"Reste {n}", matAlertAt:"alerte à {n}", matLowBadge:"À racheter", matUse:"Utiliser", matBuy:"Racheter", matUseQ:"Utiliser {q} de « {n} » ?", matNotEnough:"Il ne reste que {n}.", matBuyQ:"Combien en avez-vous acheté ? ({u})", matBuyCost:"Prix payé en tout (0 si déjà compté)", matExpLabel:"Achat matériel", matCat:"Matériel atelier", tabMesures:"Mesures",
-      tabVitrine:"Vitrine", vtTitle:"Ma vitrine",
+      tabVitrine:"Catalogue", vtTitle:"Mon catalogue",
       vtHint:"Vos modèles apparaissent dans le catalogue SanaaPro, que toutes les clientes peuvent consulter.",
       vtQuartier:"Quartier de l'atelier", vtOpen:"Voir le catalogue public ›", vtNoWave:"Votre numéro Wave n'est pas rempli : les clientes ne voient pas l'option « Payer l'acompte par Wave » sur vos modèles.", vtNoWa:"Votre numéro WhatsApp n'est pas rempli : les clientes ne voient pas le bouton « Commander sur WhatsApp ».", vtWarnGo:"Ouvrir les Réglages ›", vtWaveBtn:"Envoyer mon lien de paiement Wave", vtSyncFail:"Le catalogue a refusé la mise à jour de vos modèles : envoyez une capture de ce message à SanaaPro.", vtAdd:"Ajouter un modèle",
       vtPhoto:"Photo du modèle", vtName:"Nom du modèle", vtNamePh:"Ex. Robe en wax brodée", vtFor:"Pour",
@@ -1832,7 +1832,7 @@
       bankOtherPh:"Nom de la banque", bank2Title:"＋ Ajouter un deuxième compte bancaire", bankLabel:"Virement bancaire (facultatif)", bankPh:"Banque — ex. GT Bank", bankNamePh:"Nom du compte", bankNoPh:"Numéro de compte", bankHint:"Ces coordonnées s'ajoutent aux messages de paiement envoyés aux clientes, à côté de Wave.", waveLabel:"Numéro Wave (paiement des clientes)", waveLinkLabel:"Lien de paiement Wave (facultatif)", waveLinkHint:"Si vous avez un compte Wave Business, collez ici votre lien de paiement : la cliente tombera directement sur votre page de paiement Wave.",
       vtLimit:"La formule Standard permet {n} modèles dans le catalogue. Passez au Premium pour en publier sans limite, ou supprimez un modèle.",
       vtLimitAsk:"Passer au Premium sur WhatsApp ?",
-      vtShareT:"Envoyer ma vitrine aux clientes", vtShareBtn:"Partager sur WhatsApp", vtCopy:"Copier le lien",
+      vtShareT:"Envoyer mon catalogue aux clientes", vtShareBtn:"Partager sur WhatsApp", vtCopy:"Copier le lien",
       vtShareH:"Le lien ouvre le catalogue directement sur vos modèles. Envoyez-le à une cliente, à une liste de diffusion ou mettez-le en statut.",
       vtCopied:"Lien copié. Collez-le dans votre statut ou un message.",
       vtShareMsg:"Bonjour ! Découvrez les modèles de {shop} en photo 👗\nChoisissez celui qui vous plaît et commandez directement sur WhatsApp :\n{url}",
@@ -2105,7 +2105,7 @@
       online:"Online — synced", offlineShort:"Offline",
       tabApercu:"Overview", tabAtelier:"Workshop", tabBoutique:"Shop", tabMateriel:"Supplies",
       matStatItems:"Supplies", matStatLow:"To rebuy", matNew:"New supply purchase", matHint:"Thread, buttons, zips, fusible interfacing, fabric for ready-to-wear… These supplies are for the workshop: they are not sold in the shop.", matName:"Supply", matNamePh:"e.g. White fusible, black thread, 20 cm zip", matCost:"Price paid (total)", matSeuil:"Warn me when only this is left", matSeuilPh:"e.g. 2 (optional)", matAdd:"Save the purchase", matStock:"Workshop stock", matSearchPh:"Search a supply…", matEmpty:"No supplies recorded.", mu_piece:"piece", mu_m:"metre", mu_yd:"yard", mu_bobine:"spool", mu_paquet:"pack", mu_kg:"kg", matLeft:"{n} left", matAlertAt:"alert at {n}", matLowBadge:"To rebuy", matUse:"Use", matBuy:"Rebuy", matUseQ:"Use {q} of “{n}”?", matNotEnough:"Only {n} left.", matBuyQ:"How much did you buy? ({u})", matBuyCost:"Total price paid (0 if already counted)", matExpLabel:"Supplies purchase", matCat:"Workshop supplies", tabMesures:"Measurements",
-      tabVitrine:"Showcase", vtTitle:"My showcase",
+      tabVitrine:"Catalogue", vtTitle:"My catalogue",
       vtHint:"Your designs appear in the SanaaPro catalogue, which every client can browse.",
       vtQuartier:"Workshop area", vtOpen:"See the public catalogue ›", vtNoWave:"Your Wave number is empty: clients don't see the “Pay a deposit with Wave” option on your designs.", vtNoWa:"Your WhatsApp number is empty: clients don't see the “Order on WhatsApp” button.", vtWarnGo:"Open Settings ›", vtWaveBtn:"Send my Wave payment link", vtSyncFail:"The catalogue refused to update your designs: send a screenshot of this message to SanaaPro.", vtAdd:"Add a design",
       vtPhoto:"Photo of the design", vtName:"Design name", vtNamePh:"E.g. Embroidered wax dress", vtFor:"For",
@@ -2124,7 +2124,7 @@
       bankOtherPh:"Bank name", bank2Title:"＋ Add a second bank account", bankLabel:"Bank transfer (optional)", bankPh:"Bank — e.g. GT Bank", bankNamePh:"Account name", bankNoPh:"Account number", bankHint:"These details are added to the payment messages sent to clients, next to Wave.", waveLabel:"Wave number (client payments)", waveLinkLabel:"Wave payment link (optional)", waveLinkHint:"If you have a Wave Business account, paste your payment link here: clients will land directly on your Wave payment page.",
       vtLimit:"The Standard plan allows {n} designs in the catalogue. Upgrade to Premium to publish without limit, or remove a design.",
       vtLimitAsk:"Upgrade to Premium on WhatsApp?",
-      vtShareT:"Send my showcase to clients", vtShareBtn:"Share on WhatsApp", vtCopy:"Copy the link",
+      vtShareT:"Send my catalogue to clients", vtShareBtn:"Share on WhatsApp", vtCopy:"Copy the link",
       vtShareH:"The link opens the catalogue straight on your designs. Send it to a client, a broadcast list, or post it as your status.",
       vtCopied:"Link copied. Paste it in your status or a message.",
       vtShareMsg:"Hello! See {shop}'s designs in photos 👗\nPick the one you like and order directly on WhatsApp:\n{url}",
