@@ -516,6 +516,8 @@
   .pz-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid var(--line) }
   .pz-row .nm{ font-size:14.5px } .pz-row .pr{ font-size:12.5px; color:var(--muted); margin-top:2px }
   .pz-q{ display:flex; align-items:center; gap:8px }
+  .pz-exp{ display:flex; align-items:center; gap:10px; margin:14px 0 4px; padding:10px 12px; border:1px solid var(--line2); border-radius:12px; font-weight:700; cursor:pointer }
+  .pz-exp input{ width:20px; height:20px; margin:0 } .pz-exp.on{ border-color:#ff9f43; color:#ff9f43 }
   .pz-q button{ width:36px; height:36px; border-radius:10px; border:1px solid var(--line2); background:none; color:var(--txt); font-size:19px; cursor:pointer; line-height:1 }
   .pz-q span{ min-width:22px; text-align:center; font-weight:700 }
   .pz-q.has span{ color:var(--gold) }
@@ -881,6 +883,7 @@
         <input id="pz-nom" type="text" autocomplete="off" data-i18n-ph="pzClientPh" placeholder="Nom complet">
         <label data-i18n="phoneWa">Téléphone / WhatsApp</label>
         <input id="pz-tel" type="tel" placeholder="+220 …">
+        <label class="pz-exp" id="pz-exp-row"><input type="checkbox" id="pz-express"> <span id="pz-exp-lbl">⚡ Express</span></label>
         <div id="pz-grid"></div>
         <div class="pz-tot"><span data-i18n="pzTotal">Total</span><b id="pz-total">0</b></div>
         <label data-i18n="discountOpt">Réduction accordée (optionnel)</label>
@@ -898,6 +901,8 @@
       <div class="card" id="pz-tedit" hidden>
         <h2 data-i18n="pzPricesT">Mes tarifs pressing</h2>
         <p style="margin:0;font-size:13px;color:var(--muted)" data-i18n="pzPricesHint">Catégorie, article et prix. Ajoutez, modifiez ou supprimez librement.</p>
+        <label data-i18n="pzExpPct">Supplément express (%)</label>
+        <input id="pz-exp-pct" type="number" step="1" min="0" inputmode="decimal" placeholder="50">
         <div id="pz-tlist"></div>
         <button class="ghost" id="pz-tadd" type="button" data-i18n="pzAddItem">+ Ajouter un article</button>
         <button class="primary" id="pz-tsave" type="button" data-i18n="pzSavePrices">Enregistrer les tarifs</button>
@@ -1982,7 +1987,7 @@
       pzSavePrices:"Enregistrer les tarifs", pzPricesSaved:"Tarifs enregistrés.", pzCat:"Catégorie", pzItem:"Article", pzPrice:"Prix",
       quickExpensePz:"Dépense rapide — Pressing", expCatPzPh:"Catégorie (ex. savon, javel, électricité)",
       pzSearchPh:"Nom, téléphone ou n° de ticket…", pzNone:"Aucun ticket ici.",
-      pzNeedName:"Entrez le nom du client.", pzNeedItem:"Choisissez au moins un article.",
+      pzNeedName:"Entrez le nom du client.", pzNeedItem:"Choisissez au moins un article.", pzExpLbl:"⚡ Express — rendu le jour même (+{p} %)", pzExpPct:"Supplément express (%)", pzExpTag:"EXPRESS",
       pzCreated:"Ticket n° {n} créé.", pzTicket:"Ticket", pzPickupOn:"Retrait prévu le {d}",
       pzRecu:"Reçu", pzLavage:"Lavage", pzRepassage:"Repassage", pzPret:"Prêt", pzRecupere:"Récupéré",
       pzCash:"Encaisser", pzCashAsk:"Montant reçu de {n} :", pzReceipt:"Reçu WhatsApp", pzDelete:"Supprimer",
@@ -2274,7 +2279,7 @@
       pzSavePrices:"Save prices", pzPricesSaved:"Prices saved.", pzCat:"Category", pzItem:"Item", pzPrice:"Price",
       quickExpensePz:"Quick expense — Dry cleaning", expCatPzPh:"Category (e.g. soap, bleach, electricity)",
       pzSearchPh:"Name, phone or ticket no.…", pzNone:"No tickets here.",
-      pzNeedName:"Enter the customer's name.", pzNeedItem:"Choose at least one item.",
+      pzNeedName:"Enter the customer's name.", pzNeedItem:"Choose at least one item.", pzExpLbl:"⚡ Express — same-day service (+{p} %)", pzExpPct:"Express surcharge (%)", pzExpTag:"EXPRESS",
       pzCreated:"Ticket no. {n} created.", pzTicket:"Ticket", pzPickupOn:"Pick-up on {d}",
       pzRecu:"Received", pzLavage:"Washing", pzRepassage:"Ironing", pzPret:"Ready", pzRecupere:"Collected",
       pzCash:"Take payment", pzCashAsk:"Amount received from {n}:", pzReceipt:"WhatsApp receipt", pzDelete:"Delete",
@@ -6460,6 +6465,20 @@
     return (Array.isArray(g) && g.length) ? g : PZ_DEFAULT;
   }
   const pzKey = (c,n) => c+"|"+n;
+  // Express : prix normal + supplément (50 % par défaut), arrondi aux 25 les plus proches
+  let PZ_EXPRESS=false;
+  function pzExpPct(){ const v=Number(BOUTIQUE && BOUTIQUE.pzExpressPct); return (isFinite(v) && v>=0 && BOUTIQUE && BOUTIQUE.pzExpressPct!=null && BOUTIQUE.pzExpressPct!=="") ? v : 50; }
+  function pzPrix(base){ base=Number(base)||0; return PZ_EXPRESS ? Math.round(base*(1+pzExpPct()/100)/25)*25 : base; }
+  function pzExpPaint(){
+    const lb=$("pz-exp-lbl"); if(lb) lb.textContent=t("pzExpLbl").replace("{p}", pzExpPct());
+    const rw=$("pz-exp-row"); if(rw) rw.classList.toggle("on", PZ_EXPRESS);
+    const cb=$("pz-express"); if(cb) cb.checked=PZ_EXPRESS;
+  }
+  $("pz-express").addEventListener("change", e=>{
+    PZ_EXPRESS=!!e.target.checked;
+    if(PZ_EXPRESS && !$("pz-retrait").value) $("pz-retrait").value=todayISO();
+    buildPzGrid();
+  });
   function pzStepLabel(st){ return t("pz"+st.charAt(0).toUpperCase()+st.slice(1)); }
   function buildPzGrid(){
     const box=$("pz-grid"); if(!box) return;
@@ -6471,7 +6490,7 @@
         const row=document.createElement("div"); row.className="pz-row";
         const l=document.createElement("div");
         const nm=document.createElement("div"); nm.className="nm"; nm.textContent=it.nom;
-        const pr=document.createElement("div"); pr.className="pr"; pr.textContent=money(it.prix);
+        const pr=document.createElement("div"); pr.className="pr"; pr.textContent=money(pzPrix(it.prix))+(PZ_EXPRESS?" ⚡":"");
         l.appendChild(nm); l.appendChild(pr);
         const q=document.createElement("div"); q.className="pz-q";
         const mi=document.createElement("button"); mi.type="button"; mi.textContent="−";
@@ -6480,7 +6499,7 @@
         const paint=()=>{ const n=(PZ_CART[k]&&PZ_CART[k].qte)||0; sp.textContent=n; q.classList.toggle("has", n>0); };
         const chg=d=>{
           const n=Math.max(0, ((PZ_CART[k]&&PZ_CART[k].qte)||0)+d);
-          if(n) PZ_CART[k]={ nom:it.nom, prix:Number(it.prix)||0, qte:n }; else delete PZ_CART[k];
+          if(n) PZ_CART[k]={ nom:it.nom, base:Number(it.prix)||0, prix:Number(it.prix)||0, qte:n }; else delete PZ_CART[k];
           paint(); pzTotal();
         };
         mi.addEventListener("click", ()=>chg(-1)); pl.addEventListener("click", ()=>chg(1));
@@ -6488,11 +6507,11 @@
         row.appendChild(l); row.appendChild(q); box.appendChild(row);
       });
     });
-    pzTotal();
+    pzExpPaint(); pzTotal();
   }
   let PZ_REMISE=0;
   function pzTotal(){
-    let tot=0; Object.values(PZ_CART).forEach(it=>{ tot += it.prix*it.qte; });
+    let tot=0; Object.values(PZ_CART).forEach(it=>{ if(it.base==null) it.base=it.prix; it.prix=pzPrix(it.base); tot += it.prix*it.qte; });
     const av=Math.max(0, parseFloat($("pz-avance").value)||0);
     const rv=parseFloat(String($("pz-remise").value||"").replace(",", "."));
     const rm=(isNaN(rv)||rv<=0) ? 0 : Math.min(rv, tot);
@@ -6545,7 +6564,9 @@
     const data={
       kind:"pressing", numero:mx+1,
       clienteName:nom, clientePhone:$("pz-tel").value.trim(),
-      articles:items, resume:items.map(x=>x.qte+"× "+x.nom).join(", "),
+      articles:items.map(x=>{ const a={ nom:x.nom, prix:x.prix, qte:x.qte }; if(PZ_EXPRESS) a.prixNormal=x.base; return a; }),
+      resume:(PZ_EXPRESS ? "⚡ "+t("pzExpTag")+" · " : "")+items.map(x=>x.qte+"× "+x.nom).join(", "),
+      express: PZ_EXPRESS, expressPct: PZ_EXPRESS ? pzExpPct() : null,
       prix:total, paye:avance, statut:"recu", retrait:$("pz-retrait").value||"",
       remise: remise>0 ? remise : 0, prixInitial: remise>0 ? brut : null,
       createdAtMs:Date.now(), createdAt:serverTimestamp()
@@ -6555,7 +6576,7 @@
     const o=Object.assign({ id:ref.id }, data);
     PRESS.unshift(o);
     if(avance>0) addMouv("recette","pressing",avance, t("pzTicket")+" "+fmtNum(o.numero)+" — "+nom, { commandeId:ref.id });
-    PZ_CART={}; ["pz-nom","pz-tel","pz-avance","pz-remise","pz-retrait"].forEach(id=>{ $(id).value=""; });
+    PZ_CART={}; PZ_EXPRESS=false; ["pz-nom","pz-tel","pz-avance","pz-remise","pz-retrait"].forEach(id=>{ $(id).value=""; });
     buildPzGrid();
     msg.textContent=t("pzCreated").replace("{n}", fmtNum(o.numero)); msg.className="msg ok show";
     setTimeout(()=>{ msg.classList.remove("show"); }, 4000);
@@ -6735,6 +6756,7 @@
     if(!await askCode()) return;
     const box=$("pz-tlist"); box.innerHTML="";
     pzTarifs().forEach(g=>(g.items||[]).forEach(it=>box.appendChild(pzEditRow({ cat:g.cat, nom:it.nom, prix:it.prix }))));
+    $("pz-exp-pct").value=pzExpPct();
     $("pz-tedit").hidden=false; $("pz-tedit").scrollIntoView({ block:"start" });
   });
   $("pz-tadd").addEventListener("click", ()=>{
@@ -6751,10 +6773,12 @@
       groups[idx[cat]].items.push({ nom, prix });
     });
     if(!groups.length){ alert(t("pzNeedItem")); return; }
-    if(BOUTIQUE) BOUTIQUE.tarifsPressing=groups;
+    const ep=parseFloat(String($("pz-exp-pct").value||"").replace(",", "."));
+    const expPct=(isNaN(ep)||ep<0) ? 50 : ep;
+    if(BOUTIQUE){ BOUTIQUE.tarifsPressing=groups; BOUTIQUE.pzExpressPct=expPct; }
     PZ_CART={}; buildPzGrid();
     $("pz-tedit").hidden=true;
-    setDoc(doc(db,"boutiques",BID), { tarifsPressing:groups, updatedAt:serverTimestamp() }, { merge:true }).catch(pzFail);
+    setDoc(doc(db,"boutiques",BID), { tarifsPressing:groups, pzExpressPct:expPct, updatedAt:serverTimestamp() }, { merge:true }).catch(pzFail);
     const m=$("pz-msg"); m.textContent=t("pzPricesSaved"); m.className="msg ok show"; setTimeout(()=>m.classList.remove("show"), 3000);
   });
 
