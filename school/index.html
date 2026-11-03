@@ -144,6 +144,7 @@
   </label>
   <button class="primary" id="s-go" data-i18n="setupGo">Créer mon école</button>
   <div class="msg err" id="s-msg"></div>
+  <button class="flink" id="s-back" style="font-size:15px;color:var(--gold)" data-i18n="backAtelier">← Retour à mon atelier</button>
   <button class="flink" id="s-out" data-i18n="logout">Déconnexion</button>
 </div>
 
@@ -422,7 +423,7 @@
       badLogin:"Email ou mot de passe incorrect.", resetSent:"Lien envoyé à {e}. Regardez aussi dans les spams.", needEmail:"Écrivez d'abord votre email.",
       setupTitle:"Créer votre école", setupSub:"Une seule fois. Tout reste modifiable dans Réglages.", schoolName:"Nom de l'école",
       schoolSub:"Sous-titre (facultatif)", schoolWa:"Numéro WhatsApp de l'école", setupModel:"Remplir avec la grille d'une école de couture (classes, frais, 6 trimestres)",
-      setupGo:"Créer mon école", needName:"Écrivez le nom de l'école.", logout:"Déconnexion",
+      setupGo:"Créer mon école", needName:"Écrivez le nom de l'école.", logout:"Déconnexion", backAtelier:"← Retour à mon atelier",
       rulesMissing:"Le serveur refuse l'accès à l'école : les règles Firestore pour « ecoles » ne sont pas encore publiées.",
       loadFail:"Chargement impossible. Vérifiez la connexion puis rouvrez l'app.",
       toAtelier:"Atelier", tApercu:"Aperçu", tEleves:"Élèves", tPresence:"Présence", tNotes:"Notes", tFinances:"Finances", tProgramme:"Programme", tReglages:"Réglages",
@@ -466,7 +467,7 @@
       badLogin:"Wrong email or password.", resetSent:"Link sent to {e}. Check your spam folder too.", needEmail:"Type your email first.",
       setupTitle:"Create your school", setupSub:"Only once. Everything can be changed later in Settings.", schoolName:"School name",
       schoolSub:"Subtitle (optional)", schoolWa:"School WhatsApp number", setupModel:"Fill with a fashion school template (classes, fees, 6 terms)",
-      setupGo:"Create my school", needName:"Type the school name.", logout:"Sign out",
+      setupGo:"Create my school", needName:"Type the school name.", logout:"Sign out", backAtelier:"← Back to my workshop",
       rulesMissing:"The server refuses access to the school: the Firestore rules for “ecoles” are not published yet.",
       loadFail:"Could not load. Check the connection and reopen the app.",
       toAtelier:"Workshop", tApercu:"Overview", tEleves:"Students", tPresence:"Attendance", tNotes:"Marks", tFinances:"Finances", tProgramme:"Programme", tReglages:"Settings",
@@ -605,6 +606,7 @@
   });
   $("l-signup").addEventListener("click", () => { location.href = "../../inscription/"; });
   $("s-out").addEventListener("click", () => signOut(auth));
+  $("s-back").addEventListener("click", () => { location.href = "../index.html"; });
   $("r-out").addEventListener("click", () => { UNSUB.forEach(f => f()); signOut(auth); });
 
   onAuthStateChanged(auth, async (user) => {
