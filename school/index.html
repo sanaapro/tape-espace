@@ -420,7 +420,7 @@
       fNewDep:"Dépense de l'école", amount:"Montant", desc:"Description", fAddDep:"Enregistrer la dépense", fMoves:"Mouvements",
       fSep:"Ces chiffres sont ceux de l'école uniquement. L'atelier, le pressing et la boutique ont leurs propres finances.",
       depSaved:"Dépense enregistrée.", needAmt:"Écrivez un montant.", noMoves:"Aucun mouvement sur cette période.",
-      stTitle:"Enseignants et personnel", stNom:"Nom complet", stRole:"Poste (ex. enseignante)", stSal:"Salaire par mois", stAdd:"Enregistrer", stCancel:"Annuler", stNone:"Aucun enseignant enregistré.", stTot:"{k} personne(s) · salaires : {m} par mois", stPay:"Payer", stEdit:"Modifier", stDel:"Retirer", stPayAsk:"Montant versé à {n} :", stPaid:"Salaire de {n} enregistré dans les dépenses.", stNeed:"Entrez le nom et le salaire.", stSaved:"Enregistré ✓", stPaidMonth:"payé ce mois", dDate:"Date de la dépense", catLoyer:"Loyer", catElec:"Électricité", catSal:"Salaire enseignant / personnel", catMat:"Matériel et tissu", catEnt:"Entretien des machines", catAutre:"Autre",
+      stTitle:"Enseignants et personnel", stNom:"Nom complet", stRole:"Poste (ex. enseignante)", stSal:"Salaire par mois", stAdd:"Enregistrer", stCancel:"Annuler", stNone:"Aucun enseignant enregistré.", stTot:"{k} personne(s) · salaires : {m} par mois", stPay:"Payer", stEdit:"Modifier", stDel:"Retirer", stPayAsk:"Montant versé à {n} :", stPaid:"Salaire de {n} enregistré dans les dépenses.", stNeed:"Entrez le nom et le salaire.", stSaved:"Enregistré ✓", stPaidMonth:"payé ce mois", stLastPaid:"dernier salaire payé : {mo}", dDate:"Date de la dépense", catLoyer:"Loyer", catElec:"Électricité", catSal:"Salaire enseignant / personnel", catMat:"Matériel et tissu", catEnt:"Entretien des machines", catAutre:"Autre",
       gEdit:"Modifier le programme", save:"Enregistrer", gEmpty:"Pas encore de programme. Touchez « Modifier le programme ».", gPh:"Ce qu'on apprend pendant ce trimestre…",
       rIdent:"L'école", currency:"Monnaie", nbTrim:"Nombre de trimestres", saved:"Enregistré.",
       rClasses:"Classes et scolarité par trimestre", rClassesHelp:"« 2e partie » : prix appliqué à partir du trimestre indiqué (ex. 2e année à partir du trimestre 4). Laisser vide si le prix ne change pas.",
@@ -464,7 +464,7 @@
       fNewDep:"School expense", amount:"Amount", desc:"Description", fAddDep:"Save expense", fMoves:"Movements",
       fSep:"These figures are for the school only. The workshop, laundry and shop have their own finances.",
       depSaved:"Expense saved.", needAmt:"Type an amount.", noMoves:"No movement in this period.",
-      stTitle:"Teachers and staff", stNom:"Full name", stRole:"Role (e.g. teacher)", stSal:"Monthly salary", stAdd:"Save", stCancel:"Cancel", stNone:"No teacher recorded yet.", stTot:"{k} person(s) · salaries: {m} a month", stPay:"Pay", stEdit:"Edit", stDel:"Remove", stPayAsk:"Amount paid to {n}:", stPaid:"{n}'s salary recorded in the expenses.", stNeed:"Enter the name and the salary.", stSaved:"Saved ✓", stPaidMonth:"paid this month", dDate:"Date of the expense", catLoyer:"Rent", catElec:"Electricity", catSal:"Teacher / staff salary", catMat:"Materials and fabric", catEnt:"Machine maintenance", catAutre:"Other",
+      stTitle:"Teachers and staff", stNom:"Full name", stRole:"Role (e.g. teacher)", stSal:"Monthly salary", stAdd:"Save", stCancel:"Cancel", stNone:"No teacher recorded yet.", stTot:"{k} person(s) · salaries: {m} a month", stPay:"Pay", stEdit:"Edit", stDel:"Remove", stPayAsk:"Amount paid to {n}:", stPaid:"{n}'s salary recorded in the expenses.", stNeed:"Enter the name and the salary.", stSaved:"Saved ✓", stPaidMonth:"paid this month", stLastPaid:"last salary paid: {mo}", dDate:"Date of the expense", catLoyer:"Rent", catElec:"Electricity", catSal:"Teacher / staff salary", catMat:"Materials and fabric", catEnt:"Machine maintenance", catAutre:"Other",
       gEdit:"Edit the programme", save:"Save", gEmpty:"No programme yet. Tap “Edit the programme”.", gPh:"What is learnt during this term…",
       rIdent:"The school", currency:"Currency", nbTrim:"Number of terms", saved:"Saved.",
       rClasses:"Classes and tuition per term", rClassesHelp:"“2nd price”: price used from the given term (e.g. 2nd year from term 4). Leave empty if the price does not change.",
@@ -981,9 +981,11 @@
     if(!$("st-list")) return;
     const L = staff(), m0 = periodStart("mois");
     $("st-list").innerHTML = L.map(p => {
-      const paid = MOUVS.filter(m => m.type === "depense" && m.staffId === p.id && num(m.ms) >= m0).reduce((s, m) => s + num(m.montant), 0);
+      const last = MOUVS.filter(m => m.type === "depense" && m.staffId === p.id).sort((a, b) => num(b.ms) - num(a.ms))[0];
+      const paid = last ? num(last.montant) : 0;
+      const lastTxt = last ? new Date(num(last.ms)).toLocaleDateString(LANG === "en" ? "en-GB" : "fr-FR", { month:"long", year:"numeric" }) : "";
       return '<div class="it" style="cursor:default"><div class="main"><div class="t1">' + esc(p.nom) + '</div><div class="t2">' + esc(p.role || "") + (p.phone ? " · " + esc(p.phone) : "") + " · " + esc(money(num(p.salaire)))
-        + (paid > 0 ? ' · <span style="color:var(--ok)">' + esc(t("stPaidMonth")) + " " + esc(money(paid)) + "</span>" : "") + '</div></div>'
+        + (paid > 0 ? ' · <span style="color:var(--ok)">' + esc(fmt(t("stLastPaid"), { mo:lastTxt })) + " (" + esc(money(paid)) + ")</span>" : "") + '</div></div>'
         + '<button class="ghost gold" data-sp="' + esc(p.id) + '" style="padding:6px 9px">' + esc(t("stPay")) + '</button>'
         + '<button class="ghost" data-se="' + esc(p.id) + '" style="padding:6px 9px;margin-left:4px">✎</button>'
         + '<button class="ghost red" data-sd="' + esc(p.id) + '" style="padding:6px 9px;margin-left:4px">✕</button></div>';
@@ -993,7 +995,11 @@
       const p = staff().find(x => x.id === b.dataset.sp); if(!p) return;
       const v = prompt(fmt(t("stPayAsk"), { n:p.nom }), String(num(p.salaire) || "")); if(v == null) return;
       const amt = num(v); if(amt <= 0) return;
-      const id = newId("dep-"), rec = { type:"depense", cat:"catSal", staffId:p.id, montant:amt, label: t("catSal") + " — " + p.nom, ms:Date.now() };
+      /* Le salaire payé au plus tard le 5 du mois est celui du mois précédent : il est compté dans ce mois-là. */
+      const now = new Date(), cov = now.getDate() <= 5 ? new Date(now.getFullYear(), now.getMonth(), 0, 12) : now;
+      const moisTxt = cov.toLocaleDateString(LANG === "en" ? "en-GB" : "fr-FR", { month:"long", year:"numeric" });
+      const id = newId("dep-"), rec = { type:"depense", cat:"catSal", staffId:p.id, mois: cov.getFullYear() + "-" + pad(cov.getMonth() + 1), montant:amt,
+                                        label: t("catSal") + " — " + p.nom + " — " + moisTxt, ms: cov === now ? Date.now() : cov.getTime() };
       MOUVS.push(Object.assign({ id }, rec)); save(doc(db, "ecoles", UID, "mouvements", id), rec, false);
       $("st-msg").className = "msg"; $("st-msg").textContent = fmt(t("stPaid"), { n:p.nom }); renderFinances();
     }));
