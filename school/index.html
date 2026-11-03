@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SanaaPro School</title>
+<meta name="description" content="SanaaPro School — students, attendance, marks, fees and school finances.">
+<meta name="theme-color" content="#0E0E0F">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SanaaPro School">
+<style>
+  :root{
+    --bg:#0E0E0F; --panel:#17181A; --panel2:#1E1F22; --line:#2C2E32; --line2:#3A3D42;
+    --gold:#C9A227; --txt:#EDEBE6; --muted:#98948C; --ok:#4ade80; --bad:#f87171; --warn:#facc15;
+    --serif:Georgia,"Times New Roman",serif; --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; min-height:100vh; background:var(--bg); color:var(--txt); font-family:var(--sans); font-size:15px; }
+  [hidden]{ display:none !important; }
+  .wrap{ max-width:720px; margin:0 auto; padding:0 14px 90px; }
+  .head{ text-align:center; padding:18px 10px 12px; position:relative; }
+  .head img{ display:block; margin:0 auto 6px; border-radius:12px; }
+  .head .name{ font-family:var(--serif); font-size:22px; color:var(--gold); font-weight:700; letter-spacing:1px; }
+  .head .sub{ font-size:12px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-top:3px; }
+  .toprow{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:10px; }
+  .chip{ background:none; border:1px solid var(--line2); color:var(--muted); border-radius:20px; padding:7px 13px; font-size:13px; cursor:pointer; font-family:var(--sans); }
+  .chip.gold{ border-color:var(--gold); color:var(--gold); font-weight:700; }
+  .seg{ display:inline-flex; border:1px solid var(--line2); border-radius:20px; overflow:hidden; }
+  .seg button{ background:none; border:0; color:var(--muted); padding:7px 12px; font-size:12px; cursor:pointer; }
+  .seg button.on{ background:var(--gold); color:#141310; font-weight:700; }
+  .tabs{ display:flex; overflow-x:auto; gap:2px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--bg); z-index:5; scrollbar-width:none; }
+  .tabs::-webkit-scrollbar{ display:none; }
+  .tabs button{ flex:0 0 auto; background:none; border:0; border-bottom:2px solid transparent; color:var(--muted); padding:12px 12px; font-size:14px; cursor:pointer; font-family:var(--sans); }
+  .tabs button.on{ color:var(--gold); border-bottom-color:var(--gold); font-weight:700; }
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px; margin-top:14px; }
+  .card h2{ font-family:var(--serif); font-size:17px; color:var(--gold); margin:0 0 12px; font-weight:700; }
+  .stats{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:14px; }
+  .stat{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px; text-align:center; }
+  .stat .n{ font-family:var(--serif); font-size:28px; color:var(--gold); font-weight:700; line-height:1.1; }
+  .stat .l{ font-size:12px; color:var(--muted); margin-top:4px; }
+  label{ display:block; font-size:12px; color:var(--muted); margin:10px 0 4px; }
+  input,select,textarea{ width:100%; background:var(--panel2); border:1px solid var(--line2); color:var(--txt); border-radius:10px; padding:11px 12px; font-size:15px; font-family:var(--sans); }
+  textarea{ min-height:90px; resize:vertical; }
+  input:focus,select:focus,textarea:focus{ outline:none; border-color:var(--gold); }
+  .row{ display:flex; gap:8px; } .row>*{ flex:1; min-width:0; }
+  button.primary{ width:100%; margin-top:14px; padding:13px; border:0; border-radius:10px; background:var(--gold); color:#141310; font-size:15px; font-weight:700; cursor:pointer; font-family:var(--sans); }
+  button.ghost{ background:none; border:1px solid var(--line2); color:var(--txt); border-radius:9px; padding:9px 12px; font-size:13px; cursor:pointer; font-family:var(--sans); }
+  button.ghost.gold{ border-color:var(--gold); color:var(--gold); font-weight:700; }
+  button.ghost.red{ border-color:#5b2a2a; color:var(--bad); }
+  .msg{ font-size:13px; margin-top:8px; min-height:16px; color:var(--ok); } .msg.err{ color:var(--bad); }
+  .muted{ color:var(--muted); font-size:13px; }
+  .list .it{ display:flex; align-items:center; gap:10px; padding:12px 4px; border-bottom:1px solid var(--line); cursor:pointer; }
+  .list .it:last-child{ border-bottom:0; }
+  .it .main{ flex:1; min-width:0; } .it .t1{ font-weight:600; } .it .t2{ font-size:12px; color:var(--muted); margin-top:2px; }
+  .dot{ width:10px; height:10px; border-radius:50%; flex:0 0 10px; }
+  .dot.ok{ background:var(--ok); } .dot.bad{ background:var(--bad); } .dot.mid{ background:var(--warn); }
+  .amt{ font-weight:700; white-space:nowrap; } .amt.bad{ color:var(--bad); } .amt.ok{ color:var(--ok); }
+  .pres{ display:flex; gap:6px; } .pres button{ width:42px; padding:9px 0; border-radius:9px; border:1px solid var(--line2); background:none; color:var(--muted); font-weight:700; cursor:pointer; }
+  .pres button.on.P{ background:#14361f; border-color:var(--ok); color:var(--ok); }
+  .pres button.on.A{ background:#3a1616; border-color:var(--bad); color:var(--bad); }
+  .pres button.on.R{ background:#3a3214; border-color:var(--warn); color:var(--warn); }
+  .noteIn{ width:70px; text-align:center; }
+  table{ width:100%; border-collapse:collapse; font-size:13px; } td,th{ padding:7px 4px; border-bottom:1px solid var(--line); text-align:left; } th{ color:var(--muted); font-weight:600; }
+  td.r,th.r{ text-align:right; }
+  .modal{ position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:20; overflow-y:auto; padding:20px 12px; }
+  .modal .box{ max-width:620px; margin:0 auto; background:var(--panel); border:1px solid var(--line2); border-radius:16px; padding:16px; }
+  .modal .x{ float:right; background:none; border:0; color:var(--muted); font-size:24px; cursor:pointer; line-height:1; }
+  .login{ max-width:380px; margin:40px auto; padding:0 16px; }
+  .login h1{ font-family:var(--serif); color:var(--gold); text-align:center; font-size:22px; margin:8px 0 4px; }
+  .pw{ position:relative; } .pw input{ padding-right:44px; } .pw button{ position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:0; color:var(--muted); font-size:18px; cursor:pointer; }
+  .pw button.on{ color:var(--gold); }
+  .flink{ display:block; width:100%; margin-top:12px; background:none; border:0; color:var(--gold); font-size:14px; cursor:pointer; text-align:center; }
+  .lockbox{ text-align:center; padding:24px 10px; }
+  .badge{ display:inline-block; font-size:11px; padding:2px 7px; border-radius:6px; border:1px solid var(--line2); color:var(--muted); margin-left:6px; vertical-align:2px; }
+  .badge.gold{ border-color:var(--gold); color:var(--gold); }
+  .toast{ position:fixed; left:50%; bottom:22px; transform:translateX(-50%); background:var(--panel2); border:1px solid var(--gold); color:var(--txt); padding:10px 16px; border-radius:10px; z-index:40; font-size:14px; max-width:90%; }
+  .fl{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .prog h3{ font-family:var(--serif); color:var(--gold); font-size:15px; margin:14px 0 6px; }
+  .prog .txt{ white-space:pre-wrap; color:var(--txt); font-size:14px; line-height:1.5; }
+  .ed-line{ display:flex; gap:6px; align-items:center; margin-top:8px; } .ed-line input,.ed-line select{ padding:9px 8px; font-size:14px; }
+  .foot{ text-align:center; color:var(--muted); font-size:11px; margin-top:30px; letter-spacing:1px; }
+</style>
+</head>
+<body>
+
+<!-- CHARGEMENT -->
+<div id="loading" class="login" style="text-align:center;color:var(--muted)">…</div>
+
+<!-- CONNEXION -->
+<div id="login" class="login" hidden>
+  <img src="icon-192.png" width="72" height="72" alt="" style="display:block;margin:0 auto;border-radius:14px">
+  <h1>SanaaPro School</h1>
+  <div class="muted" style="text-align:center" data-i18n="loginSub">Connectez-vous avec votre compte SanaaPro</div>
+  <div style="text-align:center;margin-top:12px"><div class="seg" data-seg="lang"><button data-lang="fr">FR</button><button data-lang="en">EN</button></div></div>
+  <label data-i18n="email">Email</label>
+  <input id="l-email" type="email" autocomplete="username">
+  <label data-i18n="password">Mot de passe</label>
+  <div class="pw"><input id="l-pass" type="password" autocomplete="current-password"><button type="button" id="l-eye">👁</button></div>
+  <button class="primary" id="l-go" data-i18n="signin">Se connecter</button>
+  <div class="msg err" id="l-msg"></div>
+  <button class="flink" id="l-forgot" data-i18n="forgot">Mot de passe oublié ?</button>
+  <div class="muted" style="text-align:center;margin-top:18px" data-i18n="noAccount">Pas encore de compte ?</div>
+  <button class="flink" id="l-signup" style="margin-top:4px" data-i18n="createAcc">Créer un compte SanaaPro</button>
+</div>
+
+<!-- PREMIÈRE INSTALLATION -->
+<div id="setup" class="login" hidden>
+  <img src="icon-192.png" width="64" height="64" alt="" style="display:block;margin:0 auto;border-radius:14px">
+  <h1 data-i18n="setupTitle">Créer votre école</h1>
+  <div class="muted" style="text-align:center" data-i18n="setupSub">Une seule fois. Tout reste modifiable dans Réglages.</div>
+  <label data-i18n="schoolName">Nom de l'école</label>
+  <input id="s-name" placeholder="DAFD Académie">
+  <label data-i18n="schoolSub">Sous-titre (facultatif)</label>
+  <input id="s-sub" placeholder="Djamil Academy of Fashion Design">
+  <label data-i18n="schoolWa">Numéro WhatsApp de l'école</label>
+  <input id="s-wa" inputmode="tel" placeholder="2207628683">
+  <label style="display:flex;gap:8px;align-items:center;color:var(--txt);font-size:14px;margin-top:14px">
+    <input id="s-model" type="checkbox" checked style="width:auto"> <span data-i18n="setupModel">Remplir avec la grille d'une école de couture (classes, frais, 6 trimestres)</span>
+  </label>
+  <button class="primary" id="s-go" data-i18n="setupGo">Créer mon école</button>
+  <div class="msg err" id="s-msg"></div>
+  <button class="flink" id="s-out" data-i18n="logout">Déconnexion</button>
+</div>
+
+<!-- APPLICATION -->
+<div id="app" hidden>
+  <div class="head">
+    <img id="h-logo" src="icon-192.png" width="52" height="52" alt="">
+    <div class="name" id="h-name">SanaaPro School</div>
+    <div class="sub" id="h-sub"></div>
+    <div class="toprow">
+      <button class="chip gold" id="go-atelier" hidden>✂ <span data-i18n="toAtelier">Atelier</span></button>
+      <div class="seg" data-seg="lang"><button data-lang="fr">FR</button><button data-lang="en">EN</button></div>
+      <button class="chip" id="lock-btn" hidden></button>
+    </div>
+  </div>
+  <div class="tabs" id="tabs">
+    <button data-tab="apercu" data-i18n="tApercu">Aperçu</button>
+    <button data-tab="eleves" data-i18n="tEleves">Élèves</button>
+    <button data-tab="presence" data-i18n="tPresence">Présence</button>
+    <button data-tab="notes" data-i18n="tNotes">Notes</button>
+    <button data-tab="finances" data-i18n="tFinances">Finances</button>
+    <button data-tab="programme" data-i18n="tProgramme">Programme</button>
+    <button data-tab="reglages" data-i18n="tReglages">Réglages</button>
+  </div>
+  <div class="wrap">
+
+    <!-- APERÇU -->
+    <section data-pane="apercu">
+      <div class="stats">
+        <div class="stat"><div class="n" id="a-actifs">0</div><div class="l" data-i18n="aActifs">élèves inscrits</div></div>
+        <div class="stat"><div class="n" id="a-pres">—</div><div class="l" data-i18n="aPres">présents aujourd'hui</div></div>
+        <div class="stat"><div class="n" id="a-doivent">0</div><div class="l" data-i18n="aDoivent">élèves qui doivent</div></div>
+        <div class="stat" id="a-enc-box"><div class="n" id="a-enc">—</div><div class="l" data-i18n="aEnc">encaissé aujourd'hui</div></div>
+      </div>
+      <div class="card"><h2 data-i18n="aClasses">Classes</h2><div class="list" id="a-classes"></div></div>
+      <div class="card"><h2 data-i18n="aOwe">Doivent encore</h2><div class="list" id="a-owe"></div></div>
+    </section>
+
+    <!-- ÉLÈVES -->
+    <section data-pane="eleves" hidden>
+      <button class="primary" id="e-new">＋ <span data-i18n="eNew">Nouvel élève</span></button>
+      <div class="row" style="margin-top:12px">
+        <input id="e-q" data-i18n-ph="search" placeholder="Rechercher…">
+        <select id="e-classe"></select>
+      </div>
+      <div class="fl" style="margin-top:8px">
+        <div class="seg" id="e-st"><button data-st="actif" class="on" data-i18n="stActif">Inscrits</button><button data-st="fini" data-i18n="stFini">Diplômés</button><button data-st="parti" data-i18n="stParti">Partis</button></div>
+      </div>
+      <div class="card"><div class="list" id="e-list"></div></div>
+    </section>
+
+    <!-- PRÉSENCE -->
+    <section data-pane="presence" hidden>
+      <div class="card">
+        <div class="row"><input id="p-date" type="date"><select id="p-classe"></select></div>
+        <div class="fl" style="margin-top:10px"><button class="ghost gold" id="p-all" data-i18n="pAll">Tous présents</button><span class="muted" id="p-count"></span></div>
+        <div class="list" id="p-list" style="margin-top:6px"></div>
+      </div>
+    </section>
+
+    <!-- NOTES -->
+    <section data-pane="notes" hidden>
+      <div class="card">
+        <h2 data-i18n="nToday">Note du jour (sur 10)</h2>
+        <div class="row"><input id="n-date" type="date"><select id="n-classe"></select></div>
+        <label data-i18n="nWork">Travail noté</label>
+        <input id="n-work" data-i18n-ph="nWorkPh" placeholder="ex. coupe de jupe droite">
+        <div class="list" id="n-list" style="margin-top:6px"></div>
+        <button class="primary" id="n-save" data-i18n="nSave">Enregistrer les notes</button>
+        <div class="msg" id="n-msg"></div>
+      </div>
+      <div class="card"><h2 data-i18n="nAvg">Moyennes du trimestre</h2><div class="list" id="n-avg"></div></div>
+    </section>
+
+    <!-- FINANCES -->
+    <section data-pane="finances" hidden>
+      <div id="f-locked" class="card lockbox" hidden>
+        <div style="font-size:30px">🔒</div>
+        <div class="muted" style="margin:8px 0 12px" data-i18n="fLocked">Les finances de l'école sont réservées au propriétaire.</div>
+        <button class="ghost gold" id="f-unlock" data-i18n="unlock">Entrer le code</button>
+      </div>
+      <div id="f-body">
+        <div class="fl" style="margin-top:14px"><div class="seg" id="f-per"><button data-p="jour" data-i18n="pJour">Jour</button><button data-p="semaine" data-i18n="pSemaine">Semaine</button><button data-p="mois" class="on" data-i18n="pMois">Mois</button><button data-p="annee" data-i18n="pAnnee">Année</button></div></div>
+        <div class="stats">
+          <div class="stat"><div class="n" id="f-rec" style="color:var(--ok)">0</div><div class="l" data-i18n="fRec">recettes</div></div>
+          <div class="stat"><div class="n" id="f-dep" style="color:var(--bad)">0</div><div class="l" data-i18n="fDep">dépenses</div></div>
+          <div class="stat" style="grid-column:span 2"><div class="n" id="f-sol">0</div><div class="l" data-i18n="fSol">solde de l'école</div></div>
+        </div>
+        <div class="card">
+          <h2 data-i18n="fNewDep">Dépense de l'école</h2>
+          <div class="row">
+            <select id="d-cat"></select>
+            <input id="d-amt" type="number" inputmode="numeric" data-i18n-ph="amount" placeholder="Montant">
+          </div>
+          <input id="d-lbl" style="margin-top:8px" data-i18n-ph="desc" placeholder="Description">
+          <button class="primary" id="d-save" data-i18n="fAddDep">Enregistrer la dépense</button>
+          <div class="msg" id="d-msg"></div>
+        </div>
+        <div class="card"><h2 data-i18n="fMoves">Mouvements</h2><div class="list" id="f-list"></div></div>
+        <div class="muted" style="text-align:center;margin-top:10px" data-i18n="fSep">Ces chiffres sont ceux de l'école uniquement. L'atelier, le pressing et la boutique ont leurs propres finances.</div>
+      </div>
+    </section>
+
+    <!-- PROGRAMME -->
+    <section data-pane="programme" hidden>
+      <div class="card prog" id="g-view"></div>
+      <button class="ghost gold" id="g-edit" style="margin-top:12px" data-i18n="gEdit">Modifier le programme</button>
+      <div class="card" id="g-form" hidden>
+        <div id="g-fields"></div>
+        <button class="primary" id="g-save" data-i18n="save">Enregistrer</button>
+      </div>
+    </section>
+
+    <!-- RÉGLAGES -->
+    <section data-pane="reglages" hidden>
+      <div class="card">
+        <h2 data-i18n="rIdent">L'école</h2>
+        <label data-i18n="schoolName">Nom de l'école</label><input id="r-name">
+        <label data-i18n="schoolSub">Sous-titre (facultatif)</label><input id="r-sub">
+        <label data-i18n="schoolWa">Numéro WhatsApp de l'école</label><input id="r-wa" inputmode="tel">
+        <div class="row">
+          <div><label data-i18n="currency">Monnaie</label><input id="r-cur"></div>
+          <div><label data-i18n="nbTrim">Nombre de trimestres</label><input id="r-nbt" type="number" min="1" max="12"></div>
+        </div>
+        <button class="primary" id="r-save" data-i18n="save">Enregistrer</button>
+        <div class="msg" id="r-msg"></div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="rClasses">Classes et scolarité par trimestre</h2>
+        <div class="muted" data-i18n="rClassesHelp">« 2e partie » : prix appliqué à partir du trimestre indiqué (ex. 2e année à partir du trimestre 4). Laisser vide si le prix ne change pas.</div>
+        <div id="r-classes"></div>
+        <button class="ghost" id="r-addc" style="margin-top:10px">＋ <span data-i18n="rAddClass">Ajouter une classe</span></button>
+      </div>
+      <div class="card">
+        <h2 data-i18n="rFees">Autres frais</h2>
+        <div id="r-fees"></div>
+        <button class="ghost" id="r-addf" style="margin-top:10px">＋ <span data-i18n="rAddFee">Ajouter un frais</span></button>
+        <button class="primary" id="r-savecf" data-i18n="rSaveCF">Enregistrer classes et frais</button>
+        <div class="msg" id="r-cfmsg"></div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="rCode">Code du propriétaire</h2>
+        <div class="muted" data-i18n="rCodeHelp">Avec un code, seuls ceux qui le connaissent voient les finances et peuvent supprimer. Le gérant fait tout le reste.</div>
+        <label data-i18n="rCodeNew">Nouveau code (4 chiffres ou plus)</label>
+        <input id="r-code" type="password" inputmode="numeric">
+        <button class="primary" id="r-codesave" data-i18n="rCodeSave">Enregistrer le code</button>
+        <div class="msg" id="r-codemsg"></div>
+      </div>
+      <div class="card">
+        <div class="muted" id="r-acc"></div>
+        <button class="ghost" id="r-out" style="margin-top:10px" data-i18n="logout">Déconnexion</button>
+      </div>
+      <div class="foot">SANAAPRO SCHOOL</div>
+    </section>
+  </div>
+</div>
+
+<!-- FICHE ÉLÈVE -->
+<div class="modal" id="m-eleve" hidden><div class="box">
+  <button class="x" data-close>×</button>
+  <h2 style="font-family:var(--serif);color:var(--gold);margin:0 0 4px" id="me-title"></h2>
+  <div id="me-view">
+    <div class="muted" id="me-info"></div>
+    <div class="fl" style="margin-top:10px">
+      <button class="ghost gold" id="me-pay">💰 <span data-i18n="mePay">Encaisser</span></button>
+      <button class="ghost" id="me-wa">WhatsApp</button>
+      <button class="ghost" id="me-remind" data-i18n="meRemind">Rappel de paiement</button>
+      <button class="ghost" id="me-edit" data-i18n="edit">Modifier</button>
+    </div>
+    <h3 style="font-family:var(--serif);color:var(--gold);font-size:15px;margin:16px 0 4px" data-i18n="meDues">Ce qui est dû</h3>
+    <table id="me-dues"></table>
+    <div id="me-payform" class="card" hidden>
+      <label data-i18n="mePoste">Pour quoi ?</label><select id="mp-poste"></select>
+      <label data-i18n="amount">Montant</label><input id="mp-amt" type="number" inputmode="numeric">
+      <label style="display:flex;gap:8px;align-items:center;color:var(--txt);font-size:14px"><input type="checkbox" id="mp-wa" checked style="width:auto"> <span data-i18n="mpWa">Envoyer le reçu par WhatsApp</span></label>
+      <button class="primary" id="mp-go" data-i18n="mpGo">Enregistrer le paiement</button>
+      <div class="msg err" id="mp-msg"></div>
+    </div>
+    <h3 style="font-family:var(--serif);color:var(--gold);font-size:15px;margin:16px 0 4px" data-i18n="mePaid">Paiements reçus</h3>
+    <div class="list" id="me-pays"></div>
+    <h3 style="font-family:var(--serif);color:var(--gold);font-size:15px;margin:16px 0 4px" data-i18n="meNotes">Notes et présence</h3>
+    <div class="muted" id="me-stats"></div>
+    <div class="list" id="me-notes"></div>
+  </div>
+  <div id="me-form" hidden>
+    <label data-i18n="fullName">Nom complet</label><input id="ef-nom">
+    <label data-i18n="phone">Téléphone de l'élève</label><input id="ef-phone" inputmode="tel">
+    <div class="row">
+      <div><label data-i18n="parent">Parent / tuteur</label><input id="ef-parent"></div>
+      <div><label data-i18n="parentPhone">Téléphone du parent</label><input id="ef-pphone" inputmode="tel"></div>
+    </div>
+    <label data-i18n="classe">Classe</label><select id="ef-classe"></select>
+    <div class="row">
+      <div><label data-i18n="trimNow">Trimestre en cours</label><select id="ef-trim"></select></div>
+      <div><label data-i18n="trimStart">Entré(e) au trimestre</label><select id="ef-start"></select></div>
+    </div>
+    <div class="row">
+      <div><label data-i18n="entree">Date d'entrée</label><input id="ef-date" type="date"></div>
+      <div><label data-i18n="statut">Statut</label><select id="ef-st"></select></div>
+    </div>
+    <label data-i18n="noteLbl">Remarque</label><input id="ef-note">
+    <button class="primary" id="ef-save" data-i18n="save">Enregistrer</button>
+    <div class="msg err" id="ef-msg"></div>
+    <button class="ghost red" id="ef-del" style="margin-top:14px" hidden data-i18n="del">Supprimer cet élève</button>
+  </div>
+</div></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { initializeFirestore, enableIndexedDbPersistence, doc, getDoc, setDoc, deleteDoc,
+           collection, onSnapshot, writeBatch }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  /* Même projet Firebase que l'app couture : un seul compte pour les deux apps.
+     Les données de l'école vivent sous /ecoles/{uid}, jamais mêlées à /boutiques. */
+  const app = initializeApp({
+    apiKey: "AIzaSyCqfAGGU7yFs_QYg70u3e5cNYPXQjRHzsI",
+    authDomain: "sanaapro-app.firebaseapp.com",
+    projectId: "sanaapro-app",
+    storageBucket: "sanaapro-app.firebasestorage.app",
+    messagingSenderId: "451762519937",
+    appId: "1:451762519937:web:0507928bc9f6ef0c937280"
+  });
+  const auth = getAuth(app);
+  const db = initializeFirestore(app, { experimentalForceLongPolling: true });
+  enableIndexedDbPersistence(db).catch(function(){});
+
+  const DEFAULT_CC = "220";
+  const SANAAPRO_WA = "2207628683";
+  const $ = (id) => document.getElementById(id);
+
+  /* ---------- Langue (clé partagée avec l'app couture) ---------- */
+  const I18N = {
+    fr: {
+      loginSub:"Connectez-vous avec votre compte SanaaPro", email:"Email", password:"Mot de passe", signin:"Se connecter",
+      forgot:"Mot de passe oublié ?", noAccount:"Pas encore de compte ?", createAcc:"Créer un compte SanaaPro",
+      badLogin:"Email ou mot de passe incorrect.", resetSent:"Lien envoyé à {e}. Regardez aussi dans les spams.", needEmail:"Écrivez d'abord votre email.",
+      setupTitle:"Créer votre école", setupSub:"Une seule fois. Tout reste modifiable dans Réglages.", schoolName:"Nom de l'école",
+      schoolSub:"Sous-titre (facultatif)", schoolWa:"Numéro WhatsApp de l'école", setupModel:"Remplir avec la grille d'une école de couture (classes, frais, 6 trimestres)",
+      setupGo:"Créer mon école", needName:"Écrivez le nom de l'école.", logout:"Déconnexion",
+      rulesMissing:"Le serveur refuse l'accès à l'école : les règles Firestore pour « ecoles » ne sont pas encore publiées.",
+      loadFail:"Chargement impossible. Vérifiez la connexion puis rouvrez l'app.",
+      toAtelier:"Atelier", tApercu:"Aperçu", tEleves:"Élèves", tPresence:"Présence", tNotes:"Notes", tFinances:"Finances", tProgramme:"Programme", tReglages:"Réglages",
+      aActifs:"élèves inscrits", aPres:"présents aujourd'hui", aDoivent:"élèves qui doivent", aEnc:"encaissé aujourd'hui", aClasses:"Classes", aOwe:"Doivent encore",
+      nobody:"Personne pour le moment.", allPaid:"Tout le monde est à jour.", eNew:"Nouvel élève", search:"Rechercher…", allClasses:"Toutes les classes",
+      stActif:"Inscrits", stFini:"Diplômés", stParti:"Partis", trim:"Trimestre", trimShort:"T", noClass:"Sans classe",
+      pAll:"Tous présents", pCount:"{p} présents · {a} absents · {r} en retard", pAbsMsg:"Bonjour, {n} est absent(e) aujourd'hui à {s}. Merci de nous dire la raison.",
+      nToday:"Note du jour (sur 10)", nWork:"Travail noté", nWorkPh:"ex. coupe de jupe droite", nSave:"Enregistrer les notes", nSaved:"{k} note(s) enregistrée(s).",
+      nAvg:"Moyennes du trimestre", nNone:"Aucune note ce trimestre.", nBad:"Une note doit être entre 0 et 10.",
+      fLocked:"Les finances de l'école sont réservées au propriétaire.", unlock:"Entrer le code", lockOn:"🔒 Gérant", lockOff:"🔓 Propriétaire",
+      askCode:"Code du propriétaire :", badCode:"Code incorrect.",
+      pJour:"Jour", pSemaine:"Semaine", pMois:"Mois", pAnnee:"Année", fRec:"recettes", fDep:"dépenses", fSol:"solde de l'école",
+      fNewDep:"Dépense de l'école", amount:"Montant", desc:"Description", fAddDep:"Enregistrer la dépense", fMoves:"Mouvements",
+      fSep:"Ces chiffres sont ceux de l'école uniquement. L'atelier, le pressing et la boutique ont leurs propres finances.",
+      depSaved:"Dépense enregistrée.", needAmt:"Écrivez un montant.", noMoves:"Aucun mouvement sur cette période.",
+      catLoyer:"Loyer", catElec:"Électricité", catSal:"Salaire enseignant / personnel", catMat:"Matériel et tissu", catEnt:"Entretien des machines", catAutre:"Autre",
+      gEdit:"Modifier le programme", save:"Enregistrer", gEmpty:"Pas encore de programme. Touchez « Modifier le programme ».", gPh:"Ce qu'on apprend pendant ce trimestre…",
+      rIdent:"L'école", currency:"Monnaie", nbTrim:"Nombre de trimestres", saved:"Enregistré.",
+      rClasses:"Classes et scolarité par trimestre", rClassesHelp:"« 2e partie » : prix appliqué à partir du trimestre indiqué (ex. 2e année à partir du trimestre 4). Laisser vide si le prix ne change pas.",
+      rAddClass:"Ajouter une classe", rFees:"Autres frais", rAddFee:"Ajouter un frais", rSaveCF:"Enregistrer classes et frais",
+      cName:"Nom de la classe", cPrice:"Prix / trim.", cFrom:"dès T", cPrice2:"2e prix", fName:"Nom du frais", fAmt:"Montant", fOnce:"Une fois", fEach:"Chaque trimestre",
+      rCode:"Code du propriétaire", rCodeHelp:"Avec un code, seuls ceux qui le connaissent voient les finances et peuvent supprimer. Le gérant fait tout le reste.",
+      rCodeNew:"Nouveau code (4 chiffres ou plus)", rCodeSave:"Enregistrer le code", codeShort:"4 chiffres minimum.", codeSaved:"Code enregistré.",
+      acc:"Compte : {e}", mePay:"Encaisser", meRemind:"Rappel de paiement", edit:"Modifier", meDues:"Ce qui est dû", mePoste:"Pour quoi ?",
+      mpWa:"Envoyer le reçu par WhatsApp", mpGo:"Enregistrer le paiement", mePaid:"Paiements reçus", meNotes:"Notes et présence",
+      fullName:"Nom complet", phone:"Téléphone de l'élève", parent:"Parent / tuteur", parentPhone:"Téléphone du parent", classe:"Classe",
+      trimNow:"Trimestre en cours", trimStart:"Entré(e) au trimestre", entree:"Date d'entrée", statut:"Statut", noteLbl:"Remarque", del:"Supprimer cet élève",
+      delSure:"Supprimer définitivement {n} ? Ses paiements restent dans les finances.", needNom:"Écrivez le nom de l'élève.",
+      tuition:"Scolarité", oneTime:"une fois", due:"Dû", paid:"Payé", rest:"Reste", total:"Total", upToDate:"À jour ✔", owes:"Doit {m}",
+      noPay:"Aucun paiement.", noNotes:"Aucune note.", stats:"Moyenne T{t} : {m} · Présences : {p} · Absences : {a}",
+      receipt:"Reçu {s}\nÉlève : {n}\nPaiement : {p}\nMontant : {m}\nReste à payer : {r}\nMerci.",
+      remind:"Bonjour, ceci est un rappel de {s} pour {n}. Reste à payer : {r}. Merci de passer à l'école pour régler.",
+      toPay:"reste {m}", payAuto:"Répartir automatiquement", recScol:"Paiement {n} — {p}", tooMuch:"Le montant dépasse ce qui reste ({m}). Continuer ?",
+      offline:"Hors ligne : enregistré sur le téléphone, envoi au retour du réseau.", writeErr:"Le serveur a refusé l'enregistrement.",
+      defCls1:"1re année — matin", defCls2:"1re année — après-midi", defCls3:"Classe du week-end", fForm:"Formulaire", fInsc:"Inscription", fUnif:"Uniforme", fMach:"Entretien des machines", fCahier:"Cahier de l'élève"
+    },
+    en: {
+      loginSub:"Sign in with your SanaaPro account", email:"Email", password:"Password", signin:"Sign in",
+      forgot:"Forgot password?", noAccount:"No account yet?", createAcc:"Create a SanaaPro account",
+      badLogin:"Wrong email or password.", resetSent:"Link sent to {e}. Check your spam folder too.", needEmail:"Type your email first.",
+      setupTitle:"Create your school", setupSub:"Only once. Everything can be changed later in Settings.", schoolName:"School name",
+      schoolSub:"Subtitle (optional)", schoolWa:"School WhatsApp number", setupModel:"Fill with a fashion school template (classes, fees, 6 terms)",
+      setupGo:"Create my school", needName:"Type the school name.", logout:"Sign out",
+      rulesMissing:"The server refuses access to the school: the Firestore rules for “ecoles” are not published yet.",
+      loadFail:"Could not load. Check the connection and reopen the app.",
+      toAtelier:"Workshop", tApercu:"Overview", tEleves:"Students", tPresence:"Attendance", tNotes:"Marks", tFinances:"Finances", tProgramme:"Programme", tReglages:"Settings",
+      aActifs:"students enrolled", aPres:"present today", aDoivent:"students who owe", aEnc:"collected today", aClasses:"Classes", aOwe:"Still owing",
+      nobody:"Nobody yet.", allPaid:"Everybody is up to date.", eNew:"New student", search:"Search…", allClasses:"All classes",
+      stActif:"Enrolled", stFini:"Graduated", stParti:"Left", trim:"Term", trimShort:"T", noClass:"No class",
+      pAll:"All present", pCount:"{p} present · {a} absent · {r} late", pAbsMsg:"Hello, {n} is absent today at {s}. Please let us know the reason.",
+      nToday:"Mark of the day (out of 10)", nWork:"Work marked", nWorkPh:"e.g. straight skirt cutting", nSave:"Save marks", nSaved:"{k} mark(s) saved.",
+      nAvg:"Term averages", nNone:"No marks this term.", nBad:"A mark must be between 0 and 10.",
+      fLocked:"School finances are for the owner only.", unlock:"Enter the code", lockOn:"🔒 Manager", lockOff:"🔓 Owner",
+      askCode:"Owner code:", badCode:"Wrong code.",
+      pJour:"Day", pSemaine:"Week", pMois:"Month", pAnnee:"Year", fRec:"income", fDep:"expenses", fSol:"school balance",
+      fNewDep:"School expense", amount:"Amount", desc:"Description", fAddDep:"Save expense", fMoves:"Movements",
+      fSep:"These figures are for the school only. The workshop, laundry and shop have their own finances.",
+      depSaved:"Expense saved.", needAmt:"Type an amount.", noMoves:"No movement in this period.",
+      catLoyer:"Rent", catElec:"Electricity", catSal:"Teacher / staff salary", catMat:"Materials and fabric", catEnt:"Machine maintenance", catAutre:"Other",
+      gEdit:"Edit the programme", save:"Save", gEmpty:"No programme yet. Tap “Edit the programme”.", gPh:"What is learnt during this term…",
+      rIdent:"The school", currency:"Currency", nbTrim:"Number of terms", saved:"Saved.",
+      rClasses:"Classes and tuition per term", rClassesHelp:"“2nd price”: price used from the given term (e.g. 2nd year from term 4). Leave empty if the price does not change.",
+      rAddClass:"Add a class", rFees:"Other fees", rAddFee:"Add a fee", rSaveCF:"Save classes and fees",
+      cName:"Class name", cPrice:"Price / term", cFrom:"from T", cPrice2:"2nd price", fName:"Fee name", fAmt:"Amount", fOnce:"Once", fEach:"Every term",
+      rCode:"Owner code", rCodeHelp:"With a code, only people who know it see the finances and can delete. The manager does everything else.",
+      rCodeNew:"New code (4 digits or more)", rCodeSave:"Save the code", codeShort:"At least 4 digits.", codeSaved:"Code saved.",
+      acc:"Account: {e}", mePay:"Collect", meRemind:"Payment reminder", edit:"Edit", meDues:"What is due", mePoste:"For what?",
+      mpWa:"Send the receipt on WhatsApp", mpGo:"Save the payment", mePaid:"Payments received", meNotes:"Marks and attendance",
+      fullName:"Full name", phone:"Student phone", parent:"Parent / guardian", parentPhone:"Parent phone", classe:"Class",
+      trimNow:"Current term", trimStart:"Joined in term", entree:"Date joined", statut:"Status", noteLbl:"Remark", del:"Delete this student",
+      delSure:"Delete {n} for good? Their payments stay in the finances.", needNom:"Type the student's name.",
+      tuition:"Tuition", oneTime:"once", due:"Due", paid:"Paid", rest:"Left", total:"Total", upToDate:"Up to date ✔", owes:"Owes {m}",
+      noPay:"No payment.", noNotes:"No marks.", stats:"Average T{t}: {m} · Present: {p} · Absent: {a}",
+      receipt:"Receipt {s}\nStudent: {n}\nPayment: {p}\nAmount: {m}\nLeft to pay: {r}\nThank you.",
+      remind:"Hello, this is a reminder from {s} for {n}. Left to pay: {r}. Please come to the school to settle it.",
+      toPay:"{m} left", payAuto:"Spread automatically", recScol:"Payment {n} — {p}", tooMuch:"The amount is more than what is left ({m}). Continue?",
+      offline:"Offline: saved on the phone, it will be sent when the network is back.", writeErr:"The server refused to save.",
+      defCls1:"1st year — morning", defCls2:"1st year — afternoon", defCls3:"Weekend class", fForm:"Form", fInsc:"Registration", fUnif:"Uniform", fMach:"Machine maintenance", fCahier:"Student workbook"
+    }
+  };
+  let LANG = "fr";
+  try{ LANG = localStorage.getItem("sanaapro_lang_ui") || localStorage.getItem("sanaapro_site_lang") || "fr"; }catch(e){}
+  if(!I18N[LANG]) LANG = "fr";
+  const t = (k) => (I18N[LANG][k] != null ? I18N[LANG][k] : (I18N.fr[k] != null ? I18N.fr[k] : k));
+  const fmt = (s, o) => String(s).replace(/\{(\w+)\}/g, (_, k) => (o[k] != null ? o[k] : ""));
+  function applyLang(){
+    document.documentElement.lang = LANG;
+    document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll("[data-i18n-ph]").forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+    document.querySelectorAll('[data-seg="lang"] button').forEach(b => b.classList.toggle("on", b.dataset.lang === LANG));
+    if(ECOLE){ paintLock(); renderAll(); }
+  }
+  document.querySelectorAll('[data-seg="lang"] button').forEach(b => b.addEventListener("click", () => {
+    LANG = b.dataset.lang; try{ localStorage.setItem("sanaapro_lang_ui", LANG); }catch(e){} applyLang();
+  }));
+
+  /* ---------- Outils ---------- */
+  function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+  function num(v){ const n = Number(String(v == null ? "" : v).replace(/[^\d.\-]/g, "")); return isFinite(n) ? n : 0; }
+  function cur(){ return (ECOLE && ECOLE.devise) || "D"; }
+  function money(n){ return Math.round(n).toLocaleString("fr-FR").replace(/ | /g, " ") + " " + cur(); }
+  function pad(n){ return String(n).padStart(2, "0"); }
+  function ymd(d){ d = d || new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function newId(p){ return (p || "") + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function dshow(ms){ try{ return new Date(ms).toLocaleDateString(LANG === "en" ? "en-GB" : "fr-FR", { day:"2-digit", month:"short", year:"numeric" }); }catch(e){ return ""; } }
+  function waNum(p){
+    let d = String(p || "").replace(/\D/g, "");
+    if(!d) return "";
+    if(d.length <= 7) d = DEFAULT_CC + d;
+    return d;
+  }
+  function openWa(phone, text){
+    const n = waNum(phone);
+    window.open("https://wa.me/" + n + "?text=" + encodeURIComponent(text), "_blank");
+  }
+  let toastT = null;
+  function toast(msg){
+    let el = document.querySelector(".toast");
+    if(!el){ el = document.createElement("div"); el.className = "toast"; document.body.appendChild(el); }
+    el.textContent = msg; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 3500);
+  }
+  function show(id){ ["loading","login","setup","app"].forEach(x => { $(x).hidden = (x !== id); }); }
+
+  /* Écritures : jamais bloquantes (hors ligne), mais un refus du serveur est toujours signalé. */
+  function save(ref, data, merge){
+    const p = merge === false ? setDoc(ref, data) : setDoc(ref, data, { merge:true });
+    p.catch(e => toast(t("writeErr") + " (" + (e && e.code || "") + ")"));
+    if(!navigator.onLine) toast(t("offline"));
+    return p;
+  }
+  function remove(ref){ const p = deleteDoc(ref); p.catch(e => toast(t("writeErr"))); return p; }
+
+  /* ---------- État ---------- */
+  let UID = null, ECOLE = null, EREF = null;
+  let ELEVES = [], MOUVS = [], PRES = [], NOTES = [];
+  let TAB = "apercu", PER = "mois", ESTAT = "actif", CUR_EL = null;
+  const UNSUB = [];
+  let UNLOCKED = false;
+  try{ UNLOCKED = sessionStorage.getItem("sanaapro_school_unlocked") === "1"; }catch(e){}
+
+  function hasCode(){ return !!(ECOLE && ECOLE.codeAdmin); }
+  function isOwner(){ return !hasCode() || UNLOCKED; }
+  function askCode(){
+    if(isOwner()) return true;
+    const c = prompt(t("askCode"));
+    if(c == null) return false;
+    if(String(c).trim() === String(ECOLE.codeAdmin)){
+      UNLOCKED = true; try{ sessionStorage.setItem("sanaapro_school_unlocked", "1"); }catch(e){}
+      paintLock(); renderAll(); return true;
+    }
+    alert(t("badCode")); return false;
+  }
+  function paintLock(){
+    const b = $("lock-btn");
+    b.hidden = !hasCode();
+    b.textContent = UNLOCKED ? t("lockOff") : t("lockOn");
+  }
+  $("lock-btn").addEventListener("click", () => {
+    if(UNLOCKED){ UNLOCKED = false; try{ sessionStorage.removeItem("sanaapro_school_unlocked"); }catch(e){} paintLock(); renderAll(); }
+    else askCode();
+  });
+
+  /* ---------- Connexion ---------- */
+  $("l-eye").addEventListener("click", () => {
+    const i = $("l-pass"), on = i.type === "password"; i.type = on ? "text" : "password"; $("l-eye").classList.toggle("on", on);
+  });
+  $("l-go").addEventListener("click", async () => {
+    $("l-msg").textContent = "";
+    try{ await signInWithEmailAndPassword(auth, $("l-email").value.trim(), $("l-pass").value); }
+    catch(e){ $("l-msg").textContent = t("badLogin"); }
+  });
+  $("l-pass").addEventListener("keydown", e => { if(e.key === "Enter") $("l-go").click(); });
+  $("l-forgot").addEventListener("click", async () => {
+    const e = $("l-email").value.trim(), m = $("l-msg");
+    if(!e){ m.className = "msg err"; m.textContent = t("needEmail"); return; }
+    try{ await sendPasswordResetEmail(auth, e); m.className = "msg"; m.textContent = fmt(t("resetSent"), { e }); }
+    catch(x){ m.className = "msg err"; m.textContent = t("badLogin"); }
+  });
+  $("l-signup").addEventListener("click", () => { location.href = "../../inscription/"; });
+  $("s-out").addEventListener("click", () => signOut(auth));
+  $("r-out").addEventListener("click", () => { UNSUB.forEach(f => f()); signOut(auth); });
+
+  onAuthStateChanged(auth, async (user) => {
+    UNSUB.splice(0).forEach(f => { try{ f(); }catch(e){} });
+    if(!user){ UID = null; ECOLE = null; applyLang(); show("login"); return; }
+    UID = user.uid; EREF = doc(db, "ecoles", UID);
+    show("loading"); $("loading").textContent = "…";
+    // Lien vers l'atelier : seulement si ce compte a aussi une boutique de couture.
+    getDoc(doc(db, "boutiques", UID)).then(s => {
+      const ok = s.exists() && !(s.data() || {}).deleted;
+      $("go-atelier").hidden = !ok;
+      if(ok) BOUTIQUE_DATA = s.data();
+    }).catch(() => {});
+    let snap;
+    try{ snap = await getDoc(EREF); }
+    catch(e){
+      $("loading").textContent = (e && e.code === "permission-denied") ? t("rulesMissing") : t("loadFail");
+      const b = document.createElement("button"); b.className = "flink"; b.textContent = t("logout");
+      b.onclick = () => signOut(auth); $("loading").appendChild(b); return;
+    }
+    if(!snap.exists()){ openSetup(); return; }
+    startApp();
+  });
+  let BOUTIQUE_DATA = null;
+  $("go-atelier").addEventListener("click", () => { location.href = "../index.html"; });
+
+  /* ---------- Première installation ---------- */
+  function openSetup(){
+    applyLang(); show("setup");
+    // Reprend ce qui est déjà connu dans la boutique couture (numéro, monnaie).
+    getDoc(doc(db, "boutiques", UID)).then(s => {
+      const b = s.exists() ? s.data() : null; if(!b) return;
+      if(!$("s-wa").value) $("s-wa").value = b.whatsapp || "";
+    }).catch(() => {});
+  }
+  function defaultModel(){
+    return {
+      nbTrim: 6,
+      classes: [
+        { id:"c1", nom:t("defCls1"), prix:19500, prix2:24500, des:4 },
+        { id:"c2", nom:t("defCls2"), prix:19500, prix2:24500, des:4 },
+        { id:"c3", nom:t("defCls3"), prix:16500, prix2:0, des:0 }
+      ],
+      frais: [
+        { id:"form", nom:t("fForm"), montant:200, freq:"once" },
+        { id:"insc", nom:t("fInsc"), montant:2500, freq:"once" },
+        { id:"unif", nom:t("fUnif"), montant:1750, freq:"once" },
+        { id:"mach", nom:t("fMach"), montant:500, freq:"trim" },
+        { id:"cahier", nom:t("fCahier"), montant:1000, freq:"trim" }
+      ]
+    };
+  }
+  $("s-go").addEventListener("click", async () => {
+    const name = $("s-name").value.trim();
+    if(!name){ $("s-msg").textContent = t("needName"); return; }
+    const b = BOUTIQUE_DATA || {};
+    const now = Date.now();
+    const data = Object.assign({
+      name, sousTitre: $("s-sub").value.trim(), whatsapp: $("s-wa").value.trim(),
+      devise: b.devise || "D", email: (auth.currentUser && auth.currentUser.email) || "",
+      codeAdmin: b.codeAdmin || "", createdMs: now, programme: {},
+      subscription: { tier:"trial", startMs: now, expiresMs: now + 14 * 86400000 }
+    }, $("s-model").checked ? defaultModel() : { nbTrim: 6, classes: [], frais: [] });
+    $("s-go").disabled = true;
+    try{ await setDoc(EREF, data); startApp(); }
+    catch(e){ $("s-msg").textContent = (e && e.code === "permission-denied") ? t("rulesMissing") : t("loadFail"); }
+    $("s-go").disabled = false;
+  });
+
+  /* ---------- Données en direct ---------- */
+  function startApp(){
+    UNSUB.push(onSnapshot(EREF, s => { ECOLE = s.data() || {}; paintHead(); paintLock(); renderAll(); }));
+    const sub = (name, setter) => UNSUB.push(onSnapshot(collection(db, "ecoles", UID, name),
+      qs => { setter(qs.docs.map(d => Object.assign({ id:d.id }, d.data()))); renderAll(); },
+      e => { if(e && e.code === "permission-denied") toast(t("rulesMissing")); }));
+    sub("eleves", a => { ELEVES = a; });
+    sub("mouvements", a => { MOUVS = a; });
+    sub("presences", a => { PRES = a; });
+    sub("notes", a => { NOTES = a; });
+    $("p-date").value = ymd(); $("n-date").value = ymd();
+    applyLang(); setTab(TAB); show("app");
+  }
+  function paintHead(){
+    $("h-name").textContent = ECOLE.name || "SanaaPro School";
+    $("h-sub").textContent = ECOLE.sousTitre || "SanaaPro School";
+    document.title = (ECOLE.name || "SanaaPro") + " — School";
+  }
+
+  /* ---------- Onglets ---------- */
+  function setTab(k){
+    if(k === "finances" && !isOwner()){ /* le panneau verrouillé s'affiche */ }
+    TAB = k;
+    document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === k));
+    document.querySelectorAll("[data-pane]").forEach(p => { p.hidden = p.dataset.pane !== k; });
+    renderAll(); window.scrollTo(0, 0);
+  }
+  document.querySelectorAll("#tabs button").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+
+  /* ---------- Calcul de ce que doit un élève ---------- */
+  const classes = () => (ECOLE && ECOLE.classes) || [];
+  const fraisL = () => (ECOLE && ECOLE.frais) || [];
+  const nbTrim = () => Math.max(1, Math.min(12, num(ECOLE && ECOLE.nbTrim) || 6));
+  const classeOf = (el) => classes().find(c => c.id === el.classeId) || null;
+  function prixScol(c, tr){
+    if(!c) return 0;
+    return (num(c.prix2) > 0 && num(c.des) > 0 && tr >= num(c.des)) ? num(c.prix2) : num(c.prix);
+  }
+  /* Postes dus : frais « une fois » (trimestre 0) + pour chaque trimestre depuis l'entrée jusqu'au trimestre en cours :
+     scolarité de la classe + frais « chaque trimestre ». */
+  function duesOf(el){
+    const out = [];
+    const start = Math.max(1, num(el.startTrim) || 1), now = Math.max(start, num(el.trim) || start);
+    fraisL().filter(f => f.freq === "once").forEach(f => out.push({ key:f.id + "|0", poste:f.id, trim:0, nom:f.nom, montant:num(f.montant) }));
+    const c = classeOf(el);
+    for(let tr = start; tr <= now; tr++){
+      const p = prixScol(c, tr);
+      if(p > 0) out.push({ key:"scol|" + tr, poste:"scol", trim:tr, nom:t("tuition"), montant:p });
+      fraisL().filter(f => f.freq === "trim").forEach(f => out.push({ key:f.id + "|" + tr, poste:f.id, trim:tr, nom:f.nom, montant:num(f.montant) }));
+    }
+    const pays = MOUVS.filter(m => m.type === "recette" && m.eleveId === el.id);
+    out.forEach(d => {
+      d.paye = pays.filter(m => m.poste === d.poste && num(m.trim) === d.trim).reduce((s, m) => s + num(m.montant), 0);
+      d.reste = Math.max(0, d.montant - d.paye);
+    });
+    return out;
+  }
+  /* Reste global = tout ce qui est dû moins tout ce qui a été payé (un trop-perçu sur un poste compte comme avance). */
+  function resteOf(el){
+    const D = duesOf(el);
+    const due = D.reduce((s, d) => s + d.montant, 0);
+    const paid = MOUVS.filter(m => m.type === "recette" && m.eleveId === el.id).reduce((s, m) => s + num(m.montant), 0);
+    return Math.max(0, due - paid);
+  }
+  function postLabel(d){ return d.nom + (d.trim ? " — " + t("trimShort") + d.trim : " (" + t("oneTime") + ")"); }
+
+  /* ---------- Rendu ---------- */
+  function fillClasseSelect(sel, withAll){
+    const v = sel.value;
+    sel.innerHTML = (withAll ? '<option value="">' + esc(t("allClasses")) + "</option>" : "")
+      + classes().map(c => '<option value="' + esc(c.id) + '">' + esc(c.nom) + "</option>").join("")
+      + (withAll ? "" : '<option value="">' + esc(t("noClass")) + "</option>");
+    if([...sel.options].some(o => o.value === v)) sel.value = v;
+  }
+  function actifs(){ return ELEVES.filter(e => (e.statut || "actif") === "actif").sort((a, b) => String(a.nom).localeCompare(String(b.nom))); }
+
+  function renderAll(){
+    if(!ECOLE) return;
+    try{
+      $("f-locked").hidden = isOwner(); $("f-body").hidden = !isOwner();
+      $("a-enc-box").hidden = !isOwner();
+      if(TAB === "apercu") renderApercu();
+      if(TAB === "eleves") renderEleves();
+      if(TAB === "presence") renderPresence();
+      if(TAB === "notes") renderNotes();
+      if(TAB === "finances" && isOwner()) renderFinances();
+      if(TAB === "programme") renderProgramme();
+      if(TAB === "reglages") renderReglages();
+      if(CUR_EL && !$("m-eleve").hidden && !$("me-view").hidden) renderEleveView();
+    }catch(e){ console.error(e); }
+  }
+
+  function itemHtml(el, right){
+    const c = classeOf(el), r = resteOf(el);
+    return '<div class="it" data-el="' + esc(el.id) + '"><span class="dot ' + (r > 0 ? "bad" : "ok") + '"></span>'
+      + '<div class="main"><div class="t1">' + esc(el.nom) + '</div><div class="t2">' + esc(c ? c.nom : t("noClass")) + " · " + t("trimShort") + esc(el.trim || 1) + "</div></div>"
+      + (right != null ? right : '<span class="amt ' + (r > 0 ? "bad" : "ok") + '">' + (r > 0 ? esc(fmt(t("toPay"), { m: money(r) })) : "✔") + "</span>")
+      + "</div>";
+  }
+  function bindItems(box){ box.querySelectorAll("[data-el]").forEach(n => n.addEventListener("click", () => openEleve(n.dataset.el))); }
+
+  function renderApercu(){
+    const A = actifs(), today = ymd();
+    $("a-actifs").textContent = A.length;
+    const pr = PRES.filter(p => p.date === today);
+    $("a-pres").textContent = pr.length ? pr.filter(p => p.statut === "P" || p.statut === "R").length : "—";
+    const owe = A.map(e => ({ e, r: resteOf(e) })).filter(x => x.r > 0).sort((a, b) => b.r - a.r);
+    $("a-doivent").textContent = owe.length;
+    if(isOwner()){
+      const d0 = new Date(); d0.setHours(0, 0, 0, 0);
+      $("a-enc").textContent = money(MOUVS.filter(m => m.type === "recette" && num(m.ms) >= d0.getTime()).reduce((s, m) => s + num(m.montant), 0));
+    }
+    $("a-classes").innerHTML = classes().map(c => {
+      const n = A.filter(e => e.classeId === c.id).length;
+      return '<div class="it" data-cls="' + esc(c.id) + '"><div class="main"><div class="t1">' + esc(c.nom) + '</div></div><span class="amt">' + n + "</span></div>";
+    }).join("") || '<div class="muted">' + esc(t("nobody")) + "</div>";
+    $("a-classes").querySelectorAll("[data-cls]").forEach(n => n.addEventListener("click", () => { $("e-classe").value = n.dataset.cls; setTab("eleves"); }));
+    $("a-owe").innerHTML = owe.length ? owe.map(x => itemHtml(x.e)).join("") : '<div class="muted">' + esc(A.length ? t("allPaid") : t("nobody")) + "</div>";
+    bindItems($("a-owe"));
+  }
+
+  function renderEleves(){
+    fillClasseSelect($("e-classe"), true);
+    const q = $("e-q").value.trim().toLowerCase(), cl = $("e-classe").value;
+    const L = ELEVES.filter(e => (e.statut || "actif") === ESTAT)
+      .filter(e => !cl || e.classeId === cl)
+      .filter(e => !q || [e.nom, e.phone, e.parent, e.parentPhone].join(" ").toLowerCase().includes(q))
+      .sort((a, b) => String(a.nom).localeCompare(String(b.nom)));
+    $("e-list").innerHTML = L.map(e => itemHtml(e)).join("") || '<div class="muted">' + esc(t("nobody")) + "</div>";
+    bindItems($("e-list"));
+  }
+  $("e-q").addEventListener("input", renderEleves);
+  $("e-classe").addEventListener("change", renderEleves);
+  document.querySelectorAll("#e-st button").forEach(b => b.addEventListener("click", () => {
+    ESTAT = b.dataset.st; document.querySelectorAll("#e-st button").forEach(x => x.classList.toggle("on", x === b)); renderEleves();
+  }));
+
+  /* Présence : un document par élève et par jour (id = date_élève), donc un 2e appui remplace, jamais de doublon. */
+  function renderPresence(){
+    fillClasseSelect($("p-classe"), true);
+    const date = $("p-date").value || ymd(), cl = $("p-classe").value;
+    const L = actifs().filter(e => !cl || e.classeId === cl);
+    const st = {}; PRES.filter(p => p.date === date).forEach(p => { st[p.eleveId] = p.statut; });
+    let P = 0, A = 0, R = 0;
+    L.forEach(e => { if(st[e.id] === "P") P++; else if(st[e.id] === "A") A++; else if(st[e.id] === "R") R++; });
+    $("p-count").textContent = fmt(t("pCount"), { p:P, a:A, r:R });
+    $("p-list").innerHTML = L.map(e => {
+      const s = st[e.id] || "";
+      return '<div class="it" style="cursor:default"><div class="main"><div class="t1">' + esc(e.nom) + "</div></div>"
+        + (s === "A" ? '<button class="ghost" data-wa="' + esc(e.id) + '" style="padding:7px 9px">💬</button>' : "")
+        + '<div class="pres">' + ["P","A","R"].map(k => '<button class="' + k + (s === k ? " on" : "") + '" data-p="' + esc(e.id) + '" data-s="' + k + '">' + (k === "P" ? (LANG === "en" ? "P" : "P") : k === "A" ? "A" : (LANG === "en" ? "L" : "R")) + "</button>").join("") + "</div></div>";
+    }).join("") || '<div class="muted">' + esc(t("nobody")) + "</div>";
+    $("p-list").querySelectorAll("[data-p]").forEach(b => b.addEventListener("click", () => setPres(b.dataset.p, b.dataset.s)));
+    $("p-list").querySelectorAll("[data-wa]").forEach(b => b.addEventListener("click", () => {
+      const e = ELEVES.find(x => x.id === b.dataset.wa); if(!e) return;
+      openWa(e.parentPhone || e.phone, fmt(t("pAbsMsg"), { n:e.nom, s:ECOLE.name || "" }));
+    }));
+  }
+  function setPres(eid, s){
+    const date = $("p-date").value || ymd(), id = date + "_" + eid;
+    const rec = { id, date, eleveId:eid, statut:s, ms:Date.now() };
+    const i = PRES.findIndex(p => p.id === id); if(i >= 0) PRES[i] = rec; else PRES.push(rec);
+    save(doc(db, "ecoles", UID, "presences", id), { date, eleveId:eid, statut:s, ms:rec.ms }, false);
+    renderPresence();
+  }
+  $("p-date").addEventListener("change", renderPresence);
+  $("p-classe").addEventListener("change", renderPresence);
+  $("p-all").addEventListener("click", () => {
+    const date = $("p-date").value || ymd(), cl = $("p-classe").value;
+    const b = writeBatch(db), now = Date.now();
+    actifs().filter(e => !cl || e.classeId === cl).forEach(e => {
+      const id = date + "_" + e.id;
+      if(PRES.some(p => p.id === id)) return;
+      PRES.push({ id, date, eleveId:e.id, statut:"P", ms:now });
+      b.set(doc(db, "ecoles", UID, "presences", id), { date, eleveId:e.id, statut:"P", ms:now });
+    });
+    b.commit().catch(() => toast(t("writeErr")));
+    renderPresence();
+  });
+
+  /* Notes du jour : une note par élève et par jour (id = date_élève). */
+  function renderNotes(){
+    fillClasseSelect($("n-classe"), true);
+    const date = $("n-date").value || ymd(), cl = $("n-classe").value;
+    const L = actifs().filter(e => !cl || e.classeId === cl);
+    const ex = {}; NOTES.filter(n => n.date === date).forEach(n => { ex[n.eleveId] = n; });
+    const keep = {}; $("n-list").querySelectorAll("input[data-n]").forEach(i => { if(i.value !== "") keep[i.dataset.n] = i.value; });
+    $("n-list").innerHTML = L.map(e => {
+      const v = keep[e.id] != null ? keep[e.id] : (ex[e.id] ? ex[e.id].note : "");
+      return '<div class="it" style="cursor:default"><div class="main"><div class="t1">' + esc(e.nom) + '</div><div class="t2">' + t("trimShort") + esc(e.trim || 1) + '</div></div><input class="noteIn" data-n="' + esc(e.id) + '" type="number" inputmode="decimal" min="0" max="10" step="0.5" value="' + esc(v) + '"></div>';
+    }).join("") || '<div class="muted">' + esc(t("nobody")) + "</div>";
+    const firstWork = Object.values(ex).find(n => n.travail);
+    if(firstWork && !$("n-work").value) $("n-work").value = firstWork.travail;
+    $("n-avg").innerHTML = L.map(e => {
+      const tr = num(e.trim) || 1, ns = NOTES.filter(n => n.eleveId === e.id && num(n.trim) === tr);
+      const m = ns.length ? (ns.reduce((s, n) => s + num(n.note), 0) / ns.length) : null;
+      return itemHtml(e, '<span class="amt ' + (m == null ? "" : m >= 5 ? "ok" : "bad") + '">' + (m == null ? "—" : m.toFixed(1) + "/10") + "</span>");
+    }).join("") || '<div class="muted">' + esc(t("nNone")) + "</div>";
+    bindItems($("n-avg"));
+  }
+  $("n-date").addEventListener("change", () => { $("n-list").innerHTML = ""; $("n-work").value = ""; renderNotes(); });
+  $("n-classe").addEventListener("change", renderNotes);
+  $("n-save").addEventListener("click", () => {
+    const date = $("n-date").value || ymd(), work = $("n-work").value.trim();
+    const ins = [...$("n-list").querySelectorAll("input[data-n]")].filter(i => i.value !== "");
+    if(ins.some(i => num(i.value) < 0 || num(i.value) > 10)){ $("n-msg").className = "msg err"; $("n-msg").textContent = t("nBad"); return; }
+    const b = writeBatch(db), now = Date.now();
+    ins.forEach(i => {
+      const e = ELEVES.find(x => x.id === i.dataset.n); if(!e) return;
+      const id = date + "_" + e.id, rec = { date, eleveId:e.id, note:num(i.value), travail:work, trim:num(e.trim) || 1, ms:now };
+      const k = NOTES.findIndex(n => n.id === id); if(k >= 0) NOTES[k] = Object.assign({ id }, rec); else NOTES.push(Object.assign({ id }, rec));
+      b.set(doc(db, "ecoles", UID, "notes", id), rec);
+    });
+    b.commit().catch(() => toast(t("writeErr")));
+    $("n-msg").className = "msg"; $("n-msg").textContent = fmt(t("nSaved"), { k: ins.length });
+    renderNotes();
+  });
+
+  /* ---------- Finances de l'école (registre à part : /ecoles/{uid}/mouvements) ---------- */
+  const CATS = ["catLoyer","catElec","catSal","catMat","catEnt","catAutre"];
+  function periodStart(p){
+    const d = new Date(); d.setHours(0, 0, 0, 0);
+    if(p === "semaine"){ const w = (d.getDay() + 6) % 7; d.setDate(d.getDate() - w); }
+    else if(p === "mois") d.setDate(1);
+    else if(p === "annee"){ d.setMonth(0, 1); }
+    return d.getTime();
+  }
+  function renderFinances(){
+    const sel = $("d-cat"), v = sel.value;
+    sel.innerHTML = CATS.map(k => '<option value="' + k + '">' + esc(t(k)) + "</option>").join("");
+    if(v) sel.value = v;
+    const from = periodStart(PER);
+    const L = MOUVS.filter(m => num(m.ms) >= from).sort((a, b) => num(b.ms) - num(a.ms));
+    const rec = L.filter(m => m.type === "recette").reduce((s, m) => s + num(m.montant), 0);
+    const dep = L.filter(m => m.type === "depense").reduce((s, m) => s + num(m.montant), 0);
+    $("f-rec").textContent = money(rec); $("f-dep").textContent = money(dep);
+    $("f-sol").textContent = money(rec - dep); $("f-sol").style.color = rec - dep < 0 ? "var(--bad)" : "var(--gold)";
+    $("f-list").innerHTML = L.map(m => {
+      const r = m.type === "recette";
+      return '<div class="it" style="cursor:default"><span class="dot ' + (r ? "ok" : "bad") + '"></span><div class="main"><div class="t1">' + esc(m.label || "") + '</div><div class="t2">' + esc(dshow(num(m.ms))) + '</div></div><span class="amt ' + (r ? "ok" : "bad") + '">' + (r ? "+" : "−") + esc(money(num(m.montant))) + '</span><button class="ghost red" data-dm="' + esc(m.id) + '" style="padding:6px 9px">✕</button></div>';
+    }).join("") || '<div class="muted">' + esc(t("noMoves")) + "</div>";
+    $("f-list").querySelectorAll("[data-dm]").forEach(b => b.addEventListener("click", () => {
+      if(!askCode() || !confirm("✕ ?")) return;
+      MOUVS = MOUVS.filter(m => m.id !== b.dataset.dm); remove(doc(db, "ecoles", UID, "mouvements", b.dataset.dm)); renderFinances();
+    }));
+  }
+  document.querySelectorAll("#f-per button").forEach(b => b.addEventListener("click", () => {
+    PER = b.dataset.p; document.querySelectorAll("#f-per button").forEach(x => x.classList.toggle("on", x === b)); renderFinances();
+  }));
+  $("f-unlock").addEventListener("click", askCode);
+  $("d-save").addEventListener("click", () => {
+    const amt = num($("d-amt").value), m = $("d-msg");
+    if(amt <= 0){ m.className = "msg err"; m.textContent = t("needAmt"); return; }
+    const cat = $("d-cat").value, lbl = $("d-lbl").value.trim();
+    const id = newId("dep-"), rec = { type:"depense", cat, montant:amt, label: t(cat) + (lbl ? " — " + lbl : ""), ms:Date.now() };
+    MOUVS.push(Object.assign({ id }, rec)); save(doc(db, "ecoles", UID, "mouvements", id), rec, false);
+    $("d-amt").value = ""; $("d-lbl").value = ""; m.className = "msg"; m.textContent = t("depSaved"); renderFinances();
+  });
+
+  /* ---------- Programme ---------- */
+  function renderProgramme(){
+    const P = ECOLE.programme || {}, n = nbTrim();
+    let h = "";
+    for(let i = 1; i <= n; i++) if(P[i]) h += "<h3>" + esc(t("trim")) + " " + i + '</h3><div class="txt">' + esc(P[i]) + "</div>";
+    $("g-view").innerHTML = h || '<div class="muted">' + esc(t("gEmpty")) + "</div>";
+  }
+  $("g-edit").addEventListener("click", () => {
+    const P = ECOLE.programme || {}, n = nbTrim();
+    let h = "";
+    for(let i = 1; i <= n; i++) h += "<label>" + esc(t("trim")) + " " + i + '</label><textarea data-g="' + i + '" placeholder="' + esc(t("gPh")) + '">' + esc(P[i] || "") + "</textarea>";
+    $("g-fields").innerHTML = h; $("g-form").hidden = false; $("g-edit").hidden = true;
+  });
+  $("g-save").addEventListener("click", () => {
+    const P = {}; $("g-fields").querySelectorAll("[data-g]").forEach(x => { P[x.dataset.g] = x.value.trim(); });
+    ECOLE.programme = P; save(EREF, { programme:P });
+    $("g-form").hidden = true; $("g-edit").hidden = false; renderProgramme();
+  });
+
+  /* ---------- Réglages ---------- */
+  let CF_DRAFT = null;
+  function renderReglages(){
+    const act = document.activeElement;
+    [["r-name","name"],["r-sub","sousTitre"],["r-wa","whatsapp"],["r-cur","devise"]].forEach(([id, k]) => { if(act !== $(id)) $(id).value = ECOLE[k] || (k === "devise" ? "D" : ""); });
+    if(act !== $("r-nbt")) $("r-nbt").value = nbTrim();
+    $("r-acc").textContent = fmt(t("acc"), { e: (auth.currentUser && auth.currentUser.email) || "" });
+    if(!CF_DRAFT) CF_DRAFT = { classes: JSON.parse(JSON.stringify(classes())), frais: JSON.parse(JSON.stringify(fraisL())) };
+    paintCF();
+  }
+  function paintCF(){
+    if(document.activeElement && document.activeElement.closest && document.activeElement.closest("#r-classes,#r-fees")) return;
+    $("r-classes").innerHTML = CF_DRAFT.classes.map((c, i) =>
+      '<div class="ed-line"><input data-c="' + i + '" data-k="nom" value="' + esc(c.nom) + '" placeholder="' + esc(t("cName")) + '" style="flex:2">'
+      + '<input data-c="' + i + '" data-k="prix" type="number" value="' + esc(c.prix || "") + '" placeholder="' + esc(t("cPrice")) + '" style="flex:1">'
+      + '<input data-c="' + i + '" data-k="des" type="number" value="' + esc(c.des || "") + '" placeholder="' + esc(t("cFrom")) + '" style="flex:0 0 58px">'
+      + '<input data-c="' + i + '" data-k="prix2" type="number" value="' + esc(c.prix2 || "") + '" placeholder="' + esc(t("cPrice2")) + '" style="flex:1">'
+      + '<button class="ghost red" data-rc="' + i + '" style="padding:8px">✕</button></div>').join("");
+    $("r-fees").innerHTML = CF_DRAFT.frais.map((f, i) =>
+      '<div class="ed-line"><input data-f="' + i + '" data-k="nom" value="' + esc(f.nom) + '" placeholder="' + esc(t("fName")) + '" style="flex:2">'
+      + '<input data-f="' + i + '" data-k="montant" type="number" value="' + esc(f.montant || "") + '" placeholder="' + esc(t("fAmt")) + '" style="flex:1">'
+      + '<select data-f="' + i + '" data-k="freq" style="flex:1"><option value="once"' + (f.freq === "once" ? " selected" : "") + ">" + esc(t("fOnce")) + '</option><option value="trim"' + (f.freq === "trim" ? " selected" : "") + ">" + esc(t("fEach")) + "</option></select>"
+      + '<button class="ghost red" data-rf="' + i + '" style="padding:8px">✕</button></div>').join("");
+    $("r-classes").querySelectorAll("[data-c]").forEach(x => x.addEventListener("input", () => { const c = CF_DRAFT.classes[x.dataset.c]; c[x.dataset.k] = x.dataset.k === "nom" ? x.value : num(x.value); }));
+    $("r-fees").querySelectorAll("[data-f]").forEach(x => x.addEventListener(x.tagName === "SELECT" ? "change" : "input", () => { const f = CF_DRAFT.frais[x.dataset.f]; f[x.dataset.k] = x.dataset.k === "montant" ? num(x.value) : x.value; }));
+    $("r-classes").querySelectorAll("[data-rc]").forEach(b => b.addEventListener("click", () => { CF_DRAFT.classes.splice(+b.dataset.rc, 1); paintCF(); }));
+    $("r-fees").querySelectorAll("[data-rf]").forEach(b => b.addEventListener("click", () => { CF_DRAFT.frais.splice(+b.dataset.rf, 1); paintCF(); }));
+  }
+  $("r-addc").addEventListener("click", () => { CF_DRAFT.classes.push({ id:newId("c"), nom:"", prix:0, prix2:0, des:0 }); paintCF(); });
+  $("r-addf").addEventListener("click", () => { CF_DRAFT.frais.push({ id:newId("f"), nom:"", montant:0, freq:"once" }); paintCF(); });
+  $("r-savecf").addEventListener("click", () => {
+    if(!askCode()) return;
+    const cl = CF_DRAFT.classes.filter(c => String(c.nom || "").trim()), fr = CF_DRAFT.frais.filter(f => String(f.nom || "").trim());
+    ECOLE.classes = cl; ECOLE.frais = fr; save(EREF, { classes:cl, frais:fr });
+    CF_DRAFT = null; $("r-cfmsg").textContent = t("saved"); renderAll();
+  });
+  $("r-save").addEventListener("click", () => {
+    const d = { name:$("r-name").value.trim() || ECOLE.name, sousTitre:$("r-sub").value.trim(), whatsapp:$("r-wa").value.trim(),
+                devise:$("r-cur").value.trim() || "D", nbTrim:Math.max(1, Math.min(12, num($("r-nbt").value) || 6)) };
+    Object.assign(ECOLE, d); save(EREF, d); paintHead(); $("r-msg").textContent = t("saved");
+  });
+  $("r-codesave").addEventListener("click", () => {
+    const c = $("r-code").value.trim(), m = $("r-codemsg");
+    if(c.length < 4){ m.className = "msg err"; m.textContent = t("codeShort"); return; }
+    if(!askCode()) return;
+    ECOLE.codeAdmin = c; save(EREF, { codeAdmin:c }); $("r-code").value = "";
+    UNLOCKED = true; try{ sessionStorage.setItem("sanaapro_school_unlocked", "1"); }catch(e){}
+    m.className = "msg"; m.textContent = t("codeSaved"); paintLock();
+  });
+
+  /* ---------- Fiche élève ---------- */
+  document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => { $("m-eleve").hidden = true; CUR_EL = null; }));
+  function trimOptions(sel, v){
+    let h = ""; for(let i = 1; i <= nbTrim(); i++) h += '<option value="' + i + '">' + esc(t("trim")) + " " + i + "</option>";
+    sel.innerHTML = h; sel.value = String(v || 1);
+  }
+  function openEleve(id){
+    CUR_EL = id; $("m-eleve").hidden = false; $("me-view").hidden = false; $("me-form").hidden = true; $("me-payform").hidden = true;
+    renderEleveView();
+  }
+  function renderEleveView(){
+    const e = ELEVES.find(x => x.id === CUR_EL); if(!e){ $("m-eleve").hidden = true; return; }
+    const c = classeOf(e);
+    $("me-title").textContent = e.nom;
+    $("me-info").innerHTML = esc(c ? c.nom : t("noClass")) + " · " + esc(t("trim")) + " " + esc(e.trim || 1)
+      + (e.phone ? " · 📞 " + esc(e.phone) : "") + (e.parent || e.parentPhone ? "<br>" + esc(t("parent")) + " : " + esc(e.parent || "") + " " + esc(e.parentPhone || "") : "")
+      + (e.note ? "<br>" + esc(e.note) : "");
+    const D = duesOf(e), tot = D.reduce((s, d) => s + d.montant, 0);
+    const pay = MOUVS.filter(m => m.type === "recette" && m.eleveId === e.id).reduce((s, m) => s + num(m.montant), 0);
+    $("me-dues").innerHTML = '<tr><th></th><th class="r">' + esc(t("due")) + '</th><th class="r">' + esc(t("paid")) + '</th><th class="r">' + esc(t("rest")) + "</th></tr>"
+      + D.map(d => '<tr><td>' + esc(postLabel(d)) + '</td><td class="r">' + esc(money(d.montant)) + '</td><td class="r">' + esc(money(d.paye)) + '</td><td class="r" style="color:' + (d.reste > 0 ? "var(--bad)" : "var(--ok)") + '">' + (d.reste > 0 ? esc(money(d.reste)) : "✔") + "</td></tr>").join("")
+      + '<tr><th>' + esc(t("total")) + '</th><th class="r">' + esc(money(tot)) + '</th><th class="r">' + esc(money(pay)) + '</th><th class="r" style="color:' + (tot - pay > 0 ? "var(--bad)" : "var(--ok)") + '">' + (tot - pay > 0 ? esc(money(tot - pay)) : esc(t("upToDate"))) + "</th></tr>";
+    const P = MOUVS.filter(m => m.type === "recette" && m.eleveId === e.id).sort((a, b) => num(b.ms) - num(a.ms));
+    $("me-pays").innerHTML = P.map(m => '<div class="it" style="cursor:default"><div class="main"><div class="t1">' + esc(m.posteNom || m.label || "") + '</div><div class="t2">' + esc(dshow(num(m.ms))) + '</div></div><span class="amt ok">' + esc(money(num(m.montant))) + "</span></div>").join("") || '<div class="muted">' + esc(t("noPay")) + "</div>";
+    const tr = num(e.trim) || 1, ns = NOTES.filter(n => n.eleveId === e.id).sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    const nt = ns.filter(n => num(n.trim) === tr), avg = nt.length ? (nt.reduce((s, n) => s + num(n.note), 0) / nt.length).toFixed(1) + "/10" : "—";
+    const pr = PRES.filter(p => p.eleveId === e.id);
+    $("me-stats").textContent = fmt(t("stats"), { t:tr, m:avg, p:pr.filter(p => p.statut !== "A").length, a:pr.filter(p => p.statut === "A").length });
+    $("me-notes").innerHTML = ns.slice(0, 30).map(n => '<div class="it" style="cursor:default"><div class="main"><div class="t1">' + esc(n.travail || "—") + '</div><div class="t2">' + esc(n.date) + " · " + t("trimShort") + esc(n.trim) + '</div></div><span class="amt">' + esc(n.note) + "/10</span></div>").join("") || '<div class="muted">' + esc(t("noNotes")) + "</div>";
+  }
+  $("me-wa").addEventListener("click", () => { const e = ELEVES.find(x => x.id === CUR_EL); if(e) openWa(e.parentPhone || e.phone, ""); });
+  $("me-remind").addEventListener("click", () => {
+    const e = ELEVES.find(x => x.id === CUR_EL); if(!e) return;
+    openWa(e.parentPhone || e.phone, fmt(t("remind"), { s:ECOLE.name || "", n:e.nom, r:money(resteOf(e)) }));
+  });
+  $("me-pay").addEventListener("click", () => {
+    const e = ELEVES.find(x => x.id === CUR_EL); if(!e) return;
+    const D = duesOf(e), open = D.filter(d => d.reste > 0), list = open.length ? open : D;
+    $("mp-poste").innerHTML = (open.length > 1 ? '<option value="auto">' + esc(t("payAuto")) + " — " + esc(fmt(t("toPay"), { m:money(resteOf(e)) })) + "</option>" : "") + list.map(d => '<option value="' + esc(d.key) + '">' + esc(postLabel(d)) + (d.reste > 0 ? " — " + esc(fmt(t("toPay"), { m:money(d.reste) })) : "") + "</option>").join("");
+    const upd = () => {
+      if($("mp-poste").value === "auto"){ $("mp-amt").value = ""; return; }
+      const d = D.find(x => x.key === $("mp-poste").value); $("mp-amt").value = d && d.reste > 0 ? d.reste : "";
+    };
+    $("mp-poste").onchange = upd; upd();
+    $("mp-msg").textContent = ""; $("me-payform").hidden = false; $("mp-amt").focus();
+  });
+  $("mp-go").addEventListener("click", () => {
+    const e = ELEVES.find(x => x.id === CUR_EL); if(!e) return;
+    const D = duesOf(e), amt = num($("mp-amt").value);
+    if(amt <= 0){ $("mp-msg").textContent = t("needAmt"); return; }
+    if($("mp-poste").value === "auto"){
+      /* Répartition du plus ancien au plus récent : frais uniques, puis trimestre par trimestre (scolarité d'abord). */
+      const open = D.filter(x => x.reste > 0).sort((a, b) => a.trim - b.trim || (a.poste === "scol" ? -1 : 0) - (b.poste === "scol" ? -1 : 0));
+      const tot = open.reduce((s, x) => s + x.reste, 0);
+      if(amt > tot && !confirm(fmt(t("tooMuch"), { m:money(tot) }))) return;
+      let left = amt; const lines = [], now = Date.now();
+      open.forEach((x, i) => {
+        if(left <= 0) return;
+        const part = (i === open.length - 1) ? left : Math.min(left, x.reste);
+        left -= part;
+        const id = newId("pay-"), lbl = postLabel(x);
+        const rec = { type:"recette", source:"scolarite", eleveId:e.id, eleveNom:e.nom, poste:x.poste, posteNom:lbl, trim:x.trim, montant:part,
+                      label: fmt(t("recScol"), { n:e.nom, p:lbl }), ms:now };
+        MOUVS.push(Object.assign({ id }, rec)); save(doc(db, "ecoles", UID, "mouvements", id), rec, false);
+        lines.push(lbl + " : " + money(part));
+      });
+      if($("mp-wa").checked) openWa(e.parentPhone || e.phone, fmt(t("receipt"), { s:ECOLE.name || "", n:e.nom, p:"\n• " + lines.join("\n• "), m:money(amt), r:money(resteOf(e)) }));
+      $("me-payform").hidden = true; renderAll(); return;
+    }
+    const d = D.find(x => x.key === $("mp-poste").value);
+    if(!d){ return; }
+    if(amt > d.reste && !confirm(fmt(t("tooMuch"), { m:money(d.reste) }))) return;
+    const id = newId("pay-"), lbl = postLabel(d);
+    const rec = { type:"recette", source:"scolarite", eleveId:e.id, eleveNom:e.nom, poste:d.poste, posteNom:lbl, trim:d.trim, montant:amt,
+                  label: fmt(t("recScol"), { n:e.nom, p:lbl }), ms:Date.now() };
+    MOUVS.push(Object.assign({ id }, rec)); save(doc(db, "ecoles", UID, "mouvements", id), rec, false);
+    if($("mp-wa").checked){
+      openWa(e.parentPhone || e.phone, fmt(t("receipt"), { s:ECOLE.name || "", n:e.nom, p:lbl, m:money(amt), r:money(resteOf(e)) }));
+    }
+    $("me-payform").hidden = true; renderAll();
+  });
+
+  $("e-new").addEventListener("click", () => openForm(null));
+  $("me-edit").addEventListener("click", () => openForm(CUR_EL));
+  function openForm(id){
+    const e = id ? ELEVES.find(x => x.id === id) : null;
+    CUR_EL = id; $("m-eleve").hidden = false; $("me-view").hidden = true; $("me-form").hidden = false;
+    $("me-title").textContent = e ? e.nom : t("eNew");
+    $("ef-nom").value = e ? e.nom || "" : ""; $("ef-phone").value = e ? e.phone || "" : "";
+    $("ef-parent").value = e ? e.parent || "" : ""; $("ef-pphone").value = e ? e.parentPhone || "" : "";
+    fillClasseSelect($("ef-classe"), false); $("ef-classe").value = e ? (e.classeId || "") : ((classes()[0] || {}).id || "");
+    trimOptions($("ef-trim"), e ? e.trim : 1); trimOptions($("ef-start"), e ? (e.startTrim || 1) : 1);
+    $("ef-date").value = e && e.entreeMs ? ymd(new Date(e.entreeMs)) : ymd();
+    $("ef-st").innerHTML = ["actif","fini","parti"].map(k => '<option value="' + k + '">' + esc(t("st" + k[0].toUpperCase() + k.slice(1))) + "</option>").join("");
+    $("ef-st").value = e ? (e.statut || "actif") : "actif";
+    $("ef-note").value = e ? e.note || "" : ""; $("ef-msg").textContent = "";
+    $("ef-del").hidden = !e;
+  }
+  $("ef-start").addEventListener("change", () => { if(num($("ef-trim").value) < num($("ef-start").value)) $("ef-trim").value = $("ef-start").value; });
+  $("ef-save").addEventListener("click", () => {
+    const nom = $("ef-nom").value.trim(); if(!nom){ $("ef-msg").textContent = t("needNom"); return; }
+    const start = num($("ef-start").value) || 1;
+    const d = { nom, phone:$("ef-phone").value.trim(), parent:$("ef-parent").value.trim(), parentPhone:$("ef-pphone").value.trim(),
+                classeId:$("ef-classe").value, trim:Math.max(start, num($("ef-trim").value) || 1), startTrim:start,
+                entreeMs: new Date(($("ef-date").value || ymd()) + "T12:00:00").getTime(), statut:$("ef-st").value, note:$("ef-note").value.trim() };
+    const id = CUR_EL || newId("el-");
+    if(!CUR_EL) d.createdMs = Date.now();
+    const i = ELEVES.findIndex(x => x.id === id);
+    if(i >= 0) ELEVES[i] = Object.assign({}, ELEVES[i], d); else ELEVES.push(Object.assign({ id }, d));
+    save(doc(db, "ecoles", UID, "eleves", id), d);
+    openEleve(id); renderAll();
+  });
+  $("ef-del").addEventListener("click", () => {
+    const e = ELEVES.find(x => x.id === CUR_EL); if(!e) return;
+    if(!askCode()) return;
+    if(!confirm(fmt(t("delSure"), { n:e.nom }))) return;
+    ELEVES = ELEVES.filter(x => x.id !== e.id); remove(doc(db, "ecoles", UID, "eleves", e.id));
+    $("m-eleve").hidden = true; CUR_EL = null; renderAll();
+  });
+
+  applyLang();
+  if("serviceWorker" in navigator){ window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js", { scope:"./" }).catch(() => {}); }); }
+</script>
+</body>
+</html>
