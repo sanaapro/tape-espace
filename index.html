@@ -219,6 +219,8 @@
   .chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
   .chips button{ padding:9px 13px; border:1px solid var(--line2); border-radius:20px; background:transparent;
     color:var(--txt); font-size:13px; cursor:pointer; font-family:var(--sans); }
+  .chips.sm{ gap:6px; margin-top:8px; }
+  .chips.sm button{ padding:5px 10px; font-size:12.5px; border-radius:14px; }
   .chips button.on{ background:var(--gold); color:#141310; border-color:var(--gold); }
   .vt-prev{ display:none; width:100%; max-height:260px; object-fit:cover; border-radius:10px; margin-top:10px; }
   .vt-batch{ margin-top:12px; display:flex; flex-direction:column; gap:10px }
@@ -1003,28 +1005,6 @@
         <p style="margin:8px 0 0;font-size:12px;color:var(--muted);line-height:1.5" data-i18n="idNote">L'email de connexion et l'identifiant ne se modifient pas ici.</p>
       </div>
       <div class="card">
-        <h2 data-i18n="actTitle">Mes activités</h2>
-        <p style="margin:0 0 6px;font-size:13px;color:var(--muted)" data-i18n="actHint">Choisissez ce que fait votre commerce. Seuls les onglets utiles s'affichent.</p>
-        <div class="chips" id="act-chips">
-          <button type="button" data-act="couture" data-i18n="actCouture">Couture</button>
-          <button type="button" data-act="pressing" data-i18n="actPressing">Pressing</button>
-          <button type="button" data-act="boutique" data-i18n="actBoutique">Boutique</button>
-          <button type="button" data-act="tissu" data-i18n="actTissu">Vente de tissu</button>
-        </div>
-        <div class="msg ok" id="act-msg"></div>
-      </div>
-      <div class="card">
-        <h2 data-i18n="toolTitle">Outils avancés</h2>
-        <p style="margin:0 0 6px;font-size:13px;color:var(--muted)" data-i18n="toolHint">Activez seulement ce dont vous avez besoin. Les onglets s'ajoutent en haut de l'écran.</p>
-        <div class="chips" id="tool-chips">
-          <button type="button" data-tool="charge" data-i18n="tabCharge">Charge</button>
-          <button type="button" data-tool="vitrine" data-i18n="tabVitrine">Catalogue</button>
-          <button type="button" data-tool="staff" data-i18n="tabStaff">Salariés</button>
-          <button type="button" data-tool="pointage" data-i18n="tabPointage">Pointage</button>
-          <button type="button" data-tool="visits" data-i18n="tabVisitors">Visiteurs</button>
-        </div>
-      </div>
-      <div class="card">
         <h2 data-i18n="impTitle">Importer mes anciennes données</h2>
         <p style="margin:0 0 8px;font-size:13px;color:var(--muted)" data-i18n="impHint">Choisissez le fichier d'import que vous avez reçu (.json). Rien n'est enregistré avant votre confirmation.</p>
         <input id="imp-file" type="file" accept=".json,application/json">
@@ -1107,7 +1087,26 @@
         </div>
         <div class="msg err" id="del-msg"></div>
       </div>
-      <div id="cof-set" style="margin:22px 4px 4px;font-size:12.5px;color:var(--muted);line-height:1.6">
+      <div id="more-funcs" style="margin:22px 4px 0;font-size:12.5px;color:var(--muted);line-height:1.5">
+        <div style="color:var(--txt);font-weight:600" data-i18n="moreTitle">Activer d'autres fonctions</div>
+        <div data-i18n="moreHint">Au départ, SanaaPro reste simple. Touchez une fonction pour l'ajouter en haut de l'écran ; touchez encore pour la retirer.</div>
+        <div class="chips sm" id="act-chips">
+          <button type="button" data-act="couture" data-i18n="actCouture">Couture</button>
+          <button type="button" data-act="pressing" data-i18n="actPressing">Pressing</button>
+          <button type="button" data-act="boutique" data-i18n="actBoutique">Boutique</button>
+          <button type="button" data-act="tissu" data-i18n="actTissu">Vente de tissu</button>
+        </div>
+        <div class="msg ok" id="act-msg"></div>
+        <div class="chips sm" id="tool-chips">
+          <button type="button" data-tool="materiel" data-i18n="tabMateriel">Matériel</button>
+          <button type="button" data-tool="charge" data-i18n="tabCharge">Charge</button>
+          <button type="button" data-tool="vitrine" data-i18n="tabVitrine">Catalogue</button>
+          <button type="button" data-tool="staff" data-i18n="tabStaff">Salariés</button>
+          <button type="button" data-tool="pointage" data-i18n="tabPointage">Pointage</button>
+          <button type="button" data-tool="visits" data-i18n="tabVisitors">Visiteurs</button>
+        </div>
+      </div>
+      <div id="cof-set" style="margin:14px 4px 4px;font-size:12.5px;color:var(--muted);line-height:1.6">
         🔒 <span id="cof-set-state"></span>
         <button type="button" id="cof-set-go" class="flink-sm" data-i18n="cofSetGo">Activer ou régler mon coffre</button>
       </div>
@@ -2000,7 +1999,7 @@
       pzCash:"Encaisser", pzCashAsk:"Montant reçu de {n} :", pzReceipt:"Reçu WhatsApp", pzDelete:"Supprimer",
       pzDeleteQ:"Supprimer le ticket n° {n} de {c} ?", pzPaidAll:"Payé", pzDueShort:"Reste {v}",
       pzWaMsg:"WhatsApp", noPhonePz:"Pas de numéro pour ce client.",
-      actTitle:"Mes activités", actHint:"Choisissez ce que fait votre commerce. Seuls les onglets utiles s'affichent.",
+      actTitle:"Mes activités", moreTitle:"Activer d\u2019autres fonctions", moreHint:"Au départ, SanaaPro reste simple. Touchez une fonction pour l\u2019ajouter en haut de l\u2019écran ; touchez encore pour la retirer.", actHint:"Choisissez ce que fait votre commerce. Seuls les onglets utiles s'affichent.",
       actCouture:"Couture", actPressing:"Pressing", actBoutique:"Boutique", actTissu:"Vente de tissu", pzRdv:"📅 Rendez-vous", pzRdvAsk:"Nouvelle date de retrait (AAAA-MM-JJ)", pzRdvWaQ:"Prévenir le client de la nouvelle date sur WhatsApp ?", pzRdvMsg:"Bonjour {n}, votre linge (ticket n° {t}) sera prêt le {d}. Merci de votre confiance — {shop}", pzCashConfirm:"Confirmer : {n} a payé {v} ?", cofSetTitle:"🔒 Mon coffre (épargne)", cofSetHint:"À chaque paiement d\u2019un client, une part (vous choisissez le pourcentage) est mise de côté pour vos projets, et une autre peut être réservée aux salaires.", cofSetGo:"Activer ou régler mon coffre", cofSetSee:"Voir et régler mon coffre", cofSetOff:"Pas encore activé.", cofSetOn:"Coffre activé : {p} % de chaque recette", cofSetSal:"Salaires : {p} %", tabTissu:"Tissus", tabBoutiqueTissu:"Boutique · Tissus", actTissuOn:"✅ Vente de tissu activée : un onglet « Tissus » est apparu, pour les rouleaux et les lots.", actTissuGo:"Ouvrir l\u2019onglet Tissus", fabStock:"Stock de tissu", fabNew:"Nouveau tissu", apSalesN:"Ventes du jour", apSalesD:"Recette du jour", apInStock:"En stock", actSaveFail:"Réglage non enregistré : {e}",
       kArticle:"Article", kRouleau:"Rouleau", kLot:"Lot / coupon", kHintArticle:"Un article vendu à la pièce (chemise, sac, bazin plié…).", kHintRouleau:"Un rouleau vendu au mètre ou au yard. Déjà entamé ? Cochez la case : pas besoin de le mesurer.", kHintLot:"Des lots déjà coupés (ex. 5 mètres), vendus entiers.", fabUnit:"Unité", uMetre:"Mètre", uYard:"Yard", fabLen:"Longueur du rouleau", fabEntame:"Rouleau déjà entamé (longueur inconnue)", fabLotLen:"Longueur d\u2019un lot", fabPhoto:"📷 Photo du tissu (facultatif)", fabNbLots:"Nombre de lots", fabPrixLot:"Prix d\u2019un lot", fabPrixU:"Prix par {u}", fabLenNeed:"Indiquez la longueur, ou cochez « déjà entamé ».", fabEntameShort:"entamé", fabLeft:"reste {n}", fabUnknown:"longueur inconnue", fabDone:"Terminé", fabDoneQ:"Ce rouleau est fini ? Il disparaîtra de la liste.", fabTooMuch:"Il ne reste que {n} sur ce rouleau.", fabRollsLbl:"rouleau(x)", stockSearchPh:"Chercher un article ou un tissu…", lotOf:"lot de {n}", actNeedOne:"Gardez au moins une activité.", callBtn:"Appeler",
       toolTitle:"Outils avancés", toolHint:"Activez seulement ce dont vous avez besoin. Les onglets s'ajoutent en haut de l'écran.",
@@ -2292,7 +2291,7 @@
       pzCash:"Take payment", pzCashAsk:"Amount received from {n}:", pzReceipt:"WhatsApp receipt", pzDelete:"Delete",
       pzDeleteQ:"Delete ticket no. {n} for {c}?", pzPaidAll:"Paid", pzDueShort:"Due {v}",
       pzWaMsg:"WhatsApp", noPhonePz:"No phone number for this customer.",
-      actTitle:"My activities", actHint:"Choose what your business does. Only the useful tabs are shown.",
+      actTitle:"My activities", moreTitle:"Turn on more features", moreHint:"SanaaPro starts simple. Tap a feature to add it at the top of the screen; tap again to remove it.", actHint:"Choose what your business does. Only the useful tabs are shown.",
       actCouture:"Tailoring", actPressing:"Dry cleaning", actBoutique:"Shop", actTissu:"Fabric sales", pzRdv:"📅 Pick-up date", pzRdvAsk:"New pick-up date (YYYY-MM-DD)", pzRdvWaQ:"Tell the client the new date on WhatsApp?", pzRdvMsg:"Hello {n}, your laundry (ticket no. {t}) will be ready on {d}. Thank you — {shop}", pzCashConfirm:"Confirm: {n} paid {v}?", cofSetTitle:"🔒 My savings vault", cofSetHint:"Every time a client pays, a share (you choose the percentage) is put aside for your projects, and another can be kept for wages.", cofSetGo:"Turn on or set my vault", cofSetSee:"See and set my vault", cofSetOff:"Not turned on yet.", cofSetOn:"Vault on: {p} % of every payment", cofSetSal:"Wages: {p} %", tabTissu:"Fabrics", tabBoutiqueTissu:"Shop · Fabrics", actTissuOn:"✅ Fabric sales switched on: a “Fabrics” tab has appeared, for rolls and lots.", actTissuGo:"Open the Fabrics tab", fabStock:"Fabric stock", fabNew:"New fabric", apSalesN:"Sales today", apSalesD:"Today\u2019s takings", apInStock:"In stock", actSaveFail:"Setting not saved: {e}",
       kArticle:"Item", kRouleau:"Roll", kLot:"Lot / cut piece", kHintArticle:"An item sold by the piece (shirt, bag, folded bazin…).", kHintRouleau:"A roll sold by the metre or yard. Already started? Tick the box: no need to measure it.", kHintLot:"Pieces already cut (e.g. 5 metres), sold whole.", fabUnit:"Unit", uMetre:"Metre", uYard:"Yard", fabLen:"Roll length", fabEntame:"Roll already started (length unknown)", fabLotLen:"Length of one lot", fabPhoto:"📷 Fabric photo (optional)", fabNbLots:"Number of lots", fabPrixLot:"Price of one lot", fabPrixU:"Price per {u}", fabLenNeed:"Enter the length, or tick “already started”.", fabEntameShort:"started", fabLeft:"{n} left", fabUnknown:"length unknown", fabDone:"Finished", fabDoneQ:"Is this roll finished? It will leave the list.", fabTooMuch:"Only {n} left on this roll.", fabRollsLbl:"roll(s)", stockSearchPh:"Search an item or fabric…", lotOf:"lot of {n}", actNeedOne:"Keep at least one activity.", callBtn:"Call",
       toolTitle:"Advanced tools", toolHint:"Turn on only what you need. The tabs appear at the top of the screen.",
@@ -5476,19 +5475,29 @@
   const ACT_TABS = { couture:["atelier","charge","mesures","vitrine","materiel"], pressing:["pressing"], boutique:["boutique"], tissu:["tissus"] };
   function activites(){
     const a = BOUTIQUE && BOUTIQUE.activites;
-    return (Array.isArray(a) && a.length) ? a : ["couture","boutique"];
+    if(Array.isArray(a) && a.length) return a;
+    // Depuis le 03/11/2026 : une nouvelle boutique démarre avec la couture seulement.
+    let ms = 0;
+    try{ const c = BOUTIQUE && BOUTIQUE.createdAt; ms = c && c.toMillis ? c.toMillis() : (Number(c)||0); }catch(e){}
+    return (ms && ms >= LIGHT_START_MS) ? ["couture"] : ["couture","boutique"];
   }
   function hasAct(k){ return activites().indexOf(k) !== -1; }
   // Outils avancés : cachés au démarrage pour les nouvelles boutiques, activables dans Réglages.
   // Les boutiques créées avant le démarrage simplifié gardent tous leurs onglets.
-  const TOOL_TABS = ["charge","vitrine","staff","pointage","visits"];
+  const TOOL_TABS = ["charge","vitrine","staff","pointage","visits","materiel"];
   const SIMPLE_START_MS = Date.UTC(2026, 9, 25);
+  const LIGHT_START_MS = Date.UTC(2026, 10, 3);
   function outils(){
     const o = BOUTIQUE && BOUTIQUE.outils;
-    if(Array.isArray(o)) return o;
     let ms = 0;
     try{ const c = BOUTIQUE && BOUTIQUE.createdAt; ms = c && c.toMillis ? c.toMillis() : (Number(c)||0); }catch(e){}
-    return (!ms || ms < SIMPLE_START_MS) ? TOOL_TABS.slice() : [];
+    if(Array.isArray(o)){
+      // Matériel était un onglet de la couture avant le 03/11 : les anciennes boutiques le gardent.
+      if(BOUTIQUE.outilsV!==2 && (!ms || ms < LIGHT_START_MS) && o.indexOf("materiel")===-1) return o.concat(["materiel"]);
+      return o;
+    }
+    if(!ms || ms < SIMPLE_START_MS) return TOOL_TABS.slice();
+    return ms < LIGHT_START_MS ? ["materiel"] : [];
   }
   function hasTool(k){ return outils().indexOf(k) !== -1; }
   function applyActivities(){
@@ -5534,7 +5543,8 @@
       if(o.indexOf(k)!==-1) o=o.filter(x=>x!==k); else o.push(k);
       if(BOUTIQUE) BOUTIQUE.outils=o;
       applyActivities();
-      setDoc(doc(db,"boutiques",BID), { outils:o, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+      if(BOUTIQUE) BOUTIQUE.outilsV=2;
+      setDoc(doc(db,"boutiques",BID), { outils:o, outilsV:2, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
     });
   });
 
