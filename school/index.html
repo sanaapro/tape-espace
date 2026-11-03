@@ -336,6 +336,7 @@
       <div><label data-i18n="statut">Statut</label><select id="ef-st"></select></div>
     </div>
     <label data-i18n="noteLbl">Remarque</label><input id="ef-note">
+    <label data-i18n="exLbl">Ne paie pas</label><div id="ef-ex" style="display:flex;flex-wrap:wrap;gap:6px 16px;margin:4px 0 12px"></div>
     <button class="primary" id="ef-save" data-i18n="save">Enregistrer</button>
     <div class="msg err" id="ef-msg"></div>
     <button class="ghost red" id="ef-del" style="margin-top:14px" hidden data-i18n="del">Supprimer cet élève</button>
@@ -403,7 +404,7 @@
       acc:"Compte : {e}", mePay:"Encaisser", meRemind:"Rappel de paiement", edit:"Modifier", meDues:"Ce qui est dû", mePoste:"Pour quoi ?",
       mpWa:"Envoyer le reçu (image avec code QR)", mpGo:"Enregistrer le paiement", mePaid:"Paiements reçus", meNotes:"Notes et présence",
       fullName:"Nom complet", phone:"Téléphone de l'élève", parent:"Parent / tuteur", parentPhone:"Téléphone du parent", classe:"Classe",
-      trimNow:"Trimestre en cours", trimStart:"Entré(e) au trimestre", entree:"Date d'entrée", statut:"Statut", noteLbl:"Remarque", del:"Supprimer cet élève",
+      trimNow:"Trimestre en cours", trimStart:"Entré(e) au trimestre", entree:"Date d'entrée", statut:"Statut", noteLbl:"Remarque", exLbl:"Ne paie pas (ancien élève, classe du week-end…)", del:"Supprimer cet élève",
       delSure:"Supprimer définitivement {n} ? Ses paiements restent dans les finances.", needNom:"Écrivez le nom de l'élève.",
       tuition:"Scolarité", oneTime:"une fois", due:"Dû", paid:"Payé", rest:"Reste", total:"Total", upToDate:"À jour ✔", owes:"Doit {m}",
       noPay:"Aucun paiement.", noNotes:"Aucune note.", stats:"Moyenne T{t} : {m} · Présences : {p} · Absences : {a}",
@@ -447,7 +448,7 @@
       acc:"Account: {e}", mePay:"Collect", meRemind:"Payment reminder", edit:"Edit", meDues:"What is due", mePoste:"For what?",
       mpWa:"Send the receipt (image with QR code)", mpGo:"Save the payment", mePaid:"Payments received", meNotes:"Marks and attendance",
       fullName:"Full name", phone:"Student phone", parent:"Parent / guardian", parentPhone:"Parent phone", classe:"Class",
-      trimNow:"Current term", trimStart:"Joined in term", entree:"Date joined", statut:"Status", noteLbl:"Remark", del:"Delete this student",
+      trimNow:"Current term", trimStart:"Joined in term", entree:"Date joined", statut:"Status", noteLbl:"Remark", exLbl:"Does not pay (returning student, weekend class…)", del:"Delete this student",
       delSure:"Delete {n} for good? Their payments stay in the finances.", needNom:"Type the student's name.",
       tuition:"Tuition", oneTime:"once", due:"Due", paid:"Paid", rest:"Left", total:"Total", upToDate:"Up to date ✔", owes:"Owes {m}",
       noPay:"No payment.", noNotes:"No marks.", stats:"Average T{t}: {m} · Present: {p} · Absent: {a}",
@@ -687,7 +688,9 @@
   function duesOf(el){
     const out = [];
     const start = Math.max(1, num(el.startTrim) || 1), now = Math.max(start, num(el.trim) || start);
-    fraisL().filter(f => f.freq === "once").forEach(f => out.push({ key:f.id + "|0", poste:f.id, trim:0, nom:f.nom, montant:num(f.montant) }));
+    /* Frais « une fois » dont l'élève est dispensé (ancien élève, classe sans uniforme…) : exempt = [ids]. */
+    const ex = Array.isArray(el.exempt) ? el.exempt : [];
+    fraisL().filter(f => f.freq === "once" && !ex.includes(f.id)).forEach(f => out.push({ key:f.id + "|0", poste:f.id, trim:0, nom:f.nom, montant:num(f.montant) }));
     const c = classeOf(el);
     for(let tr = start; tr <= now; tr++){
       const p = prixScol(c, tr);
@@ -1288,6 +1291,8 @@
     $("ef-st").innerHTML = ["actif","fini","parti"].map(k => '<option value="' + k + '">' + esc(t("st" + k[0].toUpperCase() + k.slice(1))) + "</option>").join("");
     $("ef-st").value = e ? (e.statut || "actif") : "actif";
     $("ef-note").value = e ? e.note || "" : ""; $("ef-msg").textContent = "";
+    const ex = (e && Array.isArray(e.exempt)) ? e.exempt : [];
+    $("ef-ex").innerHTML = fraisL().filter(f => f.freq === "once").map(f => '<label style="display:inline-flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" value="' + esc(f.id) + '"' + (ex.includes(f.id) ? " checked" : "") + "> " + esc(f.nom) + "</label>").join("");
     $("ef-del").hidden = !e;
   }
   $("ef-start").addEventListener("change", () => { if(num($("ef-trim").value) < num($("ef-start").value)) $("ef-trim").value = $("ef-start").value; });
@@ -1296,7 +1301,8 @@
     const start = num($("ef-start").value) || 1;
     const d = { nom, phone:$("ef-phone").value.trim(), parent:$("ef-parent").value.trim(), parentPhone:$("ef-pphone").value.trim(),
                 classeId:$("ef-classe").value, trim:Math.max(start, num($("ef-trim").value) || 1), startTrim:start,
-                entreeMs: new Date(($("ef-date").value || ymd()) + "T12:00:00").getTime(), statut:$("ef-st").value, note:$("ef-note").value.trim() };
+                entreeMs: new Date(($("ef-date").value || ymd()) + "T12:00:00").getTime(), statut:$("ef-st").value, note:$("ef-note").value.trim(),
+                exempt:[...$("ef-ex").querySelectorAll("input:checked")].map(x => x.value) };
     const id = CUR_EL || newId("el-");
     if(!CUR_EL) d.createdMs = Date.now();
     const i = ELEVES.findIndex(x => x.id === id);
