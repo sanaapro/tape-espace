@@ -164,6 +164,7 @@
     <button data-tab="eleves" data-i18n="tEleves">Élèves</button>
     <button data-tab="presence" data-i18n="tPresence">Présence</button>
     <button data-tab="notes" data-i18n="tNotes">Notes</button>
+    <button data-tab="depenses" data-i18n="tDepenses">Dépenses</button>
     <button data-tab="finances" data-i18n="tFinances">Finances</button>
     <button data-tab="programme" data-i18n="tProgramme">Programme</button>
     <button data-tab="reglages" data-i18n="tReglages">Réglages</button>
@@ -177,6 +178,7 @@
         <div class="stat"><div class="n" id="a-pres">—</div><div class="l" data-i18n="aPres">présents aujourd'hui</div></div>
         <div class="stat"><div class="n" id="a-doivent">0</div><div class="l" data-i18n="aDoivent">élèves qui doivent</div></div>
         <div class="stat" id="a-enc-box"><div class="n" id="a-enc">—</div><div class="l" data-i18n="aEnc">encaissé aujourd'hui</div></div>
+        <div class="stat" id="a-reste-box"><div class="n" id="a-reste" style="color:var(--warn)">—</div><div class="l" data-i18n="aReste">reste à encaisser</div></div>
       </div>
       <div class="card"><h2 data-i18n="aClasses">Classes</h2><div class="list" id="a-classes"></div></div>
       <div class="card"><h2 data-i18n="aOwe">Doivent encore</h2><div class="list" id="a-owe"></div></div>
@@ -219,19 +221,8 @@
     </section>
 
     <!-- FINANCES -->
-    <section data-pane="finances" hidden>
-      <div id="f-locked" class="card lockbox" hidden>
-        <div style="font-size:30px">🔒</div>
-        <div class="muted" style="margin:8px 0 12px" data-i18n="fLocked">Les finances de l'école sont réservées au propriétaire.</div>
-        <button class="ghost gold" id="f-unlock" data-i18n="unlock">Entrer le code</button>
-      </div>
-      <div id="f-body">
-        <div class="fl" style="margin-top:14px"><div class="seg" id="f-per"><button data-p="jour" data-i18n="pJour">Jour</button><button data-p="semaine" data-i18n="pSemaine">Semaine</button><button data-p="mois" class="on" data-i18n="pMois">Mois</button><button data-p="annee" data-i18n="pAnnee">Année</button></div></div>
-        <div class="stats">
-          <div class="stat"><div class="n" id="f-rec" style="color:var(--ok)">0</div><div class="l" data-i18n="fRec">recettes</div></div>
-          <div class="stat"><div class="n" id="f-dep" style="color:var(--bad)">0</div><div class="l" data-i18n="fDep">dépenses</div></div>
-          <div class="stat" style="grid-column:span 2"><div class="n" id="f-sol">0</div><div class="l" data-i18n="fSol">solde de l'école</div></div>
-        </div>
+    <!-- DÉPENSES (le gérant note chaque jour ce qui est dépensé) -->
+    <section data-pane="depenses" hidden>
         <div class="card">
           <h2 data-i18n="fNewDep">Dépense de l'école</h2>
           <div class="row">
@@ -243,6 +234,28 @@
           <button class="primary" id="d-save" data-i18n="fAddDep">Enregistrer la dépense</button>
           <div class="msg" id="d-msg"></div>
         </div>
+        <div class="card">
+          <div class="row"><h2 data-i18n="dList" style="margin:0">Dépenses du mois</h2><input id="dl-mois" type="month" style="max-width:170px"></div>
+          <div class="muted" id="dl-tot" style="margin:6px 0"></div>
+          <div class="list" id="dl-list"></div>
+        </div>
+      </section>
+
+    <section data-pane="finances" hidden>
+      <div id="f-locked" class="card lockbox" hidden>
+        <div style="font-size:30px">🔒</div>
+        <div class="muted" style="margin:8px 0 12px" data-i18n="fLocked">Les finances de l'école sont réservées au propriétaire.</div>
+        <button class="ghost gold" id="f-unlock" data-i18n="unlock">Entrer le code</button>
+      </div>
+      <div id="f-body">
+        <div class="fl" style="margin-top:14px"><div class="seg" id="f-per"><button data-p="jour" data-i18n="pJour">Jour</button><button data-p="semaine" data-i18n="pSemaine">Semaine</button><button data-p="mois" class="on" data-i18n="pMois">Mois</button><button data-p="trimestre" data-i18n="pTrim">Trimestre</button><button data-p="annee" data-i18n="pAnnee">Année</button></div></div>
+        <div class="stats">
+          <div class="stat"><div class="n" id="f-rec" style="color:var(--ok)">0</div><div class="l" data-i18n="fRec">recettes</div></div>
+          <div class="stat"><div class="n" id="f-dep" style="color:var(--bad)">0</div><div class="l" data-i18n="fDep">dépenses</div></div>
+          <div class="stat"><div class="n" id="f-sol">0</div><div class="l" data-i18n="fSol">solde de l'école</div></div>
+          <div class="stat"><div class="n" id="f-reste" style="color:var(--warn)">0</div><div class="l" data-i18n="fReste">reste à encaisser (élèves)</div></div>
+        </div>
+        <div class="card" id="f-bilan"></div>
         <div class="card">
           <h2>👩‍🏫 <span data-i18n="stTitle">Enseignants et personnel</span></h2>
           <div class="list" id="st-list"></div>
@@ -283,6 +296,10 @@
         <div class="row">
           <div><label data-i18n="currency">Monnaie</label><input id="r-cur"></div>
           <div><label data-i18n="nbTrim">Nombre de trimestres</label><input id="r-nbt" type="number" min="1" max="12"></div>
+        </div>
+        <div class="row">
+          <div><label data-i18n="rLoyer">Loyer par an</label><input id="r-loyer" type="number" inputmode="numeric"></div>
+          <div><label data-i18n="rTrimDeb">Début du trimestre en cours</label><input id="r-trimdeb" type="date"></div>
         </div>
         <label data-i18n="rcLang">Langue des reçus et messages aux élèves</label>
         <select id="r-rclang"><option value="en">English</option><option value="fr">Français</option></select>
@@ -420,7 +437,7 @@
       fNewDep:"Dépense de l'école", amount:"Montant", desc:"Description", fAddDep:"Enregistrer la dépense", fMoves:"Mouvements",
       fSep:"Ces chiffres sont ceux de l'école uniquement. L'atelier, le pressing et la boutique ont leurs propres finances.",
       depSaved:"Dépense enregistrée.", needAmt:"Écrivez un montant.", noMoves:"Aucun mouvement sur cette période.",
-      stTitle:"Enseignants et personnel", stNom:"Nom complet", stRole:"Poste (ex. enseignante)", stSal:"Salaire par mois", stAdd:"Enregistrer", stCancel:"Annuler", stNone:"Aucun enseignant enregistré.", stTot:"{k} personne(s) · salaires : {m} par mois", stPay:"Payer", stEdit:"Modifier", stDel:"Retirer", stPayAsk:"Montant versé à {n} :", stPaid:"Salaire de {n} enregistré dans les dépenses.", stNeed:"Entrez le nom et le salaire.", stSaved:"Enregistré ✓", stPaidMonth:"payé ce mois", stLastPaid:"dernier salaire payé : {mo}", dDate:"Date de la dépense", catLoyer:"Loyer", catElec:"Électricité", catSal:"Salaire enseignant / personnel", catMat:"Matériel et tissu", catEnt:"Entretien des machines", catAutre:"Autre",
+      bTitle:"Bilan du trimestre", bRange:"Du {a} au {b}", bEnc:"Encaissé (élèves et autres recettes)", bDep:"Dépenses (courant, entretien, matériel, transport…)", bSal:"Salaires", bLoyer:"Part du loyer ({m} par an ÷ 3)", bBen:"Bénéfice du trimestre", bReste:"Reste à encaisser (élèves)", bHint:"Réglez « Début du trimestre en cours » dans Réglages pour un bilan exact.", tDepenses:"Dépenses", dList:"Dépenses du mois", dlTot:"{k} dépense(s) · total {m}", pTrim:"Trimestre", fReste:"reste à encaisser (élèves)", aReste:"reste à encaisser", rLoyer:"Loyer par an", rTrimDeb:"Début du trimestre en cours", catTransport:"Transport", stTitle:"Enseignants et personnel", stNom:"Nom complet", stRole:"Poste (ex. enseignante)", stSal:"Salaire par mois", stAdd:"Enregistrer", stCancel:"Annuler", stNone:"Aucun enseignant enregistré.", stTot:"{k} personne(s) · salaires : {m} par mois", stPay:"Payer", stEdit:"Modifier", stDel:"Retirer", stPayAsk:"Montant versé à {n} :", stPaid:"Salaire de {n} enregistré dans les dépenses.", stNeed:"Entrez le nom et le salaire.", stSaved:"Enregistré ✓", stPaidMonth:"payé ce mois", stLastPaid:"dernier salaire payé : {mo}", dDate:"Date de la dépense", catLoyer:"Loyer", catElec:"Courant / électricité", catSal:"Salaire enseignant / personnel", catMat:"Matériel et tissu", catEnt:"Entretien et réparations (machines, ventilateurs…)", catAutre:"Autre",
       gEdit:"Modifier le programme", save:"Enregistrer", gEmpty:"Pas encore de programme. Touchez « Modifier le programme ».", gPh:"Ce qu'on apprend pendant ce trimestre…",
       rIdent:"L'école", currency:"Monnaie", nbTrim:"Nombre de trimestres", saved:"Enregistré.",
       rClasses:"Classes et scolarité par trimestre", rClassesHelp:"« 2e partie » : prix appliqué à partir du trimestre indiqué (ex. 2e année à partir du trimestre 4). Laisser vide si le prix ne change pas.",
@@ -464,7 +481,7 @@
       fNewDep:"School expense", amount:"Amount", desc:"Description", fAddDep:"Save expense", fMoves:"Movements",
       fSep:"These figures are for the school only. The workshop, laundry and shop have their own finances.",
       depSaved:"Expense saved.", needAmt:"Type an amount.", noMoves:"No movement in this period.",
-      stTitle:"Teachers and staff", stNom:"Full name", stRole:"Role (e.g. teacher)", stSal:"Monthly salary", stAdd:"Save", stCancel:"Cancel", stNone:"No teacher recorded yet.", stTot:"{k} person(s) · salaries: {m} a month", stPay:"Pay", stEdit:"Edit", stDel:"Remove", stPayAsk:"Amount paid to {n}:", stPaid:"{n}'s salary recorded in the expenses.", stNeed:"Enter the name and the salary.", stSaved:"Saved ✓", stPaidMonth:"paid this month", stLastPaid:"last salary paid: {mo}", dDate:"Date of the expense", catLoyer:"Rent", catElec:"Electricity", catSal:"Teacher / staff salary", catMat:"Materials and fabric", catEnt:"Machine maintenance", catAutre:"Other",
+      bTitle:"Term result", bRange:"From {a} to {b}", bEnc:"Collected (students and other income)", bDep:"Expenses (power, repairs, materials, transport…)", bSal:"Salaries", bLoyer:"Share of the rent ({m} a year ÷ 3)", bBen:"Profit for the term", bReste:"Still to collect (students)", bHint:"Set “Start of the current term” in Settings for an exact result.", tDepenses:"Expenses", dList:"Expenses of the month", dlTot:"{k} expense(s) · total {m}", pTrim:"Term", fReste:"still to collect (students)", aReste:"still to collect", rLoyer:"Rent per year", rTrimDeb:"Start of the current term", catTransport:"Transport", stTitle:"Teachers and staff", stNom:"Full name", stRole:"Role (e.g. teacher)", stSal:"Monthly salary", stAdd:"Save", stCancel:"Cancel", stNone:"No teacher recorded yet.", stTot:"{k} person(s) · salaries: {m} a month", stPay:"Pay", stEdit:"Edit", stDel:"Remove", stPayAsk:"Amount paid to {n}:", stPaid:"{n}'s salary recorded in the expenses.", stNeed:"Enter the name and the salary.", stSaved:"Saved ✓", stPaidMonth:"paid this month", stLastPaid:"last salary paid: {mo}", dDate:"Date of the expense", catLoyer:"Rent", catElec:"Power / electricity", catSal:"Teacher / staff salary", catMat:"Materials and fabric", catEnt:"Maintenance and repairs (machines, fans…)", catAutre:"Other",
       gEdit:"Edit the programme", save:"Save", gEmpty:"No programme yet. Tap “Edit the programme”.", gPh:"What is learnt during this term…",
       rIdent:"The school", currency:"Currency", nbTrim:"Number of terms", saved:"Saved.",
       rClasses:"Classes and tuition per term", rClassesHelp:"“2nd price”: price used from the given term (e.g. 2nd year from term 4). Leave empty if the price does not change.",
@@ -754,12 +771,13 @@
     if(!ECOLE) return;
     try{
       $("f-locked").hidden = isOwner(); $("f-body").hidden = !isOwner();
-      $("a-enc-box").hidden = !isOwner();
+      $("a-enc-box").hidden = !isOwner(); $("a-reste-box").hidden = !isOwner();
       if(TAB === "apercu") renderApercu();
       if(TAB === "eleves") renderEleves();
       if(TAB === "presence") renderPresence();
       if(TAB === "notes") renderNotes();
       if(TAB === "finances" && isOwner()) renderFinances();
+      if(TAB === "depenses") renderDepenses();
       if(TAB === "programme") renderProgramme();
       if(TAB === "reglages") renderReglages();
       if(CUR_EL && !$("m-eleve").hidden && !$("me-view").hidden) renderEleveView();
@@ -785,6 +803,7 @@
     if(isOwner()){
       const d0 = new Date(); d0.setHours(0, 0, 0, 0);
       $("a-enc").textContent = money(MOUVS.filter(m => m.type === "recette" && num(m.ms) >= d0.getTime()).reduce((s, m) => s + num(m.montant), 0));
+      $("a-reste").textContent = money(resteTotal());
     }
     $("a-classes").innerHTML = classes().map(c => {
       const n = A.filter(e => e.classeId === c.id).length;
@@ -940,12 +959,13 @@
   });
 
   /* ---------- Finances de l'école (registre à part : /ecoles/{uid}/mouvements) ---------- */
-  const CATS = ["catLoyer","catElec","catSal","catMat","catEnt","catAutre"];
+  const CATS = ["catElec","catEnt","catMat","catTransport","catLoyer","catSal","catAutre"];
   function periodStart(p){
     const d = new Date(); d.setHours(0, 0, 0, 0);
     if(p === "semaine"){ const w = (d.getDay() + 6) % 7; d.setDate(d.getDate() - w); }
     else if(p === "mois") d.setDate(1);
     else if(p === "annee"){ d.setMonth(0, 1); }
+    else if(p === "trimestre"){ return trimRange().from; }
     return d.getTime();
   }
   function renderFinances(){
@@ -967,7 +987,58 @@
       MOUVS = MOUVS.filter(m => m.id !== b.dataset.dm); remove(doc(db, "ecoles", UID, "mouvements", b.dataset.dm)); renderFinances();
     }));
     renderStaff();
+    $("f-reste").textContent = money(resteTotal());
+    renderBilan();
   }
+  /* Reste à encaisser = ce que doivent encore tous les élèves actifs. */
+  function resteTotal(){ return actifs().reduce((s, e) => s + resteOf(e), 0); }
+  /* Trimestre en cours : du « Début du trimestre » (Réglages) à 3 mois plus tard ; sans réglage, les 3 derniers mois. */
+  function trimRange(){
+    let from;
+    if(ECOLE.trimDebut){ from = new Date(ECOLE.trimDebut + "T00:00:00"); }
+    else { from = new Date(); from.setHours(0, 0, 0, 0); from.setMonth(from.getMonth() - 3); }
+    const to = new Date(from); to.setMonth(to.getMonth() + 3); to.setDate(to.getDate() - 1); to.setHours(23, 59, 59, 999);
+    return { from: from.getTime(), to: to.getTime() };
+  }
+  /* Bilan du trimestre : encaissé − dépenses − salaires − part du loyer (loyer par an ÷ 3 trimestres).
+     Les dépenses « Loyer » saisies ne sont pas retirées une deuxième fois quand un loyer annuel est réglé. */
+  function renderBilan(){
+    const R = trimRange(), inT = m => num(m.ms) >= R.from && num(m.ms) <= R.to;
+    const L = MOUVS.filter(inT);
+    const enc = L.filter(m => m.type === "recette").reduce((s, m) => s + num(m.montant), 0);
+    const loyerAn = num(ECOLE.loyerAn), partLoyer = loyerAn > 0 ? Math.round(loyerAn / 3) : 0;
+    const dep = L.filter(m => m.type === "depense" && m.cat !== "catSal" && !(loyerAn > 0 && m.cat === "catLoyer")).reduce((s, m) => s + num(m.montant), 0);
+    const sal = L.filter(m => m.type === "depense" && m.cat === "catSal").reduce((s, m) => s + num(m.montant), 0);
+    const ben = enc - dep - sal - partLoyer, D = ms => new Date(ms).toLocaleDateString(LANG === "en" ? "en-GB" : "fr-FR");
+    const row = (k, v, col, bold) => '<div class="it" style="cursor:default"><div class="main"><div class="t1"' + (bold ? ' style="font-weight:800"' : "") + ">" + esc(k) + '</div></div><span class="amt" style="color:' + col + (bold ? ";font-size:17px" : "") + '">' + esc(v) + "</span></div>";
+    $("f-bilan").innerHTML = '<h2>' + esc(t("bTitle")) + '</h2><div class="muted" style="margin-bottom:6px">' + esc(fmt(t("bRange"), { a:D(R.from), b:D(R.to) })) + "</div>"
+      + row(t("bEnc"), "+" + money(enc), "var(--ok)")
+      + row(t("bDep"), "−" + money(dep), "var(--bad)")
+      + row(t("bSal"), "−" + money(sal), "var(--bad)")
+      + (partLoyer ? row(fmt(t("bLoyer"), { m:money(loyerAn) }), "−" + money(partLoyer), "var(--bad)") : "")
+      + row(t("bBen"), money(ben), ben < 0 ? "var(--bad)" : "var(--gold)", true)
+      + row(t("bReste"), money(resteTotal()), "var(--warn)")
+      + (ECOLE.trimDebut ? "" : '<div class="muted" style="margin-top:6px">' + esc(t("bHint")) + "</div>");
+  }
+
+  /* ---------- Page Dépenses (gérant) : saisie de chaque dépense, liste du mois ---------- */
+  function renderDepenses(){
+    const sel = $("d-cat"), v = sel.value;
+    sel.innerHTML = CATS.map(k => '<option value="' + k + '">' + esc(t(k)) + "</option>").join("");
+    if(v) sel.value = v;
+    if(!$("d-date").value) $("d-date").value = ymd();
+    if(!$("dl-mois").value) $("dl-mois").value = ymd().slice(0, 7);
+    const mo = $("dl-mois").value;
+    const L = MOUVS.filter(m => m.type === "depense" && ymd(new Date(num(m.ms))).slice(0, 7) === mo).sort((a, b) => num(b.ms) - num(a.ms));
+    $("dl-tot").textContent = fmt(t("dlTot"), { k:L.length, m:money(L.reduce((s, m) => s + num(m.montant), 0)) });
+    $("dl-list").innerHTML = L.map(m => '<div class="it" style="cursor:default"><span class="dot bad"></span><div class="main"><div class="t1">' + esc(m.label || "") + '</div><div class="t2">' + esc(dshow(num(m.ms))) + '</div></div><span class="amt bad">−' + esc(money(num(m.montant))) + '</span><button class="ghost red" data-dd="' + esc(m.id) + '" style="padding:6px 9px">✕</button></div>').join("")
+      || '<div class="muted">' + esc(t("noMoves")) + "</div>";
+    $("dl-list").querySelectorAll("[data-dd]").forEach(b => b.addEventListener("click", () => {
+      if(!askCode() || !confirm("✕ ?")) return;
+      MOUVS = MOUVS.filter(m => m.id !== b.dataset.dd); remove(doc(db, "ecoles", UID, "mouvements", b.dataset.dd)); renderDepenses();
+    }));
+  }
+  $("dl-mois").addEventListener("change", renderDepenses);
   document.querySelectorAll("#f-per button").forEach(b => b.addEventListener("click", () => {
     PER = b.dataset.p; document.querySelectorAll("#f-per button").forEach(x => x.classList.toggle("on", x === b)); renderFinances();
   }));
@@ -1034,7 +1105,7 @@
     const dv = $("d-date").value, ms = (dv && dv !== ymd()) ? new Date(dv + "T12:00:00").getTime() : Date.now();
     const id = newId("dep-"), rec = { type:"depense", cat, montant:amt, label: t(cat) + (lbl ? " — " + lbl : ""), ms };
     MOUVS.push(Object.assign({ id }, rec)); save(doc(db, "ecoles", UID, "mouvements", id), rec, false);
-    $("d-amt").value = ""; $("d-lbl").value = ""; m.className = "msg"; m.textContent = t("depSaved"); renderFinances();
+    $("d-amt").value = ""; $("d-lbl").value = ""; m.className = "msg"; m.textContent = t("depSaved"); renderAll();
   });
 
   /* ---------- Programme ---------- */
@@ -1178,6 +1249,8 @@
     [["r-name","name"],["r-sub","sousTitre"],["r-wa","whatsapp"],["r-cur","devise"]].forEach(([id, k]) => { if(act !== $(id)) $(id).value = ECOLE[k] || (k === "devise" ? "D" : ""); });
     if(act !== $("r-nbt")) $("r-nbt").value = nbTrim();
     if(act !== $("r-rclang")) $("r-rclang").value = ECOLE.langRecu || "en";
+    if(act !== $("r-loyer")) $("r-loyer").value = ECOLE.loyerAn || "";
+    if(act !== $("r-trimdeb")) $("r-trimdeb").value = ECOLE.trimDebut || "";
     $("r-acc").textContent = fmt(t("acc"), { e: (auth.currentUser && auth.currentUser.email) || "" });
     if(!CF_DRAFT) CF_DRAFT = { classes: JSON.parse(JSON.stringify(classes())), frais: JSON.parse(JSON.stringify(fraisL())) };
     paintCF();
@@ -1210,7 +1283,8 @@
   });
   $("r-save").addEventListener("click", () => {
     const d = { name:$("r-name").value.trim() || ECOLE.name, sousTitre:$("r-sub").value.trim(), whatsapp:$("r-wa").value.trim(),
-                devise:$("r-cur").value.trim() || "D", langRecu:$("r-rclang").value, nbTrim:Math.max(1, Math.min(12, num($("r-nbt").value) || 6)) };
+                devise:$("r-cur").value.trim() || "D", langRecu:$("r-rclang").value, nbTrim:Math.max(1, Math.min(12, num($("r-nbt").value) || 6)),
+                loyerAn:num($("r-loyer").value), trimDebut:$("r-trimdeb").value || "" };
     Object.assign(ECOLE, d); save(EREF, d); paintHead(); $("r-msg").textContent = t("saved");
   });
   $("r-codesave").addEventListener("click", () => {
