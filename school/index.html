@@ -56,7 +56,11 @@
   .list .it:last-child{ border-bottom:0; }
   .it .main{ flex:1; min-width:0; } .it .t1{ font-weight:600; } .it .t2{ font-size:12px; color:var(--muted); margin-top:2px; }
   .dot{ width:10px; height:10px; border-radius:50%; flex:0 0 10px; }
-  .dot.ok{ background:var(--ok); } .dot.bad{ background:var(--bad); } .dot.mid{ background:var(--warn); }
+  .dot.ok{ background:var(--ok); } .dot.paid{ background:#60a5fa; } .nm-owe{ color:#f87171; } .nm-paid{ color:#60a5fa; } .amt.paid{ color:#60a5fa; }
+  .rc-ov{ position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:30; overflow-y:auto; padding:16px 12px; text-align:center; }
+  .rc-ov img{ max-width:100%; width:380px; border-radius:6px; box-shadow:0 4px 24px rgba(0,0,0,.5); }
+  .rc-bar{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:14px 0 30px; }
+  @media print{ body.printrc > *:not(.rc-ov){ display:none !important; } body.printrc .rc-ov{ position:static; background:#fff; } body.printrc .rc-bar{ display:none; } } .dot.bad{ background:var(--bad); } .dot.mid{ background:var(--warn); }
   .amt{ font-weight:700; white-space:nowrap; } .amt.bad{ color:var(--bad); } .amt.ok{ color:var(--ok); }
   .pres{ display:flex; gap:6px; } .pres button{ width:42px; padding:9px 0; border-radius:9px; border:1px solid var(--line2); background:none; color:var(--muted); font-weight:700; cursor:pointer; }
   .pres button.on.P{ background:#14361f; border-color:var(--ok); color:var(--ok); }
@@ -253,6 +257,8 @@
           <div><label data-i18n="currency">Monnaie</label><input id="r-cur"></div>
           <div><label data-i18n="nbTrim">Nombre de trimestres</label><input id="r-nbt" type="number" min="1" max="12"></div>
         </div>
+        <label data-i18n="rcLang">Langue des reçus et messages aux élèves</label>
+        <select id="r-rclang"><option value="en">English</option><option value="fr">Français</option></select>
         <button class="primary" id="r-save" data-i18n="save">Enregistrer</button>
         <div class="msg" id="r-msg"></div>
       </div>
@@ -303,7 +309,7 @@
     <div id="me-payform" class="card" hidden>
       <label data-i18n="mePoste">Pour quoi ?</label><select id="mp-poste"></select>
       <label data-i18n="amount">Montant</label><input id="mp-amt" type="number" inputmode="numeric">
-      <label style="display:flex;gap:8px;align-items:center;color:var(--txt);font-size:14px"><input type="checkbox" id="mp-wa" checked style="width:auto"> <span data-i18n="mpWa">Envoyer le reçu par WhatsApp</span></label>
+      <label style="display:flex;gap:8px;align-items:center;color:var(--txt);font-size:14px"><input type="checkbox" id="mp-wa" checked style="width:auto"> <span data-i18n="mpWa">Envoyer le reçu (image avec code QR)</span></label>
       <button class="primary" id="mp-go" data-i18n="mpGo">Enregistrer le paiement</button>
       <div class="msg err" id="mp-msg"></div>
     </div>
@@ -395,7 +401,7 @@
       rCode:"Code du propriétaire", rCodeHelp:"Avec un code, seuls ceux qui le connaissent voient les finances et peuvent supprimer. Le gérant fait tout le reste.",
       rCodeNew:"Nouveau code (4 chiffres ou plus)", rCodeSave:"Enregistrer le code", codeShort:"4 chiffres minimum.", codeSaved:"Code enregistré.",
       acc:"Compte : {e}", mePay:"Encaisser", meRemind:"Rappel de paiement", edit:"Modifier", meDues:"Ce qui est dû", mePoste:"Pour quoi ?",
-      mpWa:"Envoyer le reçu par WhatsApp", mpGo:"Enregistrer le paiement", mePaid:"Paiements reçus", meNotes:"Notes et présence",
+      mpWa:"Envoyer le reçu (image avec code QR)", mpGo:"Enregistrer le paiement", mePaid:"Paiements reçus", meNotes:"Notes et présence",
       fullName:"Nom complet", phone:"Téléphone de l'élève", parent:"Parent / tuteur", parentPhone:"Téléphone du parent", classe:"Classe",
       trimNow:"Trimestre en cours", trimStart:"Entré(e) au trimestre", entree:"Date d'entrée", statut:"Statut", noteLbl:"Remarque", del:"Supprimer cet élève",
       delSure:"Supprimer définitivement {n} ? Ses paiements restent dans les finances.", needNom:"Écrivez le nom de l'élève.",
@@ -403,7 +409,7 @@
       noPay:"Aucun paiement.", noNotes:"Aucune note.", stats:"Moyenne T{t} : {m} · Présences : {p} · Absences : {a}",
       receipt:"Reçu {s}\nÉlève : {n}\nPaiement : {p}\nMontant : {m}\nReste à payer : {r}\nMerci.",
       remind:"Bonjour, ceci est un rappel de {s} pour {n}. Reste à payer : {r}. Merci de passer à l'école pour régler.",
-      toPay:"reste {m}", payAuto:"Répartir automatiquement", recScol:"Paiement {n} — {p}", tooMuch:"Le montant dépasse ce qui reste ({m}). Continuer ?",
+      toPay:"reste {m}", paidAll:"Tout payé", rcNo:"Reçu n°", mpWa2:"Montrer le reçu à envoyer", rcSend:"Envoyer sur WhatsApp", rcPrint:"Imprimer", rcClose:"Fermer", rcLang:"Langue des reçus et messages aux élèves", payAuto:"Répartir automatiquement", recScol:"Paiement {n} — {p}", tooMuch:"Le montant dépasse ce qui reste ({m}). Continuer ?",
       offline:"Hors ligne : enregistré sur le téléphone, envoi au retour du réseau.", writeErr:"Le serveur a refusé l'enregistrement.",
       defCls4:"2e année", gTrimTitle:"Programme par trimestre", today:"Aujourd'hui", thisWeek:"Cette semaine", toCheck:"À vérifier dans le cahier", hwYesterday:"Devoir du dernier cours", endWeek:"Fin de semaine", bring:"À apporter", homework:"Devoir", weekDay:"Semaine {s} · Jour {n}", noClassToday:"Pas de cours aujourd'hui pour cette classe.", nextLesson:"Prochain cours : {d}", closedBtn:"École fermée aujourd'hui (décaler le programme)", reopenBtn:"Annuler la fermeture d'aujourd'hui", closedSure:"Marquer aujourd'hui comme fermé ? Le programme du cahier sera décalé d'un jour de cours.", closedDay:"Jour de fermeture.", noCahier:"Aucun cahier relié à cette classe.", cahierEnd:"Le cahier de ce trimestre est terminé.", seeList:"Voir les élèves", clsSettings:"Réglages de la classe", horaire:"Horaire", teacher:"Enseignant(e)", classDays:"Jours de cours", clsStart:"Début du cahier pour cette classe", cahierLbl:"Cahier", cahierAuto:"Automatique (selon le trimestre des élèves)", students:"élève(s)", pickClass:"Choisissez une classe.", dows:"D,L,M,M,J,V,S",
       defCls1:"1re année — matin", defCls2:"1re année — après-midi", defCls3:"Classe du week-end", fForm:"Formulaire", fInsc:"Inscription", fUnif:"Uniforme", fMach:"Entretien des machines", fCahier:"Cahier de l'élève"
@@ -439,7 +445,7 @@
       rCode:"Owner code", rCodeHelp:"With a code, only people who know it see the finances and can delete. The manager does everything else.",
       rCodeNew:"New code (4 digits or more)", rCodeSave:"Save the code", codeShort:"At least 4 digits.", codeSaved:"Code saved.",
       acc:"Account: {e}", mePay:"Collect", meRemind:"Payment reminder", edit:"Edit", meDues:"What is due", mePoste:"For what?",
-      mpWa:"Send the receipt on WhatsApp", mpGo:"Save the payment", mePaid:"Payments received", meNotes:"Marks and attendance",
+      mpWa:"Send the receipt (image with QR code)", mpGo:"Save the payment", mePaid:"Payments received", meNotes:"Marks and attendance",
       fullName:"Full name", phone:"Student phone", parent:"Parent / guardian", parentPhone:"Parent phone", classe:"Class",
       trimNow:"Current term", trimStart:"Joined in term", entree:"Date joined", statut:"Status", noteLbl:"Remark", del:"Delete this student",
       delSure:"Delete {n} for good? Their payments stay in the finances.", needNom:"Type the student's name.",
@@ -447,7 +453,7 @@
       noPay:"No payment.", noNotes:"No marks.", stats:"Average T{t}: {m} · Present: {p} · Absent: {a}",
       receipt:"Receipt {s}\nStudent: {n}\nPayment: {p}\nAmount: {m}\nLeft to pay: {r}\nThank you.",
       remind:"Hello, this is a reminder from {s} for {n}. Left to pay: {r}. Please come to the school to settle it.",
-      toPay:"{m} left", payAuto:"Spread automatically", recScol:"Payment {n} — {p}", tooMuch:"The amount is more than what is left ({m}). Continue?",
+      toPay:"{m} left", paidAll:"Fully paid", rcNo:"Receipt no.", mpWa2:"Show the receipt to send", rcSend:"Send on WhatsApp", rcPrint:"Print", rcClose:"Close", rcLang:"Language of receipts and messages to students", payAuto:"Spread automatically", recScol:"Payment {n} — {p}", tooMuch:"The amount is more than what is left ({m}). Continue?",
       offline:"Offline: saved on the phone, it will be sent when the network is back.", writeErr:"The server refused to save.",
       defCls4:"2nd year", gTrimTitle:"Programme by term", today:"Today", thisWeek:"This week", toCheck:"To check in the workbook", hwYesterday:"Homework from last class", endWeek:"End of week", bring:"Bring", homework:"Homework", weekDay:"Week {s} · Day {n}", noClassToday:"No class today for this group.", nextLesson:"Next class: {d}", closedBtn:"School closed today (shift the programme)", reopenBtn:"Cancel today's closure", closedSure:"Mark today as closed? The workbook programme will move by one class day.", closedDay:"Closed day.", noCahier:"No workbook linked to this class.", cahierEnd:"This term's workbook is finished.", seeList:"See the students", clsSettings:"Class settings", horaire:"Time", teacher:"Teacher", classDays:"Class days", clsStart:"Workbook start for this class", cahierLbl:"Workbook", cahierAuto:"Automatic (from the students' term)", students:"student(s)", pickClass:"Choose a class.", dows:"S,M,T,W,T,F,S",
       defCls1:"1st year — morning", defCls2:"1st year — afternoon", defCls3:"Weekend class", fForm:"Form", fInsc:"Registration", fUnif:"Uniform", fMach:"Machine maintenance", fCahier:"Student workbook"
@@ -732,9 +738,9 @@
 
   function itemHtml(el, right){
     const c = classeOf(el), r = resteOf(el);
-    return '<div class="it" data-el="' + esc(el.id) + '"><span class="dot ' + (r > 0 ? "bad" : "ok") + '"></span>'
-      + '<div class="main"><div class="t1">' + esc(el.nom) + '</div><div class="t2">' + esc(c ? c.nom : t("noClass")) + " · " + t("trimShort") + esc(el.trim || 1) + "</div></div>"
-      + (right != null ? right : '<span class="amt ' + (r > 0 ? "bad" : "ok") + '">' + (r > 0 ? esc(fmt(t("toPay"), { m: money(r) })) : "✔") + "</span>")
+    return '<div class="it" data-el="' + esc(el.id) + '"><span class="dot ' + (r > 0 ? "bad" : "paid") + '"></span>'
+      + '<div class="main"><div class="t1 ' + (r > 0 ? "nm-owe" : "nm-paid") + '">' + esc(el.nom) + '</div><div class="t2">' + esc(c ? c.nom : t("noClass")) + " · " + t("trimShort") + esc(el.trim || 1) + "</div></div>"
+      + (right != null ? right : '<span class="amt ' + (r > 0 ? "bad" : "paid") + '">' + (r > 0 ? esc(fmt(t("toPay"), { m: money(r) })) : "✔ " + esc(t("paidAll"))) + "</span>")
       + "</div>";
   }
   function bindItems(box){ box.querySelectorAll("[data-el]").forEach(n => n.addEventListener("click", () => openEleve(n.dataset.el))); }
@@ -1056,6 +1062,7 @@
     const act = document.activeElement;
     [["r-name","name"],["r-sub","sousTitre"],["r-wa","whatsapp"],["r-cur","devise"]].forEach(([id, k]) => { if(act !== $(id)) $(id).value = ECOLE[k] || (k === "devise" ? "D" : ""); });
     if(act !== $("r-nbt")) $("r-nbt").value = nbTrim();
+    if(act !== $("r-rclang")) $("r-rclang").value = ECOLE.langRecu || "en";
     $("r-acc").textContent = fmt(t("acc"), { e: (auth.currentUser && auth.currentUser.email) || "" });
     if(!CF_DRAFT) CF_DRAFT = { classes: JSON.parse(JSON.stringify(classes())), frais: JSON.parse(JSON.stringify(fraisL())) };
     paintCF();
@@ -1088,7 +1095,7 @@
   });
   $("r-save").addEventListener("click", () => {
     const d = { name:$("r-name").value.trim() || ECOLE.name, sousTitre:$("r-sub").value.trim(), whatsapp:$("r-wa").value.trim(),
-                devise:$("r-cur").value.trim() || "D", nbTrim:Math.max(1, Math.min(12, num($("r-nbt").value) || 6)) };
+                devise:$("r-cur").value.trim() || "D", langRecu:$("r-rclang").value, nbTrim:Math.max(1, Math.min(12, num($("r-nbt").value) || 6)) };
     Object.assign(ECOLE, d); save(EREF, d); paintHead(); $("r-msg").textContent = t("saved");
   });
   $("r-codesave").addEventListener("click", () => {
@@ -1113,7 +1120,7 @@
   function renderEleveView(){
     const e = ELEVES.find(x => x.id === CUR_EL); if(!e){ $("m-eleve").hidden = true; return; }
     const c = classeOf(e);
-    $("me-title").textContent = e.nom;
+    $("me-title").textContent = e.nom; $("me-title").style.color = resteOf(e) > 0 ? "#f87171" : "#60a5fa";
     $("me-info").innerHTML = esc(c ? c.nom : t("noClass")) + " · " + esc(t("trim")) + " " + esc(e.trim || 1)
       + (e.phone ? " · 📞 " + esc(e.phone) : "") + (e.parent || e.parentPhone ? "<br>" + esc(t("parent")) + " : " + esc(e.parent || "") + " " + esc(e.parentPhone || "") : "")
       + (e.note ? "<br>" + esc(e.note) : "");
@@ -1123,7 +1130,10 @@
       + D.map(d => '<tr><td>' + esc(postLabel(d)) + '</td><td class="r">' + esc(money(d.montant)) + '</td><td class="r">' + esc(money(d.paye)) + '</td><td class="r" style="color:' + (d.reste > 0 ? "var(--bad)" : "var(--ok)") + '">' + (d.reste > 0 ? esc(money(d.reste)) : "✔") + "</td></tr>").join("")
       + '<tr><th>' + esc(t("total")) + '</th><th class="r">' + esc(money(tot)) + '</th><th class="r">' + esc(money(pay)) + '</th><th class="r" style="color:' + (tot - pay > 0 ? "var(--bad)" : "var(--ok)") + '">' + (tot - pay > 0 ? esc(money(tot - pay)) : esc(t("upToDate"))) + "</th></tr>";
     const P = MOUVS.filter(m => m.type === "recette" && m.eleveId === e.id).sort((a, b) => num(b.ms) - num(a.ms));
-    $("me-pays").innerHTML = P.map(m => '<div class="it" style="cursor:default"><div class="main"><div class="t1">' + esc(m.posteNom || m.label || "") + '</div><div class="t2">' + esc(dshow(num(m.ms))) + '</div></div><span class="amt ok">' + esc(money(num(m.montant))) + "</span></div>").join("") || '<div class="muted">' + esc(t("noPay")) + "</div>";
+    const G = {}; P.forEach(m => { const k = m.recu || ("ms" + m.ms); (G[k] = G[k] || []).push(m); });
+    $("me-pays").innerHTML = Object.keys(G).map(k => { const g = G[k], tot = g.reduce((s2, m) => s2 + num(m.montant), 0);
+      return '<div class="it" style="cursor:default"><div class="main"><div class="t1">' + esc(g.map(m => m.posteNom || m.label || "").join(" · ")) + '</div><div class="t2">' + esc(dshow(num(g[0].ms))) + (g[0].recuNo ? " · " + esc(t("rcNo")) + " " + esc(g[0].recuNo) : "") + '</div></div><span class="amt ok">' + esc(money(tot)) + '</span><button class="ghost" data-rc="' + esc(k) + '" style="padding:6px 9px">🧾</button></div>'; }).join("") || '<div class="muted">' + esc(t("noPay")) + "</div>";
+    $("me-pays").querySelectorAll("[data-rc]").forEach(b => b.addEventListener("click", () => showReceipt(e, G[b.dataset.rc])));
     const tr = num(e.trim) || 1, ns = NOTES.filter(n => n.eleveId === e.id).sort((a, b) => String(b.date).localeCompare(String(a.date)));
     const nt = ns.filter(n => num(n.trim) === tr), avg = nt.length ? (nt.reduce((s, n) => s + num(n.note), 0) / nt.length).toFixed(1) + "/10" : "—";
     const pr = PRES.filter(p => p.eleveId === e.id);
@@ -1155,32 +1165,114 @@
       const open = D.filter(x => x.reste > 0).sort((a, b) => a.trim - b.trim || (a.poste === "scol" ? -1 : 0) - (b.poste === "scol" ? -1 : 0));
       const tot = open.reduce((s, x) => s + x.reste, 0);
       if(amt > tot && !confirm(fmt(t("tooMuch"), { m:money(tot) }))) return;
-      let left = amt; const lines = [], now = Date.now();
+      let left = amt; const lines = [], now = Date.now(), R = nextReceipt(), grp = [];
       open.forEach((x, i) => {
         if(left <= 0) return;
         const part = (i === open.length - 1) ? left : Math.min(left, x.reste);
         left -= part;
         const id = newId("pay-"), lbl = postLabel(x);
         const rec = { type:"recette", source:"scolarite", eleveId:e.id, eleveNom:e.nom, poste:x.poste, posteNom:lbl, trim:x.trim, montant:part,
-                      label: fmt(t("recScol"), { n:e.nom, p:lbl }), ms:now };
+                      label: fmt(t("recScol"), { n:e.nom, p:lbl }), ms:now, recu:R.id, recuNo:R.no };
         MOUVS.push(Object.assign({ id }, rec)); save(doc(db, "ecoles", UID, "mouvements", id), rec, false);
-        lines.push(lbl + " : " + money(part));
+        grp.push(rec);
       });
-      if($("mp-wa").checked) openWa(e.parentPhone || e.phone, fmt(t("receipt"), { s:ECOLE.name || "", n:e.nom, p:"\n• " + lines.join("\n• "), m:money(amt), r:money(resteOf(e)) }));
-      $("me-payform").hidden = true; renderAll(); return;
+      $("me-payform").hidden = true; renderAll();
+      if($("mp-wa").checked) showReceipt(e, grp);
+      return;
     }
     const d = D.find(x => x.key === $("mp-poste").value);
     if(!d){ return; }
     if(amt > d.reste && !confirm(fmt(t("tooMuch"), { m:money(d.reste) }))) return;
-    const id = newId("pay-"), lbl = postLabel(d);
+    const id = newId("pay-"), lbl = postLabel(d), R = nextReceipt();
     const rec = { type:"recette", source:"scolarite", eleveId:e.id, eleveNom:e.nom, poste:d.poste, posteNom:lbl, trim:d.trim, montant:amt,
-                  label: fmt(t("recScol"), { n:e.nom, p:lbl }), ms:Date.now() };
+                  label: fmt(t("recScol"), { n:e.nom, p:lbl }), ms:Date.now(), recu:R.id, recuNo:R.no };
     MOUVS.push(Object.assign({ id }, rec)); save(doc(db, "ecoles", UID, "mouvements", id), rec, false);
-    if($("mp-wa").checked){
-      openWa(e.parentPhone || e.phone, fmt(t("receipt"), { s:ECOLE.name || "", n:e.nom, p:lbl, m:money(amt), r:money(resteOf(e)) }));
-    }
     $("me-payform").hidden = true; renderAll();
+    if($("mp-wa").checked) showReceipt(e, [rec]);
   });
+
+  /* ---------- Reçu en image (comme l'atelier) : papier blanc + code QR, partagé sur WhatsApp ---------- */
+  const RC = {
+    en: { title:"PAYMENT RECEIPT", no:"Receipt no.", date:"Date", student:"Student", cls:"Class", term:"Term", paidNow:"Amount paid", left:"Left to pay", paidTerm:"FULLY PAID — TERM {n}", thanks:"Thank you for your trust.", once:"once", tuition:"Tuition",
+          cap:"Receipt {no} — {s}\nStudent: {n}\nPaid: {m}\n{r}", capLeft:"Left to pay: {m}", capPaid:"Fully paid for term {n}. Thank you!" },
+    fr: { title:"REÇU DE PAIEMENT", no:"Reçu n°", date:"Date", student:"Élève", cls:"Classe", term:"Trimestre", paidNow:"Montant versé", left:"Reste à payer", paidTerm:"TOUT PAYÉ — TRIMESTRE {n}", thanks:"Merci de votre confiance.", once:"une fois", tuition:"Scolarité",
+          cap:"Reçu {no} — {s}\nÉlève : {n}\nVersé : {m}\n{r}", capLeft:"Reste à payer : {m}", capPaid:"Trimestre {n} entièrement payé. Merci !" }
+  };
+  function nextReceipt(){
+    const no = (num(ECOLE.recuSeq) || 0) + 1; ECOLE.recuSeq = no; save(EREF, { recuSeq:no });
+    return { id:newId("rc-"), no:String(no).padStart(4, "0") };
+  }
+  function loadQr(){
+    if(window.qrcode) return Promise.resolve(window.qrcode);
+    return new Promise((res) => { const sc = document.createElement("script"); sc.src = "qrcode.js"; sc.onload = () => res(window.qrcode || null); sc.onerror = () => res(null); document.head.appendChild(sc); });
+  }
+  async function receiptCanvas(e, grp){
+    const L = RC[ECOLE.langRecu === "fr" ? "fr" : "en"], c = classeOf(e), tr = num(e.trim) || 1;
+    const amt = grp.reduce((s2, m) => s2 + num(m.montant), 0), no = grp[0].recuNo || "—";
+    // Situation APRÈS ce paiement (paiements jusqu'à cette date incluse).
+    const restNow = resteOf(e);
+    const W = 600, S = 2, P = 34, SANS = "-apple-system,'Segoe UI',Roboto,Arial,sans-serif", SERIF = "Georgia,'Times New Roman',serif";
+    const cv = document.createElement("canvas"), g = cv.getContext("2d");
+    const ops = []; let y = P;
+    const text = (tx, font, col, lh, align) => { ops.push({ tx, font, col, y:y + lh * S * 0.78, align:align || "center" }); y += lh * S; };
+    const row = (k, v, bold) => { ops.push({ dash:true, y }); ops.push({ tx:k, font:(13*S)+"px "+SANS, col:"#333", y:y + 21*S, align:"left" }); ops.push({ tx:v, font:(bold ? "800 " : "700 ")+(13*S)+"px "+SANS, col:"#111", y:y + 21*S, align:"right" }); y += 30*S; };
+    text(ECOLE.name || "", "700 "+(19*S)+"px "+SERIF, "#111", 26);
+    if(ECOLE.sousTitre) text(ECOLE.sousTitre, (11.5*S)+"px "+SANS, "#555", 17);
+    if(ECOLE.whatsapp) text("☎ " + ECOLE.whatsapp, (11.5*S)+"px "+SANS, "#555", 17);
+    y += 8*S; text(L.title, "800 "+(14*S)+"px "+SANS, "#111", 30); y += 4*S;
+    row(L.no, no); row(L.date, new Date(num(grp[0].ms)).toLocaleDateString(ECOLE.langRecu === "fr" ? "fr-FR" : "en-GB", { day:"2-digit", month:"long", year:"numeric" }));
+    row(L.student, e.nom); if(c) row(L.cls, c.nom); row(L.term, String(tr));
+    grp.forEach(m => { const nm = String(m.posteNom || "").replace(t("tuition"), L.tuition).replace("(" + t("oneTime") + ")", "(" + L.once + ")"); row(nm, money(num(m.montant))); });
+    y += 10*S; text(L.paidNow, (12*S)+"px "+SANS, "#444", 18); text(money(amt), "800 "+(26*S)+"px "+SANS, "#111", 36);
+    if(restNow > 0){ y += 4*S; text(L.left + " : " + money(restNow), "800 "+(15*S)+"px "+SANS, "#b42318", 26); }
+    else { y += 10*S; ops.push({ stamp:fmt(L.paidTerm, { n:tr }), y:y + 18*S }); y += 44*S; }
+    let qrImg = null;
+    const q = await loadQr();
+    if(q){
+      try{
+        const qr = q(0, "M"); qr.addData((ECOLE.name || "School") + " | " + L.no + " " + no + " | " + e.nom + " | " + money(amt) + " | " + new Date(num(grp[0].ms)).toISOString().slice(0, 10) + " | " + (restNow > 0 ? L.left + " " + money(restNow) : "PAID T" + tr)); qr.make();
+        qrImg = await new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = qr.createDataURL(6, 2); });
+      }catch(x){ qrImg = null; }
+    }
+    if(qrImg){ ops.push({ img:qrImg, y:y + 8*S, sz:150*S }); y += 166*S; }
+    text(L.thanks, (12*S)+"px "+SANS, "#444", 22);
+    text("SanaaPro School", (9.5*S)+"px "+SANS, "#999", 16);
+    y += P; cv.width = W * S / 2 * 2; cv.height = Math.ceil(y);
+    const CW = cv.width;
+    g.fillStyle = "#ffffff"; g.fillRect(0, 0, CW, cv.height);
+    const px = P * S / 2 * 2;
+    ops.forEach(o => {
+      if(o.dash){ g.save(); g.strokeStyle = "#bbb"; g.lineWidth = S; g.setLineDash([4*S, 3*S]); g.beginPath(); g.moveTo(px, o.y); g.lineTo(CW - px, o.y); g.stroke(); g.restore(); return; }
+      if(o.img){ g.imageSmoothingEnabled = false; g.drawImage(o.img, (CW - o.sz) / 2, o.y, o.sz, o.sz); return; }
+      if(o.stamp){ g.save(); g.translate(CW / 2, o.y); g.rotate(-5 * Math.PI / 180); g.font = "900 "+(17*S)+"px "+SANS; const w = g.measureText(o.stamp).width + 26*S, h = 34*S;
+        g.strokeStyle = "#1d4ed8"; g.lineWidth = 3*S; g.strokeRect(-w/2, -h/2, w, h); g.fillStyle = "#1d4ed8"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(o.stamp, 0, 1*S); g.restore(); return; }
+      g.font = o.font; g.fillStyle = o.col; g.textAlign = o.align; g.textBaseline = "alphabetic";
+      const x = o.align === "left" ? px : o.align === "right" ? CW - px : CW / 2;
+      let tx = o.tx; if(o.align !== "center"){ const max = (CW - 2*px) * 0.6; while(g.measureText(tx).width > max && tx.length > 4) tx = tx.slice(0, -2); if(tx !== o.tx) tx += "…"; }
+      g.fillText(tx, x, o.y);
+    });
+    return { cv, caption: fmt(L.cap, { no, s:ECOLE.name || "", n:e.nom, m:money(amt), r: restNow > 0 ? fmt(L.capLeft, { m:money(restNow) }) : fmt(L.capPaid, { n:tr }) }), no };
+  }
+  async function showReceipt(e, grp){
+    if(!grp || !grp.length) return;
+    const R = await receiptCanvas(e, grp);
+    const ov = document.createElement("div"); ov.className = "rc-ov";
+    const im = new Image(); im.src = R.cv.toDataURL("image/png"); ov.appendChild(im);
+    const bar = document.createElement("div"); bar.className = "rc-bar";
+    const mk = (lbl, cls, fn) => { const b = document.createElement("button"); b.className = "ghost " + cls; b.textContent = lbl; b.onclick = fn; bar.appendChild(b); };
+    mk("📤 " + t("rcSend"), "gold", async () => {
+      try{
+        const blob = await new Promise(r => R.cv.toBlob(r, "image/png"));
+        const f = new File([blob], "receipt-" + R.no + ".png", { type:"image/png" });
+        if(navigator.canShare && navigator.canShare({ files:[f] })){ await navigator.share({ files:[f], text:R.caption }); return; }
+        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
+      }catch(x){ if(x && x.name === "AbortError") return; }
+      openWa(e.parentPhone || e.phone, R.caption);
+    });
+    mk("🖨 " + t("rcPrint"), "", () => { document.body.classList.add("printrc"); setTimeout(() => { window.print(); setTimeout(() => document.body.classList.remove("printrc"), 500); }, 150); });
+    mk(t("rcClose"), "", () => ov.remove());
+    ov.appendChild(bar); document.body.appendChild(ov);
+  }
 
   $("e-new").addEventListener("click", () => openForm(null));
   $("me-edit").addEventListener("click", () => openForm(CUR_EL));
