@@ -60,6 +60,19 @@
   .rc-ov{ position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:30; overflow-y:auto; padding:16px 12px; text-align:center; }
   .rc-ov img{ max-width:100%; width:380px; border-radius:6px; box-shadow:0 4px 24px rgba(0,0,0,.5); }
   .rc-bar{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:14px 0 30px; }
+  #printsheet{ display:none; }
+  @media print{
+    body.printsheet > *:not(#printsheet){ display:none !important; }
+    body.printsheet #printsheet{ display:block; color:#000; background:#fff; font-family:Arial, sans-serif; }
+    #printsheet .ps-page{ page-break-after:always; padding:6mm 4mm; }
+    #printsheet .ps-page:last-child{ page-break-after:auto; }
+    #printsheet h1{ font:700 18pt Georgia, serif; margin:0; } #printsheet h2{ font:700 13pt Arial, sans-serif; margin:4mm 0 2mm; }
+    #printsheet .ps-meta{ font-size:10pt; margin-bottom:3mm; }
+    #printsheet table{ width:100%; border-collapse:collapse; font-size:10.5pt; }
+    #printsheet th, #printsheet td{ border:1px solid #000; padding:2.2mm 2mm; text-align:left; }
+    #printsheet th{ background:#eee; } #printsheet td.n{ width:8mm; text-align:center; } #printsheet td.w{ height:12mm; }
+    #printsheet .ps-sign{ margin-top:6mm; font-size:10pt; }
+  }
   @media print{ body.printrc > *:not(.rc-ov){ display:none !important; } body.printrc .rc-ov{ position:static; background:#fff; } body.printrc .rc-bar{ display:none; } } .dot.bad{ background:var(--bad); } .dot.mid{ background:var(--warn); }
   .amt{ font-weight:700; white-space:nowrap; } .amt.bad{ color:var(--bad); } .amt.ok{ color:var(--ok); }
   .pres{ display:flex; gap:6px; } .pres button{ width:42px; padding:9px 0; border-radius:9px; border:1px solid var(--line2); background:none; color:var(--muted); font-weight:700; cursor:pointer; }
@@ -200,6 +213,7 @@
         <div class="list" id="n-list" style="margin-top:6px"></div>
         <button class="primary" id="n-save" data-i18n="nSave">Enregistrer les notes</button>
         <div class="msg" id="n-msg"></div>
+        <button class="ghost" id="n-print" type="button" style="margin-top:10px">🖨 <span data-i18n="nPrint">Imprimer la feuille de la semaine</span></button>
       </div>
       <div class="card"><h2 data-i18n="nAvg">Moyennes du trimestre</h2><div class="list" id="n-avg"></div></div>
     </section>
@@ -385,7 +399,7 @@
       nobody:"Personne pour le moment.", allPaid:"Tout le monde est à jour.", eNew:"Nouvel élève", search:"Rechercher…", allClasses:"Toutes les classes",
       stActif:"Inscrits", stFini:"Diplômés", stParti:"Partis", trim:"Trimestre", trimShort:"T", noClass:"Sans classe",
       pAll:"Tous présents", pCount:"{p} présents · {a} absents · {r} en retard", pAbsMsg:"Bonjour, {n} est absent(e) aujourd'hui à {s}. Merci de nous dire la raison.",
-      nToday:"Note du jour (sur 10)", nWork:"Travail noté", nWorkPh:"ex. coupe de jupe droite", nSave:"Enregistrer les notes", nSaved:"{k} note(s) enregistrée(s).",
+      nToday:"Note du jour (sur 10)", nWork:"Travail noté", nWorkPh:"ex. coupe de jupe droite", nSave:"Enregistrer les notes", nPrint:"Imprimer la feuille de la semaine", nSaved:"{k} note(s) enregistrée(s).",
       nAvg:"Moyennes du trimestre", nNone:"Aucune note ce trimestre.", nBad:"Une note doit être entre 0 et 10.",
       fLocked:"Les finances de l'école sont réservées au propriétaire.", unlock:"Entrer le code", lockOn:"🔒 Gérant", lockOff:"🔓 Propriétaire",
       askCode:"Code du propriétaire :", badCode:"Code incorrect.",
@@ -429,7 +443,7 @@
       nobody:"Nobody yet.", allPaid:"Everybody is up to date.", eNew:"New student", search:"Search…", allClasses:"All classes",
       stActif:"Enrolled", stFini:"Graduated", stParti:"Left", trim:"Term", trimShort:"T", noClass:"No class",
       pAll:"All present", pCount:"{p} present · {a} absent · {r} late", pAbsMsg:"Hello, {n} is absent today at {s}. Please let us know the reason.",
-      nToday:"Mark of the day (out of 10)", nWork:"Work marked", nWorkPh:"e.g. straight skirt cutting", nSave:"Save marks", nSaved:"{k} mark(s) saved.",
+      nToday:"Mark of the day (out of 10)", nWork:"Work marked", nWorkPh:"e.g. straight skirt cutting", nSave:"Save marks", nPrint:"Print the weekly mark sheet", nSaved:"{k} mark(s) saved.",
       nAvg:"Term averages", nNone:"No marks this term.", nBad:"A mark must be between 0 and 10.",
       fLocked:"School finances are for the owner only.", unlock:"Enter the code", lockOn:"🔒 Manager", lockOff:"🔓 Owner",
       askCode:"Owner code:", badCode:"Wrong code.",
@@ -882,6 +896,34 @@
     b.commit().catch(() => toast(t("writeErr")));
     $("n-msg").className = "msg"; $("n-msg").textContent = fmt(t("nSaved"), { k: ins.length });
     renderNotes();
+  });
+
+  /* ---------- Feuille de notes de la semaine à imprimer (une page par classe) ---------- */
+  $("n-print").addEventListener("click", () => {
+    const EN = ECOLE.langRecu !== "fr";
+    const L = EN ? { title:"Weekly mark sheet", week:"Week of", teacher:"Teacher", no:"No.", st:"Student", work:"Work of the day", rem:"Remark", sign:"Teacher's signature", out:"Marks out of 10 — give this sheet to the school manager at the end of the week." }
+                 : { title:"Feuille de notes de la semaine", week:"Semaine du", teacher:"Professeur", no:"N°", st:"Élève", work:"Travail du jour", rem:"Remarque", sign:"Signature du professeur", out:"Notes sur 10 — remettre la feuille au gérant à la fin de la semaine." };
+    const base = new Date(($("n-date").value || ymd()) + "T12:00:00"), mon = new Date(base); mon.setDate(base.getDate() - ((base.getDay() + 6) % 7));
+    const fmtD = d => d.toLocaleDateString(EN ? "en-GB" : "fr-FR", { weekday:"short", day:"2-digit", month:"2-digit" });
+    const cl = $("n-classe").value, list = classes().filter(c => !cl || c.id === cl);
+    const pages = list.map(c => {
+      const els = actifs().filter(e => e.classeId === c.id);
+      if(!els.length && !cl) return "";
+      const days = classDays(c).slice().sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)).map(g => { const d = new Date(mon); d.setDate(mon.getDate() + ((g + 6) % 7)); return d; });
+      const th = days.map(d => "<th>" + esc(fmtD(d)) + "</th>").join("");
+      const empty = days.map(() => "<td></td>").join("");
+      const rows = els.map((e, i) => '<tr><td class="n">' + (i + 1) + "</td><td>" + esc(e.nom) + "</td>" + empty + "<td></td></tr>").join("")
+        + [1, 2].map(k => '<tr><td class="n">' + (els.length + k) + "</td><td></td>" + empty + "<td></td></tr>").join("");
+      return '<div class="ps-page"><h1>' + esc(ECOLE.name || "") + "</h1><h2>" + esc(L.title) + " — " + esc(c.nom) + (c.horaire ? " (" + esc(c.horaire) + ")" : "") + "</h2>"
+        + '<div class="ps-meta">' + esc(L.week) + " " + esc(mon.toLocaleDateString(EN ? "en-GB" : "fr-FR")) + " · " + esc(L.teacher) + " : ____________________ · " + esc(L.out) + "</div>"
+        + "<table><tr><th>" + esc(L.no) + "</th><th>" + esc(L.st) + "</th>" + th + "<th>" + esc(L.rem) + "</th></tr>"
+        + '<tr><td class="n"></td><td class="w"><b>' + esc(L.work) + "</b></td>" + days.map(() => '<td class="w"></td>').join("") + "<td></td></tr>"
+        + rows + "</table>" + '<div class="ps-sign">' + esc(L.sign) + " : ____________________</div></div>";
+    }).join("");
+    let box = $("printsheet"); if(!box){ box = document.createElement("div"); box.id = "printsheet"; document.body.appendChild(box); }
+    box.innerHTML = pages || "<p>" + esc(t("nobody")) + "</p>";
+    document.body.classList.add("printsheet");
+    setTimeout(() => { window.print(); setTimeout(() => document.body.classList.remove("printsheet"), 500); }, 150);
   });
 
   /* ---------- Finances de l'école (registre à part : /ecoles/{uid}/mouvements) ---------- */
