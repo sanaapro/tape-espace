@@ -239,8 +239,21 @@
             <input id="d-amt" type="number" inputmode="numeric" data-i18n-ph="amount" placeholder="Montant">
           </div>
           <input id="d-lbl" style="margin-top:8px" data-i18n-ph="desc" placeholder="Description">
+          <label data-i18n="dDate" style="margin-top:8px">Date de la dépense</label><input id="d-date" type="date">
           <button class="primary" id="d-save" data-i18n="fAddDep">Enregistrer la dépense</button>
           <div class="msg" id="d-msg"></div>
+        </div>
+        <div class="card">
+          <h2>👩‍🏫 <span data-i18n="stTitle">Enseignants et personnel</span></h2>
+          <div class="list" id="st-list"></div>
+          <div class="muted" id="st-tot" style="margin:8px 0 4px"></div>
+          <div id="st-form" style="margin-top:10px">
+            <div class="row"><input id="st-nom" data-i18n-ph="stNom" placeholder="Nom complet"><input id="st-role" data-i18n-ph="stRole" placeholder="Poste (ex. enseignante)"></div>
+            <div class="row" style="margin-top:8px"><input id="st-phone" inputmode="tel" data-i18n-ph="phone" placeholder="Téléphone"><input id="st-sal" type="number" inputmode="numeric" data-i18n-ph="stSal" placeholder="Salaire par mois"></div>
+            <button class="primary" id="st-save" data-i18n="stAdd">Enregistrer</button>
+            <button class="ghost" id="st-cancel" type="button" hidden data-i18n="stCancel">Annuler</button>
+            <div class="msg" id="st-msg"></div>
+          </div>
         </div>
         <div class="card"><h2 data-i18n="fMoves">Mouvements</h2><div class="list" id="f-list"></div></div>
         <div class="muted" style="text-align:center;margin-top:10px" data-i18n="fSep">Ces chiffres sont ceux de l'école uniquement. L'atelier, le pressing et la boutique ont leurs propres finances.</div>
@@ -407,7 +420,7 @@
       fNewDep:"Dépense de l'école", amount:"Montant", desc:"Description", fAddDep:"Enregistrer la dépense", fMoves:"Mouvements",
       fSep:"Ces chiffres sont ceux de l'école uniquement. L'atelier, le pressing et la boutique ont leurs propres finances.",
       depSaved:"Dépense enregistrée.", needAmt:"Écrivez un montant.", noMoves:"Aucun mouvement sur cette période.",
-      catLoyer:"Loyer", catElec:"Électricité", catSal:"Salaire enseignant / personnel", catMat:"Matériel et tissu", catEnt:"Entretien des machines", catAutre:"Autre",
+      stTitle:"Enseignants et personnel", stNom:"Nom complet", stRole:"Poste (ex. enseignante)", stSal:"Salaire par mois", stAdd:"Enregistrer", stCancel:"Annuler", stNone:"Aucun enseignant enregistré.", stTot:"{k} personne(s) · salaires : {m} par mois", stPay:"Payer", stEdit:"Modifier", stDel:"Retirer", stPayAsk:"Montant versé à {n} :", stPaid:"Salaire de {n} enregistré dans les dépenses.", stNeed:"Entrez le nom et le salaire.", stSaved:"Enregistré ✓", stPaidMonth:"payé ce mois", dDate:"Date de la dépense", catLoyer:"Loyer", catElec:"Électricité", catSal:"Salaire enseignant / personnel", catMat:"Matériel et tissu", catEnt:"Entretien des machines", catAutre:"Autre",
       gEdit:"Modifier le programme", save:"Enregistrer", gEmpty:"Pas encore de programme. Touchez « Modifier le programme ».", gPh:"Ce qu'on apprend pendant ce trimestre…",
       rIdent:"L'école", currency:"Monnaie", nbTrim:"Nombre de trimestres", saved:"Enregistré.",
       rClasses:"Classes et scolarité par trimestre", rClassesHelp:"« 2e partie » : prix appliqué à partir du trimestre indiqué (ex. 2e année à partir du trimestre 4). Laisser vide si le prix ne change pas.",
@@ -451,7 +464,7 @@
       fNewDep:"School expense", amount:"Amount", desc:"Description", fAddDep:"Save expense", fMoves:"Movements",
       fSep:"These figures are for the school only. The workshop, laundry and shop have their own finances.",
       depSaved:"Expense saved.", needAmt:"Type an amount.", noMoves:"No movement in this period.",
-      catLoyer:"Rent", catElec:"Electricity", catSal:"Teacher / staff salary", catMat:"Materials and fabric", catEnt:"Machine maintenance", catAutre:"Other",
+      stTitle:"Teachers and staff", stNom:"Full name", stRole:"Role (e.g. teacher)", stSal:"Monthly salary", stAdd:"Save", stCancel:"Cancel", stNone:"No teacher recorded yet.", stTot:"{k} person(s) · salaries: {m} a month", stPay:"Pay", stEdit:"Edit", stDel:"Remove", stPayAsk:"Amount paid to {n}:", stPaid:"{n}'s salary recorded in the expenses.", stNeed:"Enter the name and the salary.", stSaved:"Saved ✓", stPaidMonth:"paid this month", dDate:"Date of the expense", catLoyer:"Rent", catElec:"Electricity", catSal:"Teacher / staff salary", catMat:"Materials and fabric", catEnt:"Machine maintenance", catAutre:"Other",
       gEdit:"Edit the programme", save:"Save", gEmpty:"No programme yet. Tap “Edit the programme”.", gPh:"What is learnt during this term…",
       rIdent:"The school", currency:"Currency", nbTrim:"Number of terms", saved:"Saved.",
       rClasses:"Classes and tuition per term", rClassesHelp:"“2nd price”: price used from the given term (e.g. 2nd year from term 4). Leave empty if the price does not change.",
@@ -953,16 +966,67 @@
       if(!askCode() || !confirm("✕ ?")) return;
       MOUVS = MOUVS.filter(m => m.id !== b.dataset.dm); remove(doc(db, "ecoles", UID, "mouvements", b.dataset.dm)); renderFinances();
     }));
+    renderStaff();
   }
   document.querySelectorAll("#f-per button").forEach(b => b.addEventListener("click", () => {
     PER = b.dataset.p; document.querySelectorAll("#f-per button").forEach(x => x.classList.toggle("on", x === b)); renderFinances();
   }));
   $("f-unlock").addEventListener("click", askCode);
+  /* ---------- Enseignants et personnel : liste sur le document école (champ « personnel »),
+     chaque salaire versé devient une dépense « Salaire enseignant / personnel » ---------- */
+  let ST_EDIT = null;
+  const staff = () => Array.isArray(ECOLE.personnel) ? ECOLE.personnel : [];
+  function saveStaff(L){ ECOLE.personnel = L; save(EREF, { personnel:L }); renderStaff(); }
+  function renderStaff(){
+    if(!$("st-list")) return;
+    const L = staff(), m0 = periodStart("mois");
+    $("st-list").innerHTML = L.map(p => {
+      const paid = MOUVS.filter(m => m.type === "depense" && m.staffId === p.id && num(m.ms) >= m0).reduce((s, m) => s + num(m.montant), 0);
+      return '<div class="it" style="cursor:default"><div class="main"><div class="t1">' + esc(p.nom) + '</div><div class="t2">' + esc(p.role || "") + (p.phone ? " · " + esc(p.phone) : "") + " · " + esc(money(num(p.salaire)))
+        + (paid > 0 ? ' · <span style="color:var(--ok)">' + esc(t("stPaidMonth")) + " " + esc(money(paid)) + "</span>" : "") + '</div></div>'
+        + '<button class="ghost gold" data-sp="' + esc(p.id) + '" style="padding:6px 9px">' + esc(t("stPay")) + '</button>'
+        + '<button class="ghost" data-se="' + esc(p.id) + '" style="padding:6px 9px;margin-left:4px">✎</button>'
+        + '<button class="ghost red" data-sd="' + esc(p.id) + '" style="padding:6px 9px;margin-left:4px">✕</button></div>';
+    }).join("") || '<div class="muted">' + esc(t("stNone")) + "</div>";
+    $("st-tot").textContent = L.length ? fmt(t("stTot"), { k:L.length, m:money(L.reduce((s, p) => s + num(p.salaire), 0)) }) : "";
+    $("st-list").querySelectorAll("[data-sp]").forEach(b => b.addEventListener("click", () => {
+      const p = staff().find(x => x.id === b.dataset.sp); if(!p) return;
+      const v = prompt(fmt(t("stPayAsk"), { n:p.nom }), String(num(p.salaire) || "")); if(v == null) return;
+      const amt = num(v); if(amt <= 0) return;
+      const id = newId("dep-"), rec = { type:"depense", cat:"catSal", staffId:p.id, montant:amt, label: t("catSal") + " — " + p.nom, ms:Date.now() };
+      MOUVS.push(Object.assign({ id }, rec)); save(doc(db, "ecoles", UID, "mouvements", id), rec, false);
+      $("st-msg").className = "msg"; $("st-msg").textContent = fmt(t("stPaid"), { n:p.nom }); renderFinances();
+    }));
+    $("st-list").querySelectorAll("[data-se]").forEach(b => b.addEventListener("click", () => {
+      const p = staff().find(x => x.id === b.dataset.se); if(!p) return;
+      ST_EDIT = p.id; $("st-nom").value = p.nom || ""; $("st-role").value = p.role || ""; $("st-phone").value = p.phone || ""; $("st-sal").value = p.salaire || "";
+      $("st-cancel").hidden = false; $("st-nom").focus();
+    }));
+    $("st-list").querySelectorAll("[data-sd]").forEach(b => b.addEventListener("click", () => {
+      const p = staff().find(x => x.id === b.dataset.sd); if(!p) return;
+      if(!askCode() || !confirm(t("stDel") + " " + p.nom + " ?")) return;
+      saveStaff(staff().filter(x => x.id !== p.id));
+    }));
+  }
+  function resetStaffForm(){ ST_EDIT = null; ["st-nom","st-role","st-phone","st-sal"].forEach(k => $(k).value = ""); $("st-cancel").hidden = true; }
+  $("st-cancel").addEventListener("click", resetStaffForm);
+  $("st-save").addEventListener("click", () => {
+    const nom = $("st-nom").value.trim(), sal = num($("st-sal").value), m = $("st-msg");
+    if(!nom || sal <= 0){ m.className = "msg err"; m.textContent = t("stNeed"); return; }
+    const d = { nom, role:$("st-role").value.trim(), phone:$("st-phone").value.trim(), salaire:sal };
+    let L = staff().slice();
+    if(ST_EDIT){ if(!askCode()) return; L = L.map(x => x.id === ST_EDIT ? Object.assign({}, x, d) : x); }
+    else L.push(Object.assign({ id:newId("st-"), createdMs:Date.now() }, d));
+    saveStaff(L); resetStaffForm(); m.className = "msg"; m.textContent = t("stSaved");
+  });
+
   $("d-save").addEventListener("click", () => {
     const amt = num($("d-amt").value), m = $("d-msg");
     if(amt <= 0){ m.className = "msg err"; m.textContent = t("needAmt"); return; }
     const cat = $("d-cat").value, lbl = $("d-lbl").value.trim();
-    const id = newId("dep-"), rec = { type:"depense", cat, montant:amt, label: t(cat) + (lbl ? " — " + lbl : ""), ms:Date.now() };
+    /* Date choisie (dépense passée notée plus tard) : midi de ce jour ; aujourd'hui = l'heure réelle. */
+    const dv = $("d-date").value, ms = (dv && dv !== ymd()) ? new Date(dv + "T12:00:00").getTime() : Date.now();
+    const id = newId("dep-"), rec = { type:"depense", cat, montant:amt, label: t(cat) + (lbl ? " — " + lbl : ""), ms };
     MOUVS.push(Object.assign({ id }, rec)); save(doc(db, "ecoles", UID, "mouvements", id), rec, false);
     $("d-amt").value = ""; $("d-lbl").value = ""; m.className = "msg"; m.textContent = t("depSaved"); renderFinances();
   });
