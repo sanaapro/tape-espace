@@ -1,0 +1,650 @@
+{
+"id": "dafd-y1-t1",
+"titre": "DAFD — Student Workbook · Year 1 · Term 1",
+"trim": 1,
+"debut": "2026-09-28",
+"joursSemaine": [
+1,
+2,
+3,
+4
+],
+"verifs": [
+"Daily mark /10 filled in (5 criteria) and signed by the teacher",
+"Fabric sample of the day glued on the work page",
+"“What I learned” written for the day"
+],
+"verifsFinSemaine": [
+"Weekly average /10 written",
+"“Seen by parent” signed",
+"Questions for the teacher answered"
+],
+"jours": [
+{
+"n": 1,
+"s": 1,
+"theme": "Welcome and discovery of the trade",
+"t": "Welcome and the trade",
+"obj": "Know the school, the trade and its tools; master 3 hand stitches.",
+"items": [
+"Meet the academy, read the rules.",
+"Tour of the workshop.",
+"Tools list (page 4)."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 2,
+"s": 1,
+"theme": "Welcome and discovery of the trade",
+"t": "The tailor's tools",
+"obj": "Know the school, the trade and its tools; master 3 hand stitches.",
+"items": [
+"Name and handle each tool.",
+"Hold shears, cut straight on paper, then fabric.",
+"Safety rules."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 3,
+"s": 1,
+"theme": "Welcome and discovery of the trade",
+"t": "First hand stitches",
+"obj": "Know the school, the trade and its tools; master 3 hand stitches.",
+"items": [
+"Thread the needle, tie a knot.",
+"Running stitch, backstitch, tacking on a cotton strip."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 4,
+"s": 1,
+"theme": "Welcome and discovery of the trade",
+"t": "The tailor's and designer's trade",
+"obj": "Know the school, the trade and its tools; master 3 hand stitches.",
+"items": [
+"Fashion careers and the school's garments.",
+"Practise and correct hand stitches."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 5,
+"s": 2,
+"theme": "Hand sewing",
+"t": "Overcast and herringbone",
+"obj": "Master finishing stitches, hems and small fasteners.",
+"items": [
+"Overcast stops the edge fraying.",
+"Herringbone for hems on thick fabric."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 6,
+"s": 2,
+"theme": "Hand sewing",
+"t": "Blind hem and rolled hem",
+"obj": "Master finishing stitches, hems and small fasteners.",
+"items": [
+"Fold, pin, sew 15 cm of blind hem.",
+"Roll and sew the edge of a voile square."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 7,
+"s": 2,
+"theme": "Hand sewing",
+"t": "Buttons, snaps, hooks",
+"obj": "Master finishing stitches, hems and small fasteners.",
+"items": [
+"Sew 4 buttons with a shank.",
+"Sew 2 snaps and 2 hooks. Start the sample book."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 8,
+"s": 2,
+"theme": "Hand sewing",
+"t": "Major West African garments",
+"obj": "Master finishing stitches, hems and small fasteners.",
+"items": [
+"Boubou, kaftan, wrapper, complet.",
+"Finish the stitch and button sample book."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 9,
+"s": 3,
+"theme": "The sewing machine",
+"t": "Parts of the machine",
+"obj": "Thread, set up and sew straight.",
+"items": [
+"Name the parts of the machine.",
+"Thread the top and the bobbin, several times."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 10,
+"s": 3,
+"theme": "The sewing machine",
+"t": "Setting and stitching",
+"obj": "Thread, set up and sew straight.",
+"items": [
+"Stitch length, tension, backstitch.",
+"Stitch on lined paper: straight lines, curves, corners."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 11,
+"s": 3,
+"theme": "The sewing machine",
+"t": "Machine care",
+"obj": "Thread, set up and sew straight.",
+"items": [
+"Clean, oil, change the needle.",
+"Sew parallel lines on fabric, secure the ends neatly."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 12,
+"s": 3,
+"theme": "The sewing machine",
+"t": "Safety and control",
+"obj": "Thread, set up and sew straight.",
+"items": [
+"Good habits at the machine.",
+"Sew a straight line along 1 m of fabric."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 13,
+"s": 4,
+"theme": "Basic seams",
+"t": "Plain seam, pressed open",
+"obj": "Join two fabrics and finish the seam neatly.",
+"items": [
+"Seam allowance: 1 to 1.5 cm.",
+"Sew and press open 3 seams."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 14,
+"s": 4,
+"theme": "Basic seams",
+"t": "French and flat-felled seams",
+"obj": "Join two fabrics and finish the seam neatly.",
+"items": [
+"A French seam encloses the edges: fine fabrics.",
+"A flat-felled seam is strong: shirts, trousers."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 15,
+"s": 4,
+"theme": "Basic seams",
+"t": "Finishing the edges",
+"obj": "Join two fabrics and finish the seam neatly.",
+"items": [
+"Zigzag, overlocker or clean edge.",
+"Glue the samples in the workbook."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 16,
+"s": 4,
+"theme": "Basic seams",
+"t": "Which seam for which fabric?",
+"obj": "Join two fabrics and finish the seam neatly.",
+"items": [
+"Choose the seam for the fabric.",
+"Sew on wax, bazin and voile, compare."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 17,
+"s": 5,
+"theme": "Knowing fabrics",
+"t": "Fibres and fabrics",
+"obj": "Recognise fabrics and prepare them before cutting.",
+"items": [
+"Natural: cotton, linen, silk. Synthetic: polyester.",
+"Touch and identify wax, bazin, voile, silk."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 18,
+"s": 5,
+"theme": "Knowing fabrics",
+"t": "Grain, selvedge, bias",
+"obj": "Recognise fabrics and prepare them before cutting.",
+"items": [
+"Find the grain and the selvedge.",
+"Cut bias strips at 45°."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 19,
+"s": 5,
+"theme": "Knowing fabrics",
+"t": "Preparing fabric",
+"obj": "Recognise fabrics and prepare them before cutting.",
+"items": [
+"Pre-shrink: wash or dampen before cutting.",
+"Press wax, bazin and delicate fabrics."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 20,
+"s": 5,
+"theme": "Knowing fabrics",
+"t": "Wax, bazin and kita",
+"obj": "Recognise fabrics and prepare them before cutting.",
+"items": [
+"Origin and care of African fabrics.",
+"Attach a bias strip to an edge."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 21,
+"s": 6,
+"theme": "Taking measurements",
+"t": "Women's measurements",
+"obj": "Take accurate measurements and record them properly.",
+"items": [
+"Follow the dress form on page 3.",
+"Measure a classmate and fill in her sheet."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 22,
+"s": 6,
+"theme": "Taking measurements",
+"t": "Men's and children's measurements",
+"obj": "Take accurate measurements and record them properly.",
+"items": [
+"Neck, back width, shirt length, inside leg.",
+"Compare results with another student."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 23,
+"s": 6,
+"theme": "Taking measurements",
+"t": "Avoiding mistakes",
+"obj": "Take accurate measurements and record them properly.",
+"items": [
+"Tape flat, level, not tight.",
+"Complete 3 full measurement sheets."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 24,
+"s": 6,
+"theme": "Taking measurements",
+"t": "The client measurement sheet",
+"obj": "Take accurate measurements and record them properly.",
+"items": [
+"Fill in a clean, complete sheet.",
+"Check measurements taken at home."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 25,
+"s": 7,
+"theme": "Fashion drawing",
+"t": "The fashion figure",
+"obj": "Draw a figure and a clear garment.",
+"items": [
+"The figure is 9 heads tall.",
+"Draw 3 front-view figures."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 26,
+"s": 7,
+"theme": "Fashion drawing",
+"t": "Flat drawing",
+"obj": "Draw a figure and a clear garment.",
+"items": [
+"Draw the garment laid flat, front and back.",
+"Show darts, zips and seams."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 27,
+"s": 7,
+"theme": "Fashion drawing",
+"t": "Colours and prints",
+"obj": "Draw a figure and a clear garment.",
+"items": [
+"Colour wax and bazin prints.",
+"Colour 2 sketches."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 28,
+"s": 7,
+"theme": "Fashion drawing",
+"t": "Fashion history",
+"obj": "Draw a figure and a clear garment.",
+"items": [
+"Key silhouettes of the 20th century.",
+"Draw an African outfit in colour."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 29,
+"s": 8,
+"theme": "Drafting the straight skirt",
+"t": "Drafting the skirt",
+"obj": "Draft a basic skirt to your measurements.",
+"items": [
+"Measurements: waist, hips, hip depth, length.",
+"Draw the rectangle, the hip line, the side curve."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 30,
+"s": 8,
+"theme": "Drafting the straight skirt",
+"t": "Darts",
+"obj": "Draft a basic skirt to your measurements.",
+"items": [
+"Work out: (hips − waist) ÷ number of darts.",
+"Add the slit and seam allowances."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 31,
+"s": 8,
+"theme": "Drafting the straight skirt",
+"t": "Laying out and cutting",
+"obj": "Draft a basic skirt to your measurements.",
+"items": [
+"Lay the pattern on grain, pin.",
+"Cut the skirt and chalk the marks."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 32,
+"s": 8,
+"theme": "Drafting the straight skirt",
+"t": "Checking a pattern",
+"obj": "Draft a basic skirt to your measurements.",
+"items": [
+"Check measurements, darts and marks.",
+"Draft a 2nd skirt to a classmate's measurements."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 33,
+"s": 9,
+"theme": "Sewing the skirt",
+"t": "Darts and seams",
+"obj": "Sew a complete skirt.",
+"items": [
+"Order: darts, zip, sides, waistband, hem.",
+"Sew the darts and side seams."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 34,
+"s": 9,
+"theme": "Sewing the skirt",
+"t": "Invisible zip",
+"obj": "Sew a complete skirt.",
+"items": [
+"Press the coil open.",
+"Sew with the special foot, close to the teeth."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 35,
+"s": 9,
+"theme": "Sewing the skirt",
+"t": "Waistband, buttonhole and hem",
+"obj": "Sew a complete skirt.",
+"items": [
+"Attach the waistband, sew the machine buttonhole, sew on the button.",
+"Blind hem, press the skirt."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 36,
+"s": 9,
+"theme": "Sewing the skirt",
+"t": "Quality check",
+"obj": "Sew a complete skirt.",
+"items": [
+"What to check on a finished skirt.",
+"Fitting, corrections and finishing."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 37,
+"s": 10,
+"theme": "Skirt variations",
+"t": "Flared and A-line skirts",
+"obj": "Adapt the basic pattern.",
+"items": [
+"Close the darts, open the hem.",
+"Draft and cut a flared skirt."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 38,
+"s": 10,
+"theme": "Skirt variations",
+"t": "Pencil and godet skirts",
+"obj": "Adapt the basic pattern.",
+"items": [
+"Narrow the hem for a pencil skirt.",
+"Sew the flared skirt."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 39,
+"s": 10,
+"theme": "Skirt variations",
+"t": "Wrap skirt",
+"obj": "Adapt the basic pattern.",
+"items": [
+"The sewn wrapper: overlap at the front.",
+"Draft and cut a wax wrap skirt."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 40,
+"s": 10,
+"theme": "Skirt variations",
+"t": "Skirts and body shapes",
+"obj": "Adapt the basic pattern.",
+"items": [
+"Choose the skirt for the figure.",
+"Finish the flared and wrap skirts."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 41,
+"s": 11,
+"theme": "Pockets and tote bag",
+"t": "Patch pocket",
+"obj": "Attach pockets and finish a sellable item.",
+"items": [
+"Fold the top, tack the curved edge.",
+"Sew the pocket with triangle reinforcements."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 42,
+"s": 11,
+"theme": "Pockets and tote bag",
+"t": "In-seam pocket",
+"obj": "Attach pockets and finish a sellable item.",
+"items": [
+"Pocket in the side seam.",
+"Make a sample."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 43,
+"s": 11,
+"theme": "Pockets and tote bag",
+"t": "Project: wax tote bag",
+"obj": "Attach pockets and finish a sellable item.",
+"items": [
+"Cut the body, handles and lining.",
+"Sew and finish the bag."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 44,
+"s": 11,
+"theme": "Pockets and tote bag",
+"t": "Pricing the bag",
+"obj": "Attach pockets and finish a sellable item.",
+"items": [
+"Work out the cost price of the bag.",
+"Finish the bag, photo for the portfolio."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 45,
+"s": 12,
+"theme": "Term 1 exam",
+"t": "Revision",
+"obj": "Show what you have learned this term.",
+"items": [
+"Revision.",
+"Finish outstanding work."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 46,
+"s": 12,
+"theme": "Term 1 exam",
+"t": "Written exam and sewing test",
+"obj": "Show what you have learned this term.",
+"items": [
+"Written exam.",
+"Sewing test."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 47,
+"s": 12,
+"theme": "Term 1 exam",
+"t": "Pattern drafting test",
+"obj": "Show what you have learned this term.",
+"items": [
+"Pattern drafting test.",
+"Group correction."
+],
+"apporter": "",
+"devoir": ""
+},
+{
+"n": 48,
+"s": 12,
+"theme": "Term 1 exam",
+"t": "Report cards",
+"obj": "Show what you have learned this term.",
+"items": [
+"Report cards and one-to-one talk.",
+"Tidy up, machine care."
+],
+"apporter": "",
+"devoir": ""
+}
+]
+}

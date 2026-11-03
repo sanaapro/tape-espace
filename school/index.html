@@ -81,6 +81,11 @@
   .prog h3{ font-family:var(--serif); color:var(--gold); font-size:15px; margin:14px 0 6px; }
   .prog .txt{ white-space:pre-wrap; color:var(--txt); font-size:14px; line-height:1.5; }
   .ed-line{ display:flex; gap:6px; align-items:center; margin-top:8px; } .ed-line input,.ed-line select{ padding:9px 8px; font-size:14px; }
+  .chips{ display:flex; gap:6px; overflow-x:auto; margin-top:12px; padding-bottom:4px; scrollbar-width:none; } .chips::-webkit-scrollbar{ display:none; }
+  .chips .chip{ flex:0 0 auto; } .chip.on{ background:var(--gold); color:#141310; border-color:var(--gold); font-weight:700; }
+  .lesson h3{ font-family:var(--serif); color:var(--gold); font-size:17px; margin:4px 0 6px; } .lesson ol{ margin:8px 0; padding-left:20px; line-height:1.5; } .lesson .k{ color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:1px; }
+  .chk{ list-style:none; padding:0; margin:0; } .chk li{ padding:7px 0; border-bottom:1px solid var(--line); } .chk li:before{ content:'☐ '; color:var(--gold); }
+  .wk .it.today{ background:#22200f; border-radius:8px; }
   .foot{ text-align:center; color:var(--muted); font-size:11px; margin-top:30px; letter-spacing:1px; }
 </style>
 </head>
@@ -163,10 +168,9 @@
     <!-- ÉLÈVES -->
     <section data-pane="eleves" hidden>
       <button class="primary" id="e-new">＋ <span data-i18n="eNew">Nouvel élève</span></button>
-      <div class="row" style="margin-top:12px">
-        <input id="e-q" data-i18n-ph="search" placeholder="Rechercher…">
-        <select id="e-classe"></select>
-      </div>
+      <div class="chips" id="e-chips"></div>
+      <input id="e-q" style="margin-top:8px" data-i18n-ph="search" placeholder="Rechercher…">
+      <div class="card" id="e-clsinfo" hidden></div>
       <div class="fl" style="margin-top:8px">
         <div class="seg" id="e-st"><button data-st="actif" class="on" data-i18n="stActif">Inscrits</button><button data-st="fini" data-i18n="stFini">Diplômés</button><button data-st="parti" data-i18n="stParti">Partis</button></div>
       </div>
@@ -227,6 +231,9 @@
 
     <!-- PROGRAMME -->
     <section data-pane="programme" hidden>
+      <div class="chips" id="g-chips"></div>
+      <div id="g-class"></div>
+      <h2 style="font-family:var(--serif);color:var(--gold);font-size:16px;margin:22px 0 0" data-i18n="gTrimTitle">Programme par trimestre</h2>
       <div class="card prog" id="g-view"></div>
       <button class="ghost gold" id="g-edit" style="margin-top:12px" data-i18n="gEdit">Modifier le programme</button>
       <div class="card" id="g-form" hidden>
@@ -398,6 +405,7 @@
       remind:"Bonjour, ceci est un rappel de {s} pour {n}. Reste à payer : {r}. Merci de passer à l'école pour régler.",
       toPay:"reste {m}", payAuto:"Répartir automatiquement", recScol:"Paiement {n} — {p}", tooMuch:"Le montant dépasse ce qui reste ({m}). Continuer ?",
       offline:"Hors ligne : enregistré sur le téléphone, envoi au retour du réseau.", writeErr:"Le serveur a refusé l'enregistrement.",
+      defCls4:"2e année", gTrimTitle:"Programme par trimestre", today:"Aujourd'hui", thisWeek:"Cette semaine", toCheck:"À vérifier dans le cahier", hwYesterday:"Devoir du dernier cours", endWeek:"Fin de semaine", bring:"À apporter", homework:"Devoir", weekDay:"Semaine {s} · Jour {n}", noClassToday:"Pas de cours aujourd'hui pour cette classe.", nextLesson:"Prochain cours : {d}", closedBtn:"École fermée aujourd'hui (décaler le programme)", reopenBtn:"Annuler la fermeture d'aujourd'hui", closedSure:"Marquer aujourd'hui comme fermé ? Le programme du cahier sera décalé d'un jour de cours.", closedDay:"Jour de fermeture.", noCahier:"Aucun cahier relié à cette classe.", cahierEnd:"Le cahier de ce trimestre est terminé.", seeList:"Voir les élèves", clsSettings:"Réglages de la classe", horaire:"Horaire", teacher:"Enseignant(e)", classDays:"Jours de cours", clsStart:"Début du cahier pour cette classe", cahierLbl:"Cahier", cahierAuto:"Automatique (selon le trimestre des élèves)", students:"élève(s)", pickClass:"Choisissez une classe.", dows:"D,L,M,M,J,V,S",
       defCls1:"1re année — matin", defCls2:"1re année — après-midi", defCls3:"Classe du week-end", fForm:"Formulaire", fInsc:"Inscription", fUnif:"Uniforme", fMach:"Entretien des machines", fCahier:"Cahier de l'élève"
     },
     en: {
@@ -441,6 +449,7 @@
       remind:"Hello, this is a reminder from {s} for {n}. Left to pay: {r}. Please come to the school to settle it.",
       toPay:"{m} left", payAuto:"Spread automatically", recScol:"Payment {n} — {p}", tooMuch:"The amount is more than what is left ({m}). Continue?",
       offline:"Offline: saved on the phone, it will be sent when the network is back.", writeErr:"The server refused to save.",
+      defCls4:"2nd year", gTrimTitle:"Programme by term", today:"Today", thisWeek:"This week", toCheck:"To check in the workbook", hwYesterday:"Homework from last class", endWeek:"End of week", bring:"Bring", homework:"Homework", weekDay:"Week {s} · Day {n}", noClassToday:"No class today for this group.", nextLesson:"Next class: {d}", closedBtn:"School closed today (shift the programme)", reopenBtn:"Cancel today's closure", closedSure:"Mark today as closed? The workbook programme will move by one class day.", closedDay:"Closed day.", noCahier:"No workbook linked to this class.", cahierEnd:"This term's workbook is finished.", seeList:"See the students", clsSettings:"Class settings", horaire:"Time", teacher:"Teacher", classDays:"Class days", clsStart:"Workbook start for this class", cahierLbl:"Workbook", cahierAuto:"Automatic (from the students' term)", students:"student(s)", pickClass:"Choose a class.", dows:"S,M,T,W,T,F,S",
       defCls1:"1st year — morning", defCls2:"1st year — afternoon", defCls3:"Weekend class", fForm:"Form", fInsc:"Registration", fUnif:"Uniform", fMach:"Machine maintenance", fCahier:"Student workbook"
     }
   };
@@ -585,7 +594,8 @@
       classes: [
         { id:"c1", nom:t("defCls1"), prix:19500, prix2:24500, des:4 },
         { id:"c2", nom:t("defCls2"), prix:19500, prix2:24500, des:4 },
-        { id:"c3", nom:t("defCls3"), prix:16500, prix2:0, des:0 }
+        { id:"c3", nom:t("defCls3"), prix:16500, prix2:0, des:0, jours:[5,6] },
+        { id:"c4", nom:t("defCls4"), prix:24500, prix2:0, des:0 }
       ],
       frais: [
         { id:"form", nom:t("fForm"), montant:200, freq:"once" },
@@ -615,7 +625,7 @@
 
   /* ---------- Données en direct ---------- */
   function startApp(){
-    UNSUB.push(onSnapshot(EREF, s => { ECOLE = s.data() || {}; paintHead(); paintLock(); renderAll(); }));
+    UNSUB.push(onSnapshot(EREF, s => { ECOLE = s.data() || {}; paintHead(); paintLock(); migrate(); loadCahiers(); renderAll(); }));
     const sub = (name, setter) => UNSUB.push(onSnapshot(collection(db, "ecoles", UID, name),
       qs => { setter(qs.docs.map(d => Object.assign({ id:d.id }, d.data()))); renderAll(); },
       e => { if(e && e.code === "permission-denied") toast(t("rulesMissing")); }));
@@ -625,6 +635,21 @@
     sub("notes", a => { NOTES = a; });
     $("p-date").value = ymd(); $("n-date").value = ymd();
     applyLang(); setTab(TAB); show("app");
+  }
+  /* Mise à jour unique des écoles créées avec l'ancienne grille : ajoute la classe de 2e année,
+     les jours du week-end (vendredi-samedi) et les horaires connus, sans toucher aux réglages déjà faits. */
+  function migrate(){
+    if(ECOLE.migr1 || !isOwner()) return;
+    const cl = (ECOLE.classes || []).map(x => Object.assign({}, x)), ids = cl.map(x => x.id).join(",");
+    if(ids === "c1,c2,c3"){
+      const c1 = cl[0], c2 = cl[1], c3 = cl[2];
+      if(!c1.horaire) c1.horaire = "9:00 – 14:00";
+      if(!c2.horaire) c2.horaire = "15:30 – 18:30";
+      if(!c3.jours) c3.jours = [5,6];
+      cl.push({ id:"c4", nom:t("defCls4"), prix:24500, prix2:0, des:0 });
+      ECOLE.classes = cl; save(EREF, { classes:cl, migr1:true });
+    } else save(EREF, { migr1:true });
+    ECOLE.migr1 = true;
   }
   function paintHead(){
     $("h-name").textContent = ECOLE.name || "SanaaPro School";
@@ -727,16 +752,35 @@
     }
     $("a-classes").innerHTML = classes().map(c => {
       const n = A.filter(e => e.classeId === c.id).length;
-      return '<div class="it" data-cls="' + esc(c.id) + '"><div class="main"><div class="t1">' + esc(c.nom) + '</div></div><span class="amt">' + n + "</span></div>";
+      const L = lessonInfo(c, today);
+      const sub = [c.horaire, L && L.lesson && L.isClassDay ? "📖 " + L.lesson.t : ""].filter(Boolean).join(" · ");
+      return '<div class="it" data-cls="' + esc(c.id) + '"><div class="main"><div class="t1">' + esc(c.nom) + '</div>' + (sub ? '<div class="t2">' + esc(sub) + "</div>" : "") + '</div><span class="amt">' + n + "</span></div>";
     }).join("") || '<div class="muted">' + esc(t("nobody")) + "</div>";
-    $("a-classes").querySelectorAll("[data-cls]").forEach(n => n.addEventListener("click", () => { $("e-classe").value = n.dataset.cls; setTab("eleves"); }));
+    $("a-classes").querySelectorAll("[data-cls]").forEach(n => n.addEventListener("click", () => { ECLS = n.dataset.cls; setTab("eleves"); }));
     $("a-owe").innerHTML = owe.length ? owe.map(x => itemHtml(x.e)).join("") : '<div class="muted">' + esc(A.length ? t("allPaid") : t("nobody")) + "</div>";
     bindItems($("a-owe"));
   }
 
+  let ECLS = "";
+  function classChips(box, cur, onPick, withAll){
+    const A = actifs();
+    box.innerHTML = (withAll ? '<button class="chip' + (!cur ? " on" : "") + '" data-c="">' + esc(t("allClasses")) + " · " + A.length + "</button>" : "")
+      + classes().map(c => '<button class="chip' + (cur === c.id ? " on" : "") + '" data-c="' + esc(c.id) + '">' + esc(c.nom) + " · " + A.filter(e => e.classeId === c.id).length + "</button>").join("");
+    box.querySelectorAll("[data-c]").forEach(b => b.addEventListener("click", () => onPick(b.dataset.c)));
+  }
   function renderEleves(){
-    fillClasseSelect($("e-classe"), true);
-    const q = $("e-q").value.trim().toLowerCase(), cl = $("e-classe").value;
+    if(ECLS && !classes().some(c => c.id === ECLS)) ECLS = "";
+    classChips($("e-chips"), ECLS, (id) => { ECLS = id; renderEleves(); }, true);
+    const ci = classes().find(c => c.id === ECLS);
+    $("e-clsinfo").hidden = !ci;
+    if(ci){
+      const L = ci ? lessonInfo(ci, ymd()) : null;
+      $("e-clsinfo").innerHTML = '<div class="t1" style="font-weight:700">' + esc(ci.nom) + '</div><div class="muted">' + esc([ci.horaire, ci.enseignant].filter(Boolean).join(" · ")) + "</div>"
+        + (L && L.lesson ? '<div style="margin-top:8px"><span class="muted">' + esc(t("today")) + " : </span><b>" + esc(L.lesson.t) + "</b></div>" : "")
+        + '<button class="ghost gold" style="margin-top:10px" id="e-goprog">📖 ' + esc(t("tProgramme")) + "</button>";
+      $("e-goprog").onclick = () => { GCLS = ci.id; setTab("programme"); };
+    }
+    const q = $("e-q").value.trim().toLowerCase(), cl = ECLS;
     const L = ELEVES.filter(e => (e.statut || "actif") === ESTAT)
       .filter(e => !cl || e.classeId === cl)
       .filter(e => !q || [e.nom, e.phone, e.parent, e.parentPhone].join(" ").toLowerCase().includes(q))
@@ -745,7 +789,6 @@
     bindItems($("e-list"));
   }
   $("e-q").addEventListener("input", renderEleves);
-  $("e-classe").addEventListener("change", renderEleves);
   document.querySelectorAll("#e-st button").forEach(b => b.addEventListener("click", () => {
     ESTAT = b.dataset.st; document.querySelectorAll("#e-st button").forEach(x => x.classList.toggle("on", x === b)); renderEleves();
   }));
@@ -806,6 +849,7 @@
     }).join("") || '<div class="muted">' + esc(t("nobody")) + "</div>";
     const firstWork = Object.values(ex).find(n => n.travail);
     if(firstWork && !$("n-work").value) $("n-work").value = firstWork.travail;
+    if(!$("n-work").value && cl){ const c = classes().find(x => x.id === cl), L = c && lessonInfo(c, date); if(L && L.lesson && L.isClassDay) $("n-work").value = L.lesson.t; }
     $("n-avg").innerHTML = L.map(e => {
       const tr = num(e.trim) || 1, ns = NOTES.filter(n => n.eleveId === e.id && num(n.trim) === tr);
       const m = ns.length ? (ns.reduce((s, n) => s + num(n.note), 0) / ns.length) : null;
@@ -873,7 +917,122 @@
   });
 
   /* ---------- Programme ---------- */
+  /* ---------- Cahiers de l'élève : le programme du jour vient directement du cahier ---------- */
+  let CAH_IDX = [], CAH = {}, CAH_LOADING = false, GCLS = null;
+  async function loadCahiers(){
+    if(CAH_LOADING) return; CAH_LOADING = true;
+    if(!/DAFD|Djamil/i.test((ECOLE.name || "") + " " + (ECOLE.sousTitre || ""))) return;
+    try{
+      CAH_IDX = await fetch("cahiers/index.json", { cache:"no-cache" }).then(r => r.json());
+      for(const c of CAH_IDX){ try{ CAH[c.id] = await fetch("cahiers/" + c.id + ".json").then(r => r.json()); }catch(e){} }
+    }catch(e){}
+    renderAll();
+  }
+  function fermes(){ return (ECOLE && ECOLE.fermetures) || []; }
+  function classDays(c){ return (c.jours && c.jours.length) ? c.jours.map(Number) : [1,2,3,4]; }
+  function cahierFor(c){
+    if(c.cahier && CAH[c.cahier]) return CAH[c.cahier];
+    const tr = {}; actifs().filter(e => e.classeId === c.id).forEach(e => { const k = num(e.trim) || 1; tr[k] = (tr[k] || 0) + 1; });
+    let best = Object.keys(tr).sort((a, b) => tr[b] - tr[a])[0];
+    if(!best) best = /2e|2nd|year 2|deuxi/i.test(c.nom || "") ? 4 : 1;
+    const all = Object.values(CAH);
+    return all.find(x => num(x.trim) === num(best)) || null;
+  }
+  const dParse = (s) => new Date(s + "T12:00:00");
+  /* Rang du jour de cours : on compte les jours de cours de la classe depuis le début du cahier, sans les jours fermés. */
+  function lessonInfo(c, dateStr){
+    const cah = cahierFor(c); if(!cah) return null;
+    const days = classDays(c), closed = fermes(), start = dParse(c.debut || cah.debut), target = dParse(dateStr);
+    if(target < start) return { cah, lesson: cah.jours[0], isClassDay:false, before:true, next: c.debut || cah.debut };
+    let idx = -1; const d = new Date(start);
+    while(d <= target){ const k = ymd(d); if(days.includes(d.getDay()) && !closed.includes(k)) idx++; d.setDate(d.getDate() + 1); }
+    const isClassDay = days.includes(target.getDay()) && !closed.includes(dateStr);
+    if(isClassDay) return { cah, idx, lesson: cah.jours[idx] || null, isClassDay:true, closed:false };
+    // Pas cours ce jour : on montre le prochain cours.
+    const n = new Date(target); for(let i = 0; i < 21; i++){ n.setDate(n.getDate() + 1); const k = ymd(n); if(days.includes(n.getDay()) && !closed.includes(k)) break; }
+    return { cah, idx: idx + 1, lesson: cah.jours[idx + 1] || null, isClassDay:false, closed: closed.includes(dateStr), next: ymd(n) };
+  }
+  function dLong(s){ try{ return dParse(s).toLocaleDateString(LANG === "en" ? "en-GB" : "fr-FR", { weekday:"long", day:"numeric", month:"long" }); }catch(e){ return s; } }
+  function lessonHtml(L){
+    const x = L.lesson;
+    return '<div class="lesson"><div class="k">' + esc(fmt(t("weekDay"), { s:x.s, n:x.n })) + " · " + esc(x.theme || "") + "</div><h3>" + esc(x.t) + "</h3>"
+      + (x.obj ? '<div>' + esc(x.obj) + "</div>" : "")
+      + (x.items && x.items.length ? "<ol>" + x.items.map(i => "<li>" + esc(i) + "</li>").join("") + "</ol>" : "")
+      + (x.apporter ? '<div><span class="k">' + esc(t("bring")) + "</span><br>" + esc(x.apporter) + "</div>" : "")
+      + (x.devoir ? '<div style="margin-top:8px"><span class="k">' + esc(t("homework")) + "</span><br>" + esc(x.devoir) + "</div>" : "")
+      + "</div>";
+  }
+  function renderClassProgramme(){
+    if(GCLS && !classes().some(c => c.id === GCLS)) GCLS = null;
+    if(!GCLS && classes()[0]) GCLS = classes()[0].id;
+    classChips($("g-chips"), GCLS, (id) => { GCLS = id; renderProgramme(); }, false);
+    const c = classes().find(x => x.id === GCLS), box = $("g-class");
+    if(!c){ box.innerHTML = '<div class="card muted">' + esc(t("pickClass")) + "</div>"; return; }
+    const today = ymd(), L = lessonInfo(c, today), nb = actifs().filter(e => e.classeId === c.id).length;
+    let h = '<div class="card"><div style="font-weight:700;font-size:16px">' + esc(c.nom) + '</div><div class="muted">'
+      + esc([c.horaire, c.enseignant, nb + " " + t("students")].filter(Boolean).join(" · ")) + '</div><button class="ghost" style="margin-top:10px" id="g-list">👥 ' + esc(t("seeList")) + "</button></div>";
+    if(!L){
+      h += '<div class="card muted">' + esc(t("noCahier")) + "</div>";
+    } else {
+      h += '<div class="card"><h2>📖 ' + esc(t("today")) + " — " + esc(dLong(today)) + '</h2><div class="muted" style="margin:-6px 0 10px">' + esc(L.cah.titre) + "</div>";
+      if(L.closed) h += '<div class="muted">' + esc(t("closedDay")) + "</div>";
+      if(!L.isClassDay){
+        h += '<div class="muted">' + esc(t("noClassToday")) + " " + esc(fmt(t("nextLesson"), { d:dLong(L.next) })) + "</div>";
+        if(L.lesson) h += '<div style="margin-top:10px">' + lessonHtml(L) + "</div>";
+      } else if(L.lesson){ h += lessonHtml(L); }
+      else h += '<div class="muted">' + esc(t("cahierEnd")) + "</div>";
+      if(L.isClassDay || L.closed) h += '<button class="ghost' + (L.closed ? "" : " red") + '" style="margin-top:12px" id="g-close">' + esc(L.closed ? t("reopenBtn") : t("closedBtn")) + "</button>";
+      h += "</div>";
+      if(L.isClassDay && L.lesson){
+        const prev = L.cah.jours[L.idx - 1];
+        const days = classDays(c), lastOfWeek = Math.max.apply(null, days.filter(x => x !== 0)) === dParse(today).getDay();
+        h += '<div class="card"><h2>✔ ' + esc(t("toCheck")) + '</h2><ul class="chk">'
+          + (L.cah.verifs || []).map(v => "<li>" + esc(v) + "</li>").join("")
+          + (prev && prev.devoir ? "<li><b>" + esc(t("hwYesterday")) + " :</b> " + esc(prev.devoir) + "</li>" : "")
+          + (lastOfWeek ? (L.cah.verifsFinSemaine || []).map(v => "<li><b>" + esc(t("endWeek")) + " :</b> " + esc(v) + "</li>").join("") : "")
+          + "</ul></div>";
+      }
+      // Cette semaine : du lundi au dimanche de la semaine courante.
+      const mon = dParse(today); mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7));
+      let w = "";
+      for(let i = 0; i < 7; i++){
+        const d = new Date(mon); d.setDate(mon.getDate() + i); const k = ymd(d);
+        if(!classDays(c).includes(d.getDay())) continue;
+        const Li = lessonInfo(c, k);
+        const ttl = Li && Li.closed ? t("closedDay") : (Li && Li.isClassDay && Li.lesson ? Li.lesson.t : "—");
+        w += '<div class="it' + (k === today ? " today" : "") + '" style="cursor:default"><div class="main"><div class="t1">' + esc(ttl) + '</div><div class="t2">' + esc(dLong(k)) + (Li && Li.isClassDay && Li.lesson ? " · " + esc(fmt(t("weekDay"), { s:Li.lesson.s, n:Li.lesson.n })) : "") + "</div></div></div>";
+      }
+      h += '<div class="card wk"><h2>🗓 ' + esc(t("thisWeek")) + '</h2><div class="list">' + w + "</div></div>";
+    }
+    // Réglages de la classe
+    const dn = t("dows").split(",");
+    const opts = '<option value="">' + esc(t("cahierAuto")) + "</option>" + Object.values(CAH).map(x => '<option value="' + esc(x.id) + '"' + (c.cahier === x.id ? " selected" : "") + ">" + esc(x.titre) + "</option>").join("");
+    h += '<details class="card"><summary style="cursor:pointer;color:var(--gold);font-weight:700">⚙ ' + esc(t("clsSettings")) + "</summary>"
+      + "<label>" + esc(t("horaire")) + '</label><input id="gc-h" value="' + esc(c.horaire || "") + '" placeholder="9:00 – 14:00">'
+      + "<label>" + esc(t("teacher")) + '</label><input id="gc-t" value="' + esc(c.enseignant || "") + '">'
+      + "<label>" + esc(t("classDays")) + '</label><div class="fl" id="gc-d">' + [1,2,3,4,5,6,0].map(k => '<button type="button" class="chip' + (classDays(c).includes(k) ? " on" : "") + '" data-d="' + k + '">' + esc(dn[k]) + "</button>").join("") + "</div>"
+      + "<label>" + esc(t("clsStart")) + '</label><input id="gc-s" type="date" value="' + esc(c.debut || (L ? L.cah.debut : "")) + '">'
+      + (Object.keys(CAH).length ? "<label>" + esc(t("cahierLbl")) + '</label><select id="gc-c">' + opts + "</select>" : "")
+      + '<button class="primary" id="gc-save">' + esc(t("save")) + '</button><div class="msg" id="gc-msg"></div></details>';
+    box.innerHTML = h;
+    $("g-list").onclick = () => { ECLS = c.id; setTab("eleves"); };
+    if($("g-close")) $("g-close").onclick = () => {
+      const f = fermes().slice(), i = f.indexOf(today);
+      if(i >= 0) f.splice(i, 1); else { if(!confirm(t("closedSure"))) return; f.push(today); }
+      ECOLE.fermetures = f; save(EREF, { fermetures:f }); renderAll();
+    };
+    box.querySelectorAll("#gc-d [data-d]").forEach(b => b.addEventListener("click", () => b.classList.toggle("on")));
+    $("gc-save").onclick = () => {
+      const cl = classes().map(x => Object.assign({}, x)), me = cl.find(x => x.id === c.id);
+      me.horaire = $("gc-h").value.trim(); me.enseignant = $("gc-t").value.trim();
+      me.jours = [...box.querySelectorAll("#gc-d .chip.on")].map(b => num(b.dataset.d));
+      me.debut = $("gc-s").value || ""; if($("gc-c")) me.cahier = $("gc-c").value;
+      ECOLE.classes = cl; save(EREF, { classes:cl }); CF_DRAFT = null; $("gc-msg").textContent = t("saved"); renderAll();
+    };
+  }
+
   function renderProgramme(){
+    renderClassProgramme();
     const P = ECOLE.programme || {}, n = nbTrim();
     let h = "";
     for(let i = 1; i <= n; i++) if(P[i]) h += "<h3>" + esc(t("trim")) + " " + i + '</h3><div class="txt">' + esc(P[i]) + "</div>";

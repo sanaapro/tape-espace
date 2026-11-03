@@ -1,7 +1,7 @@
 /* SanaaPro School : service worker.
    Cache PRÉFIXÉ "sanaapro-school-" : le domaine sanaapro.github.io est partagé
    avec l'app couture (préfixe "sanaapro-tape-espace-"), on ne touche jamais à ses caches. */
-const CACHE = "sanaapro-school-v1";
+const CACHE = "sanaapro-school-v2";
 const PREFIX = "sanaapro-school-";
 const CORE = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 

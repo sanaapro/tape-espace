@@ -1,0 +1,853 @@
+{
+"id": "dafd-y2-t1",
+"titre": "DAFD — Student Workbook · Year 2 · Trimester 1",
+"trim": 4,
+"debut": "2026-10-05",
+"joursSemaine": [
+1,
+2,
+3,
+4
+],
+"verifs": [
+"Date written on the day page",
+"“My client” column of the rules table filled in before cutting (teacher checks)",
+"Teacher check: Done + grade /20 and signature"
+],
+"verifsFinSemaine": [
+"All day pages of the week signed",
+"Finished garments photographed for the portfolio"
+],
+"jours": [
+{
+"n": 1,
+"s": 1,
+"theme": "Fresh Start",
+"t": "Welcome back – Year 1 review",
+"obj": "Meet again, review your Year 1 work and correct your mistakes before starting Year 2.",
+"items": [
+"Welcome back: greet your classmates; check your book, tape, square ruler, hip curve, chalk and scissors.",
+"Lay your Year 1 garments on the table; tell the class who you made them for.",
+"Grade each garment with the 5 checks: fit, finish inside, stitching, pressing, time.",
+"Find your 3 main mistakes; write each one and how to correct it in the table.",
+"Correct one mistake on the garment today; the teacher checks and signs."
+],
+"apporter": "Your best Year 1 garments (sewn for friends or family), your Year 1 notes and tools",
+"devoir": "Write your 3 mistakes and how you will avoid them in Year 2.",
+"devoirVeille": null
+},
+{
+"n": 2,
+"s": 1,
+"theme": "Fresh Start",
+"t": "Bodice block: draft",
+"obj": "Draft a fitted bodice block (front and back) that will be the base of every dress and top this trimester.",
+"items": [
+"Draw two rectangles: back = bust ÷ 4 + 1 wide, front = bust ÷ 4 + 2 wide, both as long as the back length + 4 cm.",
+"Neck, shoulder point X and slope 4.5 cm; join A to B on back and front.",
+"Armhole depth bust ÷ 4 - 2; widths at half depth; draw the curves with the hip curve.",
+"Place the bust point (down 26, in span ÷ 2); draw the side dart and the waist dart, both stopping 2.5 cm before it.",
+"Shape the waist; true the seams: side seams and shoulders must be the same length front and back.",
+"Add 1.5 cm on side seams, 1 cm elsewhere; cut the toile in calico."
+],
+"apporter": "Bust, waist, shoulder, neck, back and front length, bust point, span",
+"devoir": "Cut the calico toile and bring it tomorrow.",
+"devoirVeille": null
+},
+{
+"n": 3,
+"s": 1,
+"theme": "Fresh Start",
+"t": "Bodice block: toile & fitting",
+"obj": "Fit the toile on a partner, correct the pattern and trace the final block on card.",
+"items": [
+"Baste the darts, shoulders and side seams (4 mm stitch); press.",
+"Fit on your partner over light clothes; pin CF and CB on the body.",
+"Check every point of the table; pin and chalk each correction.",
+"Unpick; report the corrections on the paper pattern (never only on the toile).",
+"Trace the final block on card: name, measurements, grain, notches, 'BODICE BLOCK – Year 2'."
+],
+"apporter": "Calico toile from Day 2, your partner",
+"devoir": "Write every correction you made and why.",
+"devoirVeille": null
+},
+{
+"n": 4,
+"s": 1,
+"theme": "Fresh Start",
+"t": "Sleeveless shell top",
+"obj": "Turn the bodice block into a lined-look sleeveless top with an all-in-one facing, in one session.",
+"items": [
+"Trace the block; lengthen to back length + 20 cm; hip = hip ÷ 4 + 1.",
+"Narrow the shoulder 2 cm; raise the armhole 1 cm; widen the neck 1.5 cm and lower the front 2 cm.",
+"Draft an all-in-one facing 5 cm wide (neck + armholes) on front and back.",
+"Cut; sew darts and shoulders of shell and facing separately.",
+"Attach the facing by the roll method; understitch; side seams of shell and facing in one run.",
+"Invisible zip 40 cm at CB; hem 2 cm; press."
+],
+"apporter": "Bodice block, hip",
+"devoir": "Portfolio photo, front and back.",
+"devoirVeille": null
+},
+{
+"n": 5,
+"s": 2,
+"theme": "The Men's Shirt",
+"t": "Long-sleeve shirt: full draft & cutting",
+"obj": "Draft every piece of the men's shirt – back, yoke, front, sleeve, collar, stand, cuff – and cut it.",
+"items": [
+"Back: rectangle chest ÷ 4 + 3 by shirt length; neck A, shoulder X and B, armhole C, width W; yoke 8 cm under the neck.",
+"Front: same frame; neck depth neck ÷ 6 + 1.5; front width shoulder ÷ 2 - 2.5; stand 2 + facing 3.5.",
+"Curve the hem: side 6 cm higher than CB and CF.",
+"Measure the armhole on the paper (back + front); draft the sleeve: cap = armhole ÷ 4, diagonals = each armhole.",
+"Collar: stand and leaf = neck ÷ 2 + 1.5; check against the neckline measured on the paper.",
+"Cut on grain; notches; fuse collar, stand, cuffs and facing."
+],
+"apporter": "Neck, shoulder, chest, shirt length, sleeve, arm round, wrist",
+"devoir": "Pack your pieces in order in a bag.",
+"devoirVeille": null
+},
+{
+"n": 6,
+"s": 2,
+"theme": "The Men's Shirt",
+"t": "Long-sleeve shirt: sewing & finishing",
+"obj": "Sew the complete shirt to selling quality in one session.",
+"items": [
+"Box pleat; back between the two yokes (roll method); shoulders to the yoke; edge-stitch 1 mm.",
+"Fold and stitch the front facings.",
+"Collar: sew the leaf, trim to 0.5, turn, topstitch 6 mm; sandwich in the stand; attach; edge-stitch.",
+"Tower placket 14 cm on each sleeve; set the sleeves flat; side + sleeve seam in one line.",
+"Pleat the sleeve to 24 cm; attach the cuffs; hem 1 + 1 cm.",
+"7 buttonholes on the front, 1 on the stand, 1 per cuff; buttons; press."
+],
+"apporter": "Your cut pieces",
+"devoir": "Portfolio photo + your total time.",
+"devoirVeille": null
+},
+{
+"n": 7,
+"s": 2,
+"theme": "The Men's Shirt",
+"t": "Short-sleeve shirt with chest pocket",
+"obj": "Adapt the shirt pattern to a short-sleeve shirt with a precise chest pocket, in one session.",
+"items": [
+"Trace the shirt pattern; shorten the body 4 cm (worn outside the trousers).",
+"Sleeve: 24 cm long from the shoulder point; hem width = arm round + 6; 3 cm hem allowance.",
+"Pocket: chest ÷ 8 wide, 14 cm high + 3 cm fold + 1 cm seams; place it 21 cm under the neck point, 6 cm from CF.",
+"Cut; press the pocket on a card template; topstitch it 2 mm with triangle bar-tacks at the top.",
+"Assemble as Day 6, without cuffs; hem the sleeves 3 cm, topstitched 2.5 cm.",
+"Buttonholes, buttons, press."
+],
+"apporter": "Shirt pattern from Day 5, arm round",
+"devoir": "Draw the pocket with all its measurements.",
+"devoirVeille": null
+},
+{
+"n": 8,
+"s": 2,
+"theme": "The Men's Shirt",
+"t": "Men's kaftan with mandarin collar",
+"obj": "Make a long men's kaftan from the shirt pattern: mandarin collar, half placket, side slits.",
+"items": [
+"Trace the shirt front and back without yoke; lengthen to the kaftan length.",
+"At the hip line go out to hip ÷ 4 + 4; at the hem hip ÷ 4 + 6.",
+"Half placket 30 × 3 cm at CF, 4 buttons; mandarin collar neck ÷ 2 + 1, 3.5 cm high, on the fold.",
+"Long sleeve, no cuff: hem = wrist + 12, 3 cm hem.",
+"Side slits 30 cm, faced; hem 3 cm with mitred corners at the slits.",
+"Optional: embroidery band 3 cm around the neckline and placket."
+],
+"apporter": "Shirt pattern, hip, kaftan length",
+"devoir": "Portfolio photo.",
+"devoirVeille": null
+},
+{
+"n": 9,
+"s": 3,
+"theme": "Trousers In Detail",
+"t": "Classic trousers: draft & pocket marking",
+"obj": "Draft men's trousers and mark every pocket, the fly and the waistband to the millimetre.",
+"items": [
+"Front: crotch line = crotch depth + 1; hip at 2/3; hip ÷ 4 - 1 + 1; extension hip ÷ 16; crease in the middle.",
+"Knee and hem centred on the crease; waist ÷ 4 - 1 + pleat 3.",
+"Back: hip ÷ 4 + 1 + 1; extension hip ÷ 10; CB raised 3; waist ÷ 4 + 1 + dart 2.5.",
+"Mark the slant pocket: 4 cm in at the waist, 17 cm down the side seam.",
+"Mark the back welt: 13.5 cm long, 7 cm under the waist, parallel to it, centred on the dart.",
+"Draft fly facing 4 × 20, shield 8 × 20, waistband waist + 4 by 8, 7 belt loops 5 × 1, pocket bags 18 × 30."
+],
+"apporter": "Waist, hip, thigh, knee, bottom, trouser length, crotch depth",
+"devoir": "Cut all the pieces and label them.",
+"devoirVeille": null
+},
+{
+"n": 10,
+"s": 3,
+"theme": "Trousers In Detail",
+"t": "Classic trousers: pockets, fly & waistband",
+"obj": "Sew the trousers with a double-welt back pocket, slant side pockets and a clean fly.",
+"items": [
+"Overlock all edges except the waist; sew the back darts.",
+"Back welt: interface, mark the box 13.5 × 1, sew two welts 0.5 cm, cut with a Y of 1 cm, turn, close the triangles, bag.",
+"Slant pockets: stay-tape the opening, facing to the bag, French-seam the bag, baste at waist and side.",
+"Fly zip with facing and shield; topstitch the J-curve 4 cm.",
+"Side seams, inseams, crotch in one line; waistband with 7 loops; hook or button.",
+"Hem 4 cm, blind stitch; press a sharp crease front and back."
+],
+"apporter": "Your cut pieces",
+"devoir": "Portfolio photo + write the 6 steps of a welt pocket.",
+"devoirVeille": null
+},
+{
+"n": 11,
+"s": 3,
+"theme": "Trousers In Detail",
+"t": "Trousers with side band & side-seam pockets",
+"obj": "Make ceremony or sport trousers with a contrast band set into the side seam, in one session.",
+"items": [
+"Trace the trousers; take 1.5 cm off the front side seam and 1.5 cm off the back side seam.",
+"Band: finished width 3 cm, cut 5 cm (two 1 cm seams), length = side seam + 4 cm.",
+"Straight pocket in the band seam: opening 16 cm, starting 3 cm under the waistband.",
+"Sew band to front, then to back, pocket bags in the seam; press the seams onto the band.",
+"Fly, inseams, crotch, waistband (or elastic 4 cm).",
+"Hem 4 cm; press."
+],
+"apporter": "Classic trousers pattern",
+"devoir": "Portfolio photo.",
+"devoirVeille": null
+},
+{
+"n": 12,
+"s": 3,
+"theme": "Trousers In Detail",
+"t": "Bermuda shorts with cargo pockets",
+"obj": "Cut and sew bermuda shorts with pleated cargo pockets and flaps, in one session.",
+"items": [
+"Trace the trousers to waist-to-knee - 4 cm; hem front thigh ÷ 2, back thigh ÷ 2 + 3.",
+"Cargo pocket 18 × 20 with a 4 cm box pleat; flap 18 × 7; top of the flap 5 cm under the crotch line, centred on the side seam.",
+"Slant side pockets and one back welt as Day 10.",
+"Sew pockets first, then fly, seams, waistband.",
+"Hem 3 cm, topstitched; press."
+],
+"apporter": "Classic trousers pattern, waist to knee, thigh",
+"devoir": "Portfolio photo.",
+"devoirVeille": null
+},
+{
+"n": 13,
+"s": 4,
+"theme": "Four Skirts",
+"t": "Lined pencil skirt with vent",
+"obj": "Draft, cut and sew a lined pencil skirt with a CB vent and invisible zip in one day.",
+"items": [
+"Front on the fold: hip ÷ 4 + 1; waist ÷ 4 + 0.5 + dart 2.5; side raised 1.2; hem 1.5 in.",
+"Back: hip ÷ 4 + 1; waist ÷ 4 - 0.5 + dart 3; vent 20 × 4 at CB.",
+"Cut shell and lining (lining 1 cm shorter, vent cut away on the right lining).",
+"Invisible zip at CB, darts, side seams, vent.",
+"Lining at the waist with a 4 cm waistband; hem 3 cm by hand."
+],
+"apporter": "Waist, hip, skirt length, waist-to-hip 20 cm",
+"devoir": "Draw the vent in 3 steps.",
+"devoirVeille": null
+},
+{
+"n": 14,
+"s": 4,
+"theme": "Four Skirts",
+"t": "Flared skirt with hip yoke",
+"obj": "Transform the straight skirt into a flared skirt with a hip yoke.",
+"items": [
+"Trace the straight skirt; draw the yoke 12 cm under the waist.",
+"Close the dart into the yoke; slash the lower part 3 times, open 3–4 cm each.",
+"Add 10 cm of flare at the side hem; smooth the hem curve.",
+"Cut; let it hang 1 hour before levelling the hem.",
+"Yoke, side seams, zip; narrow rolled hem."
+],
+"apporter": "Straight skirt pattern",
+"devoir": "Sketch 3 skirts you can make from this block.",
+"devoirVeille": null
+},
+{
+"n": 15,
+"s": 4,
+"theme": "Four Skirts",
+"t": "Six-panel skirt with godets",
+"obj": "Make a 6-panel skirt with 6 inserted godets.",
+"items": [
+"One panel: waist ÷ 6 + 0.5; hip ÷ 6 + 0.5; straight to the hem.",
+"Godet slit 25 cm from the hem on every seam.",
+"Cut 6 panels and 6 godets (triangle 25 high, 20 base).",
+"Sew the panels; set each godet point first; press.",
+"Waistband, zip, hem."
+],
+"apporter": "Waist, hip, skirt length",
+"devoir": "Two sentences: flare or godet, what is the difference?",
+"devoirVeille": null
+},
+{
+"n": 16,
+"s": 4,
+"theme": "Four Skirts",
+"t": "Box-pleated skirt",
+"obj": "Calculate, mark and press a skirt with 6 box pleats stitched down to the hip.",
+"items": [
+"Fabric width = hip + 4 + 6 pleats × 12 cm.",
+"Mark each pleat: 6 cm fold on each side of the pleat line; check the waist = waist + 2.",
+"Stitch the pleats down 20 cm (to the hip line); press on a card.",
+"Waistband waist + 3 × 8; zip at the left side.",
+"Hem 4 cm before pressing the pleats to the hem."
+],
+"apporter": "Waist, hip, skirt length",
+"devoir": "Portfolio photo.",
+"devoirVeille": null
+},
+{
+"n": 17,
+"s": 5,
+"theme": "Dresses",
+"t": "Princess dress: draft & cut",
+"obj": "Move the darts into princess seams and extend the block to a dress.",
+"items": [
+"Draw the princess line from mid-armhole through the bust point to the waist dart.",
+"Cut the block apart; close the darts; smooth the curves.",
+"Extend to the dress length; hip ÷ 4 + 1 at the hip line (20 cm under the waist).",
+"Two notches on every princess curve.",
+"Cut shell, facings and lining."
+],
+"apporter": "Bodice block, hip, dress length",
+"devoir": "Label all pieces: name, number, grain, notches.",
+"devoirVeille": null
+},
+{
+"n": 18,
+"s": 5,
+"theme": "Dresses",
+"t": "Princess dress: sewing & finishing",
+"obj": "Assemble the princess dress with invisible zip and set-in sleeves.",
+"items": [
+"Princess seams; clip curves; press over the tailor's ham.",
+"Invisible zip at CB; close CB below.",
+"Shoulders; neckline facing; understitch.",
+"Sleeves with 2 rows of ease stitches; set; side seams.",
+"Hem 3 cm; fit on a person; press."
+],
+"apporter": "Cut pieces, arm round",
+"devoir": "3 fitting problems and their solutions.",
+"devoirVeille": null
+},
+{
+"n": 19,
+"s": 5,
+"theme": "Dresses",
+"t": "A-line dress with long sleeves",
+"obj": "Cut and sew an A-line dress with set-in sleeves in one session.",
+"items": [
+"From the block: close the waist dart and open it as flare at the hem (+6 cm per side).",
+"Sleeve: cap = armhole ÷ 3, width at least arm round + 5, wrist + 8 at the hem.",
+"Cut in one layout.",
+"Darts, shoulders, neckline facing, sleeves, sides, zip.",
+"Hem 3 cm; press; record your time."
+],
+"apporter": "Bodice block, dress length, sleeve, arm round, wrist",
+"devoir": "Portfolio photo.",
+"devoirVeille": null
+},
+{
+"n": 20,
+"s": 5,
+"theme": "Dresses",
+"t": "Shift dress with side-seam pockets",
+"obj": "Make a sleeveless shift dress with hidden pockets in the side seams.",
+"items": [
+"Remove the waist dart; keep the bust dart; waist shaped only 1.5 cm in at the side.",
+"Hip = hip ÷ 4 + 1.5; straight to the hem.",
+"Pocket: opening 16 cm starting 8 cm under the waist; bag 20 × 25.",
+"Sew the pocket bags to the side seams first, then the side seams around them.",
+"All-in-one facing; CB zip; hem 3 cm."
+],
+"apporter": "Bodice block, hip, dress length",
+"devoir": "Portfolio photo.",
+"devoirVeille": null
+},
+{
+"n": 21,
+"s": 6,
+"theme": "Local Ensembles",
+"t": "Senator ensemble: draft & cut",
+"obj": "Draft the senator top from the shirt pattern and cut top and trousers in one layout.",
+"items": [
+"Shirt pattern without yoke; lengthen to the senator length.",
+"Hip ÷ 4 + 3 from the waist down; side slits 20 cm.",
+"Mandarin collar neck ÷ 2 + 1 on the fold, 3.5 high; half placket 25 × 3.",
+"Long sleeve with plain cuff or turned hem.",
+"Trousers from Week 3 (straight or tapered); one layout for both."
+],
+"apporter": "Shirt + trousers patterns, hip, senator length",
+"devoir": "Design an embroidery or piping detail for the placket.",
+"devoirVeille": null
+},
+{
+"n": 22,
+"s": 6,
+"theme": "Local Ensembles",
+"t": "Senator ensemble: sewing",
+"obj": "Sew the complete senator ensemble in one session.",
+"items": [
+"Top: half placket, shoulders, mandarin collar, sleeves.",
+"Side seams to the slits; face the slits.",
+"Trousers: side pockets, seams, elastic or buttoned waistband.",
+"Hems, buttons, press.",
+"Present the ensemble on a person."
+],
+"apporter": "Cut pieces",
+"devoir": "Portfolio photo + time.",
+"devoirVeille": null
+},
+{
+"n": 23,
+"s": 6,
+"theme": "Local Ensembles",
+"t": "Women's 3-piece: draft & cut",
+"obj": "Draft a fitted top with peplum, a wrapper skirt and a head-tie.",
+"items": [
+"Choose the model with the teacher: neckline, sleeve, peplum depth, wrapper length.",
+"Top: bodice block cut at the waist. Quarter-circle peplum: radius = waist × 4 ÷ 6.28.",
+"Wrapper: 2 panels, overlap 25 cm; total waist = waist + 25 + 2.",
+"Head-tie: 180 × 50 cm, straight grain.",
+"Plan the layout for 6 yards; cut all pieces."
+],
+"apporter": "Bust, waist, hip, shoulder, lengths, head round",
+"devoir": "Calculate the fabric for one size bigger.",
+"devoirVeille": null
+},
+{
+"n": 24,
+"s": 6,
+"theme": "Local Ensembles",
+"t": "Women's 3-piece: sewing",
+"obj": "Sew the complete 3-piece ensemble.",
+"items": [
+"Overlock; darts; shoulders; neck facing; understitch.",
+"Sleeves; side seams; invisible zip at CB.",
+"Peplum: rolled hem first, then attach at the waist.",
+"Wrapper: waistband, ties 80 × 4, 3 cm hem by hand. Head-tie: rolled hem, mitred corners.",
+"Press all three pieces; present on the dress form."
+],
+"apporter": "Cut pieces",
+"devoir": "Portfolio photo.",
+"devoirVeille": null
+},
+{
+"n": 25,
+"s": 7,
+"theme": "Trousers & Jumpsuit",
+"t": "Palazzo trousers",
+"obj": "Draft and sew real wide palazzo trousers in one day.",
+"items": [
+"Same crotch, hip and waist lines as the trousers; darts instead of pleats.",
+"No knee narrowing. Hem front = bottom ÷ 2 - 1 + 15; back = bottom ÷ 2 + 1 + 15.",
+"Draw side seam and inseam straight from hip and crotch to the hem.",
+"Invisible zip at the side; facing or narrow waistband.",
+"Hem 4 cm (1 + 1 on light fabric); fit; press."
+],
+"apporter": "Waist, hip, bottom, length, crotch depth",
+"devoir": "Portfolio photo.",
+"devoirVeille": null
+},
+{
+"n": 26,
+"s": 7,
+"theme": "Trousers & Jumpsuit",
+"t": "Jumpsuit: draft & cut",
+"obj": "Join the bodice block and the trousers into a jumpsuit that lets the wearer sit and bend.",
+"items": [
+"Take A, B and C on your client.",
+"Trace the bodice; the waist of bodice and trousers must match: waist ÷ 4 + 1 + dart.",
+"Add movement ease: 1.5 under the bodice waist + 1.5 above the trouser waist.",
+"Back crotch extension hip ÷ 10 + 1.",
+"Check A and B on the paper; correct before cutting. CB zip 55 cm."
+],
+"apporter": "Block, trousers, total crotch length A, trunk B, waist to floor C",
+"devoir": "Sketch 2 jumpsuit variations.",
+"devoirVeille": null
+},
+{
+"n": 27,
+"s": 7,
+"theme": "Trousers & Jumpsuit",
+"t": "Jumpsuit: sewing & fitting",
+"obj": "Sew the jumpsuit to selling quality.",
+"items": [
+"Bodice: darts, shoulders, sides. Trousers: darts, side seams, inseams.",
+"Crotch seam from the front waist to the zip mark; press over the ham.",
+"Join bodice and trousers at the waist: CF, darts and side seams matched.",
+"Invisible CB zip; all-in-one facing or neck facing + sleeves.",
+"Try on: she sits and bends without pulling. Hems; press."
+],
+"apporter": "Cut pieces",
+"devoir": "Portfolio photo.",
+"devoirVeille": null
+},
+{
+"n": 28,
+"s": 7,
+"theme": "Trousers & Jumpsuit",
+"t": "Mid-term test: shirt in one session",
+"obj": "Show that you can make a complete shirt alone, in one session.",
+"items": [
+"Calculate with the shirt rules; the teacher checks.",
+"Draft or adapt your pattern.",
+"Cut and sew the full shirt.",
+"Buttons and pressing.",
+"Hand in with your calculation sheet."
+],
+"apporter": "Measurements given by the teacher",
+"devoir": "Read the teacher's comments and correct your notes.",
+"devoirVeille": null
+},
+{
+"n": 29,
+"s": 8,
+"theme": "The Tailored Jacket",
+"t": "Jacket: draft body, lapel & collar",
+"obj": "Draft a single-breasted jacket with notched lapel and its collar.",
+"items": [
+"Width = chest ÷ 4 + 4 (over a shirt).",
+"Shoulder = shoulder ÷ 2 + 1 (pad); slope 4 cm only.",
+"Armhole depth chest ÷ 4 + 2; front neck width neck ÷ 6 + 0.5.",
+"Button extension 2.5; first button on the waist line; roll line neck point to first button.",
+"Lapel 8.5 cm outside the roll line; notch; under and upper collar.",
+"Front dart 1.5 cm, 10 cm from CF; pocket positions."
+],
+"apporter": "Neck, shoulder, chest, waist, hip, jacket length, back length",
+"devoir": "Draw the lapel in 3 widths: 7, 8.5, 10 cm.",
+"devoirVeille": null
+},
+{
+"n": 30,
+"s": 8,
+"theme": "The Tailored Jacket",
+"t": "Jacket: sleeve, facings, cutting & interfacing",
+"obj": "Complete every pattern piece, cut shell, lining and interfacing, and fuse.",
+"items": [
+"Two-piece sleeve: cap = armhole ÷ 3 + 1; curve = armhole + 3 to 4; split top and under sleeve.",
+"Front facing with lapel; back neck facing; under collar on the bias (2 pieces).",
+"Lining: 1 cm pleat at CB, 1 cm extra length.",
+"Cut shell, lining, interfacing; fuse front, facings, collars, hems.",
+"Mark darts, pockets, buttonholes; tape the roll line (pulled 0.5 cm)."
+],
+"apporter": "Armhole measured, sleeve, arm round, wrist",
+"devoir": "Walk the seams: check all pieces fit together.",
+"devoirVeille": null
+},
+{
+"n": 31,
+"s": 8,
+"theme": "The Tailored Jacket",
+"t": "Jacket: darts, pockets, shell & collar",
+"obj": "Make the darts and pockets, assemble the shell and set collar and lapels.",
+"items": [
+"Front darts; flap pockets each side; breast welt on the left front.",
+"CB, sides, shoulders (ease the back 0.5 cm).",
+"Under collar to the neckline; upper collar to the facing.",
+"Facing to front along lapel and collar; clip at the notch; trim, grade, turn.",
+"Understitch below the break point; press the lapel roll on the ham."
+],
+"apporter": "Cut pieces",
+"devoir": "Explain why we understitch.",
+"devoirVeille": null
+},
+{
+"n": 32,
+"s": 8,
+"theme": "The Tailored Jacket",
+"t": "Jacket: sleeves, lining & finishing",
+"obj": "Set the sleeves, bag the lining and finish the jacket to selling quality.",
+"items": [
+"Sleeve seams, vent with 3–4 buttons; ease the cap and shrink the ease with the iron.",
+"Set sleeves; sleeve head roll and shoulder pads.",
+"Lining to facings; hems; bag through 20 cm left open in a sleeve lining seam.",
+"Keyhole buttonholes; buttons with thread shank.",
+"Final press with a cloth; try on; teacher evaluation."
+],
+"apporter": "Shell from Day 31",
+"devoir": "Portfolio photo.",
+"devoirVeille": null
+},
+{
+"n": 33,
+"s": 9,
+"theme": "Waistcoat & Shirt Dress",
+"t": "Lined waistcoat",
+"obj": "Draft and sew a lined men's waistcoat in one session.",
+"items": [
+"Width = chest ÷ 4 + 1.5; shoulder narrowed 3 cm; armhole 2 cm lower than the shirt.",
+"V-neck to the first button; 5 buttons 8 cm apart; front point 5 cm below the side.",
+"Back in lining fabric with adjuster belt.",
+"Two welt pockets; bag shell and lining; turn through the side seams.",
+"Buttonholes, buttons, press."
+],
+"apporter": "Neck, shoulder, chest, waist, waistcoat length",
+"devoir": "Portfolio photo.",
+"devoirVeille": null
+},
+{
+"n": 34,
+"s": 9,
+"theme": "Waistcoat & Shirt Dress",
+"t": "Shirt dress: draft & cut",
+"obj": "Draft a sleeveless shirt dress: fitted bodice, mandarin collar, button stand, waistband, box-pleated skirt and side pockets.",
+"items": [
+"Bodice: trace the block to the waist; sleeveless: shoulder ÷ 2 - 2, armhole raised 1 cm.",
+"Front: button stand 2 cm + facing 3.5 cm beyond CF; widen the neck 0.5 cm for the collar.",
+"Mandarin collar: neck ÷ 2 + 1 long, 3.5 cm high, CB on the fold, front ends curved.",
+"Waistband 4 cm finished, as long as the bodice waist with the darts closed (+ stand on the front).",
+"Skirt panel: waist ÷ 4 + 1 + 2 box pleats of 8 cm; hem = waist panel + 8; length = dress - back length - 4.",
+"Pocket: opening 16 cm, 4 cm under the waistband; bag 20 × 25. Cut; fuse collar, stand and waistband."
+],
+"apporter": "Bust, waist, shoulder, neck, back length, dress length",
+"devoir": "Cut all pieces and press the pleats on a card.",
+"devoirVeille": null
+},
+{
+"n": 35,
+"s": 9,
+"theme": "Waistcoat & Shirt Dress",
+"t": "Shirt dress: sewing & finishing",
+"obj": "Sew the shirt dress to selling quality: clean collar, even pleats, invisible pockets.",
+"items": [
+"Darts; shoulders; bodice side seams.",
+"Collar: interface, sew, trim, turn, edge-stitch; attach between the CF lines.",
+"Armholes: bias facing 2.5 cm, understitch, topstitch 1 cm.",
+"Skirt: baste the box pleats; pocket bags to the side seams; side seams around the pockets.",
+"Waistband between bodice and skirt; topstitch 2 mm.",
+"Front facings; hem 3 cm; 12 buttonholes; buttons; press."
+],
+"apporter": "Your cut pieces",
+"devoir": "Portfolio photo.",
+"devoirVeille": null
+},
+{
+"n": 36,
+"s": 9,
+"theme": "Waistcoat & Shirt Dress",
+"t": "Blouse with Peter Pan collar & puff sleeves",
+"obj": "Draft a flat collar on the neckline and a gathered puff sleeve.",
+"items": [
+"Overlap the front and back shoulders 2 cm; draw the collar 6 cm wide on the neckline.",
+"Puff sleeve: slash the cap 4 times, open 3 cm each, raise the top 3 cm.",
+"Sleeve band = arm round + 3.",
+"Gather the cap between the notches; set.",
+"CB buttons or zip; hem 2 cm."
+],
+"apporter": "Bodice block, arm round",
+"devoir": "Portfolio photo.",
+"devoirVeille": null
+},
+{
+"n": 37,
+"s": 10,
+"theme": "Kaba & Off-Shoulder Dress",
+"t": "Kaba (fitted long dress with flounce): draft & cut",
+"obj": "Draft a fitted princess kaba to the knee with a circular flounce and 3/4 puff sleeves.",
+"items": [
+"Princess pattern fitted to the knee: knee ÷ 4 + 1 per quarter.",
+"Flounce: half circle, depth = dress length - waist to knee, inner edge = knee round + 4.",
+"3/4 puff sleeve: slash cap, + 3 cm height; sleeve length 45.",
+"CB zip 55 cm; lining to the knee.",
+"Cut shell and lining."
+],
+"apporter": "Princess pattern, waist to knee, dress length",
+"devoir": "Draw two kaba variations.",
+"devoirVeille": null
+},
+{
+"n": 38,
+"s": 10,
+"theme": "Kaba & Off-Shoulder Dress",
+"t": "Kaba: sewing & finishing",
+"obj": "Sew the kaba with a smooth flounce and a level hem.",
+"items": [
+"Princess seams; zip; lining.",
+"Sleeves with gathered cap.",
+"Attach the flounce at the knee line; press seam up.",
+"Let it hang; level on the dress form; rolled hem.",
+"Final fitting; press."
+],
+"apporter": "Cut pieces",
+"devoir": "Portfolio photo.",
+"devoirVeille": null
+},
+{
+"n": 39,
+"s": 10,
+"theme": "Kaba & Off-Shoulder Dress",
+"t": "Off-shoulder dress: draft & cut",
+"obj": "Draft a fitted off-shoulder dress with princess seams, portrait band, cap sleeves and a 3/4 circle skirt.",
+"items": [
+"Measure G: round the body over the upper arms, 8 cm under the shoulder point, tape firm.",
+"Bodice from the block: top line 8 cm under the shoulder point; top width = G ÷ 4 - 1 so the dress holds itself up.",
+"Princess seams through the bust point; the dart value goes into the seam; CB zip on the back.",
+"Portrait band: half = G ÷ 2 + 1, 8 cm deep, curved like the top line; cut 2 + interfacing.",
+"Cap sleeve: arm round + 4 long, 6 cm deep in the middle.",
+"Skirt 3/4 circle: radius = waist ÷ 4.71; 4 quarters; length = dress - back length."
+],
+"apporter": "Bust, waist, off-shoulder round G, arm round, back length, dress length",
+"devoir": "Cut all pieces; hang the skirt quarters overnight.",
+"devoirVeille": null
+},
+{
+"n": 40,
+"s": 10,
+"theme": "Kaba & Off-Shoulder Dress",
+"t": "Off-shoulder dress: sewing & finishing",
+"obj": "Sew the off-shoulder dress so the neckline stays up without straps.",
+"items": [
+"Princess seams; 6 mm rigilène boning on the princess and side seams of the lining, 2 cm under the top.",
+"Band: interface; piping on the lower edge; attach to the top with the cap sleeves between.",
+"Elastic 1 cm = G - 6 in the top seam allowance (or silicone gripper tape).",
+"Join the skirt quarters; level the hem on the dress form; attach to the bodice with a grosgrain waist stay.",
+"Invisible CB zip 50 cm; lining; narrow rolled hem with contrast piping.",
+"Try on: she lifts her arms – the band must not slide down."
+],
+"apporter": "Your cut pieces",
+"devoir": "Portfolio photo.",
+"devoirVeille": null
+},
+{
+"n": 41,
+"s": 11,
+"theme": "Real Client & Tailored Trousers",
+"t": "Real client (1): consultation & cutting",
+"obj": "Receive a real client from the atelier like a professional.",
+"items": [
+"Greet the client; listen; sketch the model; choose the fabric together.",
+"Take all measurements; write them on the order sheet.",
+"Calculate; the teacher checks.",
+"Fabric quantity and price (fabric + trimmings + work).",
+"Draft and cut."
+],
+"apporter": "All measurements for the chosen garment",
+"devoir": "Fill in the order sheet completely.",
+"devoirVeille": null
+},
+{
+"n": 42,
+"s": 11,
+"theme": "Real Client & Tailored Trousers",
+"t": "Real client (2): sewing & first fitting",
+"obj": "Sew the client's garment to the fitting stage.",
+"items": [
+"Main seams with long stitches where the fitting may change them.",
+"First fitting; mark corrections with pins and chalk.",
+"Correct the pattern too, not only the garment.",
+"Sew the corrected seams.",
+"Prepare for finishing."
+],
+"apporter": "Order sheet",
+"devoir": "Note every correction on the order sheet.",
+"devoirVeille": null
+},
+{
+"n": 43,
+"s": 11,
+"theme": "Real Client & Tailored Trousers",
+"t": "Real client (3): finishing & delivery",
+"obj": "Deliver a finished, pressed, packed garment to the client.",
+"items": [
+"Hems, buttons, clean all threads inside.",
+"Final press; hang or fold with tissue.",
+"Final fitting; client signature.",
+"Record time, cost, price, profit.",
+"Portfolio photo."
+],
+"apporter": "Order sheet",
+"devoir": "What did the client like? What will you improve?",
+"devoirVeille": null
+},
+{
+"n": 44,
+"s": 11,
+"theme": "Real Client & Tailored Trousers",
+"t": "Women's tailored trousers with jetted pockets",
+"obj": "Make high-waisted women's trousers with front pleats and jetted pockets.",
+"items": [
+"Trousers draft for a woman; waist raised 4 cm (high waist).",
+"Two front pleats 2.5 cm each; back darts 2 × 2.",
+"Jetted pocket 13 cm at the front hip, 5 cm under the waist.",
+"Side invisible zip or front fly.",
+"Waistband 4 cm; hem 4 cm; press the crease."
+],
+"apporter": "Waist, hip, length, crotch depth",
+"devoir": "Portfolio photo.",
+"devoirVeille": null
+},
+{
+"n": 45,
+"s": 12,
+"theme": "Examination",
+"t": "Revision & written quiz",
+"obj": "Revise all the rules of the trimester and pass the written quiz.",
+"items": [
+"Revise shirt, trousers, pockets, bodice, skirts, jacket.",
+"Written quiz: 20 questions (calculations, vocabulary, order of operations).",
+"Correction together.",
+"Check your portfolio: one photo per garment.",
+"Prepare your tools for the practical exam."
+],
+"apporter": "Your book",
+"devoir": "Complete your portfolio.",
+"devoirVeille": null
+},
+{
+"n": 46,
+"s": 12,
+"theme": "Examination",
+"t": "Practical exam (1): draft & cut",
+"obj": "Draft and cut a garment drawn by lot, alone, on your own client's measurements.",
+"items": [
+"Draw by lot: shirt, trousers, dress, senator or skirt ensemble.",
+"Write the measurements on the exam sheet; calculate; show your sheet.",
+"Draft with all notches and grain lines.",
+"Cut; the teacher marks layout and cutting.",
+"Store your pieces for tomorrow."
+],
+"apporter": "Your client's measurements",
+"devoir": "Rest.",
+"devoirVeille": null
+},
+{
+"n": 47,
+"s": 12,
+"theme": "Examination",
+"t": "Practical exam (2): sew & finish",
+"obj": "Sew and finish the exam garment.",
+"items": [
+"Sew in the correct order of operations.",
+"Finish inside and outside.",
+"Press.",
+"Hand in on a hanger with your calculation sheet.",
+"The teacher marks: fit, finish, stitching, pressing, time."
+],
+"apporter": "Your pieces",
+"devoir": "None.",
+"devoirVeille": null
+},
+{
+"n": 48,
+"s": 12,
+"theme": "Examination",
+"t": "Presentation, portfolio & trimester review",
+"obj": "Present your work and receive your trimester evaluation.",
+"items": [
+"Present your 3 best garments to the class.",
+"Hand in your portfolio.",
+"Receive your trimester report.",
+"Set 3 personal goals for Trimester 2.",
+"Clean and oil your machine."
+],
+"apporter": "Your 3 best garments, portfolio",
+"devoir": "Enjoy the holiday – keep sketching\\!",
+"devoirVeille": null
+}
+]
+}
