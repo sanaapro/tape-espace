@@ -235,7 +235,8 @@
           <div class="msg" id="d-msg"></div>
         </div>
         <div class="card">
-          <div class="row"><h2 data-i18n="dList" style="margin:0">Dépenses du mois</h2><input id="dl-mois" type="month" style="max-width:170px"></div>
+          <h2 data-i18n="dList" style="margin:0 0 8px">Dépenses enregistrées</h2>
+          <div class="row"><button class="ghost gold" id="dl-trim" type="button" data-i18n="dlTrim">Tout le trimestre</button><input id="dl-mois" type="month"></div>
           <div class="muted" id="dl-tot" style="margin:6px 0"></div>
           <div class="list" id="dl-list"></div>
         </div>
@@ -437,7 +438,7 @@
       fNewDep:"Dépense de l'école", amount:"Montant", desc:"Description", fAddDep:"Enregistrer la dépense", fMoves:"Mouvements",
       fSep:"Ces chiffres sont ceux de l'école uniquement. L'atelier, le pressing et la boutique ont leurs propres finances.",
       depSaved:"Dépense enregistrée.", needAmt:"Écrivez un montant.", noMoves:"Aucun mouvement sur cette période.",
-      bTitle:"Bilan du trimestre", bRange:"Du {a} au {b}", bEnc:"Encaissé (élèves et autres recettes)", bDep:"Dépenses (courant, entretien, matériel, transport…)", bSal:"Salaires", bLoyer:"Part du loyer ({m} par an ÷ 3)", bBen:"Bénéfice du trimestre", bReste:"Reste à encaisser (élèves)", bHint:"Réglez « Début du trimestre en cours » dans Réglages pour un bilan exact.", tDepenses:"Dépenses", dList:"Dépenses du mois", dlTot:"{k} dépense(s) · total {m}", pTrim:"Trimestre", fReste:"reste à encaisser (élèves)", aReste:"reste à encaisser", rLoyer:"Loyer par an", rTrimDeb:"Début du trimestre en cours", catTransport:"Transport", stTitle:"Enseignants et personnel", stNom:"Nom complet", stRole:"Poste (ex. enseignante)", stSal:"Salaire par mois", stAdd:"Enregistrer", stCancel:"Annuler", stNone:"Aucun enseignant enregistré.", stTot:"{k} personne(s) · salaires : {m} par mois", stPay:"Payer", stEdit:"Modifier", stDel:"Retirer", stPayAsk:"Montant versé à {n} :", stPaid:"Salaire de {n} enregistré dans les dépenses.", stNeed:"Entrez le nom et le salaire.", stSaved:"Enregistré ✓", stPaidMonth:"payé ce mois", stLastPaid:"dernier salaire payé : {mo}", dDate:"Date de la dépense", catLoyer:"Loyer", catElec:"Courant / électricité", catSal:"Salaire enseignant / personnel", catMat:"Matériel et tissu", catEnt:"Entretien et réparations (machines, ventilateurs…)", catAutre:"Autre",
+      bTitle:"Bilan du trimestre", bRange:"Du {a} au {b}", bEnc:"Encaissé (élèves et autres recettes)", bDep:"Dépenses (courant, entretien, matériel, transport…)", bSal:"Salaires", bLoyer:"Part du loyer ({m} par an ÷ 3)", bBen:"Bénéfice du trimestre", bReste:"Reste à encaisser (élèves)", bHint:"Réglez « Début du trimestre en cours » dans Réglages pour un bilan exact.", tDepenses:"Dépenses", dList:"Dépenses enregistrées", dlTrim:"Tout le trimestre", dlTot:"{k} dépense(s) · total {m}", pTrim:"Trimestre", fReste:"reste à encaisser (élèves)", aReste:"reste à encaisser", rLoyer:"Loyer par an", rTrimDeb:"Début du trimestre en cours", catTransport:"Transport", stTitle:"Enseignants et personnel", stNom:"Nom complet", stRole:"Poste (ex. enseignante)", stSal:"Salaire par mois", stAdd:"Enregistrer", stCancel:"Annuler", stNone:"Aucun enseignant enregistré.", stTot:"{k} personne(s) · salaires : {m} par mois", stPay:"Payer", stEdit:"Modifier", stDel:"Retirer", stPayAsk:"Montant versé à {n} :", stPaid:"Salaire de {n} enregistré dans les dépenses.", stNeed:"Entrez le nom et le salaire.", stSaved:"Enregistré ✓", stPaidMonth:"payé ce mois", stLastPaid:"dernier salaire payé : {mo}", dDate:"Date de la dépense", catLoyer:"Loyer", catElec:"Courant / électricité", catSal:"Salaire enseignant / personnel", catMat:"Matériel et tissu", catEnt:"Entretien et réparations (machines, ventilateurs…)", catAutre:"Autre",
       gEdit:"Modifier le programme", save:"Enregistrer", gEmpty:"Pas encore de programme. Touchez « Modifier le programme ».", gPh:"Ce qu'on apprend pendant ce trimestre…",
       rIdent:"L'école", currency:"Monnaie", nbTrim:"Nombre de trimestres", saved:"Enregistré.",
       rClasses:"Classes et scolarité par trimestre", rClassesHelp:"« 2e partie » : prix appliqué à partir du trimestre indiqué (ex. 2e année à partir du trimestre 4). Laisser vide si le prix ne change pas.",
@@ -481,7 +482,7 @@
       fNewDep:"School expense", amount:"Amount", desc:"Description", fAddDep:"Save expense", fMoves:"Movements",
       fSep:"These figures are for the school only. The workshop, laundry and shop have their own finances.",
       depSaved:"Expense saved.", needAmt:"Type an amount.", noMoves:"No movement in this period.",
-      bTitle:"Term result", bRange:"From {a} to {b}", bEnc:"Collected (students and other income)", bDep:"Expenses (power, repairs, materials, transport…)", bSal:"Salaries", bLoyer:"Share of the rent ({m} a year ÷ 3)", bBen:"Profit for the term", bReste:"Still to collect (students)", bHint:"Set “Start of the current term” in Settings for an exact result.", tDepenses:"Expenses", dList:"Expenses of the month", dlTot:"{k} expense(s) · total {m}", pTrim:"Term", fReste:"still to collect (students)", aReste:"still to collect", rLoyer:"Rent per year", rTrimDeb:"Start of the current term", catTransport:"Transport", stTitle:"Teachers and staff", stNom:"Full name", stRole:"Role (e.g. teacher)", stSal:"Monthly salary", stAdd:"Save", stCancel:"Cancel", stNone:"No teacher recorded yet.", stTot:"{k} person(s) · salaries: {m} a month", stPay:"Pay", stEdit:"Edit", stDel:"Remove", stPayAsk:"Amount paid to {n}:", stPaid:"{n}'s salary recorded in the expenses.", stNeed:"Enter the name and the salary.", stSaved:"Saved ✓", stPaidMonth:"paid this month", stLastPaid:"last salary paid: {mo}", dDate:"Date of the expense", catLoyer:"Rent", catElec:"Power / electricity", catSal:"Teacher / staff salary", catMat:"Materials and fabric", catEnt:"Maintenance and repairs (machines, fans…)", catAutre:"Other",
+      bTitle:"Term result", bRange:"From {a} to {b}", bEnc:"Collected (students and other income)", bDep:"Expenses (power, repairs, materials, transport…)", bSal:"Salaries", bLoyer:"Share of the rent ({m} a year ÷ 3)", bBen:"Profit for the term", bReste:"Still to collect (students)", bHint:"Set “Start of the current term” in Settings for an exact result.", tDepenses:"Expenses", dList:"Recorded expenses", dlTrim:"Whole term", dlTot:"{k} expense(s) · total {m}", pTrim:"Term", fReste:"still to collect (students)", aReste:"still to collect", rLoyer:"Rent per year", rTrimDeb:"Start of the current term", catTransport:"Transport", stTitle:"Teachers and staff", stNom:"Full name", stRole:"Role (e.g. teacher)", stSal:"Monthly salary", stAdd:"Save", stCancel:"Cancel", stNone:"No teacher recorded yet.", stTot:"{k} person(s) · salaries: {m} a month", stPay:"Pay", stEdit:"Edit", stDel:"Remove", stPayAsk:"Amount paid to {n}:", stPaid:"{n}'s salary recorded in the expenses.", stNeed:"Enter the name and the salary.", stSaved:"Saved ✓", stPaidMonth:"paid this month", stLastPaid:"last salary paid: {mo}", dDate:"Date of the expense", catLoyer:"Rent", catElec:"Power / electricity", catSal:"Teacher / staff salary", catMat:"Materials and fabric", catEnt:"Maintenance and repairs (machines, fans…)", catAutre:"Other",
       gEdit:"Edit the programme", save:"Save", gEmpty:"No programme yet. Tap “Edit the programme”.", gPh:"What is learnt during this term…",
       rIdent:"The school", currency:"Currency", nbTrim:"Number of terms", saved:"Saved.",
       rClasses:"Classes and tuition per term", rClassesHelp:"“2nd price”: price used from the given term (e.g. 2nd year from term 4). Leave empty if the price does not change.",
@@ -1027,10 +1028,11 @@
     sel.innerHTML = CATS.map(k => '<option value="' + k + '">' + esc(t(k)) + "</option>").join("");
     if(v) sel.value = v;
     if(!$("d-date").value) $("d-date").value = ymd();
-    if(!$("dl-mois").value) $("dl-mois").value = ymd().slice(0, 7);
-    const mo = $("dl-mois").value;
-    const L = MOUVS.filter(m => m.type === "depense" && ymd(new Date(num(m.ms))).slice(0, 7) === mo).sort((a, b) => num(b.ms) - num(a.ms));
-    $("dl-tot").textContent = fmt(t("dlTot"), { k:L.length, m:money(L.reduce((s, m) => s + num(m.montant), 0)) });
+    /* Par défaut : tout le trimestre en cours (sinon un mois neuf paraît vide) ; un mois choisi filtre ce mois. */
+    const mo = $("dl-mois").value, R = trimRange(), D = ms => new Date(ms).toLocaleDateString(LANG === "en" ? "en-GB" : "fr-FR");
+    const L = MOUVS.filter(m => m.type === "depense" && (mo ? ymd(new Date(num(m.ms))).slice(0, 7) === mo : (num(m.ms) >= R.from && num(m.ms) <= R.to))).sort((a, b) => num(b.ms) - num(a.ms));
+    $("dl-trim").classList.toggle("on", !mo);
+    $("dl-tot").textContent = (mo ? "" : fmt(t("bRange"), { a:D(R.from), b:D(R.to) }) + " · ") + fmt(t("dlTot"), { k:L.length, m:money(L.reduce((s, m) => s + num(m.montant), 0)) });
     $("dl-list").innerHTML = L.map(m => '<div class="it" style="cursor:default"><span class="dot bad"></span><div class="main"><div class="t1">' + esc(m.label || "") + '</div><div class="t2">' + esc(dshow(num(m.ms))) + '</div></div><span class="amt bad">−' + esc(money(num(m.montant))) + '</span><button class="ghost red" data-dd="' + esc(m.id) + '" style="padding:6px 9px">✕</button></div>').join("")
       || '<div class="muted">' + esc(t("noMoves")) + "</div>";
     $("dl-list").querySelectorAll("[data-dd]").forEach(b => b.addEventListener("click", () => {
@@ -1039,6 +1041,7 @@
     }));
   }
   $("dl-mois").addEventListener("change", renderDepenses);
+  $("dl-trim").addEventListener("click", () => { $("dl-mois").value = ""; renderDepenses(); });
   document.querySelectorAll("#f-per button").forEach(b => b.addEventListener("click", () => {
     PER = b.dataset.p; document.querySelectorAll("#f-per button").forEach(x => x.classList.toggle("on", x === b)); renderFinances();
   }));
