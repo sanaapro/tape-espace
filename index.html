@@ -1576,6 +1576,7 @@
         <input id="cf-new-name" type="text" list="cf-new-list" autocomplete="off" data-i18n-ph="newClientNamePh" placeholder="Ex. Awa Diallo">
         <datalist id="cf-new-list"></datalist>
         <p style="margin:4px 0 0;font-size:12.5px;color:var(--muted)" data-i18n="cfFindHint">Tapez le nom : si la cliente existe déjà, ses mesures s'affichent toutes seules.</p>
+        <div id="cf-sugg" hidden style="margin-top:6px;font-size:13px"></div>
       </div>
       <label data-i18n="phoneWa">Téléphone / WhatsApp</label>
       <input id="cf-new-phone" type="tel" data-i18n-ph="newPhonePh" placeholder="+220 …">
@@ -1872,7 +1873,7 @@
       standard:"Standard", premium:"Premium",
       typeLabel:"Type de commande", typeHint:"Type de commande (à choisir avant de remplir)", tConfection:"Confection", tRetouche:"Retouche", tPap:"Prêt-à-porter",
       genreLabel:"Genre du client", gFemme:"Femme", gHomme:"Homme",
-      newClientOpt:"+ Nouvelle cliente", cfFindHint:"Tapez le nom : si la cliente existe déjà, ses mesures s'affichent toutes seules.", cfFound:"Cliente trouvée : {n} — ses mesures sont affichées.", newClientNameLabel:"Nom du nouveau client",
+      newClientOpt:"+ Nouvelle cliente", cfFindHint:"Tapez le nom : si la cliente existe déjà, ses mesures s'affichent toutes seules.", cfFound:"Cliente trouvée : {n} — ses mesures sont affichées.", cfMaybe:"Même cliente ? Touchez son nom :", cfNbMes:"{k} mesures", newClientNameLabel:"Nom du nouveau client",
       newClientNamePh:"Ex. Awa Diallo", newPhonePh:"+220 …",
       rcvGarment:"vêtement",
       autoNotify:"Notification WhatsApp automatique",
@@ -2164,7 +2165,7 @@
       standard:"Standard", premium:"Premium",
       typeLabel:"Order type", typeHint:"Order type (choose before filling in)", tConfection:"Tailoring", tRetouche:"Alteration", tPap:"Ready-to-wear",
       genreLabel:"Client gender", gFemme:"Woman", gHomme:"Man",
-      newClientOpt:"+ New client", cfFindHint:"Type the name: if the client already exists, her measurements appear automatically.", cfFound:"Client found: {n} — measurements shown.", newClientNameLabel:"New client name",
+      newClientOpt:"+ New client", cfFindHint:"Type the name: if the client already exists, her measurements appear automatically.", cfFound:"Client found: {n} — measurements shown.", cfMaybe:"Same client? Tap the name:", cfNbMes:"{k} measurements", newClientNameLabel:"New client name",
       newClientNamePh:"e.g. Awa Diallo", newPhonePh:"+220 …",
       rcvGarment:"garment",
       autoNotify:"Automatic WhatsApp notification",
@@ -7035,12 +7036,36 @@
     const dl=$("cf-new-list");
     if(dl){ dl.innerHTML=""; CLIENTES.forEach(c=>{ if(!c.name) return; const o=document.createElement("option"); o.value=c.name; if(c.phone) o.label=c.phone; dl.appendChild(o); }); }
     toggleNewCliente();
+    if(typeof paintSugg==="function") paintSugg([]);
   }
   const normNom = s => String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();
   function clienteParNom(nom){
     const k=normNom(nom); if(!k) return null;
-    const l=CLIENTES.filter(c=>normNom(c.name)===k);
-    return l.length ? l[0] : null;
+    return meilleureFiche(CLIENTES.filter(c=>normNom(c.name)===k));
+  }
+  // plusieurs fiches pour la même personne : on garde celle qui a le plus de mesures
+  const nbMes = c => Object.values((c&&c.mesures)||{}).filter(v=>v!==""&&v!=null).length;
+  function meilleureFiche(l){ return l.length ? l.slice().sort((a,b)=>nbMes(b)-nbMes(a))[0] : null; }
+  // téléphone : on compare les 7 derniers chiffres (7482588 = 877482588 = +220 877 48 25 88)
+  const normTel = s => { const d=String(s||"").replace(/\D/g,""); return d.length>=7 ? d.slice(-7) : ""; };
+  function clientesParTel(tel){ const k=normTel(tel); if(!k) return []; return CLIENTES.filter(c=>normTel(c.phone)===k).sort((a,b)=>nbMes(b)-nbMes(a)).slice(0,4); }
+  // orthographe proche : Mohammed / Mahamad / Mohamed Touré → même squelette de consonnes
+  const squelette = s => normNom(s).replace(/[^a-z ]/g,"").replace(/[aeiouy]/g,"").replace(/(.)\1+/g,"$1").replace(/\s+/g," ").trim();
+  function clientesRessemblantes(nom){
+    const k=squelette(nom); if(k.replace(/ /g,"").length<4) return [];
+    return CLIENTES.filter(c=>c.name && squelette(c.name)===k).sort((a,b)=>nbMes(b)-nbMes(a)).slice(0,4);
+  }
+  function paintSugg(list){
+    const box=$("cf-sugg"); if(!box) return;
+    box.innerHTML=""; box.hidden=!list.length; if(!list.length) return;
+    const p=document.createElement("div"); p.style.color="var(--muted)"; p.textContent=t("cfMaybe"); box.appendChild(p);
+    list.forEach(c=>{
+      const b=document.createElement("button"); b.type="button"; b.className="ghost";
+      b.style.cssText="margin:4px 6px 0 0;padding:6px 10px;font-size:13px";
+      b.textContent=(c.name||"")+(c.phone?" · "+c.phone:"")+" · "+t("cfNbMes").replace("{k}", nbMes(c));
+      b.addEventListener("click", ()=>{ paintSugg([]); choisirClienteExistante(c); });
+      box.appendChild(b);
+    });
   }
   // Nom tapé = cliente existante → on bascule sur sa fiche (genre + mesures remplies)
   function choisirClienteExistante(c){
@@ -7050,7 +7075,18 @@
     $("cf-new-name").value="";
     const m=$("cf-msg"); if(m){ m.textContent=t("cfFound").replace("{n}", c.name||""); m.className="msg ok show"; setTimeout(()=>m.classList.remove("show"), 3500); }
   }
-  $("cf-new-name").addEventListener("input", ()=>{ const c=clienteParNom($("cf-new-name").value); if(c) choisirClienteExistante(c); });
+  $("cf-new-name").addEventListener("input", ()=>{
+    const v=$("cf-new-name").value, c=clienteParNom(v);
+    if(c){ paintSugg([]); choisirClienteExistante(c); return; }
+    const l=clientesRessemblantes(v);
+    paintSugg(l.length ? l : clientesParTel($("cf-new-phone").value));
+  });
+  // numéro déjà connu → on propose la fiche (pas de bascule forcée : une famille partage parfois un numéro)
+  $("cf-new-phone").addEventListener("input", ()=>{
+    if($("cf-cliente").value!=="__new") return;
+    const l=clientesParTel($("cf-new-phone").value);
+    if(l.length) paintSugg(l);
+  });
   function toggleNewCliente(){
     const v=$("cf-cliente").value;
     $("cf-new").hidden = (v !== "__new");
@@ -7119,6 +7155,11 @@
     if(cid === "__new" && clienteParNom($("cf-new-name").value)){
       // même nom qu'une fiche existante : on la réutilise au lieu de créer un doublon vide
       const ex=clienteParNom($("cf-new-name").value); cid=ex.id;
+    } else if(cid === "__new"){
+      // même numéro ET nom proche (Mohammed / Mahamad) : même personne, on ne crée pas de doublon sans mesures
+      const sq=squelette($("cf-new-name").value);
+      const ex=sq ? clientesParTel($("cf-new-phone").value).find(c=>squelette(c.name)===sq) : null;
+      if(ex) cid=ex.id;
     }
     if(cid === "__new"){
       const nn=$("cf-new-name").value.trim();
