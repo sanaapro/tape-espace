@@ -517,7 +517,7 @@
       since:"Depuis le {d} ({w} semaine(s))", progress:"Suivi de présence", pastWeeks:"Semaines précédentes", weekOf:"Semaine du {d}",
       attRate:"Présent(e) {p} jour(s) sur {n} jours de cours ({r} %)", attNone:"Aucune présence enregistrée pour le moment.",
       stSince:"Dans l'équipe depuis le {d}", monthAtt:"{k} jour(s) de présence ce mois-ci", noStaff:"Aucun membre du personnel. Le propriétaire les ajoute dans Finances → Enseignants et personnel.",
-      lateMin:"Retard compté après (minutes)", arrShort:"arrivée", outShort:"sortie", byBadge:"badge", notYet:"pas encore arrivé(e)", colon:" : ", dayDetail:"Détail du mois", stNeed2:"Écrivez le nom.", stPhone:"Téléphone" 
+      lateMin:"Retard compté après (minutes)", arrShort:"arrivée", outShort:"sortie", byBadge:"badge", notYet:"pas encore arrivé(e)", colon:" : ", dayDetail:"Détail du mois", stNeed2:"Écrivez le nom.", stPhone:"Téléphone", clrBtn:"Effacer ce pointage", clrSure:"Effacer le pointage de {n} du {d} ?", clrDone:"Pointage effacé." 
     },
     en: {
       loginSub:"Sign in with your SanaaPro account", email:"Email", password:"Password", signin:"Sign in",
@@ -570,7 +570,7 @@
       since:"Since {d} ({w} week(s))", progress:"Attendance record", pastWeeks:"Previous weeks", weekOf:"Week of {d}",
       attRate:"Present {p} day(s) out of {n} class days ({r}%)", attNone:"No attendance recorded yet.",
       stSince:"In the team since {d}", monthAtt:"{k} day(s) present this month", noStaff:"No staff yet. The owner adds them in Finances → Teachers and staff.",
-      lateMin:"Late after (minutes)", arrShort:"in", outShort:"out", byBadge:"badge", notYet:"not arrived yet", colon:": ", dayDetail:"This month in detail", stNeed2:"Type the name.", stPhone:"Phone" 
+      lateMin:"Late after (minutes)", arrShort:"in", outShort:"out", byBadge:"badge", notYet:"not arrived yet", colon:": ", dayDetail:"This month in detail", stNeed2:"Type the name.", stPhone:"Phone", clrBtn:"Delete this record", clrSure:"Delete the attendance record of {n} on {d}?", clrDone:"Record deleted." 
     }
   };
   let LANG = "fr";
@@ -974,11 +974,13 @@
       const s = st[e.id] || "";
       const tm = hoursTxt(rec[e.id]);
       return '<div class="it" style="cursor:default"><div class="main"><div class="t1" data-op="' + esc(e.id) + '" style="cursor:pointer">' + esc(e.nom) + "</div>" + (tm ? '<div class="t2">' + esc(tm) + "</div>" : "") + "</div>"
+        + (rec[e.id] ? '<button class="ghost red" data-clr="' + esc(date + "_" + e.id) + '" title="' + esc(t("clrBtn")) + '" style="padding:7px 9px">✕</button>' : "")
         + (s === "A" ? '<button class="ghost" data-wa="' + esc(e.id) + '" style="padding:7px 9px">💬</button>' : "")
         + '<div class="pres">' + ["P","A","R"].map(k => '<button class="' + k + (s === k ? " on" : "") + '" data-p="' + esc(e.id) + '" data-s="' + k + '">' + (k === "P" ? (LANG === "en" ? "P" : "P") : k === "A" ? "A" : (LANG === "en" ? "L" : "R")) + "</button>").join("") + "</div></div>";
     }).join("") || '<div class="muted">' + esc(t("nobody")) + "</div>";
     $("p-list").querySelectorAll("[data-p]").forEach(b => b.addEventListener("click", () => setPres(b.dataset.p, b.dataset.s)));
     $("p-list").querySelectorAll("[data-op]").forEach(b => b.addEventListener("click", () => openEleve(b.dataset.op)));
+    $("p-list").querySelectorAll("[data-clr]").forEach(b => b.addEventListener("click", () => clearPres(b.dataset.clr)));
     renderStaffPresence(); fillBadgeWho();
     $("p-list").querySelectorAll("[data-wa]").forEach(b => b.addEventListener("click", () => {
       const e = ELEVES.find(x => x.id === b.dataset.wa); if(!e) return;
@@ -1594,6 +1596,15 @@
      (plus de 3 minutes après) enregistre la sortie. Tout va dans /presences (id = date_personne),
      la même collection que la présence notée à la main : un seul registre, jamais de doublon.
      ===================================================================== */
+  /* Effacer un pointage (test, erreur) : protégé par le code du propriétaire. */
+  function clearPres(id){
+    const r = PRES.find(p => p.id === id); if(!r) return;
+    const who = r.eleveId ? (ELEVES.find(x => x.id === r.eleveId) || {}).nom : (staff().find(x => x.id === r.staffId) || {}).nom;
+    if(!askCode()) return;
+    if(!confirm(fmt(t("clrSure"), { n:who || "", d:dShort(r.date, { day:"numeric", month:"long" }) }))) return;
+    PRES = PRES.filter(p => p.id !== id); remove(doc(db, "ecoles", UID, "presences", id));
+    toast(t("clrDone")); renderAll();
+  }
   function lateMinutes(){ return ECOLE && ECOLE.retardMin != null && ECOLE.retardMin !== "" ? num(ECOLE.retardMin) : 15; }
   function hm(d){ return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
   function hoursTxt(r){
@@ -1626,6 +1637,7 @@
       const r = rec[p.id], s = r ? r.statut : "";
       return '<div class="it" style="cursor:default"><div class="main"><div class="t1" data-os="' + esc(p.id) + '" style="cursor:pointer">' + esc(p.nom) + '</div><div class="t2">'
         + esc([p.role, hoursTxt(r) || (date === ymd() && !r ? t("notYet") : "")].filter(Boolean).join(" · ")) + '</div></div>'
+        + (r ? '<button class="ghost red" data-clr="' + esc(date + "_" + p.id) + '" title="' + esc(t("clrBtn")) + '" style="padding:7px 9px;margin-right:6px">✕</button>' : "")
         + '<div class="pres">' + ["P","A"].map(k => '<button class="' + k + (s === k || (k === "P" && s === "R") ? " on" : "") + '" data-sp2="' + esc(p.id) + '" data-s="' + k + '">' + k + "</button>").join("") + "</div></div>";
     }).join("") || '<div class="muted">' + esc(t("noStaff")) + "</div>";
     $("ps-list").querySelectorAll("[data-sp2]").forEach(b => b.addEventListener("click", () => {
@@ -1636,6 +1648,7 @@
       renderStaffPresence();
     }));
     $("ps-list").querySelectorAll("[data-os]").forEach(b => b.addEventListener("click", () => openStaff(b.dataset.os)));
+    $("ps-list").querySelectorAll("[data-clr]").forEach(b => b.addEventListener("click", () => clearPres(b.dataset.clr)));
   }
 
   /* ---------- Tableau individuel de l'élève : depuis quand, cette semaine, semaines passées ---------- */
@@ -1729,10 +1742,11 @@
     const qrUrl = (txt) => { try{ const qr = q(0, "M"); qr.addData(txt); qr.make(); return qr.createDataURL(6, 0); }catch(x){ return ""; } };
     const card = (it) => {
       const isE = it.k === "e", c = isE ? classeOf(it.p) : null;
-      const sub = isE ? [c ? clsName(c) : "", c && c.horaire ? c.horaire : ""].filter(Boolean).join(" · ") : (it.p.role || "");
+      /* Le badge est toujours imprimé en anglais (langue officielle), même si l'app est en français. */
+      const sub = isE ? [c ? clsName(c, "en") : "", c && c.horaire ? c.horaire : ""].filter(Boolean).join(" · ") : (it.p.role || "");
       return '<div class="bdg"><div class="top"><img src="icon-192.png" alt=""><span>' + esc(ECOLE.name || "SanaaPro School") + "</span></div>"
-        + '<div class="mid"><div class="who"><div class="kind">' + esc(t(isE ? "badgeStudent" : "badgeStaff")) + '</div><div class="nm">' + esc(it.p.nom) + '</div><div class="cl">' + esc(sub) + "</div></div>"
-        + '<img class="qr" src="' + qrUrl("SPS1:" + it.k + ":" + it.p.id) + '" alt=""></div><div class="bot">' + esc(t("badgeLost")) + (ECOLE.whatsapp ? " ☎ " + esc(ECOLE.whatsapp) : "") + "</div></div>";
+        + '<div class="mid"><div class="who"><div class="kind">' + esc(trIn("en", isE ? "badgeStudent" : "badgeStaff")) + '</div><div class="nm">' + esc(it.p.nom) + '</div><div class="cl">' + esc(sub) + "</div></div>"
+        + '<img class="qr" src="' + qrUrl("SPS1:" + it.k + ":" + it.p.id) + '" alt=""></div><div class="bot">' + esc(trIn("en", "badgeLost")) + (ECOLE.whatsapp ? " ☎ " + esc(ECOLE.whatsapp) : "") + "</div></div>";
     };
     const ov = document.createElement("div"); ov.className = "bdg-ov";
     ov.innerHTML = '<div class="bdg-bar"><button class="ghost" id="bd-print">🖨 ' + esc(t("bPrint")) + " (" + list.length + ')</button><button class="ghost" id="bd-close">' + esc(t("rcClose")) + "</button></div>"
