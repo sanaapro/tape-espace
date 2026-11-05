@@ -1911,7 +1911,7 @@
       expBlock:"Votre abonnement est arrivé à échéance. Vos données restent visibles, mais vous ne pouvez plus rien enregistrer tant qu'il n'est pas renouvelé.\n\nVoulez-vous renouveler maintenant sur WhatsApp ?",
       renewMsg:"Bonjour, je souhaite renouveler l'abonnement de ma boutique {shop} ({slug}).",
       renewBtn:"Renouveler mon abonnement",
-      lockTitle:"Réservé à la formule Premium",
+      planPickEnding:"Votre essai gratuit se termine dans {n} jour(s)", planPickEnded:"Votre essai gratuit est terminé", planPickT2:"Choisissez votre formule", planPickHint:"Pendant l'essai vous avez tout vu. Choisissez maintenant la formule qui vous convient : vos données restent intactes.", planMonth:"mois", planChoose:"Choisir {p}", planLater:"Plus tard", planPickPrem:"Passer au Premium", planMsg:"Bonjour, je choisis la formule {p} pour ma boutique {shop} ({slug}).", planStdFeats:"Commandes, mesures, reçus WhatsApp, finances.", planPremFeats:"Tout le Standard + boutique et stock, reconnaissance des articles par photo, plan de charge, salariés, pointage, catalogue illimité.", lockTitle:"Réservé à la formule Premium",
       lockText:"La boutique avec son stock, le plan de charge, le suivi des salariés et la pointeuse du personnel font partie de la formule Premium.",
       lockPrice:"Standard {a} {cur}/mois · Premium {b} {cur}/mois",
       lockBtn:"Passer au premium sur WhatsApp",
@@ -2203,7 +2203,7 @@
       expBlock:"Your subscription has expired. Your data is still visible, but nothing can be saved until it is renewed.\n\nWould you like to renew now on WhatsApp?",
       renewMsg:"Hello, I would like to renew the subscription for my shop {shop} ({slug}).",
       renewBtn:"Renew my subscription",
-      lockTitle:"Premium plan only",
+      planPickEnding:"Your free trial ends in {n} day(s)", planPickEnded:"Your free trial has ended", planPickT2:"Choose your plan", planPickHint:"During the trial you saw everything. Now choose the plan that suits you: your data stays intact.", planMonth:"month", planChoose:"Choose {p}", planLater:"Later", planPickPrem:"Go Premium", planMsg:"Hello, I choose the {p} plan for my shop {shop} ({slug}).", planStdFeats:"Orders, measurements, WhatsApp receipts, finances.", planPremFeats:"Everything in Standard + shop and stock, photo recognition of items, workload plan, staff, attendance, unlimited catalogue.", lockTitle:"Premium plan only",
       lockText:"The shop with its stock, the delivery load plan, staff records and the staff time clock are part of the Premium plan.",
       lockPrice:"Standard {a} {cur}/month · Premium {b} {cur}/month",
       lockBtn:"Upgrade on WhatsApp",
@@ -2593,7 +2593,49 @@
     if(i.trial) return t("trial");
     return (i.sub.tier === "premium") ? t("premium") : t("standard");
   }
+  // Fin de l'essai : l'abonné choisit lui-même Standard ou Premium (une fois par jour au plus).
+  function showPlanPick(force){
+    const i = subInfo(), sub = i.sub || {};
+    const endingTrial = sub.plan === "trial" && i.days !== null && i.days <= 3;
+    if(!force){
+      if(!endingTrial) return;
+      const k = "sanaapro_planpick_" + new Date().toISOString().slice(0,10);
+      try{ if(localStorage.getItem(k)) return; localStorage.setItem(k, "1"); }catch(e){}
+    }
+    let ov = $("planpick"); if(ov) ov.remove();
+    ov = document.createElement("div"); ov.id = "planpick";
+    ov.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.72);display:flex;align-items:flex-end;justify-content:center;padding:12px";
+    const box = document.createElement("div");
+    box.style.cssText = "background:#16171A;border:1px solid var(--gold);border-radius:16px;max-width:460px;width:100%;padding:18px 16px;max-height:90vh;overflow:auto";
+    const h = document.createElement("h3"); h.style.cssText = "margin:0 0 6px;font-family:Georgia,serif;color:var(--gold);font-size:19px";
+    h.textContent = !endingTrial ? t("planPickT2") : (i.days <= 0 ? t("planPickEnded") : t("planPickEnding").replace("{n}", i.days));
+    const p = document.createElement("p"); p.style.cssText = "margin:0 0 12px;font-size:13.5px;color:var(--muted)"; p.textContent = t("planPickHint");
+    box.appendChild(h); box.appendChild(p);
+    const card = (key, price, feats, gold) => {
+      const c = document.createElement("div");
+      c.style.cssText = "border:1px solid "+(gold?"var(--gold)":"var(--line2)")+";border-radius:12px;padding:12px;margin-bottom:10px";
+      const tt = document.createElement("div"); tt.style.cssText = "display:flex;justify-content:space-between;align-items:baseline";
+      const n = document.createElement("b"); n.textContent = t(key); n.style.color = gold ? "var(--gold)" : "var(--txt)";
+      const pr = document.createElement("span"); pr.textContent = price + " " + CUR + " / " + t("planMonth"); pr.style.fontSize = "13px";
+      tt.appendChild(n); tt.appendChild(pr); c.appendChild(tt);
+      const ul = document.createElement("div"); ul.style.cssText = "font-size:12.5px;color:var(--muted);margin:6px 0 10px;line-height:1.5"; ul.textContent = t(feats); c.appendChild(ul);
+      const b = document.createElement("button"); b.className = gold ? "wa" : "ghost"; b.style.marginTop = "0";
+      b.textContent = t("planChoose").replace("{p}", t(key));
+      b.addEventListener("click", ()=>{
+        const msg = t("planMsg").replace("{p}", t(key)).replace("{shop}", (BOUTIQUE && BOUTIQUE.name) || "").replace("{slug}", (BOUTIQUE && BOUTIQUE.slug) || "");
+        openWa(SANAAPRO_WA, msg);
+      });
+      c.appendChild(b); return c;
+    };
+    box.appendChild(card("standard", PRICE_STD, "planStdFeats", false));
+    box.appendChild(card("premium", PRICE_PREM, "planPremFeats", true));
+    const later = document.createElement("button"); later.className = "ghost"; later.textContent = t("planLater");
+    later.addEventListener("click", ()=>ov.remove()); box.appendChild(later);
+    ov.appendChild(box); ov.addEventListener("click", e=>{ if(e.target===ov) ov.remove(); });
+    document.body.appendChild(ov);
+  }
   function paintLocks(){
+    try{ paintArIA(); }catch(e){}
     const i = subInfo();
     [["staff"],["boutique"],["charge"],["pointage"]].forEach(([k])=>{
       const lock=$("lock-"+k), body=$("body-"+k);
@@ -3056,7 +3098,7 @@
       /* SanaaPro School : bouton de passage seulement si ce compte a déjà une école. */
       getDoc(doc(db,"ecoles",user.uid)).then(s=>{ $("go-ecole").hidden=!s.exists(); }).catch(()=>{ $("go-ecole").hidden=true; });
       try{ localStorage.setItem("sanaapro_owner_bid", BID); }catch(e){}
-      renderDashboard(BOUTIQUE); paintLocks(); updateOffline(); applyMgr(); setTab("apercu"); show("dash"); setTimeout(() => { try{ checkRdv(false); }catch(e){} }, 5000); try{ if(navigator.onLine) wakeLecteur(); }catch(e){}
+      renderDashboard(BOUTIQUE); paintLocks(); setTimeout(()=>{ try{ showPlanPick(false); }catch(e){} }, 2500); updateOffline(); applyMgr(); setTab("apercu"); show("dash"); setTimeout(() => { try{ checkRdv(false); }catch(e){} }, 5000); try{ if(navigator.onLine) wakeLecteur(); }catch(e){}
       loadAll().then(scanFromUrl);
       syncCatalogueExpiry();
     }catch(e){ $("loading").textContent=t("loadFail"); show("loading"); }
@@ -4003,10 +4045,11 @@
   try{ AR_UNIT = localStorage.getItem("sanaapro_fab_unit")==="yd" ? "yd" : "m"; }catch(e){}
   let AR_IA_USED=false;
   function paintArIA(){
-    const on = !!(BOUTIQUE && BOUTIQUE.photoIA);
+    const prem = subInfo().premium;
+    const on = prem && !!(BOUTIQUE && BOUTIQUE.photoIA);
     $("ar-ia-box").hidden = !on;
-    $("ar-ia-state").textContent = t(on ? "arIaOn" : "arIaOff");
-    $("ar-ia-toggle").textContent = t(on ? "arIaDes" : "arIaAct");
+    $("ar-ia-state").textContent = prem ? t(on ? "arIaOn" : "arIaOff") : t("arIaOff")+" — Premium";
+    $("ar-ia-toggle").textContent = prem ? t(on ? "arIaDes" : "arIaAct") : t("planPickPrem");
   }
   function paintArForm(){
     try{ paintArIA(); }catch(e){}
@@ -4035,6 +4078,7 @@
     try{ AR_PHOTO = await compressImage(f, 220, 0.6); $("ar-photo-prev").src=AR_PHOTO; $("ar-photo-prev").hidden=false; }catch(err){}
   });
   $("ar-ia-toggle").addEventListener("click", async ()=>{
+    if(!subInfo().premium){ showPlanPick(true); return; }
     if(isMgr() && !await askCode()) return;
     const on = !(BOUTIQUE && BOUTIQUE.photoIA);
     if(BOUTIQUE) BOUTIQUE.photoIA = on;
@@ -4043,6 +4087,7 @@
   });
   $("ar-ia-file").addEventListener("change", async e=>{
     const f=e.target.files && e.target.files[0]; e.target.value=""; if(!f) return;
+    if(!subInfo().premium){ showPlanPick(true); return; }
     const st=$("ar-ia-st"); st.style.color="";
     let big;
     try{ big = await compressImage(f, 1024, 0.82); AR_PHOTO = await compressImage(f, 220, 0.6); $("ar-ia-prev").src=AR_PHOTO; $("ar-ia-prev").hidden=false; }
