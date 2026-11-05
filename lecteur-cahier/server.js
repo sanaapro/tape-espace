@@ -217,6 +217,9 @@ Donne :
 - "couleur" : couleur principale en français.
 - "confiance" : nombre entre 0 et 1.
 Termes locaux : kaftan = tunique longue à manches montées, souvent portée avec un pantalon ; boubou = très ample, manches qui tombent de l'épaule ; grand boubou homme = trois pièces amples.
+CHEMISE ou TUNIQUE — c'est la LONGUEUR qui décide, pas le tissu ni le col : une chemise s'arrête aux hanches ou juste en dessous (couvre à peine les fesses) ; une tunique descend jusqu'à mi-cuisse ou plus bas. Un vêtement posé à plat qui a la longueur d'une chemise est une CHEMISE, même avec un col officier, un col africain, un col sans boutons ou un col brodé. En cas de doute entre les deux, choisis « Chemise ».
+DÉTAILS À NOMMER quand ils se voient : col ou encolure dans un tissu différent du corps (dis « col contrasté » ou « col en wax », etc.), broderie, empiècement, poches, manches courtes ou longues.
+Le lin se reconnaît à sa texture un peu froissée et à son tissage visible, souvent en teinte unie (blanc, beige, bleu, kaki).
 Si la photo ne montre aucun article vendable, mets "confiance": 0.
 Réponds UNIQUEMENT en JSON avec ces clés.`;
 }
