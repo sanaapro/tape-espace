@@ -103,6 +103,35 @@
   .lesson h3{ font-family:var(--serif); color:var(--gold); font-size:17px; margin:4px 0 6px; } .lesson ol{ margin:8px 0; padding-left:20px; line-height:1.5; } .lesson .k{ color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:1px; }
   .chk{ list-style:none; padding:0; margin:0; } .chk li{ padding:7px 0; border-bottom:1px solid var(--line); } .chk li:before{ content:'☐ '; color:var(--gold); }
   .wk .it.today{ background:#22200f; border-radius:8px; }
+  /* Badges, scanner, tableau individuel */
+  .scan-ov{ position:fixed; inset:0; background:#000; z-index:40; display:flex; flex-direction:column; }
+  .scan-ov video{ flex:1; width:100%; min-height:0; object-fit:cover; background:#000; }
+  .scan-ov .frame{ position:absolute; left:50%; top:38%; width:min(62vw,62vh); height:min(62vw,62vh); transform:translate(-50%,-50%); border:3px solid rgba(201,162,39,.85); border-radius:18px; box-shadow:0 0 0 2000px rgba(0,0,0,.25); pointer-events:none; }
+  .scan-res{ background:var(--panel); border-top:1px solid var(--line); padding:14px 16px 12px; text-align:center; min-height:120px; }
+  .scan-res .big{ font-family:var(--serif); font-size:26px; font-weight:700; color:var(--gold); }
+  .scan-res.ok{ background:#0f2a18; } .scan-res.late{ background:#2e2508; } .scan-res.out{ background:#0f1d33; } .scan-res.err{ background:#331313; }
+  .scan-res .sub{ font-size:16px; margin-top:4px; } .scan-res .last{ color:var(--muted); font-size:12px; margin-top:8px; }
+  .scan-bar{ display:flex; gap:8px; justify-content:center; padding:8px; background:var(--panel); }
+  .wkstrip{ display:flex; gap:6px; margin-top:8px; } .wkstrip .d{ flex:1; text-align:center; border:1px solid var(--line2); border-radius:10px; padding:6px 2px; font-size:12px; }
+  .wkstrip .d b{ display:block; font-size:18px; } .wkstrip .d.P{ border-color:var(--ok); } .wkstrip .d.P b{ color:var(--ok); } .wkstrip .d.R{ border-color:var(--warn); } .wkstrip .d.R b{ color:var(--warn); }
+  .wkstrip .d.A{ border-color:var(--bad); } .wkstrip .d.A b{ color:var(--bad); } .wkstrip .d.today{ background:#22200f; } .wkstrip .d small{ color:var(--muted); display:block; }
+  .bdg-ov{ position:fixed; inset:0; background:#e9e7e2; z-index:35; overflow-y:auto; padding:12px; color:#000; }
+  .bdg-bar{ position:sticky; top:0; display:flex; gap:8px; justify-content:center; padding:8px; background:#e9e7e2; z-index:2; }
+  .bdg-bar button{ background:#141310; color:#C9A227; border:1px solid #C9A227; }
+  .bdg-sheet{ display:flex; flex-wrap:wrap; gap:4mm; justify-content:center; }
+  .bdg{ width:85.6mm; height:54mm; background:#fff; border-radius:3mm; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 1px 6px rgba(0,0,0,.25); break-inside:avoid; page-break-inside:avoid; font-family:Arial, sans-serif; }
+  .bdg .top{ background:#141310; color:#C9A227; padding:2mm 3mm; font:700 10pt Georgia, serif; display:flex; align-items:center; gap:2mm; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .bdg .top img{ width:6mm; height:6mm; border-radius:1mm; } .bdg .top span{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .bdg .mid{ flex:1; display:flex; gap:3mm; padding:2.5mm 3mm; align-items:center; }
+  .bdg .who{ flex:1; min-width:0; } .bdg .kind{ font-size:7pt; letter-spacing:1.5px; color:#8a6d10; font-weight:700; }
+  .bdg .nm{ font:700 13pt Arial, sans-serif; line-height:1.15; margin-top:1mm; word-break:break-word; } .bdg .cl{ font-size:8.5pt; color:#333; margin-top:1.5mm; }
+  .bdg .qr{ width:30mm; height:30mm; image-rendering:pixelated; } .bdg .bot{ font-size:6.5pt; color:#666; text-align:center; padding:0 3mm 1.6mm; }
+  @media print{
+    body.printbadges > *:not(.bdg-ov){ display:none !important; }
+    body.printbadges .bdg-ov{ position:static; background:#fff; padding:0; overflow:visible; }
+    body.printbadges .bdg-bar{ display:none; } body.printbadges .bdg{ box-shadow:none; border:0.3mm solid #999; }
+    @page{ size:A4; margin:8mm; }
+  }
   .foot{ text-align:center; color:var(--muted); font-size:11px; margin-top:30px; letter-spacing:1px; }
 </style>
 </head>
@@ -199,7 +228,15 @@
 
     <!-- PRÉSENCE -->
     <section data-pane="presence" hidden>
-      <div class="card">
+      <button class="primary" id="p-scan" style="margin-top:14px">📷 <span data-i18n="scanBtn">Scanner les badges (arrivée / sortie)</span></button>
+      <div class="row" style="margin-top:10px"><select id="b-who"></select><button class="ghost gold" id="b-print" style="flex:0 0 auto">🪪 <span data-i18n="badgesBtn">Badges</span></button></div>
+      <div class="fl" style="margin-top:12px"><div class="seg" id="p-seg"><button data-ps="el" class="on" data-i18n="pStudents">Élèves</button><button data-ps="st" data-i18n="pStaff">Personnel</button></div></div>
+      <div class="card" id="p-staffcard" hidden>
+        <div class="row"><input id="ps-date" type="date"></div>
+        <div class="muted" id="ps-count" style="margin-top:8px"></div>
+        <div class="list" id="ps-list" style="margin-top:6px"></div>
+      </div>
+      <div class="card" id="p-elcard">
         <div class="row"><input id="p-date" type="date"><select id="p-classe"></select></div>
         <div class="fl" style="margin-top:10px"><button class="ghost gold" id="p-all" data-i18n="pAll">Tous présents</button><span class="muted" id="p-count"></span></div>
         <div class="list" id="p-list" style="margin-top:6px"></div>
@@ -264,7 +301,7 @@
           <div class="muted" id="st-tot" style="margin:8px 0 4px"></div>
           <div id="st-form" style="margin-top:10px">
             <div class="row"><input id="st-nom" data-i18n-ph="stNom" placeholder="Nom complet"><input id="st-role" data-i18n-ph="stRole" placeholder="Poste (ex. enseignante)"></div>
-            <div class="row" style="margin-top:8px"><input id="st-phone" inputmode="tel" data-i18n-ph="phone" placeholder="Téléphone"><input id="st-sal" type="number" inputmode="numeric" data-i18n-ph="stSal" placeholder="Salaire par mois"></div>
+            <div class="row" style="margin-top:8px"><input id="st-phone" inputmode="tel" data-i18n-ph="stPhone" placeholder="Téléphone"><input id="st-sal" type="number" inputmode="numeric" data-i18n-ph="stSal" placeholder="Salaire par mois"></div>
             <button class="primary" id="st-save" data-i18n="stAdd">Enregistrer</button>
             <button class="ghost" id="st-cancel" type="button" hidden data-i18n="stCancel">Annuler</button>
             <div class="msg" id="st-msg"></div>
@@ -303,6 +340,7 @@
           <div><label data-i18n="rLoyer">Loyer par an</label><input id="r-loyer" type="number" inputmode="numeric"></div>
           <div><label data-i18n="rTrimDeb">Début du trimestre en cours</label><input id="r-trimdeb" type="date"></div>
         </div>
+        <label data-i18n="lateMin">Retard compté après (minutes)</label><input id="r-late" type="number" inputmode="numeric" min="0" max="120">
         <label data-i18n="rcLang">Langue des reçus et messages aux élèves</label>
         <select id="r-rclang"><option value="en">English</option><option value="fr">Français</option></select>
         <button class="primary" id="r-save" data-i18n="save">Enregistrer</button>
@@ -349,7 +387,9 @@
       <button class="ghost" id="me-wa">WhatsApp</button>
       <button class="ghost" id="me-remind" data-i18n="meRemind">Rappel de paiement</button>
       <button class="ghost" id="me-edit" data-i18n="edit">Modifier</button>
+      <button class="ghost" id="me-badge">🪪 <span data-i18n="meBadge">Badge</span></button>
     </div>
+    <div id="me-suivi"></div>
     <h3 style="font-family:var(--serif);color:var(--gold);font-size:15px;margin:16px 0 4px" data-i18n="meDues">Ce qui est dû</h3>
     <table id="me-dues"></table>
     <div id="me-payform" class="card" hidden>
@@ -387,6 +427,15 @@
     <div class="msg err" id="ef-msg"></div>
     <button class="ghost red" id="ef-del" style="margin-top:14px" hidden data-i18n="del">Supprimer cet élève</button>
   </div>
+</div></div>
+
+<!-- FICHE PERSONNEL -->
+<div class="modal" id="m-staff" hidden><div class="box">
+  <button class="x" id="ms-x">×</button>
+  <h2 style="font-family:var(--serif);color:var(--gold);margin:0 0 4px" id="ms-title"></h2>
+  <div class="muted" id="ms-info"></div>
+  <div class="fl" style="margin-top:10px"><button class="ghost" id="ms-badge">🪪 <span data-i18n="meBadge">Badge</span></button><button class="ghost" id="ms-wa">WhatsApp</button></div>
+  <div id="ms-body"></div>
 </div></div>
 
 <script type="module">
@@ -459,7 +508,16 @@
       toPay:"reste {m}", paidAll:"Tout payé", rcNo:"Reçu n°", mpWa2:"Montrer le reçu à envoyer", rcSend:"Envoyer sur WhatsApp", rcPrint:"Imprimer", rcClose:"Fermer", rcLang:"Langue des reçus et messages aux élèves", payAuto:"Répartir automatiquement", recScol:"Paiement {n} — {p}", tooMuch:"Le montant dépasse ce qui reste ({m}). Continuer ?",
       offline:"Hors ligne : enregistré sur le téléphone, envoi au retour du réseau.", writeErr:"Le serveur a refusé l'enregistrement.",
       defCls4:"2e année", gTrimTitle:"Programme par trimestre", today:"Aujourd'hui", thisWeek:"Cette semaine", toCheck:"À vérifier dans le cahier", hwYesterday:"Devoir du dernier cours", endWeek:"Fin de semaine", bring:"À apporter", homework:"Devoir", weekDay:"Semaine {s} · Jour {n}", noClassToday:"Pas de cours aujourd'hui pour cette classe.", nextLesson:"Prochain cours : {d}", closedBtn:"École fermée aujourd'hui (décaler le programme)", reopenBtn:"Annuler la fermeture d'aujourd'hui", closedSure:"Marquer aujourd'hui comme fermé ? Le programme du cahier sera décalé d'un jour de cours.", closedDay:"Jour de fermeture.", noCahier:"Aucun cahier relié à cette classe.", cahierEnd:"Le cahier de ce trimestre est terminé.", seeList:"Voir les élèves", clsSettings:"Réglages de la classe", horaire:"Horaire", teacher:"Enseignant(e)", classDays:"Jours de cours", clsStart:"Début du cahier pour cette classe", cahierLbl:"Cahier", cahierAuto:"Automatique (selon le trimestre des élèves)", students:"élève(s)", pickClass:"Choisissez une classe.", dows:"D,L,M,M,J,V,S",
-      defCls1:"1re année — matin", defCls2:"1re année — après-midi", defCls3:"Classe du week-end", fForm:"Formulaire", fInsc:"Inscription", fUnif:"Uniforme", fMach:"Entretien des machines", fCahier:"Cahier de l'élève"
+      defCls1:"1re année — matin", defCls2:"1re année — après-midi", defCls3:"Classe du week-end", fForm:"Formulaire", fInsc:"Inscription", fUnif:"Uniforme", fMach:"Entretien des machines", fCahier:"Cahier de l'élève",
+      scanBtn:"Scanner les badges (arrivée / sortie)", scanHelp:"Présentez le badge devant la caméra.", badgesBtn:"Badges", bAll:"Tout le monde (élèves et personnel)", bStudents:"Tous les élèves", bStaff:"Tout le personnel",
+      bPrint:"Imprimer", pStudents:"Élèves", pStaff:"Personnel", welcome:"Bienvenue {n}", bye:"Au revoir {n}", arrivedAt:"Arrivée à {h}", leftAt:"Sortie à {h}", lateAt:"En retard — arrivée à {h}",
+      already:"Déjà pointé(e) à {h}", unknownBadge:"Badge inconnu", unknownHelp:"Ce badge n'appartient à aucun élève ni membre du personnel de cette école.",
+      camErr:"Impossible d'ouvrir la caméra. Autorisez la caméra pour ce site dans le navigateur, puis réessayez.", camSwitch:"🔄 Caméra", scanToday:"{k} pointage(s) aujourd'hui",
+      badgeStudent:"ÉLÈVE", badgeStaff:"PERSONNEL", badgeLost:"Badge personnel — en cas de perte, merci de le rapporter à l'école.", meBadge:"Badge", badgeNone:"Personne à imprimer.",
+      since:"Depuis le {d} ({w} semaine(s))", progress:"Suivi de présence", pastWeeks:"Semaines précédentes", weekOf:"Semaine du {d}",
+      attRate:"Présent(e) {p} jour(s) sur {n} jours de cours ({r} %)", attNone:"Aucune présence enregistrée pour le moment.",
+      stSince:"Dans l'équipe depuis le {d}", monthAtt:"{k} jour(s) de présence ce mois-ci", noStaff:"Aucun membre du personnel. Le propriétaire les ajoute dans Finances → Enseignants et personnel.",
+      lateMin:"Retard compté après (minutes)", arrShort:"arrivée", outShort:"sortie", byBadge:"badge", notYet:"pas encore arrivé(e)", colon:" : ", dayDetail:"Détail du mois", stNeed2:"Écrivez le nom.", stPhone:"Téléphone" 
     },
     en: {
       loginSub:"Sign in with your SanaaPro account", email:"Email", password:"Password", signin:"Sign in",
@@ -503,7 +561,16 @@
       toPay:"{m} left", paidAll:"Fully paid", rcNo:"Receipt no.", mpWa2:"Show the receipt to send", rcSend:"Send on WhatsApp", rcPrint:"Print", rcClose:"Close", rcLang:"Language of receipts and messages to students", payAuto:"Spread automatically", recScol:"Payment {n} — {p}", tooMuch:"The amount is more than what is left ({m}). Continue?",
       offline:"Offline: saved on the phone, it will be sent when the network is back.", writeErr:"The server refused to save.",
       defCls4:"2nd year", gTrimTitle:"Programme by term", today:"Today", thisWeek:"This week", toCheck:"To check in the workbook", hwYesterday:"Homework from last class", endWeek:"End of week", bring:"Bring", homework:"Homework", weekDay:"Week {s} · Day {n}", noClassToday:"No class today for this group.", nextLesson:"Next class: {d}", closedBtn:"School closed today (shift the programme)", reopenBtn:"Cancel today's closure", closedSure:"Mark today as closed? The workbook programme will move by one class day.", closedDay:"Closed day.", noCahier:"No workbook linked to this class.", cahierEnd:"This term's workbook is finished.", seeList:"See the students", clsSettings:"Class settings", horaire:"Time", teacher:"Teacher", classDays:"Class days", clsStart:"Workbook start for this class", cahierLbl:"Workbook", cahierAuto:"Automatic (from the students' term)", students:"student(s)", pickClass:"Choose a class.", dows:"S,M,T,W,T,F,S",
-      defCls1:"1st year — morning", defCls2:"1st year — afternoon", defCls3:"Weekend class", fForm:"Form", fInsc:"Registration", fUnif:"Uniform", fMach:"Machine maintenance", fCahier:"Student workbook"
+      defCls1:"1st year — morning", defCls2:"1st year — afternoon", defCls3:"Weekend class", fForm:"Form", fInsc:"Registration", fUnif:"Uniform", fMach:"Machine maintenance", fCahier:"Student workbook",
+      scanBtn:"Scan badges (arrival / departure)", scanHelp:"Hold the badge in front of the camera.", badgesBtn:"Badges", bAll:"Everyone (students and staff)", bStudents:"All students", bStaff:"All staff",
+      bPrint:"Print", pStudents:"Students", pStaff:"Staff", welcome:"Welcome {n}", bye:"Goodbye {n}", arrivedAt:"Arrived at {h}", leftAt:"Left at {h}", lateAt:"Late — arrived at {h}",
+      already:"Already scanned at {h}", unknownBadge:"Unknown badge", unknownHelp:"This badge does not belong to any student or staff member of this school.",
+      camErr:"Cannot open the camera. Allow the camera for this site in the browser, then try again.", camSwitch:"🔄 Camera", scanToday:"{k} scan(s) today",
+      badgeStudent:"STUDENT", badgeStaff:"STAFF", badgeLost:"Personal badge — if found, please return it to the school.", meBadge:"Badge", badgeNone:"Nobody to print.",
+      since:"Since {d} ({w} week(s))", progress:"Attendance record", pastWeeks:"Previous weeks", weekOf:"Week of {d}",
+      attRate:"Present {p} day(s) out of {n} class days ({r}%)", attNone:"No attendance recorded yet.",
+      stSince:"In the team since {d}", monthAtt:"{k} day(s) present this month", noStaff:"No staff yet. The owner adds them in Finances → Teachers and staff.",
+      lateMin:"Late after (minutes)", arrShort:"in", outShort:"out", byBadge:"badge", notYet:"not arrived yet", colon:": ", dayDetail:"This month in detail", stNeed2:"Type the name.", stPhone:"Phone" 
     }
   };
   let LANG = "fr";
@@ -758,13 +825,55 @@
     const paid = MOUVS.filter(m => m.type === "recette" && m.eleveId === el.id).reduce((s, m) => s + num(m.montant), 0);
     return Math.max(0, due - paid);
   }
-  function postLabel(d){ return d.nom + (d.trim ? " — " + t("trimShort") + d.trim : " (" + t("oneTime") + ")"); }
+  /* ---------- Noms dans la bonne langue ----------
+     Les classes et frais créés avec la grille par défaut sont enregistrés dans la langue du moment de la création
+     (souvent le français). À l'affichage on les remet dans la langue choisie ; un nom écrit à la main reste tel quel,
+     sauf les mots courants traduits en anglais (1re année, matin, après-midi…). */
+  const DEF_CLS = { c1:"defCls1", c2:"defCls2", c3:"defCls3", c4:"defCls4" };
+  const DEF_FEE = { form:"fForm", insc:"fInsc", unif:"fUnif", mach:"fMach", cahier:"fCahier" };
+  const FR_EN = [[/1(?:re|ère|ere) ann[ée]e/gi,"1st year"],[/2(?:e|ème|eme) ann[ée]e/gi,"2nd year"],[/3(?:e|ème|eme) ann[ée]e/gi,"3rd year"],
+    [/apr[èe]s-midi/gi,"afternoon"],[/\bmatin\b/gi,"morning"],[/\bsoir\b/gi,"evening"],[/classe du week-end/gi,"Weekend class"],[/week-end/gi,"weekend"],
+    [/entretien des machines/gi,"Machine maintenance"],[/r[ée]paration (?:de |des )?machines?/gi,"Machine repair"],[/cahier de l'[ée]l[èe]ve/gi,"Student workbook"],
+    [/\binscription\b/gi,"Registration"],[/\buniforme\b/gi,"Uniform"],[/\bformulaire\b/gi,"Form"],[/scolarit[ée]/gi,"Tuition"],[/\btrimestre\b/gi,"Term"],
+    [/\bclasse\b/gi,"Class"],[/\bune fois\b/gi,"once"],[/\bpaiement\b/gi,"Payment"],[/\bsalaire\b/gi,"Salary"]];
+  function trIn(lang, k){ return (I18N[lang] && I18N[lang][k] != null) ? I18N[lang][k] : t(k); }
+  function locName(nom, lang){ let s2 = String(nom == null ? "" : nom); if((lang || LANG) !== "en") return s2; FR_EN.forEach(([r, v]) => { s2 = s2.replace(r, v); }); return s2; }
+  function defName(map, id, nom, lang){ const k = map[id]; if(k && (!nom || nom === I18N.fr[k] || nom === I18N.en[k])) return trIn(lang || LANG, k); return locName(nom, lang); }
+  function clsName(c, lang){ return c ? defName(DEF_CLS, c.id, c.nom, lang) : ""; }
+  function feeName(f, lang){ return f ? defName(DEF_FEE, f.id, f.nom, lang) : ""; }
+  function postLabel(d, lang){
+    lang = lang || LANG;
+    const f = d.poste && d.poste !== "scol" ? fraisL().find(x => x.id === d.poste) : null;
+    const nm = d.poste === "scol" ? trIn(lang, "tuition") : (f ? feeName(f, lang) : locName(String(d.nom || "").replace(/ — T\d+$| \([^)]*\)$/, ""), lang));
+    return nm + (d.trim ? " — " + trIn(lang, "trimShort") + d.trim : " (" + trIn(lang, "oneTime") + ")");
+  }
+  /* Libellé d'un mouvement reconstruit à partir de ses champs (et non du texte figé à l'enregistrement). */
+  function stripCat(label, cat){
+    let s2 = String(label || "");
+    for(const L of ["fr","en"]){ const pre = I18N[L][cat]; if(pre && s2.indexOf(pre) === 0) return s2.slice(pre.length).replace(/^ — /, ""); }
+    return null;
+  }
+  function movLabel(m){
+    if(m.type === "recette" && m.source === "scolarite" && m.poste)
+      return fmt(t("recScol"), { n:m.eleveNom || "", p:postLabel({ poste:m.poste, trim:num(m.trim), nom:m.posteNom }) });
+    if(m.type === "depense" && m.cat && I18N.fr[m.cat]){
+      if(m.cat === "catSal" && m.staffId){
+        const p = staff().find(x => x.id === m.staffId), parts = String(m.label || "").split(" — ");
+        const who = p ? p.nom : (parts[1] || "");
+        let mo = ""; if(m.mois){ const [y, mm] = String(m.mois).split("-"); mo = new Date(+y, +mm - 1, 15).toLocaleDateString(LANG === "en" ? "en-GB" : "fr-FR", { month:"long", year:"numeric" }); }
+        return [t("catSal"), who, mo].filter(Boolean).join(" — ");
+      }
+      const rest = m.desc != null ? m.desc : stripCat(m.label, m.cat);
+      if(rest != null) return t(m.cat) + (rest ? " — " + rest : "");
+    }
+    return locName(m.label || "");
+  }
 
   /* ---------- Rendu ---------- */
   function fillClasseSelect(sel, withAll){
     const v = sel.value;
     sel.innerHTML = (withAll ? '<option value="">' + esc(t("allClasses")) + "</option>" : "")
-      + classes().map(c => '<option value="' + esc(c.id) + '">' + esc(c.nom) + "</option>").join("")
+      + classes().map(c => '<option value="' + esc(c.id) + '">' + esc(clsName(c)) + "</option>").join("")
       + (withAll ? "" : '<option value="">' + esc(t("noClass")) + "</option>");
     if([...sel.options].some(o => o.value === v)) sel.value = v;
   }
@@ -784,13 +893,14 @@
       if(TAB === "programme") renderProgramme();
       if(TAB === "reglages") renderReglages();
       if(CUR_EL && !$("m-eleve").hidden && !$("me-view").hidden) renderEleveView();
+      if(CUR_ST && !$("m-staff").hidden) renderStaffView();
     }catch(e){ console.error(e); }
   }
 
   function itemHtml(el, right){
     const c = classeOf(el), r = resteOf(el);
     return '<div class="it" data-el="' + esc(el.id) + '"><span class="dot ' + (r > 0 ? "bad" : "paid") + '"></span>'
-      + '<div class="main"><div class="t1 ' + (r > 0 ? "nm-owe" : "nm-paid") + '">' + esc(el.nom) + '</div><div class="t2">' + esc(c ? c.nom : t("noClass")) + " · " + t("trimShort") + esc(el.trim || 1) + "</div></div>"
+      + '<div class="main"><div class="t1 ' + (r > 0 ? "nm-owe" : "nm-paid") + '">' + esc(el.nom) + '</div><div class="t2">' + esc(c ? clsName(c) : t("noClass")) + " · " + t("trimShort") + esc(el.trim || 1) + "</div></div>"
       + (right != null ? right : '<span class="amt ' + (r > 0 ? "bad" : "paid") + '">' + (r > 0 ? esc(fmt(t("toPay"), { m: money(r) })) : "✔ " + esc(t("paidAll"))) + "</span>")
       + "</div>";
   }
@@ -799,7 +909,7 @@
   function renderApercu(){
     const A = actifs(), today = ymd();
     $("a-actifs").textContent = A.length;
-    const pr = PRES.filter(p => p.date === today);
+    const pr = PRES.filter(p => p.date === today && p.eleveId);
     $("a-pres").textContent = pr.length ? pr.filter(p => p.statut === "P" || p.statut === "R").length : "—";
     const owe = A.map(e => ({ e, r: resteOf(e) })).filter(x => x.r > 0).sort((a, b) => b.r - a.r);
     $("a-doivent").textContent = owe.length;
@@ -812,7 +922,7 @@
       const n = A.filter(e => e.classeId === c.id).length;
       const L = lessonInfo(c, today);
       const sub = [c.horaire, L && L.lesson && L.isClassDay ? "📖 " + L.lesson.t : ""].filter(Boolean).join(" · ");
-      return '<div class="it" data-cls="' + esc(c.id) + '"><div class="main"><div class="t1">' + esc(c.nom) + '</div>' + (sub ? '<div class="t2">' + esc(sub) + "</div>" : "") + '</div><span class="amt">' + n + "</span></div>";
+      return '<div class="it" data-cls="' + esc(c.id) + '"><div class="main"><div class="t1">' + esc(clsName(c)) + '</div>' + (sub ? '<div class="t2">' + esc(sub) + "</div>" : "") + '</div><span class="amt">' + n + "</span></div>";
     }).join("") || '<div class="muted">' + esc(t("nobody")) + "</div>";
     $("a-classes").querySelectorAll("[data-cls]").forEach(n => n.addEventListener("click", () => { ECLS = n.dataset.cls; setTab("eleves"); }));
     $("a-owe").innerHTML = owe.length ? owe.map(x => itemHtml(x.e)).join("") : '<div class="muted">' + esc(A.length ? t("allPaid") : t("nobody")) + "</div>";
@@ -823,7 +933,7 @@
   function classChips(box, cur, onPick, withAll){
     const A = actifs();
     box.innerHTML = (withAll ? '<button class="chip' + (!cur ? " on" : "") + '" data-c="">' + esc(t("allClasses")) + " · " + A.length + "</button>" : "")
-      + classes().map(c => '<button class="chip' + (cur === c.id ? " on" : "") + '" data-c="' + esc(c.id) + '">' + esc(c.nom) + " · " + A.filter(e => e.classeId === c.id).length + "</button>").join("");
+      + classes().map(c => '<button class="chip' + (cur === c.id ? " on" : "") + '" data-c="' + esc(c.id) + '">' + esc(clsName(c)) + " · " + A.filter(e => e.classeId === c.id).length + "</button>").join("");
     box.querySelectorAll("[data-c]").forEach(b => b.addEventListener("click", () => onPick(b.dataset.c)));
   }
   function renderEleves(){
@@ -833,7 +943,7 @@
     $("e-clsinfo").hidden = !ci;
     if(ci){
       const L = ci ? lessonInfo(ci, ymd()) : null;
-      $("e-clsinfo").innerHTML = '<div class="t1" style="font-weight:700">' + esc(ci.nom) + '</div><div class="muted">' + esc([ci.horaire, ci.enseignant].filter(Boolean).join(" · ")) + "</div>"
+      $("e-clsinfo").innerHTML = '<div class="t1" style="font-weight:700">' + esc(clsName(ci)) + '</div><div class="muted">' + esc([ci.horaire, ci.enseignant].filter(Boolean).join(" · ")) + "</div>"
         + (L && L.lesson ? '<div style="margin-top:8px"><span class="muted">' + esc(t("today")) + " : </span><b>" + esc(L.lesson.t) + "</b></div>" : "")
         + '<button class="ghost gold" style="margin-top:10px" id="e-goprog">📖 ' + esc(t("tProgramme")) + "</button>";
       $("e-goprog").onclick = () => { GCLS = ci.id; setTab("programme"); };
@@ -856,17 +966,20 @@
     fillClasseSelect($("p-classe"), true);
     const date = $("p-date").value || ymd(), cl = $("p-classe").value;
     const L = actifs().filter(e => !cl || e.classeId === cl);
-    const st = {}; PRES.filter(p => p.date === date).forEach(p => { st[p.eleveId] = p.statut; });
+    const st = {}, rec = {}; PRES.filter(p => p.date === date && p.eleveId).forEach(p => { st[p.eleveId] = p.statut; rec[p.eleveId] = p; });
     let P = 0, A = 0, R = 0;
     L.forEach(e => { if(st[e.id] === "P") P++; else if(st[e.id] === "A") A++; else if(st[e.id] === "R") R++; });
     $("p-count").textContent = fmt(t("pCount"), { p:P, a:A, r:R });
     $("p-list").innerHTML = L.map(e => {
       const s = st[e.id] || "";
-      return '<div class="it" style="cursor:default"><div class="main"><div class="t1">' + esc(e.nom) + "</div></div>"
+      const tm = hoursTxt(rec[e.id]);
+      return '<div class="it" style="cursor:default"><div class="main"><div class="t1" data-op="' + esc(e.id) + '" style="cursor:pointer">' + esc(e.nom) + "</div>" + (tm ? '<div class="t2">' + esc(tm) + "</div>" : "") + "</div>"
         + (s === "A" ? '<button class="ghost" data-wa="' + esc(e.id) + '" style="padding:7px 9px">💬</button>' : "")
         + '<div class="pres">' + ["P","A","R"].map(k => '<button class="' + k + (s === k ? " on" : "") + '" data-p="' + esc(e.id) + '" data-s="' + k + '">' + (k === "P" ? (LANG === "en" ? "P" : "P") : k === "A" ? "A" : (LANG === "en" ? "L" : "R")) + "</button>").join("") + "</div></div>";
     }).join("") || '<div class="muted">' + esc(t("nobody")) + "</div>";
     $("p-list").querySelectorAll("[data-p]").forEach(b => b.addEventListener("click", () => setPres(b.dataset.p, b.dataset.s)));
+    $("p-list").querySelectorAll("[data-op]").forEach(b => b.addEventListener("click", () => openEleve(b.dataset.op)));
+    renderStaffPresence(); fillBadgeWho();
     $("p-list").querySelectorAll("[data-wa]").forEach(b => b.addEventListener("click", () => {
       const e = ELEVES.find(x => x.id === b.dataset.wa); if(!e) return;
       openWa(e.parentPhone || e.phone, fmt(t("pAbsMsg"), { n:e.nom, s:ECOLE.name || "" }));
@@ -874,9 +987,10 @@
   }
   function setPres(eid, s){
     const date = $("p-date").value || ymd(), id = date + "_" + eid;
-    const rec = { id, date, eleveId:eid, statut:s, ms:Date.now() };
+    const old = PRES.find(p => p.id === id) || {};
+    const rec = Object.assign({}, old, { id, date, eleveId:eid, statut:s, ms:Date.now() });
     const i = PRES.findIndex(p => p.id === id); if(i >= 0) PRES[i] = rec; else PRES.push(rec);
-    save(doc(db, "ecoles", UID, "presences", id), { date, eleveId:eid, statut:s, ms:rec.ms }, false);
+    save(doc(db, "ecoles", UID, "presences", id), { date, eleveId:eid, statut:s, ms:rec.ms });
     renderPresence();
   }
   $("p-date").addEventListener("change", renderPresence);
@@ -949,7 +1063,7 @@
       const empty = days.map(() => "<td></td>").join("");
       const rows = els.map((e, i) => '<tr><td class="n">' + (i + 1) + "</td><td>" + esc(e.nom) + "</td>" + empty + "<td></td></tr>").join("")
         + [1, 2].map(k => '<tr><td class="n">' + (els.length + k) + "</td><td></td>" + empty + "<td></td></tr>").join("");
-      return '<div class="ps-page"><h1>' + esc(ECOLE.name || "") + "</h1><h2>" + esc(L.title) + " — " + esc(c.nom) + (c.horaire ? " (" + esc(c.horaire) + ")" : "") + "</h2>"
+      return '<div class="ps-page"><h1>' + esc(ECOLE.name || "") + "</h1><h2>" + esc(L.title) + " — " + esc(clsName(c, EN ? "en" : "fr")) + (c.horaire ? " (" + esc(c.horaire) + ")" : "") + "</h2>"
         + '<div class="ps-meta">' + esc(L.week) + " " + esc(mon.toLocaleDateString(EN ? "en-GB" : "fr-FR")) + " · " + esc(L.teacher) + " : ____________________ · " + esc(L.out) + "</div>"
         + "<table><tr><th>" + esc(L.no) + "</th><th>" + esc(L.st) + "</th>" + th + "<th>" + esc(L.rem) + "</th></tr>"
         + '<tr><td class="n"></td><td class="w"><b>' + esc(L.work) + "</b></td>" + days.map(() => '<td class="w"></td>').join("") + "<td></td></tr>"
@@ -983,7 +1097,7 @@
     $("f-sol").textContent = money(rec - dep); $("f-sol").style.color = rec - dep < 0 ? "var(--bad)" : "var(--gold)";
     $("f-list").innerHTML = L.map(m => {
       const r = m.type === "recette";
-      return '<div class="it" style="cursor:default"><span class="dot ' + (r ? "ok" : "bad") + '"></span><div class="main"><div class="t1">' + esc(m.label || "") + '</div><div class="t2">' + esc(dshow(num(m.ms))) + '</div></div><span class="amt ' + (r ? "ok" : "bad") + '">' + (r ? "+" : "−") + esc(money(num(m.montant))) + '</span><button class="ghost red" data-dm="' + esc(m.id) + '" style="padding:6px 9px">✕</button></div>';
+      return '<div class="it" style="cursor:default"><span class="dot ' + (r ? "ok" : "bad") + '"></span><div class="main"><div class="t1">' + esc(movLabel(m)) + '</div><div class="t2">' + esc(dshow(num(m.ms))) + '</div></div><span class="amt ' + (r ? "ok" : "bad") + '">' + (r ? "+" : "−") + esc(money(num(m.montant))) + '</span><button class="ghost red" data-dm="' + esc(m.id) + '" style="padding:6px 9px">✕</button></div>';
     }).join("") || '<div class="muted">' + esc(t("noMoves")) + "</div>";
     $("f-list").querySelectorAll("[data-dm]").forEach(b => b.addEventListener("click", () => {
       if(!askCode() || !confirm("✕ ?")) return;
@@ -1000,7 +1114,8 @@
     let from;
     if(ECOLE.trimDebut){ from = new Date(ECOLE.trimDebut + "T00:00:00"); }
     else { from = new Date(); from.setHours(0, 0, 0, 0); from.setMonth(from.getMonth() - 3); }
-    const to = new Date(from); to.setMonth(to.getMonth() + 3); to.setDate(to.getDate() - 1); to.setHours(23, 59, 59, 999);
+    let to = new Date(from); to.setMonth(to.getMonth() + 3); to.setDate(to.getDate() - 1); to.setHours(23, 59, 59, 999);
+    if(!ECOLE.trimDebut){ to = new Date(); to.setHours(23, 59, 59, 999); }
     return { from: from.getTime(), to: to.getTime() };
   }
   /* Bilan du trimestre : encaissé − dépenses − salaires − part du loyer (loyer par an ÷ 3 trimestres).
@@ -1035,7 +1150,7 @@
     const L = MOUVS.filter(m => m.type === "depense" && (mo ? ymd(new Date(num(m.ms))).slice(0, 7) === mo : (num(m.ms) >= R.from && num(m.ms) <= R.to))).sort((a, b) => num(b.ms) - num(a.ms));
     $("dl-trim").classList.toggle("on", !mo);
     $("dl-tot").textContent = (mo ? "" : fmt(t("bRange"), { a:D(R.from), b:D(R.to) }) + " · ") + fmt(t("dlTot"), { k:L.length, m:money(L.reduce((s, m) => s + num(m.montant), 0)) });
-    $("dl-list").innerHTML = L.map(m => '<div class="it" style="cursor:default"><span class="dot bad"></span><div class="main"><div class="t1">' + esc(m.label || "") + '</div><div class="t2">' + esc(dshow(num(m.ms))) + '</div></div><span class="amt bad">−' + esc(money(num(m.montant))) + '</span><button class="ghost red" data-dd="' + esc(m.id) + '" style="padding:6px 9px">✕</button></div>').join("")
+    $("dl-list").innerHTML = L.map(m => '<div class="it" style="cursor:default"><span class="dot bad"></span><div class="main"><div class="t1">' + esc(movLabel(m)) + '</div><div class="t2">' + esc(dshow(num(m.ms))) + '</div></div><span class="amt bad">−' + esc(money(num(m.montant))) + '</span><button class="ghost red" data-dd="' + esc(m.id) + '" style="padding:6px 9px">✕</button></div>').join("")
       || '<div class="muted">' + esc(t("noMoves")) + "</div>";
     $("dl-list").querySelectorAll("[data-dd]").forEach(b => b.addEventListener("click", () => {
       if(!askCode() || !confirm("✕ ?")) return;
@@ -1094,7 +1209,7 @@
   $("st-cancel").addEventListener("click", resetStaffForm);
   $("st-save").addEventListener("click", () => {
     const nom = $("st-nom").value.trim(), sal = num($("st-sal").value), m = $("st-msg");
-    if(!nom || sal <= 0){ m.className = "msg err"; m.textContent = t("stNeed"); return; }
+    if(!nom){ m.className = "msg err"; m.textContent = t("stNeed2"); return; }
     const d = { nom, role:$("st-role").value.trim(), phone:$("st-phone").value.trim(), salaire:sal };
     let L = staff().slice();
     if(ST_EDIT){ if(!askCode()) return; L = L.map(x => x.id === ST_EDIT ? Object.assign({}, x, d) : x); }
@@ -1108,7 +1223,7 @@
     const cat = $("d-cat").value, lbl = $("d-lbl").value.trim();
     /* Date choisie (dépense passée notée plus tard) : midi de ce jour ; aujourd'hui = l'heure réelle. */
     const dv = $("d-date").value, ms = (dv && dv !== ymd()) ? new Date(dv + "T12:00:00").getTime() : Date.now();
-    const id = newId("dep-"), rec = { type:"depense", cat, montant:amt, label: t(cat) + (lbl ? " — " + lbl : ""), ms };
+    const id = newId("dep-"), rec = { type:"depense", cat, montant:amt, desc:lbl, label: t(cat) + (lbl ? " — " + lbl : ""), ms };
     MOUVS.push(Object.assign({ id }, rec)); save(doc(db, "ecoles", UID, "mouvements", id), rec, false);
     $("d-amt").value = ""; $("d-lbl").value = ""; m.className = "msg"; m.textContent = t("depSaved"); renderAll();
   });
@@ -1166,7 +1281,7 @@
     const c = classes().find(x => x.id === GCLS), box = $("g-class");
     if(!c){ box.innerHTML = '<div class="card muted">' + esc(t("pickClass")) + "</div>"; return; }
     const today = ymd(), L = lessonInfo(c, today), nb = actifs().filter(e => e.classeId === c.id).length;
-    let h = '<div class="card"><div style="font-weight:700;font-size:16px">' + esc(c.nom) + '</div><div class="muted">'
+    let h = '<div class="card"><div style="font-weight:700;font-size:16px">' + esc(clsName(c)) + '</div><div class="muted">'
       + esc([c.horaire, c.enseignant, nb + " " + t("students")].filter(Boolean).join(" · ")) + '</div><button class="ghost" style="margin-top:10px" id="g-list">👥 ' + esc(t("seeList")) + "</button></div>";
     if(!L){
       h += '<div class="card muted">' + esc(t("noCahier")) + "</div>";
@@ -1256,6 +1371,7 @@
     if(act !== $("r-rclang")) $("r-rclang").value = ECOLE.langRecu || "en";
     if(act !== $("r-loyer")) $("r-loyer").value = ECOLE.loyerAn || "";
     if(act !== $("r-trimdeb")) $("r-trimdeb").value = ECOLE.trimDebut || "";
+    if(act !== $("r-late")) $("r-late").value = lateMinutes();
     $("r-acc").textContent = fmt(t("acc"), { e: (auth.currentUser && auth.currentUser.email) || "" });
     if(!CF_DRAFT) CF_DRAFT = { classes: JSON.parse(JSON.stringify(classes())), frais: JSON.parse(JSON.stringify(fraisL())) };
     paintCF();
@@ -1289,7 +1405,8 @@
   $("r-save").addEventListener("click", () => {
     const d = { name:$("r-name").value.trim() || ECOLE.name, sousTitre:$("r-sub").value.trim(), whatsapp:$("r-wa").value.trim(),
                 devise:$("r-cur").value.trim() || "D", langRecu:$("r-rclang").value, nbTrim:Math.max(1, Math.min(12, num($("r-nbt").value) || 6)),
-                loyerAn:num($("r-loyer").value), trimDebut:$("r-trimdeb").value || "" };
+                loyerAn:num($("r-loyer").value), trimDebut:$("r-trimdeb").value || "",
+                retardMin:Math.max(0, Math.min(120, $("r-late").value === "" ? 15 : num($("r-late").value))) };
     Object.assign(ECOLE, d); save(EREF, d); paintHead(); $("r-msg").textContent = t("saved");
   });
   $("r-codesave").addEventListener("click", () => {
@@ -1315,8 +1432,8 @@
     const e = ELEVES.find(x => x.id === CUR_EL); if(!e){ $("m-eleve").hidden = true; return; }
     const c = classeOf(e);
     $("me-title").textContent = e.nom; $("me-title").style.color = resteOf(e) > 0 ? "#f87171" : "#60a5fa";
-    $("me-info").innerHTML = esc(c ? c.nom : t("noClass")) + " · " + esc(t("trim")) + " " + esc(e.trim || 1)
-      + (e.phone ? " · 📞 " + esc(e.phone) : "") + (e.parent || e.parentPhone ? "<br>" + esc(t("parent")) + " : " + esc(e.parent || "") + " " + esc(e.parentPhone || "") : "")
+    $("me-info").innerHTML = esc(c ? clsName(c) : t("noClass")) + " · " + esc(t("trim")) + " " + esc(e.trim || 1)
+      + (e.phone ? " · 📞 " + esc(e.phone) : "") + (e.parent || e.parentPhone ? "<br>" + esc(t("parent")) + t("colon") + esc(e.parent || "") + " " + esc(e.parentPhone || "") : "")
       + (e.note ? "<br>" + esc(e.note) : "");
     const D = duesOf(e), tot = D.reduce((s, d) => s + d.montant, 0);
     const pay = MOUVS.filter(m => m.type === "recette" && m.eleveId === e.id).reduce((s, m) => s + num(m.montant), 0);
@@ -1326,11 +1443,12 @@
     const P = MOUVS.filter(m => m.type === "recette" && m.eleveId === e.id).sort((a, b) => num(b.ms) - num(a.ms));
     const G = {}; P.forEach(m => { const k = m.recu || ("ms" + m.ms); (G[k] = G[k] || []).push(m); });
     $("me-pays").innerHTML = Object.keys(G).map(k => { const g = G[k], tot = g.reduce((s2, m) => s2 + num(m.montant), 0);
-      return '<div class="it" style="cursor:default"><div class="main"><div class="t1">' + esc(g.map(m => m.posteNom || m.label || "").join(" · ")) + '</div><div class="t2">' + esc(dshow(num(g[0].ms))) + (g[0].recuNo ? " · " + esc(t("rcNo")) + " " + esc(g[0].recuNo) : "") + '</div></div><span class="amt ok">' + esc(money(tot)) + '</span><button class="ghost" data-rc="' + esc(k) + '" style="padding:6px 9px">🧾</button></div>'; }).join("") || '<div class="muted">' + esc(t("noPay")) + "</div>";
+      return '<div class="it" style="cursor:default"><div class="main"><div class="t1">' + esc(g.map(m => m.poste ? postLabel({ poste:m.poste, trim:num(m.trim), nom:m.posteNom }) : movLabel(m)).join(" · ")) + '</div><div class="t2">' + esc(dshow(num(g[0].ms))) + (g[0].recuNo ? " · " + esc(t("rcNo")) + " " + esc(g[0].recuNo) : "") + '</div></div><span class="amt ok">' + esc(money(tot)) + '</span><button class="ghost" data-rc="' + esc(k) + '" style="padding:6px 9px">🧾</button></div>'; }).join("") || '<div class="muted">' + esc(t("noPay")) + "</div>";
     $("me-pays").querySelectorAll("[data-rc]").forEach(b => b.addEventListener("click", () => showReceipt(e, G[b.dataset.rc])));
     const tr = num(e.trim) || 1, ns = NOTES.filter(n => n.eleveId === e.id).sort((a, b) => String(b.date).localeCompare(String(a.date)));
     const nt = ns.filter(n => num(n.trim) === tr), avg = nt.length ? (nt.reduce((s, n) => s + num(n.note), 0) / nt.length).toFixed(1) + "/10" : "—";
     const pr = PRES.filter(p => p.eleveId === e.id);
+    renderSuivi(e);
     $("me-stats").textContent = fmt(t("stats"), { t:tr, m:avg, p:pr.filter(p => p.statut !== "A").length, a:pr.filter(p => p.statut === "A").length });
     $("me-notes").innerHTML = ns.slice(0, 30).map(n => '<div class="it" style="cursor:default"><div class="main"><div class="t1">' + esc(n.travail || "—") + '</div><div class="t2">' + esc(n.date) + " · " + t("trimShort") + esc(n.trim) + '</div></div><span class="amt">' + esc(n.note) + "/10</span></div>").join("") || '<div class="muted">' + esc(t("noNotes")) + "</div>";
   }
@@ -1415,8 +1533,9 @@
     if(ECOLE.whatsapp) text("☎ " + ECOLE.whatsapp, (11.5*S)+"px "+SANS, "#555", 17);
     y += 8*S; text(L.title, "800 "+(14*S)+"px "+SANS, "#111", 30); y += 4*S;
     row(L.no, no); row(L.date, new Date(num(grp[0].ms)).toLocaleDateString(ECOLE.langRecu === "fr" ? "fr-FR" : "en-GB", { day:"2-digit", month:"long", year:"numeric" }));
-    row(L.student, e.nom); if(c) row(L.cls, c.nom); row(L.term, String(tr));
-    grp.forEach(m => { const nm = String(m.posteNom || "").replace(t("tuition"), L.tuition).replace("(" + t("oneTime") + ")", "(" + L.once + ")"); row(nm, money(num(m.montant))); });
+    const RL = ECOLE.langRecu === "fr" ? "fr" : "en";
+    row(L.student, e.nom); if(c) row(L.cls, clsName(c, RL)); row(L.term, String(tr));
+    grp.forEach(m => { const nm = m.poste ? postLabel({ poste:m.poste, trim:num(m.trim), nom:m.posteNom }, RL) : locName(m.posteNom || m.label, RL); row(nm, money(num(m.montant))); });
     y += 10*S; text(L.paidNow, (12*S)+"px "+SANS, "#444", 18); text(money(amt), "800 "+(26*S)+"px "+SANS, "#111", 36);
     if(restNow > 0){ y += 4*S; text(L.left + " : " + money(restNow), "800 "+(15*S)+"px "+SANS, "#b42318", 26); }
     else { y += 10*S; ops.push({ stamp:fmt(L.paidTerm, { n:tr }), y:y + 18*S }); y += 44*S; }
@@ -1468,6 +1587,274 @@
     ov.appendChild(bar); document.body.appendChild(ov);
   }
 
+  /* =====================================================================
+     BADGES ET POINTAGE
+     Chaque élève et chaque membre du personnel a un badge avec un code QR « SPS1:e:<id> » (élève)
+     ou « SPS1:s:<id> » (personnel). Scanner le badge enregistre l'arrivée ; le scanner une 2e fois
+     (plus de 3 minutes après) enregistre la sortie. Tout va dans /presences (id = date_personne),
+     la même collection que la présence notée à la main : un seul registre, jamais de doublon.
+     ===================================================================== */
+  function lateMinutes(){ return ECOLE && ECOLE.retardMin != null && ECOLE.retardMin !== "" ? num(ECOLE.retardMin) : 15; }
+  function hm(d){ return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
+  function hoursTxt(r){
+    if(!r || (!r.arrivee && !r.sortie)) return "";
+    return (r.arrivee ? t("arrShort") + " " + r.arrivee : "") + (r.sortie ? " → " + t("outShort") + " " + r.sortie : "") + (r.via === "badge" ? " · 🪪" : "");
+  }
+  function classStartMin(c){
+    const m = String((c && c.horaire) || "").match(/(\d{1,2})\s*[:hH.]\s*(\d{2})/);
+    return m ? num(m[1]) * 60 + num(m[2]) : null;
+  }
+  function mondayOf(dateStr){ const d = dParse(dateStr); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d; }
+  function dShort(k, opt){ try{ return dParse(k).toLocaleDateString(LANG === "en" ? "en-GB" : "fr-FR", opt || { day:"numeric", month:"short" }); }catch(e){ return k; } }
+  const STAFF_DAYS = [1,2,3,4,5,6];
+
+  /* ---------- Présence du personnel (onglet Présence → Personnel) ---------- */
+  let PSEG = "el";
+  document.querySelectorAll("#p-seg button").forEach(b => b.addEventListener("click", () => {
+    PSEG = b.dataset.ps; document.querySelectorAll("#p-seg button").forEach(x => x.classList.toggle("on", x === b)); renderPresence();
+  }));
+  $("ps-date").addEventListener("change", renderStaffPresence);
+  function renderStaffPresence(){
+    $("p-elcard").hidden = PSEG !== "el"; $("p-staffcard").hidden = PSEG !== "st";
+    if(PSEG !== "st") return;
+    if(!$("ps-date").value) $("ps-date").value = ymd();
+    const date = $("ps-date").value, L = staff();
+    const rec = {}; PRES.filter(p => p.date === date && p.staffId).forEach(p => { rec[p.staffId] = p; });
+    const here = L.filter(p => rec[p.id] && rec[p.id].statut !== "A").length;
+    $("ps-count").textContent = L.length ? here + " / " + L.length : "";
+    $("ps-list").innerHTML = L.map(p => {
+      const r = rec[p.id], s = r ? r.statut : "";
+      return '<div class="it" style="cursor:default"><div class="main"><div class="t1" data-os="' + esc(p.id) + '" style="cursor:pointer">' + esc(p.nom) + '</div><div class="t2">'
+        + esc([p.role, hoursTxt(r) || (date === ymd() && !r ? t("notYet") : "")].filter(Boolean).join(" · ")) + '</div></div>'
+        + '<div class="pres">' + ["P","A"].map(k => '<button class="' + k + (s === k || (k === "P" && s === "R") ? " on" : "") + '" data-sp2="' + esc(p.id) + '" data-s="' + k + '">' + k + "</button>").join("") + "</div></div>";
+    }).join("") || '<div class="muted">' + esc(t("noStaff")) + "</div>";
+    $("ps-list").querySelectorAll("[data-sp2]").forEach(b => b.addEventListener("click", () => {
+      const id = date + "_" + b.dataset.sp2, old = PRES.find(p => p.id === id) || {};
+      const r2 = Object.assign({}, old, { id, date, staffId:b.dataset.sp2, statut:b.dataset.s, ms:Date.now() });
+      const i = PRES.findIndex(p => p.id === id); if(i >= 0) PRES[i] = r2; else PRES.push(r2);
+      save(doc(db, "ecoles", UID, "presences", id), { date, staffId:b.dataset.sp2, statut:b.dataset.s, ms:r2.ms });
+      renderStaffPresence();
+    }));
+    $("ps-list").querySelectorAll("[data-os]").forEach(b => b.addEventListener("click", () => openStaff(b.dataset.os)));
+  }
+
+  /* ---------- Tableau individuel de l'élève : depuis quand, cette semaine, semaines passées ---------- */
+  function takenDates(){ const S = new Set(); PRES.forEach(p => { if(p.eleveId) S.add(p.date); }); return S; }
+  function attendanceOf(recs, days, startMs, onlyTaken){
+    const today = ymd(), closed = fermes(), taken = onlyTaken ? takenDates() : null;
+    const out = []; if(!startMs) return out;
+    const d = new Date(startMs); d.setHours(12, 0, 0, 0);
+    let guard = 0;
+    while(ymd(d) <= today && guard++ < 800){
+      const k = ymd(d);
+      if(days.includes(d.getDay()) && !closed.includes(k) && (!taken || taken.has(k) || recs[k])) out.push({ k, r: recs[k] || null });
+      d.setDate(d.getDate() + 1);
+    }
+    return out;
+  }
+  function weekStrip(recs, days, k0){
+    const today = ymd(), mon = mondayOf(k0 || today), dn = t("dows").split(",");
+    let h = '<div class="wkstrip">';
+    days.slice().sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)).forEach(g => {
+      const d = new Date(mon); d.setDate(mon.getDate() + ((g + 6) % 7)); const k = ymd(d), r = recs[k];
+      const s = r ? (r.statut === "R" ? "R" : r.statut === "A" ? "A" : "P") : "";
+      const ic = s === "P" ? "✔" : s === "R" ? "⏰" : s === "A" ? "✗" : (k < today ? "·" : "");
+      h += '<div class="d ' + s + (k === today ? " today" : "") + '">' + esc(dn[g]) + " " + d.getDate() + "<b>" + ic + "</b><small>" + esc(r && r.arrivee ? r.arrivee : "") + "</small></div>";
+    });
+    return h + "</div>";
+  }
+  function renderSuivi(e){
+    const c = classeOf(e), days = c ? classDays(c) : [1,2,3,4], since = num(e.entreeMs) || num(e.createdMs);
+    const recs = {}; PRES.filter(p => p.eleveId === e.id).forEach(p => { recs[p.date] = p; });
+    let h = '<h3 style="font-family:var(--serif);color:var(--gold);font-size:15px;margin:16px 0 4px">📅 ' + esc(t("progress")) + "</h3>";
+    if(since){ const w = Math.max(1, Math.ceil((Date.now() - since) / (7 * 86400000))); h += '<div class="muted">' + esc(fmt(t("since"), { d:dshow(since), w })) + "</div>"; }
+    h += '<div class="muted" style="margin-top:8px">' + esc(t("thisWeek")) + "</div>" + weekStrip(recs, days);
+    const A = attendanceOf(recs, days, since || Date.now(), true);
+    const pres = A.filter(x => x.r && x.r.statut !== "A").length;
+    h += '<div style="margin-top:10px">' + (A.length ? esc(fmt(t("attRate"), { p:pres, n:A.length, r:Math.round(100 * pres / A.length) })) : '<span class="muted">' + esc(t("attNone")) + "</span>") + "</div>";
+    /* Semaines précédentes (8 au plus) */
+    const W = {}; A.forEach(x => { const m = ymd(mondayOf(x.k)); (W[m] = W[m] || []).push(x); });
+    const thisMon = ymd(mondayOf(ymd()));
+    const keys = Object.keys(W).filter(k => k < thisMon).sort().reverse().slice(0, 8);
+    if(keys.length){
+      h += '<details style="margin-top:8px"><summary style="cursor:pointer;color:var(--gold)">' + esc(t("pastWeeks")) + '</summary><div class="list">'
+        + keys.map(k => { const L = W[k], p = L.filter(x => x.r && x.r.statut !== "A").length;
+            return '<div class="it" style="cursor:default"><div class="main"><div class="t1">' + esc(fmt(t("weekOf"), { d:dShort(k) })) + '</div><div class="t2">'
+              + L.map(x => !x.r ? "·" : x.r.statut === "A" ? "✗" : x.r.statut === "R" ? "⏰" : "✔").join(" ") + '</div></div><span class="amt ' + (p === L.length ? "ok" : p ? "" : "bad") + '">' + p + "/" + L.length + "</span></div>"; }).join("")
+        + "</div></details>";
+    }
+    $("me-suivi").innerHTML = h;
+  }
+
+  /* ---------- Fiche du personnel ---------- */
+  let CUR_ST = null;
+  function openStaff(id){ CUR_ST = id; $("m-staff").hidden = false; renderStaffView(); }
+  $("ms-x").addEventListener("click", () => { $("m-staff").hidden = true; CUR_ST = null; });
+  function renderStaffView(){
+    const p = staff().find(x => x.id === CUR_ST); if(!p){ $("m-staff").hidden = true; return; }
+    $("ms-title").textContent = p.nom;
+    $("ms-info").textContent = [p.role, p.phone, p.createdMs ? fmt(t("stSince"), { d:dshow(num(p.createdMs)) }) : ""].filter(Boolean).join(" · ");
+    const recs = {}; PRES.filter(r => r.staffId === p.id).forEach(r => { recs[r.date] = r; });
+    const m0 = new Date(); m0.setDate(1); m0.setHours(12, 0, 0, 0);
+    const month = attendanceOf(recs, STAFF_DAYS, m0.getTime(), false);
+    const pres = month.filter(x => x.r && x.r.statut !== "A").length;
+    let h = '<div class="muted" style="margin-top:14px">' + esc(t("thisWeek")) + "</div>" + weekStrip(recs, STAFF_DAYS)
+      + '<div style="margin-top:10px">' + esc(fmt(t("monthAtt"), { k:pres })) + "</div>"
+      + '<h3 style="font-family:var(--serif);color:var(--gold);font-size:15px;margin:16px 0 4px">' + esc(t("dayDetail")) + '</h3><div class="list">'
+      + month.slice().reverse().map(x => '<div class="it" style="cursor:default"><span class="dot ' + (!x.r ? "" : x.r.statut === "A" ? "bad" : "ok") + '"></span><div class="main"><div class="t1">' + esc(dLong(x.k)) + '</div><div class="t2">' + esc(hoursTxt(x.r) || (x.r ? (x.r.statut === "A" ? "✗" : "✔") : "—")) + "</div></div></div>").join("")
+      + "</div>";
+    $("ms-body").innerHTML = h;
+  }
+  $("ms-wa").addEventListener("click", () => { const p = staff().find(x => x.id === CUR_ST); if(p && p.phone) openWa(p.phone, ""); });
+  $("ms-badge").addEventListener("click", () => { const p = staff().find(x => x.id === CUR_ST); if(p) printBadges([{ k:"s", p }]); });
+  $("me-badge").addEventListener("click", () => { const e = ELEVES.find(x => x.id === CUR_EL); if(e) printBadges([{ k:"e", p:e }]); });
+
+  /* ---------- Impression des badges (format carte bancaire, 10 par page A4) ---------- */
+  function fillBadgeWho(){
+    const sel = $("b-who"), v = sel.value;
+    sel.innerHTML = '<option value="all">' + esc(t("bAll")) + '</option><option value="el">' + esc(t("bStudents")) + '</option><option value="st">' + esc(t("bStaff")) + "</option>"
+      + classes().map(c => '<option value="c:' + esc(c.id) + '">' + esc(clsName(c)) + "</option>").join("");
+    if([...sel.options].some(o => o.value === v)) sel.value = v;
+  }
+  $("b-print").addEventListener("click", () => {
+    const v = $("b-who").value || "all", L = [];
+    if(v === "all" || v === "el") actifs().forEach(e => L.push({ k:"e", p:e }));
+    if(v.indexOf("c:") === 0) actifs().filter(e => e.classeId === v.slice(2)).forEach(e => L.push({ k:"e", p:e }));
+    if(v === "all" || v === "st") staff().forEach(p => L.push({ k:"s", p }));
+    printBadges(L);
+  });
+  async function printBadges(list){
+    if(!list.length){ toast(t("badgeNone")); return; }
+    const q = await loadQr();
+    const qrUrl = (txt) => { try{ const qr = q(0, "M"); qr.addData(txt); qr.make(); return qr.createDataURL(6, 0); }catch(x){ return ""; } };
+    const card = (it) => {
+      const isE = it.k === "e", c = isE ? classeOf(it.p) : null;
+      const sub = isE ? [c ? clsName(c) : "", c && c.horaire ? c.horaire : ""].filter(Boolean).join(" · ") : (it.p.role || "");
+      return '<div class="bdg"><div class="top"><img src="icon-192.png" alt=""><span>' + esc(ECOLE.name || "SanaaPro School") + "</span></div>"
+        + '<div class="mid"><div class="who"><div class="kind">' + esc(t(isE ? "badgeStudent" : "badgeStaff")) + '</div><div class="nm">' + esc(it.p.nom) + '</div><div class="cl">' + esc(sub) + "</div></div>"
+        + '<img class="qr" src="' + qrUrl("SPS1:" + it.k + ":" + it.p.id) + '" alt=""></div><div class="bot">' + esc(t("badgeLost")) + (ECOLE.whatsapp ? " ☎ " + esc(ECOLE.whatsapp) : "") + "</div></div>";
+    };
+    const ov = document.createElement("div"); ov.className = "bdg-ov";
+    ov.innerHTML = '<div class="bdg-bar"><button class="ghost" id="bd-print">🖨 ' + esc(t("bPrint")) + " (" + list.length + ')</button><button class="ghost" id="bd-close">' + esc(t("rcClose")) + "</button></div>"
+      + '<div class="bdg-sheet">' + list.map(card).join("") + "</div>";
+    document.body.appendChild(ov);
+    ov.querySelector("#bd-close").onclick = () => ov.remove();
+    ov.querySelector("#bd-print").onclick = () => { document.body.classList.add("printbadges"); setTimeout(() => { window.print(); setTimeout(() => document.body.classList.remove("printbadges"), 500); }, 200); };
+  }
+
+  /* ---------- Scanner d'entrée : caméra plein écran, lecture des badges en continu ---------- */
+  function loadScript(src, globalName){
+    if(window[globalName]) return Promise.resolve(window[globalName]);
+    return new Promise((res) => { const sc = document.createElement("script"); sc.src = src; sc.onload = () => res(window[globalName] || null); sc.onerror = () => res(null); document.head.appendChild(sc); });
+  }
+  let SC = null;
+  function beep(ok){
+    try{
+      const A = window.AudioContext || window.webkitAudioContext; if(!A) return;
+      SC.audio = SC.audio || new A(); const ac = SC.audio, o = ac.createOscillator(), g = ac.createGain();
+      o.type = "sine"; o.frequency.value = ok ? 880 : 220; g.gain.value = 0.15; o.connect(g); g.connect(ac.destination);
+      o.start(); o.stop(ac.currentTime + (ok ? 0.15 : 0.4));
+      if(ok){ const o2 = ac.createOscillator(); o2.type = "sine"; o2.frequency.value = 1320; o2.connect(g); o2.start(ac.currentTime + 0.17); o2.stop(ac.currentTime + 0.3); }
+    }catch(x){}
+    try{ navigator.vibrate && navigator.vibrate(ok ? 80 : [60, 60, 60]); }catch(x){}
+  }
+  function badgeScan(kind, id){
+    const isE = kind === "e", person = isE ? ELEVES.find(x => x.id === id) : staff().find(x => x.id === id);
+    if(!person) return { cls:"err", big:t("unknownBadge"), sub:t("unknownHelp"), ok:false };
+    const now = new Date(), date = ymd(now), h = hm(now), docId = date + "_" + id;
+    const ex = PRES.find(p => p.id === docId);
+    const base = isE ? { date, eleveId:id } : { date, staffId:id };
+    if(ex && ex.arrivee){
+      const lastMs = num(ex.sortieMs) || num(ex.arrMs) || num(ex.ms);
+      if(Date.now() - lastMs < 3 * 60000) return { cls:"ok", big:person.nom, sub:fmt(t("already"), { h: ex.sortie || ex.arrivee }), ok:true };
+      const upd = { sortie:h, sortieMs:Date.now(), ms:Date.now() };
+      Object.assign(ex, upd); save(doc(db, "ecoles", UID, "presences", docId), Object.assign({}, base, upd));
+      return { cls:"out", big:fmt(t("bye"), { n:person.nom }), sub:fmt(t("leftAt"), { h }), ok:true, name:person.nom, h };
+    }
+    let statut = "P";
+    if(isE){ const st = classStartMin(classeOf(person)); if(st != null && now.getHours() * 60 + now.getMinutes() > st + lateMinutes()) statut = "R"; }
+    const rec = Object.assign({}, base, { statut, arrivee:h, arrMs:Date.now(), via:"badge", ms:Date.now() });
+    if(ex) Object.assign(ex, rec); else PRES.push(Object.assign({ id:docId }, rec));
+    save(doc(db, "ecoles", UID, "presences", docId), rec);
+    return { cls: statut === "R" ? "late" : "ok", big:fmt(t("welcome"), { n:person.nom }), sub:fmt(t(statut === "R" ? "lateAt" : "arrivedAt"), { h }), ok:true, name:person.nom, h };
+  }
+  async function openScanner(){
+    if(SC) return;
+    SC = { facing: (function(){ try{ return localStorage.getItem("sanaapro_school_cam") || "user"; }catch(e){ return "user"; } })(), last:"", lastAt:0, hold:0, log:[] };
+    const ov = document.createElement("div"); ov.className = "scan-ov";
+    ov.innerHTML = '<video playsinline muted autoplay></video><div class="frame"></div>'
+      + '<div class="scan-res" id="sc-res"><div class="big">' + esc(ECOLE.name || "") + '</div><div class="sub">' + esc(t("scanHelp")) + '</div><div class="last" id="sc-last"></div></div>'
+      + '<div class="scan-bar"><button class="ghost" id="sc-flip">' + esc(t("camSwitch")) + '</button><button class="ghost gold" id="sc-close">' + esc(t("rcClose")) + "</button></div>";
+    document.body.appendChild(ov); SC.ov = ov; SC.video = ov.querySelector("video");
+    ov.querySelector("#sc-close").onclick = closeScanner;
+    ov.querySelector("#sc-flip").onclick = async () => { SC.facing = SC.facing === "user" ? "environment" : "user"; try{ localStorage.setItem("sanaapro_school_cam", SC.facing); }catch(e){} await startCam(); };
+    try{ if(ov.requestFullscreen) ov.requestFullscreen().catch(() => {}); }catch(e){}
+    try{ if(navigator.wakeLock) SC.lock = await navigator.wakeLock.request("screen"); }catch(e){}
+    paintScanLog();
+    if("BarcodeDetector" in window){
+      try{ const f = await window.BarcodeDetector.getSupportedFormats(); if(f.includes("qr_code")) SC.det = new window.BarcodeDetector({ formats:["qr_code"] }); }catch(e){}
+    }
+    if(!SC.det) SC.jsqr = await loadScript("jsqr.js", "jsQR");
+    await startCam();
+    loop();
+  }
+  async function startCam(){
+    if(!SC) return;
+    if(SC.stream) SC.stream.getTracks().forEach(tr => tr.stop());
+    try{
+      SC.stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:SC.facing, width:{ ideal:1280 }, height:{ ideal:720 } }, audio:false });
+      SC.video.srcObject = SC.stream; SC.video.style.transform = SC.facing === "user" ? "scaleX(-1)" : "";
+      await SC.video.play().catch(() => {});
+    }catch(e){ showScan({ cls:"err", big:"📷", sub:t("camErr") }); }
+  }
+  function showScan(r){
+    const box = SC && SC.ov.querySelector("#sc-res"); if(!box) return;
+    box.className = "scan-res " + (r.cls || "");
+    box.querySelector(".big").textContent = r.big; box.querySelector(".sub").textContent = r.sub;
+  }
+  function paintScanLog(){
+    if(!SC) return;
+    const today = ymd(), k = PRES.filter(p => p.date === today && p.via === "badge").length;
+    SC.ov.querySelector("#sc-last").textContent = fmt(t("scanToday"), { k }) + (SC.log.length ? " · " + SC.log.slice(0, 4).join(" · ") : "");
+  }
+  async function decodeFrame(){
+    const v = SC.video; if(!v || v.readyState < 2 || !v.videoWidth) return null;
+    if(SC.det){ const r = await SC.det.detect(v); return r && r[0] ? r[0].rawValue : null; }
+    if(!SC.jsqr) return null;
+    const w = Math.min(640, v.videoWidth), h = Math.round(v.videoHeight * w / v.videoWidth);
+    SC.cv = SC.cv || document.createElement("canvas"); SC.cv.width = w; SC.cv.height = h;
+    const g = SC.cv.getContext("2d", { willReadFrequently:true }); g.drawImage(v, 0, 0, w, h);
+    const im = g.getImageData(0, 0, w, h), r = SC.jsqr(im.data, w, h, { inversionAttempts:"attemptBoth" });
+    return r ? r.data : null;
+  }
+  async function loop(){
+    if(!SC) return;
+    try{
+      if(Date.now() > SC.hold){
+        const raw = await decodeFrame();
+        if(raw && !(raw === SC.last && Date.now() - SC.lastAt < 5000)){
+          SC.last = raw; SC.lastAt = Date.now();
+          const m = String(raw).match(/^SPS1:([es]):(.+)$/);
+          const r = m ? badgeScan(m[1], m[2]) : { cls:"err", big:t("unknownBadge"), sub:t("unknownHelp"), ok:false };
+          showScan(r); beep(r.ok); SC.hold = Date.now() + 1800;
+          if(r.name) SC.log.unshift(r.h + " " + r.name);
+          paintScanLog(); renderAll();
+        }
+      }
+    }catch(e){}
+    if(SC) SC.timer = setTimeout(loop, SC.det ? 180 : 250);
+  }
+  function closeScanner(){
+    if(!SC) return;
+    clearTimeout(SC.timer);
+    if(SC.stream) SC.stream.getTracks().forEach(tr => tr.stop());
+    try{ SC.lock && SC.lock.release(); }catch(e){}
+    try{ if(document.fullscreenElement) document.exitFullscreen().catch(() => {}); }catch(e){}
+    SC.ov.remove(); SC = null; renderAll();
+  }
+  document.addEventListener("visibilitychange", async () => { if(SC && document.visibilityState === "visible" && navigator.wakeLock){ try{ SC.lock = await navigator.wakeLock.request("screen"); }catch(e){} } });
+  $("p-scan").addEventListener("click", openScanner);
+
   $("e-new").addEventListener("click", () => openForm(null));
   $("me-edit").addEventListener("click", () => openForm(CUR_EL));
   function openForm(id){
@@ -1483,7 +1870,7 @@
     $("ef-st").value = e ? (e.statut || "actif") : "actif";
     $("ef-note").value = e ? e.note || "" : ""; $("ef-msg").textContent = "";
     const ex = (e && Array.isArray(e.exempt)) ? e.exempt : [];
-    $("ef-ex").innerHTML = fraisL().filter(f => f.freq === "once").map(f => '<label style="display:inline-flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" value="' + esc(f.id) + '"' + (ex.includes(f.id) ? " checked" : "") + "> " + esc(f.nom) + "</label>").join("");
+    $("ef-ex").innerHTML = fraisL().filter(f => f.freq === "once").map(f => '<label style="display:inline-flex;align-items:center;gap:6px;font-weight:400"><input type="checkbox" value="' + esc(f.id) + '"' + (ex.includes(f.id) ? " checked" : "") + "> " + esc(feeName(f)) + "</label>").join("");
     $("ef-del").hidden = !e;
   }
   $("ef-start").addEventListener("change", () => { if(num($("ef-trim").value) < num($("ef-start").value)) $("ef-trim").value = $("ef-start").value; });
