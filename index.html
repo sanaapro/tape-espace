@@ -4102,6 +4102,7 @@
       const tok = auth.currentUser ? await auth.currentUser.getIdToken() : "";
       const r = await fetch(LECTEUR_URL+"/article", { method:"POST", signal:ac.signal, headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+tok }, body: JSON.stringify({ image:big }) });
       const j = await r.json().catch(()=>({}));
+      if(r.status===403){ st.textContent=""; showPlanPick(true); return; }
       if(!r.ok){ st.textContent=t(r.status===429 ? "arIaLimit" : "arIaFail"); st.style.color="var(--warn)"; $("ar-name").focus(); return; }
       const nom = (LANG_UI==="en" && j.nomEn) ? j.nomEn : j.nom;
       if(!j.confiance || !nom){ st.textContent=t("arIaNone"); st.style.color="var(--warn)"; $("ar-name").focus(); return; }

@@ -26,6 +26,29 @@ async function uidFrom(req){
   }catch(e){ return null; }
 }
 
+// Premium vérifié côté serveur : on lit le document boutique avec le jeton de l'utilisateur
+// (les règles Firestore l'autorisent à lire sa propre boutique). Essai en cours = tout ouvert.
+const premCache = new Map();
+async function estPremium(uid, tok){
+  const c = premCache.get(uid);
+  if(c && Date.now() - c.at < 10 * 60 * 1000) return c.ok;
+  let ok = false;
+  try{
+    const r = await fetch(`https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/boutiques/${encodeURIComponent(uid)}?mask.fieldPaths=subscription`,
+      { headers: { Authorization: "Bearer " + tok } });
+    if(!r.ok){ console.log("premium: lecture boutique", r.status); return false; }
+    const j = await r.json();
+    const f = ((((j.fields || {}).subscription || {}).mapValue || {}).fields) || {};
+    const plan = (f.plan || {}).stringValue || "", tier = (f.tier || {}).stringValue || "";
+    const exp = (f.expiresAt || {}).timestampValue ? Date.parse(f.expiresAt.timestampValue) : null;
+    const actif = exp === null || exp > Date.now();
+    ok = (tier === "premium" && actif) || (plan === "trial" && exp !== null && exp > Date.now());
+  }catch(e){ console.log("premium: erreur", e.message); return false; }
+  premCache.set(uid, { ok, at: Date.now() });
+  if(premCache.size > 5000) premCache.clear();
+  return ok;
+}
+
 // limite simple par boutique et par jour (en mémoire)
 const usage = new Map();
 const ARTICLE_LIMIT = Number(process.env.ARTICLE_LIMIT || 400);
@@ -385,6 +408,8 @@ http.createServer(async (req, res) => {
   const m = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(String(body.image || ""));
   if(!m) return send(res, 400, { error: "image" });
   if(path === "/article"){
+    const tok = (req.headers.authorization || "").slice(7);
+    if(!await estPremium(uid, tok)) return send(res, 403, { error: "premium" });
     try{
       const t0 = Date.now();
       const r = await gemini(m[2], m[1], promptArticle(), { rapide: true });
