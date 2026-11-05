@@ -594,6 +594,7 @@
   @keyframes swInL{ from{ transform:translateX(40px); opacity:.3 } to{ transform:none; opacity:1 } }
   @keyframes swInR{ from{ transform:translateX(-40px); opacity:.3 } to{ transform:none; opacity:1 } }
   @media (prefers-reduced-motion:reduce){ .swipe-in-l, .swipe-in-r{ animation:none } }
+.cf-more{margin:6px 0 4px}.cf-more>summary{list-style:none;cursor:pointer;font-size:12.5px;color:var(--muted,#8a8a8a);padding:6px 0;user-select:none}.cf-more>summary::-webkit-details-marker{display:none}.cf-more>summary::after{content:" ▾"}.cf-more[open]>summary::after{content:" ▴"}
 </style>
 </head>
 <body>
@@ -1604,12 +1605,15 @@
         <div><label data-i18n="depotLabel">Date de dépôt</label><input id="cf-depot" type="date"></div>
         <div><label data-i18n="deliveryOpt">Date de livraison (optionnel)</label><input id="cf-liv" type="date"></div>
       </div>
+      <details id="cf-more" class="cf-more">
+      <summary data-i18n="cfMore">Plus d'options</summary>
       <label class="chk" id="cf-done-row"><input type="checkbox" id="cf-done"><span data-i18n="cfDone">Vêtement déjà terminé — rien à coudre</span></label>
       <label class="chk"><input type="checkbox" id="cf-gift"><span data-i18n="cfGift">C'est un cadeau — le vêtement est pour quelqu'un d'autre</span></label>
       <div id="cf-gift-box" hidden>
         <label data-i18n="giftName">Pour qui ?</label><input id="cf-gift-name" type="text">
         <label data-i18n="giftPhone">Téléphone de la personne (optionnel)</label><input id="cf-gift-tel" type="tel" placeholder="+220 …">
       </div>
+      </details>
       <label data-i18n="notesOpt">Notes (optionnel)</label>
       <textarea id="cf-notes" rows="2" data-i18n-ph="orderNotesPh" placeholder="Couleur, broderie, remarques…"></textarea>
       <label data-i18n="phTitle">Photos du tissu et du modèle</label>
@@ -1944,7 +1948,7 @@
       srAdvBtn:"💰 Noter une avance", srAbsBtn:"📅 Absence non annoncée", srAdvAsk:"Montant de l'avance donnée à {n} :", srAdvLabel:"Avance sur salaire",
       srAbsAsk:"Date de l'absence (AAAA-MM-JJ) :", srPaidMonth:"✓ Salaire payé", srAdvList:"Avances : {v}",
       artsTitle:"Articles de la commande (facture détaillée)", cfArtAdd:"＋ Ajouter un article", cfTotal:"Total commande", discountOpt:"Réduction accordée (optionnel)", netPrice:"Prix final après réduction", tkInitial:"Prix initial", tkDiscount:"Réduction",
-      artNamePh2:"Ex. Robe, pantalon, boubou", artPricePh:"Prix", depotLabel:"Date de dépôt", cfDone:"Vêtement déjà terminé — rien à coudre",
+      artNamePh2:"Ex. Robe, pantalon, boubou", artPricePh:"Prix", depotLabel:"Date de dépôt", cfDone:"Vêtement déjà terminé — rien à coudre", cfMore:"Plus d'options",
       cfGift:"C'est un cadeau — le vêtement est pour quelqu'un d'autre", giftName:"Pour qui ?", giftPhone:"Téléphone de la personne (optionnel)", giftFor:"Cadeau pour",
       vtTitle:"Vêtements", vtHint:"Touchez un vêtement quand il est terminé. Quand tout est fait, la commande passe à « Prêt ».",
       vtTodo:"⏳ À faire", vtDone:"✅ Fait", vtAllDone:"Tous les vêtements sont faits : la commande passe à « Prêt ».",
@@ -2236,7 +2240,7 @@
       srAdvBtn:"💰 Note an advance", srAbsBtn:"📅 Unannounced absence", srAdvAsk:"Advance given to {n}:", srAdvLabel:"Wage advance",
       srAbsAsk:"Date of absence (YYYY-MM-DD):", srPaidMonth:"✓ Wage paid", srAdvList:"Advances: {v}",
       artsTitle:"Order items (detailed invoice)", cfArtAdd:"＋ Add an item", cfTotal:"Order total", discountOpt:"Discount given (optional)", netPrice:"Final price after discount", tkInitial:"Original price", tkDiscount:"Discount",
-      artNamePh2:"E.g. dress, trousers, boubou", artPricePh:"Price", depotLabel:"Drop-off date", cfDone:"Item already finished — nothing to sew",
+      artNamePh2:"E.g. dress, trousers, boubou", artPricePh:"Price", depotLabel:"Drop-off date", cfDone:"Item already finished — nothing to sew", cfMore:"More options",
       cfGift:"It's a gift — the garment is for someone else", giftName:"For whom?", giftPhone:"That person's phone (optional)", giftFor:"Gift for",
       vtTitle:"Garments", vtHint:"Tap a garment when it is finished. When all are done, the order moves to “Ready”.",
       vtTodo:"⏳ To do", vtDone:"✅ Done", vtAllDone:"All garments are done: the order moves to “Ready”.",
@@ -7108,7 +7112,7 @@
       buildArtRows([{ nom:"", prix:"" }]);
       CF_PH=[]; renderCfPh();
       $("cf-depot").value=todayISO(); $("cf-done").checked=false; $("cf-done-row").hidden=false;
-      $("cf-gift").checked=false; $("cf-gift-name").value=""; $("cf-gift-tel").value=""; $("cf-gift-box").hidden=true;
+      $("cf-gift").checked=false; $("cf-gift-name").value=""; $("cf-gift-tel").value=""; $("cf-gift-box").hidden=true; $("cf-more").open=false;
       TYPE_CF="confection"; paintTypes();
       $("cf-cliente").value="__new"; toggleNewCliente();
       buildCmdGrid({});
@@ -7135,7 +7139,7 @@
     buildArtRows(Array.isArray(o.articles) && o.articles.length ? o.articles : [{ nom:o.article||"", prix:(o.prix||o.prix===0)?((Number(o.prix)||0)+(Number(o.remise)||0)):"" }]);
     $("cf-depot").value=o.depot||""; $("cf-done-row").hidden=true;
     CF_PH=[]; renderCfPh();
-    $("cf-gift").checked=!!o.beneficiaire; $("cf-gift-name").value=o.beneficiaire||""; $("cf-gift-tel").value=o.beneficiaireTel||""; $("cf-gift-box").hidden=!o.beneficiaire;
+    $("cf-gift").checked=!!o.beneficiaire; $("cf-gift-name").value=o.beneficiaire||""; $("cf-gift-tel").value=o.beneficiaireTel||""; $("cf-gift-box").hidden=!o.beneficiaire; $("cf-more").open=!!o.beneficiaire;
     show("cform");
   }
 
