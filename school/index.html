@@ -1618,6 +1618,9 @@
     UNLOCKED = false; try{ sessionStorage.removeItem("sanaapro_school_unlocked"); }catch(e){} paintLock();
     KIOSK_ON = true; openScanner();
   });
+  /* En mode borne, la touche « retour » d'Android ne doit pas faire sortir de l'app : on la neutralise. */
+  window.addEventListener("popstate", () => { if(isKiosk() && SC){ try{ history.pushState({ k:1 }, ""); }catch(e){} } });
+  function kioskGuard(){ if(isKiosk()){ try{ history.pushState({ k:1 }, ""); history.pushState({ k:2 }, ""); }catch(e){} } }
   function lateMinutes(){ return ECOLE && ECOLE.retardMin != null && ECOLE.retardMin !== "" ? num(ECOLE.retardMin) : 15; }
   function hm(d){ return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
   function hoursTxt(r){
@@ -1839,6 +1842,7 @@
       + '<div class="scan-res" id="sc-res"><div class="big">' + esc(ECOLE.name || "") + '</div><div class="sub">' + esc(t("scanHelp")) + '</div><div class="clock" id="sc-clock"></div><div class="last" id="sc-last"></div></div>'
       + '<div class="scan-bar"><button class="ghost" id="sc-flip">' + esc(t("camSwitch")) + '</button><button class="ghost gold" id="sc-close">' + esc(t("rcClose")) + "</button></div>";
     document.body.appendChild(ov); SC.ov = ov; SC.video = ov.querySelector("video");
+    kioskGuard();
     ov.querySelector("#sc-close").onclick = () => {
       if(isKiosk()){
         if(!askCode()) return;
