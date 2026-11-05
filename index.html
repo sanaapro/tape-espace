@@ -1911,7 +1911,7 @@
       expBlock:"Votre abonnement est arrivé à échéance. Vos données restent visibles, mais vous ne pouvez plus rien enregistrer tant qu'il n'est pas renouvelé.\n\nVoulez-vous renouveler maintenant sur WhatsApp ?",
       renewMsg:"Bonjour, je souhaite renouveler l'abonnement de ma boutique {shop} ({slug}).",
       renewBtn:"Renouveler mon abonnement",
-      planPickEnding:"Votre essai gratuit se termine dans {n} jour(s)", planPickEnded:"Votre essai gratuit est terminé", planPickT2:"Choisissez votre formule", planPickHint:"Pendant l'essai vous avez tout vu. Choisissez maintenant la formule qui vous convient : vos données restent intactes.", planMonth:"mois", planChoose:"Choisir {p}", planLater:"Plus tard", planPickPrem:"Passer au Premium", planMsg:"Bonjour, je choisis la formule {p} pour ma boutique {shop} ({slug}).", planStdFeats:"Commandes, mesures, reçus WhatsApp, finances.", planPremFeats:"Tout le Standard + boutique et stock, reconnaissance des articles par photo, plan de charge, salariés, pointage, catalogue illimité.", lockTitle:"Réservé à la formule Premium",
+      planPickEnding:"Votre essai gratuit se termine dans {n} jour(s)", planPickEnded:"Votre essai gratuit est terminé", planPickT2:"Choisissez votre formule", planPickHint:"Pendant l'essai vous avez tout vu. Choisissez maintenant la formule qui vous convient : vos données restent intactes.", planMonth:"mois", planChoose:"Choisir {p}", planLater:"Plus tard", planPickPrem:"Passer au Premium", planMsg:"Bonjour, je choisis la formule {p} pour ma boutique {shop} ({slug}).", planStdFeats:"Commandes, mesures, reçus WhatsApp, finances.", planPremFeats:"Tout le Standard + boutique et stock, reconnaissance des articles par photo, assistant vocal, plan de charge, salariés, pointage, visiteurs, catalogue illimité.", lockTitle:"Réservé à la formule Premium",
       lockText:"La boutique avec son stock, le plan de charge, le suivi des salariés et la pointeuse du personnel font partie de la formule Premium.",
       lockPrice:"Standard {a} {cur}/mois · Premium {b} {cur}/mois",
       lockBtn:"Passer au premium sur WhatsApp",
@@ -2203,7 +2203,7 @@
       expBlock:"Your subscription has expired. Your data is still visible, but nothing can be saved until it is renewed.\n\nWould you like to renew now on WhatsApp?",
       renewMsg:"Hello, I would like to renew the subscription for my shop {shop} ({slug}).",
       renewBtn:"Renew my subscription",
-      planPickEnding:"Your free trial ends in {n} day(s)", planPickEnded:"Your free trial has ended", planPickT2:"Choose your plan", planPickHint:"During the trial you saw everything. Now choose the plan that suits you: your data stays intact.", planMonth:"month", planChoose:"Choose {p}", planLater:"Later", planPickPrem:"Go Premium", planMsg:"Hello, I choose the {p} plan for my shop {shop} ({slug}).", planStdFeats:"Orders, measurements, WhatsApp receipts, finances.", planPremFeats:"Everything in Standard + shop and stock, photo recognition of items, workload plan, staff, attendance, unlimited catalogue.", lockTitle:"Premium plan only",
+      planPickEnding:"Your free trial ends in {n} day(s)", planPickEnded:"Your free trial has ended", planPickT2:"Choose your plan", planPickHint:"During the trial you saw everything. Now choose the plan that suits you: your data stays intact.", planMonth:"month", planChoose:"Choose {p}", planLater:"Later", planPickPrem:"Go Premium", planMsg:"Hello, I choose the {p} plan for my shop {shop} ({slug}).", planStdFeats:"Orders, measurements, WhatsApp receipts, finances.", planPremFeats:"Everything in Standard + shop and stock, photo recognition of items, voice assistant, workload plan, staff, attendance, visitors, unlimited catalogue.", lockTitle:"Premium plan only",
       lockText:"The shop with its stock, the delivery load plan, staff records and the staff time clock are part of the Premium plan.",
       lockPrice:"Standard {a} {cur}/month · Premium {b} {cur}/month",
       lockBtn:"Upgrade on WhatsApp",
@@ -2636,8 +2636,9 @@
   }
   function paintLocks(){
     try{ paintArIA(); }catch(e){}
+    try{ applyVoix(); }catch(e){}
     const i = subInfo();
-    [["staff"],["boutique"],["charge"],["pointage"]].forEach(([k])=>{
+    [["staff"],["boutique"],["charge"],["pointage"],["visits"]].forEach(([k])=>{
       const lock=$("lock-"+k), body=$("body-"+k);
       if(i.premium){ lock.hidden=true; body.hidden=false; return; }
       body.hidden=true; lock.hidden=false;
@@ -2658,7 +2659,7 @@
   }
   // Assistant vocal : réglage du téléphone (oui par défaut). « Non » cache le micro et les boutons de dictée.
   function voixOn(){ try{ return localStorage.getItem("sanaapro_voix")!=="0"; }catch(e){ return true; } }
-  function applyVoix(){ document.body.classList.toggle("novoice", !voixOn()); }
+  function applyVoix(){ let prem=false; try{ prem=subInfo().premium; }catch(e){} document.body.classList.toggle("novoice", !voixOn() || !prem); }
   applyVoix();
   // Lexique de l'atelier : paires { entendu, correct } sur le document boutique (partagé par tous
   // les téléphones de l'atelier). Envoyé à l'IA avec les noms des clients, et appliqué à sa réponse.

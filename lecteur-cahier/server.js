@@ -369,6 +369,9 @@ http.createServer(async (req, res) => {
   if(!uid) return send(res, 401, { error: "auth" });
   if(!allow(uid, path === "/article" ? "article" : "")) return send(res, 429, { error: "limit" });
 
+  if(path === "/voix" || path === "/assistant"){
+    if(!await estPremium(uid, (req.headers.authorization || "").slice(7))) return send(res, 403, { error: "premium" });
+  }
   let body;
   try{ body = JSON.parse(await readBody(req)); }catch(e){ return send(res, 413, { error: "body" }); }
   if(path === "/assistant"){
