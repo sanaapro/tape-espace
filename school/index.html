@@ -110,7 +110,7 @@
   .scan-res{ background:var(--panel); border-top:1px solid var(--line); padding:14px 16px 12px; text-align:center; min-height:120px; }
   .scan-res .big{ font-family:var(--serif); font-size:26px; font-weight:700; color:var(--gold); }
   .scan-res.ok{ background:#0f2a18; } .scan-res.late{ background:#2e2508; } .scan-res.out{ background:#0f1d33; } .scan-res.err{ background:#331313; }
-  .scan-res .sub{ font-size:16px; margin-top:4px; } .scan-res .last{ color:var(--muted); font-size:12px; margin-top:8px; }
+  .scan-res .sub{ font-size:16px; margin-top:4px; } .scan-res .clock{ font-family:var(--serif); font-size:15px; color:var(--muted); margin-top:4px; } .scan-res .last{ color:var(--muted); font-size:12px; margin-top:8px; }
   .scan-bar{ display:flex; gap:8px; justify-content:center; padding:8px; background:var(--panel); }
   .wkstrip{ display:flex; gap:6px; margin-top:8px; } .wkstrip .d{ flex:1; text-align:center; border:1px solid var(--line2); border-radius:10px; padding:6px 2px; font-size:12px; }
   .wkstrip .d b{ display:block; font-size:18px; } .wkstrip .d.P{ border-color:var(--ok); } .wkstrip .d.P b{ color:var(--ok); } .wkstrip .d.R{ border-color:var(--warn); } .wkstrip .d.R b{ color:var(--warn); }
@@ -229,6 +229,7 @@
     <!-- PRÉSENCE -->
     <section data-pane="presence" hidden>
       <button class="primary" id="p-scan" style="margin-top:14px">📷 <span data-i18n="scanBtn">Scanner les badges (arrivée / sortie)</span></button>
+      <button class="ghost" id="p-kiosk" style="width:100%;margin-top:8px">📟 <span data-i18n="kioskBtn">Mode borne : cette tablette ne fait que scanner</span></button>
       <div class="row" style="margin-top:10px"><select id="b-who"></select><button class="ghost gold" id="b-print" style="flex:0 0 auto">🪪 <span data-i18n="badgesBtn">Badges</span></button></div>
       <div class="fl" style="margin-top:12px"><div class="seg" id="p-seg"><button data-ps="el" class="on" data-i18n="pStudents">Élèves</button><button data-ps="st" data-i18n="pStaff">Personnel</button></div></div>
       <div class="card" id="p-staffcard" hidden>
@@ -517,7 +518,7 @@
       since:"Depuis le {d} ({w} semaine(s))", progress:"Suivi de présence", pastWeeks:"Semaines précédentes", weekOf:"Semaine du {d}",
       attRate:"Présent(e) {p} jour(s) sur {n} jours de cours ({r} %)", attNone:"Aucune présence enregistrée pour le moment.",
       stSince:"Dans l'équipe depuis le {d}", monthAtt:"{k} jour(s) de présence ce mois-ci", noStaff:"Aucun membre du personnel. Le propriétaire les ajoute dans Finances → Enseignants et personnel.",
-      lateMin:"Retard compté après (minutes)", arrShort:"arrivée", outShort:"sortie", byBadge:"badge", notYet:"pas encore arrivé(e)", colon:" : ", dayDetail:"Détail du mois", stNeed2:"Écrivez le nom.", stPhone:"Téléphone", clrBtn:"Effacer ce pointage", clrSure:"Effacer le pointage de {n} du {d} ?", clrDone:"Pointage effacé.", allNotes:"Toutes les notes", badgeCard:"Son badge", badgeLinked:"Chaque scan arrive directement sur cette page.", progTitle:"Programme et journal des cours", todayLesson:"Cours du jour", journal:"Jour par jour : cours du cahier, arrivée, note", showMore:"Voir les jours plus anciens", absentW:"absent(e)" 
+      lateMin:"Retard compté après (minutes)", arrShort:"arrivée", outShort:"sortie", byBadge:"badge", notYet:"pas encore arrivé(e)", colon:" : ", dayDetail:"Détail du mois", stNeed2:"Écrivez le nom.", stPhone:"Téléphone", clrBtn:"Effacer ce pointage", clrSure:"Effacer le pointage de {n} du {d} ?", clrDone:"Pointage effacé.", allNotes:"Toutes les notes", badgeCard:"Son badge", badgeLinked:"Chaque scan arrive directement sur cette page.", progTitle:"Programme et journal des cours", todayLesson:"Cours du jour", journal:"Jour par jour : cours du cahier, arrivée, note", showMore:"Voir les jours plus anciens", absentW:"absent(e)", kioskBtn:"Mode borne : cette tablette ne fait que scanner", kioskNeedCode:"Créez d'abord le code du propriétaire (Réglages → Code du propriétaire) : il servira à quitter le mode borne.", kioskSure:"Mettre cet appareil en mode borne ? Le scanner s'ouvrira tout seul à chaque démarrage, et il faudra votre code pour en sortir.", kioskExit:"Quitter le mode borne sur cet appareil ?" 
     },
     en: {
       loginSub:"Sign in with your SanaaPro account", email:"Email", password:"Password", signin:"Sign in",
@@ -570,7 +571,7 @@
       since:"Since {d} ({w} week(s))", progress:"Attendance record", pastWeeks:"Previous weeks", weekOf:"Week of {d}",
       attRate:"Present {p} day(s) out of {n} class days ({r}%)", attNone:"No attendance recorded yet.",
       stSince:"In the team since {d}", monthAtt:"{k} day(s) present this month", noStaff:"No staff yet. The owner adds them in Finances → Teachers and staff.",
-      lateMin:"Late after (minutes)", arrShort:"in", outShort:"out", byBadge:"badge", notYet:"not arrived yet", colon:": ", dayDetail:"This month in detail", stNeed2:"Type the name.", stPhone:"Phone", clrBtn:"Delete this record", clrSure:"Delete the attendance record of {n} on {d}?", clrDone:"Record deleted.", allNotes:"All marks", badgeCard:"Badge", badgeLinked:"Every scan goes straight to this page.", progTitle:"Programme and class log", todayLesson:"Today's class", journal:"Day by day: workbook lesson, arrival, mark", showMore:"Show older days", absentW:"absent" 
+      lateMin:"Late after (minutes)", arrShort:"in", outShort:"out", byBadge:"badge", notYet:"not arrived yet", colon:": ", dayDetail:"This month in detail", stNeed2:"Type the name.", stPhone:"Phone", clrBtn:"Delete this record", clrSure:"Delete the attendance record of {n} on {d}?", clrDone:"Record deleted.", allNotes:"All marks", badgeCard:"Badge", badgeLinked:"Every scan goes straight to this page.", progTitle:"Programme and class log", todayLesson:"Today's class", journal:"Day by day: workbook lesson, arrival, mark", showMore:"Show older days", absentW:"absent", kioskBtn:"Kiosk mode: this tablet only scans", kioskNeedCode:"First create the owner code (Settings → Owner code): it is needed to leave kiosk mode.", kioskSure:"Put this device in kiosk mode? The scanner will open by itself every time, and your code will be needed to leave it.", kioskExit:"Leave kiosk mode on this device?" 
     }
   };
   let LANG = "fr";
@@ -746,7 +747,8 @@
 
   /* ---------- Données en direct ---------- */
   function startApp(){
-    UNSUB.push(onSnapshot(EREF, s => { ECOLE = s.data() || {}; paintHead(); paintLock(); migrate(); loadCahiers(); renderAll(); }));
+    UNSUB.push(onSnapshot(EREF, s => { ECOLE = s.data() || {}; paintHead(); paintLock(); migrate(); loadCahiers(); renderAll();
+      if(isKiosk() && !KIOSK_ON){ KIOSK_ON = true; setTimeout(openScanner, 1200); } }));
     const sub = (name, setter) => UNSUB.push(onSnapshot(collection(db, "ecoles", UID, name),
       qs => { setter(qs.docs.map(d => Object.assign({ id:d.id }, d.data()))); renderAll(); },
       e => { if(e && e.code === "permission-denied") toast(t("rulesMissing")); }));
@@ -1605,6 +1607,17 @@
     PRES = PRES.filter(p => p.id !== id); remove(doc(db, "ecoles", UID, "presences", id));
     toast(t("clrDone")); renderAll();
   }
+  /* ---------- Mode borne : tablette fixée à l'entrée, branchée en permanence ----------
+     Le scanner s'ouvre tout seul au démarrage de l'app ; on ne peut le quitter qu'avec le code du propriétaire. */
+  let KIOSK_ON = false;
+  function isKiosk(){ try{ return localStorage.getItem("sanaapro_school_kiosk") === "1"; }catch(e){ return false; } }
+  $("p-kiosk").addEventListener("click", () => {
+    if(!hasCode()){ alert(t("kioskNeedCode")); setTab("reglages"); return; }
+    if(!askCode() || !confirm(t("kioskSure"))) return;
+    try{ localStorage.setItem("sanaapro_school_kiosk", "1"); }catch(e){}
+    UNLOCKED = false; try{ sessionStorage.removeItem("sanaapro_school_unlocked"); }catch(e){} paintLock();
+    KIOSK_ON = true; openScanner();
+  });
   function lateMinutes(){ return ECOLE && ECOLE.retardMin != null && ECOLE.retardMin !== "" ? num(ECOLE.retardMin) : 15; }
   function hm(d){ return pad(d.getHours()) + ":" + pad(d.getMinutes()); }
   function hoursTxt(r){
@@ -1823,10 +1836,18 @@
     SC = { facing: (function(){ try{ return localStorage.getItem("sanaapro_school_cam") || "user"; }catch(e){ return "user"; } })(), last:"", lastAt:0, hold:0, log:[] };
     const ov = document.createElement("div"); ov.className = "scan-ov";
     ov.innerHTML = '<video playsinline muted autoplay></video><div class="frame"></div>'
-      + '<div class="scan-res" id="sc-res"><div class="big">' + esc(ECOLE.name || "") + '</div><div class="sub">' + esc(t("scanHelp")) + '</div><div class="last" id="sc-last"></div></div>'
+      + '<div class="scan-res" id="sc-res"><div class="big">' + esc(ECOLE.name || "") + '</div><div class="sub">' + esc(t("scanHelp")) + '</div><div class="clock" id="sc-clock"></div><div class="last" id="sc-last"></div></div>'
       + '<div class="scan-bar"><button class="ghost" id="sc-flip">' + esc(t("camSwitch")) + '</button><button class="ghost gold" id="sc-close">' + esc(t("rcClose")) + "</button></div>";
     document.body.appendChild(ov); SC.ov = ov; SC.video = ov.querySelector("video");
-    ov.querySelector("#sc-close").onclick = closeScanner;
+    ov.querySelector("#sc-close").onclick = () => {
+      if(isKiosk()){
+        if(!askCode()) return;
+        if(!confirm(t("kioskExit"))) return;
+        try{ localStorage.removeItem("sanaapro_school_kiosk"); }catch(e){}
+        KIOSK_ON = false;
+      }
+      closeScanner();
+    };
     ov.querySelector("#sc-flip").onclick = async () => { SC.facing = SC.facing === "user" ? "environment" : "user"; try{ localStorage.setItem("sanaapro_school_cam", SC.facing); }catch(e){} await startCam(); };
     try{ if(ov.requestFullscreen) ov.requestFullscreen().catch(() => {}); }catch(e){}
     try{ if(navigator.wakeLock) SC.lock = await navigator.wakeLock.request("screen"); }catch(e){}
@@ -1851,6 +1872,8 @@
     const box = SC && SC.ov.querySelector("#sc-res"); if(!box) return;
     box.className = "scan-res " + (r.cls || "");
     box.querySelector(".big").textContent = r.big; box.querySelector(".sub").textContent = r.sub;
+    clearTimeout(SC.idleT);
+    if(!r.idle) SC.idleT = setTimeout(() => { if(SC) showScan({ cls:"", big:ECOLE.name || "", sub:t("scanHelp"), idle:true }); }, 6000);
   }
   function paintScanLog(){
     if(!SC) return;
@@ -1870,6 +1893,13 @@
   async function loop(){
     if(!SC) return;
     try{
+      const ck = SC.ov.querySelector("#sc-clock"), nowD = new Date(); if(ck) ck.textContent = dLong(ymd(nowD)) + " · " + hm(nowD);
+      /* Caméra coupée (veille, coupure, autre app) : on la relance toute seule toutes les 20 s. */
+      if(Date.now() - (SC.chk || 0) > 20000){
+        SC.chk = Date.now();
+        const tr = SC.stream && SC.stream.getVideoTracks()[0];
+        if(!tr || tr.readyState === "ended" || SC.video.paused) await startCam();
+      }
       if(Date.now() > SC.hold){
         const raw = await decodeFrame();
         if(raw && !(raw === SC.last && Date.now() - SC.lastAt < 5000)){
