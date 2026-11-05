@@ -403,7 +403,7 @@
     <div class="list" id="me-pays"></div>
     <h3 style="font-family:var(--serif);color:var(--gold);font-size:15px;margin:16px 0 4px" data-i18n="meNotes">Notes et présence</h3>
     <div class="muted" id="me-stats"></div>
-    <div class="list" id="me-notes"></div>
+    <details style="margin-top:6px"><summary style="cursor:pointer;color:var(--gold)" data-i18n="allNotes">Toutes les notes</summary><div class="list" id="me-notes"></div></details>
   </div>
   <div id="me-form" hidden>
     <label data-i18n="fullName">Nom complet</label><input id="ef-nom">
@@ -517,7 +517,7 @@
       since:"Depuis le {d} ({w} semaine(s))", progress:"Suivi de présence", pastWeeks:"Semaines précédentes", weekOf:"Semaine du {d}",
       attRate:"Présent(e) {p} jour(s) sur {n} jours de cours ({r} %)", attNone:"Aucune présence enregistrée pour le moment.",
       stSince:"Dans l'équipe depuis le {d}", monthAtt:"{k} jour(s) de présence ce mois-ci", noStaff:"Aucun membre du personnel. Le propriétaire les ajoute dans Finances → Enseignants et personnel.",
-      lateMin:"Retard compté après (minutes)", arrShort:"arrivée", outShort:"sortie", byBadge:"badge", notYet:"pas encore arrivé(e)", colon:" : ", dayDetail:"Détail du mois", stNeed2:"Écrivez le nom.", stPhone:"Téléphone", clrBtn:"Effacer ce pointage", clrSure:"Effacer le pointage de {n} du {d} ?", clrDone:"Pointage effacé." 
+      lateMin:"Retard compté après (minutes)", arrShort:"arrivée", outShort:"sortie", byBadge:"badge", notYet:"pas encore arrivé(e)", colon:" : ", dayDetail:"Détail du mois", stNeed2:"Écrivez le nom.", stPhone:"Téléphone", clrBtn:"Effacer ce pointage", clrSure:"Effacer le pointage de {n} du {d} ?", clrDone:"Pointage effacé.", allNotes:"Toutes les notes", badgeCard:"Son badge", badgeLinked:"Chaque scan arrive directement sur cette page.", progTitle:"Programme et journal des cours", todayLesson:"Cours du jour", journal:"Jour par jour : cours du cahier, arrivée, note", showMore:"Voir les jours plus anciens", absentW:"absent(e)" 
     },
     en: {
       loginSub:"Sign in with your SanaaPro account", email:"Email", password:"Password", signin:"Sign in",
@@ -570,7 +570,7 @@
       since:"Since {d} ({w} week(s))", progress:"Attendance record", pastWeeks:"Previous weeks", weekOf:"Week of {d}",
       attRate:"Present {p} day(s) out of {n} class days ({r}%)", attNone:"No attendance recorded yet.",
       stSince:"In the team since {d}", monthAtt:"{k} day(s) present this month", noStaff:"No staff yet. The owner adds them in Finances → Teachers and staff.",
-      lateMin:"Late after (minutes)", arrShort:"in", outShort:"out", byBadge:"badge", notYet:"not arrived yet", colon:": ", dayDetail:"This month in detail", stNeed2:"Type the name.", stPhone:"Phone", clrBtn:"Delete this record", clrSure:"Delete the attendance record of {n} on {d}?", clrDone:"Record deleted." 
+      lateMin:"Late after (minutes)", arrShort:"in", outShort:"out", byBadge:"badge", notYet:"not arrived yet", colon:": ", dayDetail:"This month in detail", stNeed2:"Type the name.", stPhone:"Phone", clrBtn:"Delete this record", clrSure:"Delete the attendance record of {n} on {d}?", clrDone:"Record deleted.", allNotes:"All marks", badgeCard:"Badge", badgeLinked:"Every scan goes straight to this page.", progTitle:"Programme and class log", todayLesson:"Today's class", journal:"Day by day: workbook lesson, arrival, mark", showMore:"Show older days", absentW:"absent" 
     }
   };
   let LANG = "fr";
@@ -1696,7 +1696,31 @@
               + L.map(x => !x.r ? "·" : x.r.statut === "A" ? "✗" : x.r.statut === "R" ? "⏰" : "✔").join(" ") + '</div></div><span class="amt ' + (p === L.length ? "ok" : p ? "" : "bad") + '">' + p + "/" + L.length + "</span></div>"; }).join("")
         + "</div></details>";
     }
+    /* Badge de l'élève (même code que le badge imprimé) */
+    h += '<div class="card" style="display:flex;gap:12px;align-items:center;padding:10px"><img id="me-qr" width="84" height="84" style="background:#fff;border-radius:6px;padding:4px;image-rendering:pixelated" alt="">'
+      + '<div><div class="muted" style="font-size:12px;letter-spacing:1px">🪪 ' + esc(t("badgeCard")) + '</div><div style="font-weight:700">' + esc(e.nom) + '</div><div class="muted" style="font-size:12px">' + esc(t("badgeLinked")) + "</div></div></div>";
+    /* Programme : cours du jour, puis journal (cours du cahier + présence + note, jour par jour) */
+    const notesBy = {}; NOTES.filter(n => n.eleveId === e.id).forEach(n => { notesBy[n.date] = n; });
+    h += '<h3 style="font-family:var(--serif);color:var(--gold);font-size:15px;margin:16px 0 4px">📖 ' + esc(t("progTitle")) + "</h3>";
+    const L0 = c ? lessonInfo(c, ymd()) : null;
+    if(L0 && L0.lesson){
+      h += '<div class="card" style="padding:10px"><div class="muted" style="font-size:12px">' + esc(L0.isClassDay ? t("todayLesson") : fmt(t("nextLesson"), { d:dLong(L0.next) })) + "</div>" + lessonHtml(L0) + "</div>";
+    } else if(c && !L0) h += '<div class="muted">' + esc(t("noCahier")) + "</div>";
+    const J = attendanceOf(recs, days, since || Date.now(), false).reverse();
+    if(J.length){
+      const row = (x) => {
+        const Li = c ? lessonInfo(c, x.k) : null, n = notesBy[x.k], r = x.r;
+        const st = !r ? "·" : r.statut === "A" ? "✗ " + t("absentW") : r.statut === "R" ? "⏰ " + (r.arrivee || "") : "✔ " + (r.arrivee || "");
+        const ttl = (Li && Li.isClassDay && Li.lesson) ? Li.lesson.t : (n && n.travail) || "—";
+        return '<div class="it" style="cursor:default"><span class="dot ' + (!r ? "" : r.statut === "A" ? "bad" : r.statut === "R" ? "mid" : "ok") + '"></span><div class="main"><div class="t1">' + esc(ttl) + '</div><div class="t2">'
+          + esc(dLong(x.k)) + " · " + esc(st) + (r && r.sortie ? " → " + esc(r.sortie) : "") + "</div></div>"
+          + (n ? '<span class="amt ' + (num(n.note) >= 5 ? "ok" : "bad") + '">' + esc(n.note) + "/10</span>" : "") + "</div>";
+      };
+      h += '<div class="muted" style="margin-top:8px">' + esc(t("journal")) + '</div><div class="list">' + J.slice(0, 10).map(row).join("") + "</div>";
+      if(J.length > 10) h += '<details><summary style="cursor:pointer;color:var(--gold)">' + esc(t("showMore")) + " (" + (J.length - 10) + ')</summary><div class="list">' + J.slice(10).map(row).join("") + "</div></details>";
+    }
     $("me-suivi").innerHTML = h;
+    loadQr().then(q => { if(!q || !$("me-qr")) return; try{ const qr = q(0, "M"); qr.addData("SPS1:e:" + e.id); qr.make(); $("me-qr").src = qr.createDataURL(4, 0); }catch(x){} });
   }
 
   /* ---------- Fiche du personnel ---------- */
@@ -1790,7 +1814,9 @@
     const rec = Object.assign({}, base, { statut, arrivee:h, arrMs:Date.now(), via:"badge", ms:Date.now() });
     if(ex) Object.assign(ex, rec); else PRES.push(Object.assign({ id:docId }, rec));
     save(doc(db, "ecoles", UID, "presences", docId), rec);
-    return { cls: statut === "R" ? "late" : "ok", big:fmt(t("welcome"), { n:person.nom }), sub:fmt(t(statut === "R" ? "lateAt" : "arrivedAt"), { h }), ok:true, name:person.nom, h };
+    let lesson = "";
+    if(isE){ const c = classeOf(person), Li = c ? lessonInfo(c, date) : null; if(Li && Li.isClassDay && Li.lesson) lesson = " · 📖 " + Li.lesson.t; }
+    return { cls: statut === "R" ? "late" : "ok", big:fmt(t("welcome"), { n:person.nom }), sub:fmt(t(statut === "R" ? "lateAt" : "arrivedAt"), { h }) + lesson, ok:true, name:person.nom, h };
   }
   async function openScanner(){
     if(SC) return;
