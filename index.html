@@ -594,7 +594,7 @@
   @keyframes swInL{ from{ transform:translateX(40px); opacity:.3 } to{ transform:none; opacity:1 } }
   @keyframes swInR{ from{ transform:translateX(-40px); opacity:.3 } to{ transform:none; opacity:1 } }
   @media (prefers-reduced-motion:reduce){ .swipe-in-l, .swipe-in-r{ animation:none } }
-.cf-more{margin:6px 0 4px}.cf-more>summary{list-style:none;cursor:pointer;font-size:12.5px;color:var(--muted,#8a8a8a);padding:6px 0;user-select:none}.cf-more>summary::-webkit-details-marker{display:none}.cf-more>summary::after{content:" ▾"}.cf-more[open]>summary::after{content:" ▴"}
+.cf-more{margin:10px 0 0}.cf-more>summary{list-style:none;cursor:pointer;font-size:11.5px;letter-spacing:.3px;color:var(--muted,#8a8a8a);opacity:.8;padding:4px 0;user-select:none;text-align:right}.cf-more[open]>summary{margin-bottom:6px}.cf-more>summary::-webkit-details-marker{display:none}.cf-more>summary::after{content:" ▾"}.cf-more[open]>summary::after{content:" ▴"}
 </style>
 </head>
 <body>
@@ -1529,16 +1529,21 @@
       <div class="msg" id="p-msg"></div>
       <div class="qacts">
         <button type="button" id="q-addart" data-i18n="qAddArt">＋ Ajouter un article</button>
-        <button type="button" id="q-fixprice" data-i18n="qFixPrice">✏️ Corriger le prix</button>
-        <button type="button" id="q-fixpaid" data-i18n="qFixPaid">Corriger le montant payé</button>
         <button type="button" id="q-solde" data-i18n="qSolde">💰 Solde payé</button>
         <button type="button" id="q-receipt" data-i18n="qReceipt">🧾 Renvoyer le reçu</button>
         <button type="button" id="q-resched" data-i18n="qResched">📅 Reporter la livraison</button>
+      </div>
+      <details class="cf-more" id="q-more">
+        <summary data-i18n="cfMore">Plus d'options</summary>
+        <div class="qacts">
+        <button type="button" id="q-fixprice" data-i18n="qFixPrice">✏️ Corriger le prix</button>
+        <button type="button" id="q-fixpaid" data-i18n="qFixPaid">Corriger le montant payé</button>
         <button type="button" id="q-track" data-i18n="qTrack">🔗 Envoyer le lien de suivi</button>
         <button type="button" id="q-copy" data-i18n="qCopy">📋 Copier le lien de suivi</button>
         <button type="button" id="q-phone" data-i18n="qPhone">📞 Changer le numéro WhatsApp</button>
         <button type="button" id="q-ticket" data-i18n="qTicket">🔳 Ticket avec QR code</button>
-      </div>
+        </div>
+      </details>
     </div>
     <div class="card">
       <h2 data-i18n="stage">Étape</h2>
@@ -1591,10 +1596,6 @@
       <div id="cf-arts"></div>
       <button type="button" class="ghost" id="cf-art-add" data-i18n="cfArtAdd">＋ Ajouter un article</button>
       <div class="pz-tot"><span data-i18n="cfTotal">Total commande</span><b id="cf-total">0</b></div>
-      <div id="cf-rem-box">
-        <label data-i18n="discountOpt">Réduction accordée (optionnel)</label>
-        <input id="cf-remise" type="number" step="1" min="0" inputmode="decimal" placeholder="0">
-      </div>
       <div class="pz-tot" id="cf-net-row" hidden><span data-i18n="netPrice">Prix final</span><b id="cf-net">0</b></div>
       <input id="cf-article" type="hidden"><input id="cf-prix" type="hidden">
       <div id="cf-av-box">
@@ -1607,13 +1608,16 @@
       </div>
       <details id="cf-more" class="cf-more">
       <summary data-i18n="cfMore">Plus d'options</summary>
+      <div id="cf-rem-box">
+        <label data-i18n="discountOpt">Réduction accordée (optionnel)</label>
+        <input id="cf-remise" type="number" step="1" min="0" inputmode="decimal" placeholder="0">
+      </div>
       <label class="chk" id="cf-done-row"><input type="checkbox" id="cf-done"><span data-i18n="cfDone">Vêtement déjà terminé — rien à coudre</span></label>
       <label class="chk"><input type="checkbox" id="cf-gift"><span data-i18n="cfGift">C'est un cadeau — le vêtement est pour quelqu'un d'autre</span></label>
       <div id="cf-gift-box" hidden>
         <label data-i18n="giftName">Pour qui ?</label><input id="cf-gift-name" type="text">
         <label data-i18n="giftPhone">Téléphone de la personne (optionnel)</label><input id="cf-gift-tel" type="tel" placeholder="+220 …">
       </div>
-      </details>
       <label data-i18n="notesOpt">Notes (optionnel)</label>
       <textarea id="cf-notes" rows="2" data-i18n-ph="orderNotesPh" placeholder="Couleur, broderie, remarques…"></textarea>
       <label data-i18n="phTitle">Photos du tissu et du modèle</label>
@@ -1622,6 +1626,7 @@
         <label><input type="file" id="cf-ph-modele" accept="image/*" multiple><span data-i18n="phModel">🖼️ Modèle (galerie)</span></label>
       </div>
       <div class="ph-grid" id="cf-ph"></div>
+      </details>
     </div>
     <div class="card">
       <h2 data-i18n="measures">Mesures (cm)</h2>
@@ -7015,6 +7020,7 @@
   });
 
   async function openCmd(id){
+    { const qm=document.getElementById("q-more"); if(qm) qm.open=false; }
     const local = COMMANDES.find(x=>x.id===id);
     if(local){ renderCmd(local, id); show("cmd"); return; }
     show("loading"); $("loading").textContent=t("loading");
@@ -7139,7 +7145,7 @@
     buildArtRows(Array.isArray(o.articles) && o.articles.length ? o.articles : [{ nom:o.article||"", prix:(o.prix||o.prix===0)?((Number(o.prix)||0)+(Number(o.remise)||0)):"" }]);
     $("cf-depot").value=o.depot||""; $("cf-done-row").hidden=true;
     CF_PH=[]; renderCfPh();
-    $("cf-gift").checked=!!o.beneficiaire; $("cf-gift-name").value=o.beneficiaire||""; $("cf-gift-tel").value=o.beneficiaireTel||""; $("cf-gift-box").hidden=!o.beneficiaire; $("cf-more").open=!!o.beneficiaire;
+    $("cf-gift").checked=!!o.beneficiaire; $("cf-gift-name").value=o.beneficiaire||""; $("cf-gift-tel").value=o.beneficiaireTel||""; $("cf-gift-box").hidden=!o.beneficiaire; $("cf-more").open=!!(o.beneficiaire || Number(o.remise)>0 || (o.notes||"").trim());
     show("cform");
   }
 
@@ -8910,7 +8916,7 @@
       GENRE_CF = d.genre==="homme" ? "homme" : "femme"; paintSegs(); fillClienteSelect();
       const sel=$("cf-cliente"); if(d.cliente && Array.prototype.some.call(sel.options, o=>o.value===d.cliente)) sel.value=d.cliente; toggleNewCliente();
       $("cf-new-name").value=d.name||""; if(sel.value==="__new") $("cf-new-phone").value=d.phone||"";
-      $("cf-liv").value=d.liv||""; $("cf-avance").value=d.avance||""; $("cf-remise").value=d.remise||"";
+      $("cf-liv").value=d.liv||""; $("cf-avance").value=d.avance||""; $("cf-remise").value=d.remise||""; if(Number(d.remise)>0) $("cf-more").open=true;
       if(d.arts && d.arts.length) buildArtRows(d.arts);
       buildCmdGrid(d.mesures||{});
       const sg=document.querySelector('.seg[data-seg="cfgenre"]'); if(sg){ if(d.gdone) sg.dataset.done="1"; else delete sg.dataset.done; }
