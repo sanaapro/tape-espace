@@ -28,12 +28,13 @@ async function uidFrom(req){
 
 // limite simple par boutique et par jour (en mémoire)
 const usage = new Map();
-function allow(uid){
-  const day = new Date().toISOString().slice(0, 10), k = uid + ":" + day;
+const ARTICLE_LIMIT = Number(process.env.ARTICLE_LIMIT || 400);
+function allow(uid, quoi){
+  const day = new Date().toISOString().slice(0, 10), k = uid + ":" + (quoi || "") + day;
   const n = (usage.get(k) || 0) + 1;
   if(usage.size > 5000) usage.clear();
   usage.set(k, n);
-  return n <= DAILY_LIMIT;
+  return n <= (quoi === "article" ? ARTICLE_LIMIT : DAILY_LIMIT);
 }
 
 function cors(req, res){
@@ -181,6 +182,28 @@ function nettoieModele(r){
   return o;
 }
 
+// ---------- Boutique : reconnaître un article en photo (le boutiquier ne tape que le prix) ----------
+function promptArticle(){
+  return `Tu travailles dans une boutique de vêtements et de tissus en Afrique de l'Ouest (Gambie, Sénégal, Côte d'Ivoire).
+Regarde la photo d'un article à mettre en vente. S'il y a plusieurs pièces posées ensemble (ex. haut + pantalon), c'est UN SEUL article : un ensemble.
+Donne :
+- "nom" : un nom court et vendeur en français, tel qu'un boutiquier l'écrirait : type de vêtement + tissu si reconnaissable + couleur principale + détail marquant (ex. « Kaftan bazin bleu brodé », « Ensemble wax jaune et vert », « Chemise lin blanche manches longues », « Robe dentelle bordeaux »). 2 à 6 mots, sans prix ni taille.
+- "nomEn" : le même nom en anglais.
+- "type" : une catégorie courte en français parmi : Boubou, Kaftan, Ensemble, Robe, Jupe, Chemise, Pantalon, Tunique, Abaya, Veste, Costume, T-shirt, Tissu, Chaussures, Sac, Accessoire, Autre.
+- "tissu" : wax, bazin, dentelle, kente, lin, coton, soie, satin, jean, mousseline, ou "" si tu n'es pas sûr.
+- "couleur" : couleur principale en français.
+- "confiance" : nombre entre 0 et 1.
+Termes locaux : kaftan = tunique longue à manches montées, souvent portée avec un pantalon ; boubou = très ample, manches qui tombent de l'épaule ; grand boubou homme = trois pièces amples.
+Si la photo ne montre aucun article vendable, mets "confiance": 0.
+Réponds UNIQUEMENT en JSON avec ces clés.`;
+}
+function nettoieArticle(r){
+  const s = (v, n) => String(v || "").replace(/\s+/g, " ").trim().slice(0, n);
+  const c = parseFloat(r.confiance);
+  return { nom: s(r.nom, 70), nomEn: s(r.nomEn, 70), type: s(r.type, 30), tissu: s(r.tissu, 30), couleur: s(r.couleur, 30),
+    confiance: isFinite(c) ? Math.max(0, Math.min(1, c)) : 0.5 };
+}
+
 // ---------- Dictée par la voix : l'IA écoute l'enregistrement et remplit la fiche ----------
 function promptVoix(champs, genre, kind, today){
   const liste = champs.map(c => `- "${c[0]}" : ${c[1]}`).join("\n");
@@ -316,12 +339,12 @@ http.createServer(async (req, res) => {
   if(req.method === "OPTIONS"){ res.writeHead(204); return res.end(); }
   const path = (req.url || "/").split("?")[0];
   if(req.method === "GET") return send(res, 200, { ok: true, service: "sanaapro-lecteur-cahier", pret: !!KEY });
-  if(req.method !== "POST" || (path !== "/lire" && path !== "/modele" && path !== "/voix" && path !== "/assistant")) return send(res, 404, { error: "not_found" });
+  if(req.method !== "POST" || (path !== "/lire" && path !== "/modele" && path !== "/voix" && path !== "/assistant" && path !== "/article")) return send(res, 404, { error: "not_found" });
   if(!KEY) return send(res, 503, { error: "no_key" });
 
   const uid = await uidFrom(req);
   if(!uid) return send(res, 401, { error: "auth" });
-  if(!allow(uid)) return send(res, 429, { error: "limit" });
+  if(!allow(uid, path === "/article" ? "article" : "")) return send(res, 429, { error: "limit" });
 
   let body;
   try{ body = JSON.parse(await readBody(req)); }catch(e){ return send(res, 413, { error: "body" }); }
@@ -361,6 +384,15 @@ http.createServer(async (req, res) => {
   }
   const m = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(String(body.image || ""));
   if(!m) return send(res, 400, { error: "image" });
+  if(path === "/article"){
+    try{
+      const t0 = Date.now();
+      const r = await gemini(m[2], m[1], promptArticle(), { rapide: true });
+      send(res, 200, nettoieArticle(r || {}));
+      console.log("article", uid.slice(0, 6), r && r._model, (Date.now() - t0) + " ms");
+    }catch(e){ console.log("erreur article", e.message); send(res, e.message === "quota" ? 429 : 502, { error: e.message === "quota" ? "quota" : "read" }); }
+    return;
+  }
   if(path === "/modele"){
     try{
       const r = await gemini(m[2], m[1], promptModele(body.genre));
