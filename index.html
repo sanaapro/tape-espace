@@ -1045,6 +1045,12 @@
         <button class="ghost" id="pin-set" type="button" data-i18n="pinSet">🔐 Choisir un code d'ouverture</button>
         <button class="ghost" id="pin-off" type="button" hidden data-i18n="pinOff">Retirer le code d'ouverture</button>
       </div>
+      <div class="card" id="kick-card">
+        <h2 data-i18n="kickTitle">Téléphone perdu ou prêté</h2>
+        <p style="margin:0 0 8px;font-size:13px;color:var(--muted)" data-i18n="kickHint">Déconnecte SanaaPro sur tous les autres téléphones (celui du manager compris), à distance. Ce téléphone-ci reste connecté. Pour revenir, il faudra l'email et le mot de passe.</p>
+        <button class="ghost" id="kick-all" type="button" style="border-color:var(--err);color:var(--err)" data-i18n="kickBtn">📵 Déconnecter tous les autres téléphones</button>
+        <div class="msg" id="kick-msg"></div>
+      </div>
       <div class="card" id="mgr-card">
         <h2 data-i18n="mgrTitle">Téléphone du manager</h2>
         <p style="margin:0 0 8px;font-size:13px;color:var(--muted)" data-i18n="mgrHint">Sur ce téléphone, le manager enregistre les commandes, les dépôts, les paiements et les dépenses. Il ne voit ni les Finances, ni les salaires, ni les Réglages, ni l'historique des clôtures. Pour modifier ou supprimer, il lui faut votre code.</p>
@@ -1762,7 +1768,7 @@
   import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail,
            EmailAuthProvider, reauthenticateWithCredential, deleteUser }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { initializeFirestore, enableIndexedDbPersistence,
+  import { initializeFirestore, enableIndexedDbPersistence, onSnapshot, terminate, clearIndexedDbPersistence,
            doc, getDoc, getDocFromCache, collection, setDoc as _setDoc, getDocs, getDocsFromCache,
            deleteDoc as _deleteDoc, query, orderBy, where, serverTimestamp, writeBatch }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -2054,6 +2060,7 @@
       scTicket:"Scanner un ticket client", qTicket:"🔳 Ticket avec QR code", tkOrder:"Commande n°", rcTitle:"REÇU DE PAIEMENT", rcAmt:"Montant reçu", rcDate:"Date", rcPaidAll:"SOLDÉ", rcThanks:"Merci de votre confiance", rcWa:"💬 Envoyer par WhatsApp", rcAsk:"🧾 Reçu", tkHint:"Scannez pour suivre votre commande", tkClient:"Client", tkItem:"Article", tkDate:"Date prévue", tkDeposit:"Déposé", tkTotal:"Total", tkPaid:"Payé", tkLeft:"Reste à payer", tkPrint:"🖨️ Imprimer", tkShare:"📤 Partager", tkCopied:"Lien de suivi copié.", tkNoLink:"Impossible de créer le ticket : abonnement expiré ou commande non enregistrée.", tkQrFail:"QR indisponible (pas de réseau ?)", scNotFound:"Ticket introuvable dans cette boutique. Vérifiez qu'il vient bien de votre atelier.", scCount:"{n} article(s) en cours", scTotal:"Reste à payer en tout", scAgain:"Scanner un autre ticket",
       nbTitle:"Page du cahier", nbHint:"Photographiez la page de l'ancien cahier : les mesures se remplissent toutes seules et la page reste dans la fiche.", aiReading:"📖 Lecture du cahier en cours…", aiWaking:"📖 Lecture en cours… le lecteur se réveille, cela peut prendre jusqu'à une minute.", aiDone:"✅ {n} mesure(s) lue(s) dans le cahier. Vérifiez les cases vertes avant d'enregistrer.", aiMany:"Plusieurs personnes sur la page : seule la première a été lue.", aiNone:"Aucune mesure lisible sur cette photo. Reprenez-la plus près, bien éclairée, ou dictez les mesures.", aiFail:"La lecture n'a pas abouti. La photo est gardée ; vous pouvez dicter les mesures.", aiOffline:"Pas de réseau : la photo est gardée, la lecture automatique demande Internet.", aiLimit:"Limite de lectures du jour atteinte. Dictez les mesures ou réessayez demain.", aiNoKey:"Le lecteur de cahier n'est pas encore activé.", aiAuth:"Reconnectez-vous pour utiliser la lecture du cahier.", nbBtn:"📷 Photographier la page du cahier", nbNone:"Aucune page de cahier.", nbTag:"Cahier", dictBtn:"🎤 Dicter les mesures", dictStop:"⏹ Arrêter la dictée", dictGo:"Je vous écoute… dites par exemple « épaule 42, poitrine 96 ».", dictHeard:"Entendu : « {t} » · {n} case(s) remplie(s). Vérifiez avant d'enregistrer.", dictNo:"La dictée n'est pas disponible sur ce téléphone (utilisez Chrome).", dictDenied:"Autorisez le micro pour SanaaPro dans les réglages du navigateur.", dictNet:"La dictée a besoin d'Internet. Réessayez quand le réseau revient.", dictErr:"La dictée s'est arrêtée. Touchez à nouveau le micro.",
       pinTitle:"Code d'ouverture de ce téléphone", pinHint:"Même si quelqu'un a votre téléphone déverrouillé, il ne pourra pas ouvrir SanaaPro sans ce code. L'app se verrouille quand on la quitte plus d'une minute.", pinSet:"🔐 Choisir un code d'ouverture", pinChange:"🔐 Changer le code d'ouverture", pinOff:"Retirer le code d'ouverture", pinOnState:"✅ Activé sur ce téléphone", pinOffState:"Pas de code d'ouverture sur ce téléphone.", pinLockNow:"🔐 Verrouiller", pinEnter:"Tapez votre code d'ouverture", pinNew:"Choisissez un code de 4 chiffres", pinConfirm:"Retapez le même code", pinMismatch:"Les deux codes ne sont pas pareils. Recommencez.", pinWrong:"Code incorrect.", pinWait:"Trop d'essais. Attendez 30 secondes.", pinDel:"Effacer", pinForgot:"Code oublié ?", pinForgotAsk:"Tapez le code administrateur de la boutique pour retirer le code d'ouverture :", pinForgotLogout:"Pas de code administrateur. Pour rentrer, il faudra se reconnecter avec l'email et le mot de passe. Se déconnecter ?", pinLogout:"Se déconnecter", pinLogoutQ:"Se déconnecter de SanaaPro sur ce téléphone ? Il faudra l'email et le mot de passe pour revenir.", pinCancel:"Annuler", pinSaved:"Code d'ouverture enregistré sur ce téléphone.", pinRemoved:"Code d'ouverture retiré de ce téléphone.", pinOffQ:"Retirer le code d'ouverture de ce téléphone ?", pinMgrAsk:"Voulez-vous aussi mettre un code d'ouverture sur ce téléphone ?\n\nSi le téléphone reste dans d'autres mains, personne ne pourra ouvrir SanaaPro sans ce code.",
+      kickTitle:"Téléphone perdu ou prêté", kickHint:"Déconnecte SanaaPro sur tous les autres téléphones (celui du manager compris), à distance. Ce téléphone-ci reste connecté. Pour revenir, il faudra l'email et le mot de passe.", kickBtn:"📵 Déconnecter tous les autres téléphones", kickQ:"Déconnecter SanaaPro sur TOUS les autres téléphones, y compris celui du manager ?\n\nIls devront se reconnecter avec l'email et le mot de passe.", kickDone:"✅ C'est envoyé. Chaque autre téléphone sera déconnecté dès qu'il a Internet et que SanaaPro est ouvert ou rouvert.", kickOffline:"Pas de réseau : la déconnexion partira dès que ce téléphone retrouvera Internet.", kickedMsg:"Ce téléphone a été déconnecté par le propriétaire de la boutique.",
       ptScan:"Scanner mon badge", ptAddStaff:"＋ Ajouter un employé", ptModeT:"Comment vos employés pointent",
       ptModeCode:"Code à 4 chiffres", ptModeBadge:"Badge (code-barres)", ptModeBoth:"Les deux",
       ptModeHint:"Avec le badge, l'employé montre sa carte à la caméra du téléphone, ou la passe devant un lecteur de code-barres branché.",
@@ -2347,6 +2354,7 @@
       scTicket:"Scan a customer ticket", qTicket:"🔳 Ticket with QR code", tkOrder:"Order no.", rcTitle:"PAYMENT RECEIPT", rcAmt:"Amount received", rcDate:"Date", rcPaidAll:"PAID IN FULL", rcThanks:"Thank you for your trust", rcWa:"💬 Send on WhatsApp", rcAsk:"🧾 Receipt", tkHint:"Scan to follow your order", tkClient:"Customer", tkItem:"Item", tkDate:"Due date", tkDeposit:"Dropped off", tkTotal:"Total", tkPaid:"Paid", tkLeft:"Balance due", tkPrint:"🖨️ Print", tkShare:"📤 Share", tkCopied:"Tracking link copied.", tkNoLink:"Cannot create the ticket: subscription expired or order not saved.", tkQrFail:"QR unavailable (no network?)", scNotFound:"Ticket not found in this shop. Check it comes from your workshop.", scCount:"{n} item(s) in progress", scTotal:"Total balance due", scAgain:"Scan another ticket",
       nbTitle:"Notebook page", nbHint:"Take a photo of the old notebook page: the measurements fill in by themselves and the page stays in the file.", aiReading:"📖 Reading the notebook…", aiWaking:"📖 Still reading… the reader is waking up, this can take up to a minute.", aiDone:"✅ {n} measurement(s) read from the notebook. Check the green fields before saving.", aiMany:"Several people on the page: only the first one was read.", aiNone:"No readable measurement in this photo. Retake it closer and well lit, or dictate.", aiFail:"Reading didn't work. The photo is kept; you can dictate the measurements.", aiOffline:"No network: the photo is kept, automatic reading needs internet.", aiLimit:"Daily reading limit reached. Dictate or try again tomorrow.", aiNoKey:"The notebook reader isn't switched on yet.", aiAuth:"Sign in again to use notebook reading.", nbBtn:"📷 Photograph the notebook page", nbNone:"No notebook page.", nbTag:"Notebook", dictBtn:"🎤 Dictate measurements", dictStop:"⏹ Stop dictation", dictGo:"Listening… say for example \"shoulder 42, chest 96\".", dictHeard:"Heard: \"{t}\" · {n} field(s) filled. Check before saving.", dictNo:"Dictation isn't available on this phone (use Chrome).", dictDenied:"Allow the microphone for SanaaPro in the browser settings.", dictNet:"Dictation needs internet. Try again when the network is back.", dictErr:"Dictation stopped. Tap the microphone again.",
       pinTitle:"Opening code for this phone", pinHint:"Even if someone has your phone unlocked, they can't open SanaaPro without this code. The app locks when you leave it for more than a minute.", pinSet:"🔐 Choose an opening code", pinChange:"🔐 Change the opening code", pinOff:"Remove the opening code", pinOnState:"✅ On for this phone", pinOffState:"No opening code on this phone.", pinLockNow:"🔐 Lock", pinEnter:"Enter your opening code", pinNew:"Choose a 4-digit code", pinConfirm:"Enter the same code again", pinMismatch:"The two codes don't match. Try again.", pinWrong:"Wrong code.", pinWait:"Too many tries. Wait 30 seconds.", pinDel:"Delete", pinForgot:"Forgot the code?", pinForgotAsk:"Enter the shop admin code to remove the opening code:", pinForgotLogout:"No admin code set. To get back in you'll need the email and password. Sign out?", pinLogout:"Sign out", pinLogoutQ:"Sign out of SanaaPro on this phone? You'll need the email and password to come back.", pinCancel:"Cancel", pinSaved:"Opening code saved on this phone.", pinRemoved:"Opening code removed from this phone.", pinOffQ:"Remove the opening code from this phone?", pinMgrAsk:"Do you also want an opening code on this phone?\n\nIf the phone ends up in someone else's hands, nobody can open SanaaPro without it.",
+      kickTitle:"Lost or lent phone", kickHint:"Signs SanaaPro out on every other phone (the manager's too), remotely. This phone stays signed in. To come back, the email and password will be needed.", kickBtn:"📵 Sign out all other phones", kickQ:"Sign SanaaPro out on ALL other phones, including the manager's?\n\nThey will have to sign in again with the email and password.", kickDone:"✅ Sent. Each other phone will be signed out as soon as it has internet and SanaaPro is open or reopened.", kickOffline:"No network: the sign-out will go as soon as this phone is back online.", kickedMsg:"This phone was signed out by the shop owner.",
       ptScan:"Scan my badge", ptAddStaff:"＋ Add an employee", ptModeT:"How your staff clock in",
       ptModeCode:"4-digit code", ptModeBadge:"Badge (barcode)", ptModeBoth:"Both",
       ptModeHint:"With a badge, the employee shows their card to the phone camera, or passes it in front of a plugged-in barcode reader.",
@@ -3093,7 +3101,7 @@
     $("login-msg").classList.remove("show");
     if(!email || !pass){ loginMsg(t("needBoth"), "err"); return; }
     $("login-btn").disabled=true;
-    try{ await signInWithEmailAndPassword(auth, email, pass); }
+    try{ await signInWithEmailAndPassword(auth, email, pass); try{ localStorage.setItem("sanaapro_login_at", String(Date.now())); }catch(e){} }
     catch(e){
       let m=t("loginFail");
       if(["auth/invalid-credential","auth/wrong-password","auth/user-not-found"].includes(e.code)) m=t("badLogin");
@@ -3123,6 +3131,11 @@
         zone.appendChild(b); show("loading"); return;
       }
       BID=user.uid; BOUTIQUE=snap.data();
+      if(!loginAt()){ /* téléphone connecté avant cette version : il compte comme connecté maintenant, sauf si une déconnexion est déjà demandée */
+        if(!(BOUTIQUE.kickAt && BOUTIQUE.kickBy!==DEVICE)) { try{ localStorage.setItem("sanaapro_login_at", String(Date.now())); }catch(e){} }
+      }
+      checkKick(BOUTIQUE); if(KICKING) return;
+      watchKick();
       /* SanaaPro School : bouton de passage seulement si ce compte a déjà une école. */
       getDoc(doc(db,"ecoles",user.uid)).then(s=>{ $("go-ecole").hidden=!s.exists(); }).catch(()=>{ $("go-ecole").hidden=true; });
       try{ localStorage.setItem("sanaapro_owner_bid", BID); }catch(e){}
@@ -9166,6 +9179,45 @@
     alert(t("codeSaved"));
   });
 
+
+
+  // =================== DÉCONNEXION À DISTANCE DES AUTRES TÉLÉPHONES ===================
+  // Le propriétaire écrit kickAt sur le doc boutique ; tout téléphone connecté AVANT cette heure
+  // (et qui n'est pas celui qui a appuyé) se déconnecte et efface ses données locales dès qu'il voit le changement.
+  const DEVICE = (()=>{ try{ let d=localStorage.getItem("sanaapro_device"); if(!d){ d=Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem("sanaapro_device", d); } return d; }catch(e){ return "x"; } })();
+  const loginAt = ()=>{ try{ return Number(localStorage.getItem("sanaapro_login_at"))||0; }catch(e){ return 0; } };
+  let KICK_UNSUB=null, KICKING=false;
+  async function kickOut(){
+    if(KICKING) return; KICKING=true;
+    const ov=document.createElement("div"); ov.className="pin-ov";
+    ov.innerHTML='<div class="pin-logo">SanaaPro</div><div class="pin-title" style="margin-top:14px"></div>';
+    ov.querySelector(".pin-title").textContent=t("kickedMsg");
+    document.body.appendChild(ov);
+    try{ if(KICK_UNSUB) KICK_UNSUB(); }catch(e){}
+    try{ Object.keys(localStorage).forEach(k=>{ if(k.indexOf("sanaapro_")===0 && k.indexOf("lang")===-1 && k!=="sanaapro_device") localStorage.removeItem(k); }); }catch(e){}
+    try{ await signOut(auth); }catch(e){}
+    try{ await terminate(db); await clearIndexedDbPersistence(db); }catch(e){}
+    try{ if("caches" in window){ const ks=await caches.keys(); await Promise.all(ks.filter(k=>k.indexOf("sanaapro")===0).map(k=>caches.delete(k))); } }catch(e){}
+    setTimeout(()=>location.reload(), 2500);
+  }
+  function checkKick(b){
+    if(!b || !b.kickAt) return;
+    if(b.kickBy===DEVICE) return;
+    if(Number(b.kickAt) > loginAt()) kickOut();
+  }
+  function watchKick(){
+    try{ if(KICK_UNSUB) KICK_UNSUB(); }catch(e){}
+    try{ KICK_UNSUB = onSnapshot(doc(db,"boutiques",BID), s=>{ if(s.exists()) checkKick(s.data()); }, ()=>{}); }catch(e){}
+  }
+  $("kick-all").addEventListener("click", async ()=>{
+    if(!confirm(t("kickQ"))) return;
+    if(!await askCode()) return;
+    const now=Date.now();
+    try{ localStorage.setItem("sanaapro_login_at", String(now)); }catch(e){}
+    if(BOUTIQUE){ BOUTIQUE.kickAt=now; BOUTIQUE.kickBy=DEVICE; }
+    setDoc(doc(db,"boutiques",BID), { kickAt:now, kickBy:DEVICE, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+    const m=$("kick-msg"); m.textContent = navigator.onLine ? t("kickDone") : t("kickOffline"); m.className="msg ok show";
+  });
 
   // =================== CODE D'OUVERTURE DE CE TÉLÉPHONE ===================
   // Propre à chaque téléphone (stocké haché dans ce navigateur, jamais dans la base).
