@@ -377,6 +377,22 @@
     body.printticket .tk-doc img{ width:38mm; height:38mm }
     body.printticket .tk-bar{ display:none !important }
   }
+  .pin-ov{ position:fixed; inset:0; z-index:200; background:#0E0E0F; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px 16px; color:var(--txt) }
+  .pin-ov .pin-logo{ font-family:Georgia,serif; color:var(--gold); font-size:26px; font-weight:700; letter-spacing:.5px }
+  .pin-ov .pin-shop{ color:var(--muted); font-size:14px; margin:4px 0 18px; text-align:center }
+  .pin-ov .pin-title{ font-size:16px; margin-bottom:14px; text-align:center }
+  .pin-dots{ display:flex; gap:14px; margin-bottom:10px; min-height:18px }
+  .pin-dots span{ width:15px; height:15px; border-radius:50%; border:2px solid var(--gold) }
+  .pin-dots span.on{ background:var(--gold) }
+  .pin-err{ color:var(--err); font-size:13px; min-height:20px; margin-bottom:8px; text-align:center }
+  .pin-pad{ display:grid; grid-template-columns:repeat(3,76px); gap:14px }
+  .pin-pad button{ width:76px; height:76px; border-radius:50%; border:1px solid var(--line2); background:var(--panel); color:var(--txt); font:inherit; font-size:26px; cursor:pointer }
+  .pin-pad button:active{ background:var(--panel2) }
+  .pin-pad button.k-small{ font-size:15px; color:var(--muted) }
+  .pin-ov .pin-links{ margin-top:22px; display:flex; flex-direction:column; gap:10px; align-items:center }
+  .pin-ov .pin-links button{ background:none; border:none; color:var(--gold); font:inherit; font-size:14px; cursor:pointer }
+  .pin-shake{ animation:pinsh .35s }
+  @keyframes pinsh{ 0%,100%{transform:translateX(0)} 25%{transform:translateX(-9px)} 75%{transform:translateX(9px)} }
   .ph-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(86px,1fr)); gap:8px; margin-top:8px; }
   .dict-bar{ margin:0 0 10px }
   .dict-btn{ width:100%; padding:12px; border-radius:12px; border:1px solid var(--gold); background:none; color:var(--gold); font:inherit; font-weight:700; cursor:pointer }
@@ -738,6 +754,7 @@
       <button class="logout" id="settings-btn" type="button" style="margin-right:8px">⚙ <span data-i18n="tabSettings">Réglages</span></button>
       <button class="logout" id="logout-btn" data-i18n="logout">Déconnexion</button>
       <button class="logout" id="mgr-badge" type="button" hidden data-i18n="mgrBadge">🔒 Mode manager</button>
+      <button class="logout" id="pin-lock-now" type="button" hidden data-i18n="pinLockNow">🔐 Verrouiller</button>
     </div>
 
     <div class="tabs" id="tabs">
@@ -1020,6 +1037,13 @@
         <p style="margin:0 0 4px;font-size:13px;color:var(--muted)" data-i18n="ownerCodeHint">Sans code, n'importe qui peut modifier un prix ou un modèle. Avec un code, vous seul.</p>
         <input id="b-code" type="password" inputmode="numeric" autocomplete="new-password" maxlength="6" data-i18n-ph="ownerCodePh" placeholder="4 à 6 chiffres">
         <button class="ghost" id="b-code-save" data-i18n="saveCode">Enregistrer le code</button>
+      </div>
+      <div class="card" id="pin-card">
+        <h2 data-i18n="pinTitle">Code d'ouverture de ce téléphone</h2>
+        <p style="margin:0 0 8px;font-size:13px;color:var(--muted)" data-i18n="pinHint">Même si quelqu'un a votre téléphone déverrouillé, il ne pourra pas ouvrir SanaaPro sans ce code. L'app se verrouille quand on la quitte plus d'une minute.</p>
+        <div id="pin-state" style="font-size:13px;margin-bottom:4px"></div>
+        <button class="ghost" id="pin-set" type="button" data-i18n="pinSet">🔐 Choisir un code d'ouverture</button>
+        <button class="ghost" id="pin-off" type="button" hidden data-i18n="pinOff">Retirer le code d'ouverture</button>
       </div>
       <div class="card" id="mgr-card">
         <h2 data-i18n="mgrTitle">Téléphone du manager</h2>
@@ -2029,6 +2053,7 @@
       pmTicket:"Ticket n° {v}", pmItems:"Articles : {v}", pmTotal:"Total : {v}", pmAdvance:"Avance : {v}",
       scTicket:"Scanner un ticket client", qTicket:"🔳 Ticket avec QR code", tkOrder:"Commande n°", rcTitle:"REÇU DE PAIEMENT", rcAmt:"Montant reçu", rcDate:"Date", rcPaidAll:"SOLDÉ", rcThanks:"Merci de votre confiance", rcWa:"💬 Envoyer par WhatsApp", rcAsk:"🧾 Reçu", tkHint:"Scannez pour suivre votre commande", tkClient:"Client", tkItem:"Article", tkDate:"Date prévue", tkDeposit:"Déposé", tkTotal:"Total", tkPaid:"Payé", tkLeft:"Reste à payer", tkPrint:"🖨️ Imprimer", tkShare:"📤 Partager", tkCopied:"Lien de suivi copié.", tkNoLink:"Impossible de créer le ticket : abonnement expiré ou commande non enregistrée.", tkQrFail:"QR indisponible (pas de réseau ?)", scNotFound:"Ticket introuvable dans cette boutique. Vérifiez qu'il vient bien de votre atelier.", scCount:"{n} article(s) en cours", scTotal:"Reste à payer en tout", scAgain:"Scanner un autre ticket",
       nbTitle:"Page du cahier", nbHint:"Photographiez la page de l'ancien cahier : les mesures se remplissent toutes seules et la page reste dans la fiche.", aiReading:"📖 Lecture du cahier en cours…", aiWaking:"📖 Lecture en cours… le lecteur se réveille, cela peut prendre jusqu'à une minute.", aiDone:"✅ {n} mesure(s) lue(s) dans le cahier. Vérifiez les cases vertes avant d'enregistrer.", aiMany:"Plusieurs personnes sur la page : seule la première a été lue.", aiNone:"Aucune mesure lisible sur cette photo. Reprenez-la plus près, bien éclairée, ou dictez les mesures.", aiFail:"La lecture n'a pas abouti. La photo est gardée ; vous pouvez dicter les mesures.", aiOffline:"Pas de réseau : la photo est gardée, la lecture automatique demande Internet.", aiLimit:"Limite de lectures du jour atteinte. Dictez les mesures ou réessayez demain.", aiNoKey:"Le lecteur de cahier n'est pas encore activé.", aiAuth:"Reconnectez-vous pour utiliser la lecture du cahier.", nbBtn:"📷 Photographier la page du cahier", nbNone:"Aucune page de cahier.", nbTag:"Cahier", dictBtn:"🎤 Dicter les mesures", dictStop:"⏹ Arrêter la dictée", dictGo:"Je vous écoute… dites par exemple « épaule 42, poitrine 96 ».", dictHeard:"Entendu : « {t} » · {n} case(s) remplie(s). Vérifiez avant d'enregistrer.", dictNo:"La dictée n'est pas disponible sur ce téléphone (utilisez Chrome).", dictDenied:"Autorisez le micro pour SanaaPro dans les réglages du navigateur.", dictNet:"La dictée a besoin d'Internet. Réessayez quand le réseau revient.", dictErr:"La dictée s'est arrêtée. Touchez à nouveau le micro.",
+      pinTitle:"Code d'ouverture de ce téléphone", pinHint:"Même si quelqu'un a votre téléphone déverrouillé, il ne pourra pas ouvrir SanaaPro sans ce code. L'app se verrouille quand on la quitte plus d'une minute.", pinSet:"🔐 Choisir un code d'ouverture", pinChange:"🔐 Changer le code d'ouverture", pinOff:"Retirer le code d'ouverture", pinOnState:"✅ Activé sur ce téléphone", pinOffState:"Pas de code d'ouverture sur ce téléphone.", pinLockNow:"🔐 Verrouiller", pinEnter:"Tapez votre code d'ouverture", pinNew:"Choisissez un code de 4 chiffres", pinConfirm:"Retapez le même code", pinMismatch:"Les deux codes ne sont pas pareils. Recommencez.", pinWrong:"Code incorrect.", pinWait:"Trop d'essais. Attendez 30 secondes.", pinDel:"Effacer", pinForgot:"Code oublié ?", pinForgotAsk:"Tapez le code administrateur de la boutique pour retirer le code d'ouverture :", pinForgotLogout:"Pas de code administrateur. Pour rentrer, il faudra se reconnecter avec l'email et le mot de passe. Se déconnecter ?", pinLogout:"Se déconnecter", pinLogoutQ:"Se déconnecter de SanaaPro sur ce téléphone ? Il faudra l'email et le mot de passe pour revenir.", pinCancel:"Annuler", pinSaved:"Code d'ouverture enregistré sur ce téléphone.", pinRemoved:"Code d'ouverture retiré de ce téléphone.", pinOffQ:"Retirer le code d'ouverture de ce téléphone ?", pinMgrAsk:"Voulez-vous aussi mettre un code d'ouverture sur ce téléphone ?\n\nSi le téléphone reste dans d'autres mains, personne ne pourra ouvrir SanaaPro sans ce code.",
       ptScan:"Scanner mon badge", ptAddStaff:"＋ Ajouter un employé", ptModeT:"Comment vos employés pointent",
       ptModeCode:"Code à 4 chiffres", ptModeBadge:"Badge (code-barres)", ptModeBoth:"Les deux",
       ptModeHint:"Avec le badge, l'employé montre sa carte à la caméra du téléphone, ou la passe devant un lecteur de code-barres branché.",
@@ -2321,6 +2346,7 @@
       pmTicket:"Ticket no. {v}", pmItems:"Items: {v}", pmTotal:"Total: {v}", pmAdvance:"Deposit: {v}",
       scTicket:"Scan a customer ticket", qTicket:"🔳 Ticket with QR code", tkOrder:"Order no.", rcTitle:"PAYMENT RECEIPT", rcAmt:"Amount received", rcDate:"Date", rcPaidAll:"PAID IN FULL", rcThanks:"Thank you for your trust", rcWa:"💬 Send on WhatsApp", rcAsk:"🧾 Receipt", tkHint:"Scan to follow your order", tkClient:"Customer", tkItem:"Item", tkDate:"Due date", tkDeposit:"Dropped off", tkTotal:"Total", tkPaid:"Paid", tkLeft:"Balance due", tkPrint:"🖨️ Print", tkShare:"📤 Share", tkCopied:"Tracking link copied.", tkNoLink:"Cannot create the ticket: subscription expired or order not saved.", tkQrFail:"QR unavailable (no network?)", scNotFound:"Ticket not found in this shop. Check it comes from your workshop.", scCount:"{n} item(s) in progress", scTotal:"Total balance due", scAgain:"Scan another ticket",
       nbTitle:"Notebook page", nbHint:"Take a photo of the old notebook page: the measurements fill in by themselves and the page stays in the file.", aiReading:"📖 Reading the notebook…", aiWaking:"📖 Still reading… the reader is waking up, this can take up to a minute.", aiDone:"✅ {n} measurement(s) read from the notebook. Check the green fields before saving.", aiMany:"Several people on the page: only the first one was read.", aiNone:"No readable measurement in this photo. Retake it closer and well lit, or dictate.", aiFail:"Reading didn't work. The photo is kept; you can dictate the measurements.", aiOffline:"No network: the photo is kept, automatic reading needs internet.", aiLimit:"Daily reading limit reached. Dictate or try again tomorrow.", aiNoKey:"The notebook reader isn't switched on yet.", aiAuth:"Sign in again to use notebook reading.", nbBtn:"📷 Photograph the notebook page", nbNone:"No notebook page.", nbTag:"Notebook", dictBtn:"🎤 Dictate measurements", dictStop:"⏹ Stop dictation", dictGo:"Listening… say for example \"shoulder 42, chest 96\".", dictHeard:"Heard: \"{t}\" · {n} field(s) filled. Check before saving.", dictNo:"Dictation isn't available on this phone (use Chrome).", dictDenied:"Allow the microphone for SanaaPro in the browser settings.", dictNet:"Dictation needs internet. Try again when the network is back.", dictErr:"Dictation stopped. Tap the microphone again.",
+      pinTitle:"Opening code for this phone", pinHint:"Even if someone has your phone unlocked, they can't open SanaaPro without this code. The app locks when you leave it for more than a minute.", pinSet:"🔐 Choose an opening code", pinChange:"🔐 Change the opening code", pinOff:"Remove the opening code", pinOnState:"✅ On for this phone", pinOffState:"No opening code on this phone.", pinLockNow:"🔐 Lock", pinEnter:"Enter your opening code", pinNew:"Choose a 4-digit code", pinConfirm:"Enter the same code again", pinMismatch:"The two codes don't match. Try again.", pinWrong:"Wrong code.", pinWait:"Too many tries. Wait 30 seconds.", pinDel:"Delete", pinForgot:"Forgot the code?", pinForgotAsk:"Enter the shop admin code to remove the opening code:", pinForgotLogout:"No admin code set. To get back in you'll need the email and password. Sign out?", pinLogout:"Sign out", pinLogoutQ:"Sign out of SanaaPro on this phone? You'll need the email and password to come back.", pinCancel:"Cancel", pinSaved:"Opening code saved on this phone.", pinRemoved:"Opening code removed from this phone.", pinOffQ:"Remove the opening code from this phone?", pinMgrAsk:"Do you also want an opening code on this phone?\n\nIf the phone ends up in someone else's hands, nobody can open SanaaPro without it.",
       ptScan:"Scan my badge", ptAddStaff:"＋ Add an employee", ptModeT:"How your staff clock in",
       ptModeCode:"4-digit code", ptModeBadge:"Badge (barcode)", ptModeBoth:"Both",
       ptModeHint:"With a badge, the employee shows their card to the phone camera, or passes it in front of a plugged-in barcode reader.",
@@ -3100,6 +3126,8 @@
       /* SanaaPro School : bouton de passage seulement si ce compte a déjà une école. */
       getDoc(doc(db,"ecoles",user.uid)).then(s=>{ $("go-ecole").hidden=!s.exists(); }).catch(()=>{ $("go-ecole").hidden=true; });
       try{ localStorage.setItem("sanaapro_owner_bid", BID); }catch(e){}
+      if(pinGet()) pinLock();
+      paintPinCard();
       renderDashboard(BOUTIQUE); paintLocks(); setTimeout(()=>{ try{ showPlanPick(false); }catch(e){} }, 2500); updateOffline(); applyMgr(); setTab("apercu"); show("dash"); setTimeout(() => { try{ checkRdv(false); }catch(e){} }, 5000); try{ if(navigator.onLine) wakeLecteur(); }catch(e){}
       loadAll().then(scanFromUrl);
       syncCatalogueExpiry();
@@ -9138,6 +9166,110 @@
     alert(t("codeSaved"));
   });
 
+
+  // =================== CODE D'OUVERTURE DE CE TÉLÉPHONE ===================
+  // Propre à chaque téléphone (stocké haché dans ce navigateur, jamais dans la base).
+  // Effacer les données de Chrome efface aussi la connexion : il faudrait alors l'email ET le mot de passe.
+  const PIN_KEY = () => "sanaapro_pin_" + BID;
+  const PIN_AWAY_MS = 60000;
+  let PIN_HIDDEN_AT = 0, PIN_LOCKED = false;
+  async function pinHash(code){
+    const data = new TextEncoder().encode("sanaapro|" + BID + "|" + code);
+    const buf = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+  }
+  function pinGet(){ try{ return BID ? localStorage.getItem(PIN_KEY()) : null; }catch(e){ return null; } }
+  function pinSave(h){ try{ if(h) localStorage.setItem(PIN_KEY(), h); else localStorage.removeItem(PIN_KEY()); }catch(e){} paintPinCard(); }
+  function paintPinCard(){
+    const on = !!pinGet();
+    if($("pin-state")){ $("pin-state").textContent = on ? t("pinOnState") : t("pinOffState"); $("pin-state").style.color = on ? "var(--ok)" : "var(--muted)"; }
+    if($("pin-set")) $("pin-set").textContent = on ? t("pinChange") : t("pinSet");
+    if($("pin-off")) $("pin-off").hidden = !on;
+    if($("pin-lock-now")) $("pin-lock-now").hidden = !on;
+  }
+  // Pavé numérique : mode "unlock" (vérifier), "new" (choisir puis confirmer)
+  function pinPad(opts){
+    return new Promise(resolve=>{
+      const ov=document.createElement("div"); ov.className="pin-ov";
+      ov.innerHTML='<div class="pin-logo">SanaaPro</div><div class="pin-shop"></div><div class="pin-title"></div><div class="pin-dots"></div><div class="pin-err"></div><div class="pin-pad"></div><div class="pin-links"></div>';
+      const shop=ov.querySelector(".pin-shop"), title=ov.querySelector(".pin-title"), dots=ov.querySelector(".pin-dots"), err=ov.querySelector(".pin-err"), pad=ov.querySelector(".pin-pad"), links=ov.querySelector(".pin-links");
+      shop.textContent=(BOUTIQUE && BOUTIQUE.name) || "";
+      const LEN = 4; let val="", first=null, tries=0, waitUntil=0;
+      const setTitle=()=>{ title.textContent = opts.mode==="unlock" ? t("pinEnter") : (first===null ? t("pinNew") : t("pinConfirm")); };
+      const paint=()=>{ dots.innerHTML=""; for(let i=0;i<LEN;i++){ const d=document.createElement("span"); if(i<val.length) d.className="on"; dots.appendChild(d); } };
+      const shake=()=>{ dots.classList.remove("pin-shake"); void dots.offsetWidth; dots.classList.add("pin-shake"); try{ navigator.vibrate && navigator.vibrate(150); }catch(e){} };
+      const done=(r)=>{ document.removeEventListener("keydown", onKey); ov.remove(); resolve(r); };
+      async function full(){
+        if(opts.mode==="unlock"){
+          if(Date.now()<waitUntil){ err.textContent=t("pinWait"); val=""; paint(); return; }
+          const h=await pinHash(val);
+          if(h===pinGet()){ done(true); return; }
+          tries++; val=""; paint(); shake();
+          if(tries>=5){ waitUntil=Date.now()+30000; tries=0; err.textContent=t("pinWait"); }
+          else err.textContent=t("pinWrong");
+          return;
+        }
+        if(first===null){ first=val; val=""; paint(); err.textContent=""; setTitle(); return; }
+        if(val!==first){ first=null; val=""; paint(); shake(); err.textContent=t("pinMismatch"); setTitle(); return; }
+        const h=await pinHash(val); pinSave(h); done(true);
+      }
+      const press=k=>{
+        if(k==="del"){ val=val.slice(0,-1); paint(); return; }
+        if(val.length>=LEN) return;
+        val+=k; err.textContent=""; paint();
+        if(val.length===LEN) setTimeout(full, 120);
+      };
+      ["1","2","3","4","5","6","7","8","9","","0","del"].forEach(k=>{
+        const b=document.createElement("button"); b.type="button";
+        if(k===""){ b.style.visibility="hidden"; }
+        else if(k==="del"){ b.textContent="⌫"; b.className="k-small"; b.setAttribute("aria-label", t("pinDel")); }
+        else b.textContent=k;
+        b.addEventListener("click", ()=>press(k)); pad.appendChild(b);
+      });
+      function onKey(e){ if(/^[0-9]$/.test(e.key)) press(e.key); else if(e.key==="Backspace") press("del"); }
+      document.addEventListener("keydown", onKey);
+      if(opts.mode==="unlock"){
+        const f=document.createElement("button"); f.type="button"; f.textContent=t("pinForgot");
+        f.addEventListener("click", ()=>{
+          const admin=(BOUTIQUE && BOUTIQUE.codeAdmin) ? String(BOUTIQUE.codeAdmin) : "";
+          if(!admin){ if(confirm(t("pinForgotLogout"))){ done(false); signOut(auth); } return; }
+          const g=prompt(t("pinForgotAsk")); if(g===null) return;
+          if(String(g).trim()===admin){ pinSave(null); done(true); alert(t("pinRemoved")); }
+          else { err.textContent=t("codeWrong"); shake(); }
+        });
+        links.appendChild(f);
+        const lo=document.createElement("button"); lo.type="button"; lo.textContent=t("pinLogout"); lo.style.color="var(--muted)";
+        lo.addEventListener("click", ()=>{ if(confirm(t("pinLogoutQ"))){ done(false); signOut(auth); } });
+        links.appendChild(lo);
+      } else {
+        const c=document.createElement("button"); c.type="button"; c.textContent=t("pinCancel"); c.style.color="var(--muted)";
+        c.addEventListener("click", ()=>done(false)); links.appendChild(c);
+      }
+      setTitle(); paint();
+      document.body.appendChild(ov);
+    });
+  }
+  async function pinLock(){
+    if(PIN_LOCKED || !pinGet()) return;
+    PIN_LOCKED=true;
+    try{ await pinPad({ mode:"unlock" }); } finally { PIN_LOCKED=false; }
+  }
+  document.addEventListener("visibilitychange", ()=>{
+    if(!pinGet()) return;
+    if(document.hidden) PIN_HIDDEN_AT=Date.now();
+    else if(PIN_HIDDEN_AT && Date.now()-PIN_HIDDEN_AT>PIN_AWAY_MS){ PIN_HIDDEN_AT=0; pinLock(); }
+  });
+  $("pin-set").addEventListener("click", async ()=>{
+    if(pinGet()){ if(!await pinPad({ mode:"unlock" })) return; }
+    if(await pinPad({ mode:"new" })) alert(t("pinSaved"));
+  });
+  $("pin-off").addEventListener("click", async ()=>{
+    if(!confirm(t("pinOffQ"))) return;
+    if(!await pinPad({ mode:"unlock" })) return;
+    pinSave(null); alert(t("pinRemoved"));
+  });
+  $("pin-lock-now").addEventListener("click", ()=>pinLock());
+
   // =================== MODE MANAGER (par téléphone) ===================
   // Le téléphone du manager garde la même connexion que la boutique, mais cache les chiffres
   // de la semaine / du mois, les salaires et les réglages. Seul le code administrateur
@@ -9149,13 +9281,14 @@
     $("mgr-badge").hidden=!on;
     if(on && ["finances","staff","reglages"].indexOf(TAB)!==-1) setTab("apercu");
   }
-  $("mgr-on").addEventListener("click", ()=>{
+  $("mgr-on").addEventListener("click", async ()=>{
     const admin=(BOUTIQUE && BOUTIQUE.codeAdmin) ? String(BOUTIQUE.codeAdmin) : "";
     if(!admin){ alert(t("mgrNeedCode")); try{ $("b-code").focus(); $("b-code").scrollIntoView({block:"center"}); }catch(e){} return; }
     if(!confirm(t("mgrConfirm"))) return;
     try{ localStorage.setItem("sanaapro_mgr", BID); }catch(e){}
     applyMgr(); setTab("apercu");
     alert(t("mgrDone"));
+    if(!pinGet() && confirm(t("pinMgrAsk"))){ if(await pinPad({ mode:"new" })) alert(t("pinSaved")); }
   });
   $("mgr-badge").addEventListener("click", ()=>{
     const admin=(BOUTIQUE && BOUTIQUE.codeAdmin) ? String(BOUTIQUE.codeAdmin) : "";
