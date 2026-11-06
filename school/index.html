@@ -800,15 +800,22 @@
     if(!c) return 0;
     return (num(c.prix2) > 0 && num(c.des) > 0 && tr >= num(c.des)) ? num(c.prix2) : num(c.prix);
   }
+  /* Frais « une fois » que toute une classe ne paie pas (ex. pas d'uniforme pour la classe du week-end).
+     Tant que le directeur n'a rien coché, la classe du week-end est dispensée d'uniforme par défaut. */
+  function classExempt(c){
+    if(!c) return [];
+    if(Array.isArray(c.sansFrais)) return c.sansFrais;
+    return /week/i.test(clsName(c) + " " + (c.nom || "") + " " + c.id) ? fraisL().filter(f => f.freq === "once" && /uniform/i.test(feeName(f) + " " + (f.nom || "") + " " + f.id)).map(f => f.id) : [];
+  }
   /* Postes dus : frais « une fois » (trimestre 0) + pour chaque trimestre depuis l'entrée jusqu'au trimestre en cours :
      scolarité de la classe + frais « chaque trimestre ». */
   function duesOf(el){
     const out = [];
     const start = Math.max(1, num(el.startTrim) || 1), now = Math.max(start, num(el.trim) || start);
     /* Frais « une fois » dont l'élève est dispensé (ancien élève, classe sans uniforme…) : exempt = [ids]. */
-    const ex = Array.isArray(el.exempt) ? el.exempt : [];
-    fraisL().filter(f => f.freq === "once" && !ex.includes(f.id)).forEach(f => out.push({ key:f.id + "|0", poste:f.id, trim:0, nom:f.nom, montant:num(f.montant) }));
     const c = classeOf(el);
+    const ex = (Array.isArray(el.exempt) ? el.exempt : []).concat(classExempt(c));
+    fraisL().filter(f => f.freq === "once" && !ex.includes(f.id)).forEach(f => out.push({ key:f.id + "|0", poste:f.id, trim:0, nom:f.nom, montant:num(f.montant) }));
     for(let tr = start; tr <= now; tr++){
       const p = prixScol(c, tr);
       if(p > 0) out.push({ key:"scol|" + tr, poste:"scol", trim:tr, nom:t("tuition"), montant:p });
@@ -1417,13 +1424,19 @@
       + '<input data-c="' + i + '" data-k="prix" type="number" value="' + esc(c.prix || "") + '" placeholder="' + esc(t("cPrice")) + '" style="flex:1">'
       + '<input data-c="' + i + '" data-k="des" type="number" value="' + esc(c.des || "") + '" placeholder="' + esc(t("cFrom")) + '" style="flex:0 0 58px">'
       + '<input data-c="' + i + '" data-k="prix2" type="number" value="' + esc(c.prix2 || "") + '" placeholder="' + esc(t("cPrice2")) + '" style="flex:1">'
-      + '<button class="ghost red" data-rc="' + i + '" style="padding:8px">✕</button></div>').join("");
+      + '<button class="ghost red" data-rc="' + i + '" style="padding:8px">✕</button></div>'
+      + (fraisL().some(f => f.freq === "once") ? '<div class="muted" style="display:flex;flex-wrap:wrap;gap:4px 14px;margin:-2px 0 10px;font-size:13px">' + esc(t("exLbl")) + " :"
+        + fraisL().filter(f => f.freq === "once").map(f => '<label style="display:inline-flex;align-items:center;gap:5px;font-weight:400"><input type="checkbox" style="width:auto" data-cx="' + i + '" value="' + esc(f.id) + '"' + (classExempt(c).includes(f.id) ? " checked" : "") + "> " + esc(feeName(f)) + "</label>").join("") + "</div>" : "")).join("");
     $("r-fees").innerHTML = CF_DRAFT.frais.map((f, i) =>
       '<div class="ed-line"><input data-f="' + i + '" data-k="nom" value="' + esc(f.nom) + '" placeholder="' + esc(t("fName")) + '" style="flex:2">'
       + '<input data-f="' + i + '" data-k="montant" type="number" value="' + esc(f.montant || "") + '" placeholder="' + esc(t("fAmt")) + '" style="flex:1">'
       + '<select data-f="' + i + '" data-k="freq" style="flex:1"><option value="once"' + (f.freq === "once" ? " selected" : "") + ">" + esc(t("fOnce")) + '</option><option value="trim"' + (f.freq === "trim" ? " selected" : "") + ">" + esc(t("fEach")) + "</option></select>"
       + '<button class="ghost red" data-rf="' + i + '" style="padding:8px">✕</button></div>').join("");
     $("r-classes").querySelectorAll("[data-c]").forEach(x => x.addEventListener("input", () => { const c = CF_DRAFT.classes[x.dataset.c]; c[x.dataset.k] = x.dataset.k === "nom" ? x.value : num(x.value); }));
+    $("r-classes").querySelectorAll("[data-cx]").forEach(x => x.addEventListener("change", () => {
+      const c = CF_DRAFT.classes[x.dataset.cx];
+      c.sansFrais = [...$("r-classes").querySelectorAll('[data-cx="' + x.dataset.cx + '"]:checked')].map(y => y.value);
+    }));
     $("r-fees").querySelectorAll("[data-f]").forEach(x => x.addEventListener(x.tagName === "SELECT" ? "change" : "input", () => { const f = CF_DRAFT.frais[x.dataset.f]; f[x.dataset.k] = x.dataset.k === "montant" ? num(x.value) : x.value; }));
     $("r-classes").querySelectorAll("[data-rc]").forEach(b => b.addEventListener("click", () => { CF_DRAFT.classes.splice(+b.dataset.rc, 1); paintCF(); }));
     $("r-fees").querySelectorAll("[data-rf]").forEach(b => b.addEventListener("click", () => { CF_DRAFT.frais.splice(+b.dataset.rf, 1); paintCF(); }));
