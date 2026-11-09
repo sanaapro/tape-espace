@@ -389,6 +389,7 @@
       <button class="ghost" id="me-wa">WhatsApp</button>
       <button class="ghost" id="me-remind" data-i18n="meRemind">Rappel de paiement</button>
       <button class="ghost" id="me-edit" data-i18n="edit">Modifier</button>
+      <button class="ghost gold" id="me-rclast">🧾 <span data-i18n="meRcLast">Renvoyer le dernier reçu</span></button>
       <button class="ghost" id="me-badge">🪪 <span data-i18n="meBadge">Badge</span></button>
     </div>
     <div id="me-suivi"></div>
@@ -499,7 +500,7 @@
       rCode:"Code du propriétaire", rCodeHelp:"Avec un code, seuls ceux qui le connaissent voient les finances et peuvent supprimer. Le gérant fait tout le reste.",
       rCodeNew:"Nouveau code (4 chiffres ou plus)", rCodeSave:"Enregistrer le code", codeShort:"4 chiffres minimum.", codeSaved:"Code enregistré.",
       acc:"Compte : {e}", mePay:"Encaisser", meRemind:"Rappel de paiement", edit:"Modifier", meDues:"Ce qui est dû", mePoste:"Pour quoi ?",
-      mpWa:"Envoyer le reçu (image avec code QR)", mpGo:"Enregistrer le paiement", mePaid:"Paiements reçus", meNotes:"Notes et présence",
+      mpWa:"Envoyer le reçu (image avec code QR)", mpGo:"Enregistrer le paiement", mePaid:"Paiements reçus — touchez « Reçu » pour le renvoyer", meRcLast:"Renvoyer le dernier reçu", rcBtn:"Reçu", meNotes:"Notes et présence",
       fullName:"Nom complet", phone:"Téléphone de l'élève", parent:"Parent / tuteur", parentPhone:"Téléphone du parent", classe:"Classe",
       trimNow:"Trimestre en cours", trimStart:"Entré(e) au trimestre", entree:"Date d'entrée", statut:"Statut", noteLbl:"Remarque", exLbl:"Ne paie pas (ancien élève, classe du week-end…)", del:"Supprimer cet élève",
       delSure:"Supprimer définitivement {n} ? Ses paiements restent dans les finances.", needNom:"Écrivez le nom de l'élève.",
@@ -552,7 +553,7 @@
       rCode:"Owner code", rCodeHelp:"With a code, only people who know it see the finances and can delete. The manager does everything else.",
       rCodeNew:"New code (4 digits or more)", rCodeSave:"Save the code", codeShort:"At least 4 digits.", codeSaved:"Code saved.",
       acc:"Account: {e}", mePay:"Collect", meRemind:"Payment reminder", edit:"Edit", meDues:"What is due", mePoste:"For what?",
-      mpWa:"Send the receipt (image with QR code)", mpGo:"Save the payment", mePaid:"Payments received", meNotes:"Marks and attendance",
+      mpWa:"Send the receipt (image with QR code)", mpGo:"Save the payment", mePaid:"Payments received — tap « Receipt » to send it again", meRcLast:"Send the last receipt again", rcBtn:"Receipt", meNotes:"Marks and attendance",
       fullName:"Full name", phone:"Student phone", parent:"Parent / guardian", parentPhone:"Parent phone", classe:"Class",
       trimNow:"Current term", trimStart:"Joined in term", entree:"Date joined", statut:"Status", noteLbl:"Remark", exLbl:"Does not pay (returning student, weekend class…)", del:"Delete this student",
       delSure:"Delete {n} for good? Their payments stay in the finances.", needNom:"Type the student's name.",
@@ -1491,8 +1492,11 @@
     const P = MOUVS.filter(m => m.type === "recette" && m.eleveId === e.id).sort((a, b) => num(b.ms) - num(a.ms));
     const G = {}; P.forEach(m => { const k = m.recu || ("ms" + m.ms); (G[k] = G[k] || []).push(m); });
     $("me-pays").innerHTML = Object.keys(G).map(k => { const g = G[k], tot = g.reduce((s2, m) => s2 + num(m.montant), 0);
-      return '<div class="it" style="cursor:default"><div class="main"><div class="t1">' + esc(g.map(m => m.poste ? postLabel({ poste:m.poste, trim:num(m.trim), nom:m.posteNom }) : movLabel(m)).join(" · ")) + '</div><div class="t2">' + esc(dshow(num(g[0].ms))) + (g[0].recuNo ? " · " + esc(t("rcNo")) + " " + esc(g[0].recuNo) : "") + '</div></div><span class="amt ok">' + esc(money(tot)) + '</span><button class="ghost" data-rc="' + esc(k) + '" style="padding:6px 9px">🧾</button></div>'; }).join("") || '<div class="muted">' + esc(t("noPay")) + "</div>";
+      return '<div class="it" style="cursor:default"><div class="main"><div class="t1">' + esc(g.map(m => m.poste ? postLabel({ poste:m.poste, trim:num(m.trim), nom:m.posteNom }) : movLabel(m)).join(" · ")) + '</div><div class="t2">' + esc(dshow(num(g[0].ms))) + (g[0].recuNo ? " · " + esc(t("rcNo")) + " " + esc(g[0].recuNo) : "") + '</div></div><span class="amt ok">' + esc(money(tot)) + '</span><button class="ghost gold" data-rc="' + esc(k) + '" style="padding:6px 10px;white-space:nowrap">🧾 ' + esc(t("rcBtn")) + '</button></div>'; }).join("") || '<div class="muted">' + esc(t("noPay")) + "</div>";
     $("me-pays").querySelectorAll("[data-rc]").forEach(b => b.addEventListener("click", () => showReceipt(e, G[b.dataset.rc])));
+    const lastK = Object.keys(G)[0];
+    $("me-rclast").hidden = !lastK;
+    $("me-rclast").onclick = () => { if(lastK) showReceipt(e, G[lastK]); };
     const tr = num(e.trim) || 1, ns = NOTES.filter(n => n.eleveId === e.id).sort((a, b) => String(b.date).localeCompare(String(a.date)));
     const nt = ns.filter(n => num(n.trim) === tr), avg = nt.length ? (nt.reduce((s, n) => s + num(n.note), 0) / nt.length).toFixed(1) + "/10" : "—";
     const pr = PRES.filter(p => p.eleveId === e.id);
