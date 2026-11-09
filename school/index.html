@@ -217,6 +217,7 @@
     <!-- ÉLÈVES -->
     <section data-pane="eleves" hidden>
       <button class="primary" id="e-new">＋ <span data-i18n="eNew">Nouvel élève</span></button>
+      <button class="ghost" id="e-scanrc" style="width:100%;margin-top:8px">📷 <span data-i18n="scanRcBtn">Scanner le code QR d'un reçu</span></button>
       <div class="chips" id="e-chips"></div>
       <input id="e-q" style="margin-top:8px" data-i18n-ph="search" placeholder="Rechercher…">
       <div class="card" id="e-clsinfo" hidden></div>
@@ -510,7 +511,7 @@
       offline:"Hors ligne : enregistré sur le téléphone, envoi au retour du réseau.", writeErr:"Le serveur a refusé l'enregistrement.",
       defCls4:"2e année", gTrimTitle:"Programme par trimestre", today:"Aujourd'hui", thisWeek:"Cette semaine", toCheck:"À vérifier dans le cahier", hwYesterday:"Devoir du dernier cours", endWeek:"Fin de semaine", bring:"À apporter", homework:"Devoir", weekDay:"Semaine {s} · Jour {n}", noClassToday:"Pas de cours aujourd'hui pour cette classe.", nextLesson:"Prochain cours : {d}", closedBtn:"École fermée aujourd'hui (décaler le programme)", reopenBtn:"Annuler la fermeture d'aujourd'hui", closedSure:"Marquer aujourd'hui comme fermé ? Le programme du cahier sera décalé d'un jour de cours.", closedDay:"Jour de fermeture.", noCahier:"Aucun cahier relié à cette classe.", cahierEnd:"Le cahier de ce trimestre est terminé.", seeList:"Voir les élèves", clsSettings:"Réglages de la classe", horaire:"Horaire", teacher:"Enseignant(e)", classDays:"Jours de cours", clsStart:"Début du cahier pour cette classe", cahierLbl:"Cahier", cahierAuto:"Automatique (selon le trimestre des élèves)", students:"élève(s)", pickClass:"Choisissez une classe.", dows:"D,L,M,M,J,V,S",
       defCls1:"1re année — matin", defCls2:"1re année — après-midi", defCls3:"Classe du week-end", fForm:"Formulaire", fInsc:"Inscription", fUnif:"Uniforme", fMach:"Entretien des machines", fCahier:"Cahier de l'élève",
-      scanBtn:"Scanner les badges (arrivée / sortie)", scanHelp:"Présentez le badge devant la caméra.", badgesBtn:"Badges", bAll:"Tout le monde (élèves et personnel)", bStudents:"Tous les élèves", bStaff:"Tout le personnel",
+      scanBtn:"Scanner les badges (arrivée / sortie)", scanRcBtn:"Scanner le code QR d'un reçu", scanRcHelp:"Présentez le code QR du reçu devant la caméra.", rcOk:"✔ Reçu authentique n° {no}", rcBad:"⚠ Reçu non conforme", rcBadSub:"Ce reçu n° {no} ne correspond pas à ce qui est enregistré ({d}). Vérifiez avec le propriétaire.", rcNone:"⚠ Reçu introuvable", rcNoneSub:"Aucun paiement n° {no} n'est enregistré dans cette école.", rcRestNow:"Aujourd'hui : reste {m}", rcUpToDate:"Aujourd'hui : tout est payé", scanHelp:"Présentez le badge devant la caméra.", badgesBtn:"Badges", bAll:"Tout le monde (élèves et personnel)", bStudents:"Tous les élèves", bStaff:"Tout le personnel",
       bPrint:"Imprimer", pStudents:"Élèves", pStaff:"Personnel", welcome:"Bienvenue {n}", bye:"Au revoir {n}", arrivedAt:"Arrivée à {h}", leftAt:"Sortie à {h}", lateAt:"En retard — arrivée à {h}",
       already:"Déjà pointé(e) à {h}", unknownBadge:"Badge inconnu", unknownHelp:"Ce badge n'appartient à aucun élève ni membre du personnel de cette école.",
       camErr:"Impossible d'ouvrir la caméra. Autorisez la caméra pour ce site dans le navigateur, puis réessayez.", camSwitch:"🔄 Caméra", scanToday:"{k} pointage(s) aujourd'hui",
@@ -563,7 +564,7 @@
       offline:"Offline: saved on the phone, it will be sent when the network is back.", writeErr:"The server refused to save.",
       defCls4:"2nd year", gTrimTitle:"Programme by term", today:"Today", thisWeek:"This week", toCheck:"To check in the workbook", hwYesterday:"Homework from last class", endWeek:"End of week", bring:"Bring", homework:"Homework", weekDay:"Week {s} · Day {n}", noClassToday:"No class today for this group.", nextLesson:"Next class: {d}", closedBtn:"School closed today (shift the programme)", reopenBtn:"Cancel today's closure", closedSure:"Mark today as closed? The workbook programme will move by one class day.", closedDay:"Closed day.", noCahier:"No workbook linked to this class.", cahierEnd:"This term's workbook is finished.", seeList:"See the students", clsSettings:"Class settings", horaire:"Time", teacher:"Teacher", classDays:"Class days", clsStart:"Workbook start for this class", cahierLbl:"Workbook", cahierAuto:"Automatic (from the students' term)", students:"student(s)", pickClass:"Choose a class.", dows:"S,M,T,W,T,F,S",
       defCls1:"1st year — morning", defCls2:"1st year — afternoon", defCls3:"Weekend class", fForm:"Form", fInsc:"Registration", fUnif:"Uniform", fMach:"Machine maintenance", fCahier:"Student workbook",
-      scanBtn:"Scan badges (arrival / departure)", scanHelp:"Hold the badge in front of the camera.", badgesBtn:"Badges", bAll:"Everyone (students and staff)", bStudents:"All students", bStaff:"All staff",
+      scanBtn:"Scan badges (arrival / departure)", scanRcBtn:"Scan a receipt QR code", scanRcHelp:"Hold the receipt QR code in front of the camera.", rcOk:"✔ Genuine receipt no. {no}", rcBad:"⚠ Receipt does not match", rcBadSub:"Receipt no. {no} does not match what is recorded ({d}). Check with the owner.", rcNone:"⚠ Receipt not found", rcNoneSub:"No payment no. {no} is recorded in this school.", rcRestNow:"Today: {m} left", rcUpToDate:"Today: fully paid", scanHelp:"Hold the badge in front of the camera.", badgesBtn:"Badges", bAll:"Everyone (students and staff)", bStudents:"All students", bStaff:"All staff",
       bPrint:"Print", pStudents:"Students", pStaff:"Staff", welcome:"Welcome {n}", bye:"Goodbye {n}", arrivedAt:"Arrived at {h}", leftAt:"Left at {h}", lateAt:"Late — arrived at {h}",
       already:"Already scanned at {h}", unknownBadge:"Unknown badge", unknownHelp:"This badge does not belong to any student or staff member of this school.",
       camErr:"Cannot open the camera. Allow the camera for this site in the browser, then try again.", camSwitch:"🔄 Camera", scanToday:"{k} scan(s) today",
@@ -1552,9 +1553,9 @@
 
   /* ---------- Reçu en image (comme l'atelier) : papier blanc + code QR, partagé sur WhatsApp ---------- */
   const RC = {
-    en: { title:"PAYMENT RECEIPT", no:"Receipt no.", date:"Date", student:"Student", cls:"Class", term:"Term", paidNow:"Amount paid", left:"Left to pay", paidTerm:"FULLY PAID — TERM {n}", thanks:"Thank you for your trust.", once:"once", tuition:"Tuition",
+    en: { title:"PAYMENT RECEIPT", no:"Receipt no.", date:"Date", student:"Student", cls:"Class", term:"Term", paidNow:"Amount paid", left:"Left to pay", sumTitle:"SUMMARY", totFees:"Total fees", paidBefore:"Already paid before", paidThis:"Paid today", totPaid:"Total paid", paidTerm:"FULLY PAID — TERM {n}", thanks:"Thank you for your trust.", once:"once", tuition:"Tuition",
           cap:"Receipt {no} — {s}\nStudent: {n}\nPaid: {m}\n{r}", capLeft:"Left to pay: {m}", capPaid:"Fully paid for term {n}. Thank you!" },
-    fr: { title:"REÇU DE PAIEMENT", no:"Reçu n°", date:"Date", student:"Élève", cls:"Classe", term:"Trimestre", paidNow:"Montant versé", left:"Reste à payer", paidTerm:"TOUT PAYÉ — TRIMESTRE {n}", thanks:"Merci de votre confiance.", once:"une fois", tuition:"Scolarité",
+    fr: { title:"REÇU DE PAIEMENT", no:"Reçu n°", date:"Date", student:"Élève", cls:"Classe", term:"Trimestre", paidNow:"Montant versé", left:"Reste à payer", sumTitle:"RÉCAPITULATIF", totFees:"Total des frais", paidBefore:"Déjà payé avant", paidThis:"Payé ce jour", totPaid:"Total payé", paidTerm:"TOUT PAYÉ — TRIMESTRE {n}", thanks:"Merci de votre confiance.", once:"une fois", tuition:"Scolarité",
           cap:"Reçu {no} — {s}\nÉlève : {n}\nVersé : {m}\n{r}", capLeft:"Reste à payer : {m}", capPaid:"Trimestre {n} entièrement payé. Merci !" }
   };
   function nextReceipt(){
@@ -1568,8 +1569,13 @@
   async function receiptCanvas(e, grp){
     const L = RC[ECOLE.langRecu === "fr" ? "fr" : "en"], c = classeOf(e), tr = num(e.trim) || 1;
     const amt = grp.reduce((s2, m) => s2 + num(m.montant), 0), no = grp[0].recuNo || "—";
-    // Situation APRÈS ce paiement (paiements jusqu'à cette date incluse).
-    const restNow = resteOf(e);
+    // Situation au moment de CE reçu : frais dus jusqu'au trimestre du reçu, paiements faits avant + ce paiement.
+    const rcTrim = Math.max(tr && grp.every(m => !num(m.trim)) ? tr : 0, ...grp.map(m => num(m.trim)));
+    const grpIds = new Set(grp.map(m => m.id).filter(Boolean)), rcMs = num(grp[0].ms);
+    const totDue = duesOf(e).filter(d => d.trim <= rcTrim).reduce((s2, d) => s2 + d.montant, 0);
+    const before = MOUVS.filter(m => m.type === "recette" && m.eleveId === e.id && !(grp[0].recu && m.recu === grp[0].recu) && !grpIds.has(m.id)
+                     && num(m.ms) < rcMs && num(m.trim) <= rcTrim).reduce((s2, m) => s2 + num(m.montant), 0);
+    const restNow = Math.max(0, totDue - before - amt);
     const W = 600, S = 2, P = 34, SANS = "-apple-system,'Segoe UI',Roboto,Arial,sans-serif", SERIF = "Georgia,'Times New Roman',serif";
     const cv = document.createElement("canvas"), g = cv.getContext("2d");
     const ops = []; let y = P;
@@ -1583,14 +1589,21 @@
     const RL = ECOLE.langRecu === "fr" ? "fr" : "en";
     row(L.student, e.nom); if(c) row(L.cls, clsName(c, RL)); row(L.term, String(tr));
     grp.forEach(m => { const nm = m.poste ? postLabel({ poste:m.poste, trim:num(m.trim), nom:m.posteNom }, RL) : locName(m.posteNom || m.label, RL); row(nm, money(num(m.montant))); });
+    if(totDue > 0){
+      y += 10*S; text(L.sumTitle, "800 "+(12*S)+"px "+SANS, "#111", 24);
+      row(L.totFees, money(totDue));
+      if(before > 0) row(L.paidBefore, money(before));
+      row(L.paidThis, money(amt));
+      row(L.totPaid, money(before + amt), true);
+    }
     y += 10*S; text(L.paidNow, (12*S)+"px "+SANS, "#444", 18); text(money(amt), "800 "+(26*S)+"px "+SANS, "#111", 36);
     if(restNow > 0){ y += 4*S; text(L.left + " : " + money(restNow), "800 "+(15*S)+"px "+SANS, "#b42318", 26); }
-    else { y += 10*S; ops.push({ stamp:fmt(L.paidTerm, { n:tr }), y:y + 18*S }); y += 44*S; }
+    else { y += 10*S; ops.push({ stamp:fmt(L.paidTerm, { n:rcTrim || tr }), y:y + 18*S }); y += 44*S; }
     let qrImg = null;
     const q = await loadQr();
     if(q){
       try{
-        const qr = q(0, "M"); qr.addData((ECOLE.name || "School") + " | " + L.no + " " + no + " | " + e.nom + " | " + money(amt) + " | " + new Date(num(grp[0].ms)).toISOString().slice(0, 10) + " | " + (restNow > 0 ? L.left + " " + money(restNow) : "PAID T" + tr)); qr.make();
+        const qr = q(0, "M"); qr.addData((ECOLE.name || "School") + " | " + L.no + " " + no + " | " + e.nom + " | " + money(amt) + " | " + new Date(num(grp[0].ms)).toISOString().slice(0, 10) + " | " + (restNow > 0 ? L.left + " " + money(restNow) : "PAID T" + (rcTrim || tr))); qr.make();
         qrImg = await new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = qr.createDataURL(6, 2); });
       }catch(x){ qrImg = null; }
     }
@@ -1611,7 +1624,7 @@
       let tx = o.tx; if(o.align !== "center"){ const max = (CW - 2*px) * 0.6; while(g.measureText(tx).width > max && tx.length > 4) tx = tx.slice(0, -2); if(tx !== o.tx) tx += "…"; }
       g.fillText(tx, x, o.y);
     });
-    return { cv, caption: fmt(L.cap, { no, s:ECOLE.name || "", n:e.nom, m:money(amt), r: restNow > 0 ? fmt(L.capLeft, { m:money(restNow) }) : fmt(L.capPaid, { n:tr }) }), no };
+    return { cv, caption: fmt(L.cap, { no, s:ECOLE.name || "", n:e.nom, m:money(amt), r: (before > 0 ? (L === RC.fr ? "Déjà payé avant : " : "Already paid before: ") + money(before) + "\n" + (L === RC.fr ? "Total payé : " : "Total paid: ") + money(before + amt) + "\n" : "") + (restNow > 0 ? fmt(L.capLeft, { m:money(restNow) }) : fmt(L.capPaid, { n:rcTrim || tr })) }), no };
   }
   async function showReceipt(e, grp){
     if(!grp || !grp.length) return;
@@ -1855,6 +1868,24 @@
     }catch(x){}
     try{ navigator.vibrate && navigator.vibrate(ok ? 80 : [60, 60, 60]); }catch(x){}
   }
+  /* Code QR d'un reçu : « École | Reçu n° 0026 | Nom | 11 700 D | 2026-11-09 | … ». On retrouve le paiement par son numéro
+     et on compare le nom et le montant avec ce qui est enregistré. Ne touche jamais à la présence. */
+  function receiptScan(raw){
+    const parts = String(raw).split(" | ");
+    if(parts.length < 4) return null;
+    const mNo = String(parts[1]).match(/(\d{2,})\s*$/); if(!mNo) return null;
+    const no = mNo[1], nom = String(parts[2] || "").trim(), amtTxt = String(parts[3] || "").replace(/[^\d]/g, "");
+    const grp = MOUVS.filter(m => m.type === "recette" && m.source === "scolarite" && String(m.recuNo || "") === no);
+    if(!grp.length) return { cls:"err", big:t("rcNone"), sub:fmt(t("rcNoneSub"), { no }), ok:false };
+    const realAmt = grp.reduce((s2, m) => s2 + num(m.montant), 0), realNom = grp[0].eleveNom || "";
+    const e = ELEVES.find(x => x.id === grp[0].eleveId);
+    const sameNom = !nom || realNom.trim().toLowerCase() === nom.toLowerCase() || (e && String(e.nom).trim().toLowerCase() === nom.toLowerCase());
+    const sameAmt = !amtTxt || Number(amtTxt) === Math.round(realAmt);
+    const d = new Date(num(grp[0].ms)).toLocaleDateString(LANG === "fr" ? "fr-FR" : "en-GB");
+    if(!sameNom || !sameAmt) return { cls:"err", big:t("rcBad"), sub:fmt(t("rcBadSub"), { no, d:(e ? e.nom : realNom) + " · " + money(realAmt) + " · " + d }), ok:false };
+    const rest = e ? resteOf(e) : 0;
+    return { cls:"ok", big:fmt(t("rcOk"), { no }), sub:(e ? e.nom : realNom) + " · " + money(realAmt) + " · " + d + (e ? "  —  " + (rest > 0 ? fmt(t("rcRestNow"), { m:money(rest) }) : t("rcUpToDate")) : ""), ok:true };
+  }
   function badgeScan(kind, id){
     const isE = kind === "e", person = isE ? ELEVES.find(x => x.id === id) : staff().find(x => x.id === id);
     if(!person) return { cls:"err", big:t("unknownBadge"), sub:t("unknownHelp"), ok:false };
@@ -1877,12 +1908,13 @@
     if(isE){ const c = classeOf(person), Li = c ? lessonInfo(c, date) : null; if(Li && Li.isClassDay && Li.lesson) lesson = " · 📖 " + Li.lesson.t; }
     return { cls: statut === "R" ? "late" : "ok", big:fmt(t("welcome"), { n:person.nom }), sub:fmt(t(statut === "R" ? "lateAt" : "arrivedAt"), { h }) + lesson, ok:true, name:person.nom, h };
   }
-  async function openScanner(){
+  async function openScanner(mode){
     if(SC) return;
-    SC = { facing: (function(){ try{ return localStorage.getItem("sanaapro_school_cam") || "user"; }catch(e){ return "user"; } })(), last:"", lastAt:0, hold:0, log:[] };
+    const rcMode = mode === "recu";
+    SC = { facing: rcMode ? "environment" : (function(){ try{ return localStorage.getItem("sanaapro_school_cam") || "user"; }catch(e){ return "user"; } })(), last:"", lastAt:0, hold:0, log:[], help:t(rcMode ? "scanRcHelp" : "scanHelp"), rc:rcMode };
     const ov = document.createElement("div"); ov.className = "scan-ov";
     ov.innerHTML = '<video playsinline muted autoplay></video><div class="frame"></div>'
-      + '<div class="scan-res" id="sc-res"><div class="big">' + esc(ECOLE.name || "") + '</div><div class="sub">' + esc(t("scanHelp")) + '</div><div class="clock" id="sc-clock"></div><div class="last" id="sc-last"></div></div>'
+      + '<div class="scan-res" id="sc-res"><div class="big">' + esc(ECOLE.name || "") + '</div><div class="sub">' + esc(SC.help) + '</div><div class="clock" id="sc-clock"></div><div class="last" id="sc-last"></div></div>'
       + '<div class="scan-bar"><button class="ghost" id="sc-flip">' + esc(t("camSwitch")) + '</button><button class="ghost gold" id="sc-close">' + esc(t("rcClose")) + "</button></div>";
     document.body.appendChild(ov); SC.ov = ov; SC.video = ov.querySelector("video");
     kioskGuard();
@@ -1895,7 +1927,7 @@
       }
       closeScanner();
     };
-    ov.querySelector("#sc-flip").onclick = async () => { SC.facing = SC.facing === "user" ? "environment" : "user"; try{ localStorage.setItem("sanaapro_school_cam", SC.facing); }catch(e){} await startCam(); };
+    ov.querySelector("#sc-flip").onclick = async () => { SC.facing = SC.facing === "user" ? "environment" : "user"; if(!SC.rc){ try{ localStorage.setItem("sanaapro_school_cam", SC.facing); }catch(e){} } await startCam(); };
     try{ if(ov.requestFullscreen) ov.requestFullscreen().catch(() => {}); }catch(e){}
     try{ if(navigator.wakeLock) SC.lock = await navigator.wakeLock.request("screen"); }catch(e){}
     paintScanLog();
@@ -1920,7 +1952,7 @@
     box.className = "scan-res " + (r.cls || "");
     box.querySelector(".big").textContent = r.big; box.querySelector(".sub").textContent = r.sub;
     clearTimeout(SC.idleT);
-    if(!r.idle) SC.idleT = setTimeout(() => { if(SC) showScan({ cls:"", big:ECOLE.name || "", sub:t("scanHelp"), idle:true }); }, 6000);
+    if(!r.idle) SC.idleT = setTimeout(() => { if(SC) showScan({ cls:"", big:ECOLE.name || "", sub:SC.help, idle:true }); }, 6000);
   }
   function paintScanLog(){
     if(!SC) return;
@@ -1952,7 +1984,7 @@
         if(raw && !(raw === SC.last && Date.now() - SC.lastAt < 5000)){
           SC.last = raw; SC.lastAt = Date.now();
           const m = String(raw).match(/^SPS1:([es]):(.+)$/);
-          const r = m ? badgeScan(m[1], m[2]) : { cls:"err", big:t("unknownBadge"), sub:t("unknownHelp"), ok:false };
+          const r = m ? badgeScan(m[1], m[2]) : (receiptScan(raw) || { cls:"err", big:t("unknownBadge"), sub:t("unknownHelp"), ok:false });
           showScan(r); beep(r.ok); SC.hold = Date.now() + 1800;
           if(r.name) SC.log.unshift(r.h + " " + r.name);
           paintScanLog(); renderAll();
@@ -1970,7 +2002,8 @@
     SC.ov.remove(); SC = null; renderAll();
   }
   document.addEventListener("visibilitychange", async () => { if(SC && document.visibilityState === "visible" && navigator.wakeLock){ try{ SC.lock = await navigator.wakeLock.request("screen"); }catch(e){} } });
-  $("p-scan").addEventListener("click", openScanner);
+  $("p-scan").addEventListener("click", () => openScanner());
+  $("e-scanrc").addEventListener("click", () => openScanner("recu"));
 
   $("e-new").addEventListener("click", () => openForm(null));
   /* Lien de saisie préparé : …/school/#ajout=<JSON en base64url> {nom, phone, parent, parentPhone, classe, note, paye}.
