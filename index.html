@@ -9207,7 +9207,19 @@
   }
   function watchKick(){
     try{ if(KICK_UNSUB) KICK_UNSUB(); }catch(e){}
-    try{ KICK_UNSUB = onSnapshot(doc(db,"boutiques",BID), s=>{ if(s.exists()) checkKick(s.data()); }, ()=>{}); }catch(e){}
+    try{ KICK_UNSUB = onSnapshot(doc(db,"boutiques",BID), s=>{
+      if(!s.exists()) return;
+      const d=s.data();
+      checkKick(d);
+      // Prix du pressing modifiés ailleurs (autre téléphone, Claude) : les afficher sans redémarrer l'app
+      try{
+        if(BOUTIQUE){
+          const avant=JSON.stringify([BOUTIQUE.tarifsPressing||null, BOUTIQUE.pzExpressPct==null?null:BOUTIQUE.pzExpressPct]);
+          const apres=JSON.stringify([d.tarifsPressing||null, d.pzExpressPct==null?null:d.pzExpressPct]);
+          if(avant!==apres){ BOUTIQUE.tarifsPressing=d.tarifsPressing; BOUTIQUE.pzExpressPct=d.pzExpressPct; buildPzGrid(); }
+        }
+      }catch(e){}
+    }, ()=>{}); }catch(e){}
   }
   $("kick-all").addEventListener("click", async ()=>{
     if(!confirm(t("kickQ"))) return;
