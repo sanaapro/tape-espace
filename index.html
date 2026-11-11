@@ -69,6 +69,16 @@
   .art-edit{ margin-top:11px; padding:11px; border:1px solid var(--line2); border-radius:10px; }
   .art-edit .ae-btns{ display:flex; gap:8px; margin-top:10px; }
   .art-edit .ae-btns button{ flex:1; margin:0; }
+  .rec .cartadd{ margin-top:9px; width:100%; padding:9px; border:1px dashed var(--gold); border-radius:8px; background:none; color:var(--gold); font-size:14px; }
+  #cart-bar{ position:fixed; left:50%; transform:translateX(-50%); bottom:14px; z-index:40; width:calc(100% - 24px); max-width:520px;
+    display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:14px; background:var(--gold); color:#111; font-weight:700;
+    box-shadow:0 6px 24px rgba(0,0,0,.5); border:none; font-size:15px; text-align:left; }
+  #cart-bar span{ flex:1 }
+  #cart-bar[hidden]{ display:none }
+  #body-boutique.hascart{ padding-bottom:80px }
+  .cart-it{ display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid var(--line2); font-size:15px }
+  .cart-it .nm{ flex:1 }
+  .cart-it button{ width:auto; margin:0; padding:4px 10px; background:none; border:1px solid #4A2222; color:#d88; border-radius:8px }
   .rec .ed{ margin-top:11px; width:100%; padding:9px; border:1px solid var(--line2); border-radius:8px; background:none; color:var(--gold); font-size:14px; }
   #ar-kind, #ar-kind-hint{ display:none }
   body.shop-tissu #ar-kind{ display:flex } body.shop-tissu #ar-kind-hint{ display:block }
@@ -1214,6 +1224,7 @@
       <div id="st-title" class="secttl">Stock de la boutique</div>
       <div id="stock-list"></div>
       <div id="stock-empty" class="empty" data-i18n="noStock" hidden>Aucun article en stock.</div>
+      <button type="button" id="cart-bar" hidden><span id="cart-bar-t"></span><b id="cart-bar-go"></b></button>
       </div>
     </div>
 
@@ -1918,6 +1929,7 @@
       shopStock:"Stock de la boutique", noStock:"Aucun article en stock.",
       sell:"Vendre", sellDiscPh:"Réduction", scTitle:"Confirmer la vente", scOk:"✓ Confirmer la vente", scQte:"Quantité", scPu:"Prix unitaire", scDiscCode:"Une réduction demande le code du propriétaire.", saleOwnerMsg:"🛍️ Vente boutique — {shop}\n{when}\nArticle : {art} ×{q}\n{disc}Montant encaissé : *{net}*\nStock restant : {left}\nFaite sur le téléphone du manager.", notEnoughStock:"Quantité supérieure au stock disponible.",
       confirmDeleteArt:"Retirer cet article du stock ?",
+      cartAdd:"🛒 Ajouter au panier", cartAdded:"Ajouté au panier", cartBar:"🛒 {n} article(s) · {t}", cartOpen:"Encaisser ›", cartTitle:"🛒 Panier de la cliente", cartDisc:"Réduction sur tout le panier (facultatif)", cartPay:"✓ Encaisser le panier", cartClear:"Vider", cartClearQ:"Vider le panier ?", cartLbl:"panier",
       editArt:"✏️ Corriger le nom ou le prix", editSave:"✓ Enregistrer", editCancel:"Annuler", editDup:"Un autre article porte déjà ce nom.",
       payment:"Paiement", paid:"Payé", due:"Reste à payer", cashIn:"Encaisser",
       cashedIn:"Encaissé :", amountRequired:"Indiquez un montant.",
@@ -2213,6 +2225,7 @@
       shopStock:"Shop stock", noStock:"No item in stock.",
       sell:"Sell", sellDiscPh:"Discount", scTitle:"Confirm the sale", scOk:"✓ Confirm the sale", scQte:"Quantity", scPu:"Unit price", scDiscCode:"A discount needs the owner's code.", saleOwnerMsg:"🛍️ Shop sale — {shop}\n{when}\nItem: {art} ×{q}\n{disc}Amount received: *{net}*\nStock left: {left}\nMade on the manager's phone.", notEnoughStock:"Quantity higher than available stock.",
       confirmDeleteArt:"Remove this item from stock?",
+      cartAdd:"🛒 Add to basket", cartAdded:"Added to basket", cartBar:"🛒 {n} item(s) · {t}", cartOpen:"Checkout ›", cartTitle:"🛒 Customer's basket", cartDisc:"Discount on the whole basket (optional)", cartPay:"✓ Take payment", cartClear:"Empty", cartClearQ:"Empty the basket?", cartLbl:"basket",
       editArt:"✏️ Correct the name or price", editSave:"✓ Save", editCancel:"Cancel", editDup:"Another item already has this name.",
       payment:"Payment", paid:"Paid", due:"Left to pay", cashIn:"Collect",
       cashedIn:"Collected:", amountRequired:"Enter an amount.",
@@ -4067,6 +4080,21 @@
       });
       row.appendChild(inp); row.appendChild(rmi); row.appendChild(b);
       el.appendChild(row);
+      // 🛒 Panier : la cliente prend plusieurs articles, on encaisse tout en une fois
+      const ca=document.createElement("button"); ca.type="button"; ca.className="cartadd"; ca.textContent=t("cartAdd");
+      ca.addEventListener("click", ()=>{
+        const qv=parseFloat(String(inp.value||"").replace(",", "."))||0;
+        if(qv<=0){ inp.focus(); return; }
+        const deja=CART.filter(c=>c.id===a.id).reduce((x,c)=>x+c.qte,0);
+        if(k==="rouleau"){ if(!a.entame && qv+deja>(Number(a.longueur)||0)+1e-9){ alert(t("fabTooMuch").replace("{n}", fmtL(a.longueur)+" "+u)); return; } }
+        else if(qv+deja>(Number(a.qte)||0)){ alert(t("notEnoughStock")); return; }
+        const ex=CART.find(c=>c.id===a.id);
+        if(ex) ex.qte=Math.round((ex.qte+qv)*100)/100; else CART.push({ id:a.id, qte:qv });
+        inp.value = k==="rouleau" ? "" : "1";
+        ca.textContent="✓ "+t("cartAdded"); setTimeout(()=>{ ca.textContent=t("cartAdd"); }, 1500);
+        paintCart();
+      });
+      el.appendChild(ca);
 
       if(k==="rouleau"){
         // « Terminé » : le rouleau est fini (surtout pour les rouleaux entamés). Code demandé au manager.
@@ -4132,6 +4160,103 @@
     });
   }
   $("q-stock").addEventListener("input", renderStock);
+
+  // ---- 🛒 Panier : plusieurs articles, une seule réduction, un seul reçu ----
+  let CART=[];
+  function cartLines(){
+    const out=[];
+    CART.forEach(c=>{
+      const a=STOCK.find(x=>x.id===c.id); if(!a || a.fini) return;
+      const k=kindOf(a), u=uLbl(a.unite);
+      const nom = k==="lot" ? (a.nom||"")+" ("+t("lotOf").replace("{n}", fmtL(a.lotLen)+" "+u)+")" : (a.nom||"");
+      out.push({ a, k, u, qte:c.qte, nom, qteLbl: k==="rouleau" ? fmtL(c.qte)+" "+u : String(c.qte), pu:Number(a.prix)||0, brut:Math.round((Number(a.prix)||0)*c.qte) });
+    });
+    return out;
+  }
+  function paintCart(){
+    const L=cartLines(); CART=CART.filter(c=>L.some(l=>l.a.id===c.id));
+    const bar=$("cart-bar"); if(!bar) return;
+    const n=L.length, tot=L.reduce((x,l)=>x+l.brut,0);
+    bar.hidden = n===0;
+    $("body-boutique").classList.toggle("hascart", n>0);
+    $("cart-bar-t").textContent=t("cartBar").replace("{n}", n).replace("{t}", money(tot));
+    $("cart-bar-go").textContent=t("cartOpen");
+  }
+  $("cart-bar").addEventListener("click", openCart);
+  function openCart(){
+    const L0=cartLines(); if(!L0.length){ paintCart(); return; }
+    const ov=document.createElement("div"); ov.className="tk-ov";
+    const bx=document.createElement("div"); bx.className="sc-box";
+    const h=document.createElement("h3"); h.textContent=t("cartTitle"); bx.appendChild(h);
+    const list=document.createElement("div"); bx.appendChild(list);
+    const tot=document.createElement("div"); tot.className="tot";
+    const lab=document.createElement("label"); lab.textContent=t("cartDisc"); lab.style.marginTop="12px";
+    const rmi=document.createElement("input"); rmi.type="number"; rmi.step="1"; rmi.min="0"; rmi.inputMode="decimal"; rmi.placeholder="0";
+    const close=()=>ov.remove();
+    function draw(){
+      const L=cartLines(); list.innerHTML="";
+      if(!L.length){ close(); paintCart(); return; }
+      L.forEach(l=>{
+        const r=document.createElement("div"); r.className="cart-it";
+        const nm=document.createElement("span"); nm.className="nm"; nm.textContent=l.nom+" ×"+l.qteLbl;
+        const pr=document.createElement("b"); pr.textContent=money(l.brut);
+        const x=document.createElement("button"); x.type="button"; x.textContent="✕";
+        x.addEventListener("click", ()=>{ CART=CART.filter(c=>c.id!==l.a.id); paintCart(); draw(); });
+        r.appendChild(nm); r.appendChild(pr); r.appendChild(x); list.appendChild(r);
+      });
+      const brut=L.reduce((s,l)=>s+l.brut,0);
+      const rv=parseFloat(String(rmi.value||"").replace(",", "."));
+      const remise=(isNaN(rv)||rv<=0) ? 0 : Math.min(rv, brut);
+      tot.textContent = remise>0 ? money(brut)+" − "+money(remise)+" = "+money(brut-remise) : money(brut);
+    }
+    rmi.addEventListener("input", draw);
+    bx.appendChild(lab); bx.appendChild(rmi); bx.appendChild(tot);
+    const bt=document.createElement("div"); bt.className="sc-btns";
+    const no=document.createElement("button"); no.type="button"; no.textContent=t("cartClear");
+    no.addEventListener("click", ()=>{ if(!confirm(t("cartClearQ"))) return; CART=[]; paintCart(); close(); });
+    const yes=document.createElement("button"); yes.type="button"; yes.className="ok"; yes.textContent=t("cartPay");
+    yes.addEventListener("click", async ()=>{
+      const L=cartLines(); if(!L.length){ close(); return; }
+      // vérifier encore le stock au moment d'encaisser
+      for(const l of L){
+        if(l.k==="rouleau"){ if(!l.a.entame && l.qte>(Number(l.a.longueur)||0)+1e-9){ alert(l.nom+" : "+t("fabTooMuch").replace("{n}", fmtL(l.a.longueur)+" "+l.u)); return; } }
+        else if(l.qte>(Number(l.a.qte)||0)){ alert(l.nom+" : "+t("notEnoughStock")); return; }
+      }
+      const brut=L.reduce((s,l)=>s+l.brut,0);
+      const rv=parseFloat(String(rmi.value||"").replace(",", "."));
+      const remise=(isNaN(rv)||rv<=0) ? 0 : Math.min(rv, brut);
+      if(remise>0 && isMgr()){ alert(t("scDiscCode")); if(!await askCode()) return; }
+      close();
+      // La réduction est répartie entre les articles au prorata (la dernière ligne prend l'arrondi)
+      let resteRemise=remise;
+      L.forEach((l,i)=>{
+        const a=l.a, ch={ updatedAt:serverTimestamp() };
+        if(l.k==="rouleau"){
+          if(!a.entame){ a.longueur=Math.max(0, Math.round(((Number(a.longueur)||0)-l.qte)*100)/100); ch.longueur=a.longueur; if(a.longueur<=0){ a.fini=true; ch.fini=true; } }
+          a.vendu=Math.round(((Number(a.vendu)||0)+l.qte)*100)/100; ch.vendu=a.vendu;
+        } else { a.qte=(Number(a.qte)||0)-l.qte; ch.qte=a.qte; }
+        setDoc(doc(db,"boutiques",BID,"stock",a.id), ch, { merge:true }).catch(function(){});
+        const part = i===L.length-1 ? resteRemise : Math.round(remise*l.brut/(brut||1));
+        resteRemise -= part;
+        addMouv("recette","boutique", l.brut-part, l.nom+" ×"+l.qteLbl+" ("+t("cartLbl")+(part>0 ? " · "+t("tkDiscount")+" "+money(part) : "")+")",
+          Object.assign({ articleId:a.id, qte:l.qte, panier:true }, l.k==="rouleau" ? { unite:l.u } : {}, part>0 ? { remise:part, prixInitial:l.brut } : {}, isMgr() ? { parManager:true } : {}));
+      });
+      CART=[]; renderLists(); paintCart();
+      const items=L.map(l=>({ nom:l.nom, qteLbl:l.qteLbl, brut:l.brut }));
+      const onClose = isMgr() && ownerNum() ? ()=>{
+        const LG=LANG_UI, m=tt("saleOwnerMsg",LG).replace("{shop}", (BOUTIQUE&&BOUTIQUE.name)||"").replace("{when}", nowLabel(LG))
+          .replace("{art}", items.map(x=>x.nom+" ×"+x.qteLbl).join(", ")).replace(" ×{q}", "")
+          .replace("{disc}", remise>0 ? tt("tkInitial",LG)+" : "+money(brut)+"\n"+tt("tkDiscount",LG)+" : − "+money(remise)+"\n" : "")
+          .replace("{net}", money(brut-remise)).replace("{left}", L.map(l=>l.nom+" : "+stockReste(l.a)).join(", "));
+        openWa(ownerNum(), m);
+      } : null;
+      showSaleReceipt({ items, nom:items.map(x=>x.nom).join(", "), qte:items.length, brut, remise, net:brut-remise, onClose });
+    });
+    bt.appendChild(no); bt.appendChild(yes); bx.appendChild(bt);
+    ov.appendChild(bx); ov.addEventListener("click", e=>{ if(e.target===ov) close(); });
+    document.body.appendChild(ov);
+    draw();
+  }
 
   // ---- formulaire « Nouvel article » : article / rouleau / lot ----
   let AR_KIND="article", AR_UNIT="m", AR_PHOTO=null;
@@ -5952,7 +6077,8 @@
     add("rct",t("rcTitle"));
     add("nb",nowLabel(LANG_UI));
     add("hint",t("rcAmt")); const am=add("amt",money(v.net)); am.style.marginTop="-6px";
-    row(t("tkItem"), String(v.nom).slice(0,60)+" ×"+(v.qteLbl||v.qte));
+    if(v.items) v.items.forEach(x=>row(String(x.nom).slice(0,40)+" ×"+x.qteLbl, money(x.brut)));
+    else row(t("tkItem"), String(v.nom).slice(0,60)+" ×"+(v.qteLbl||v.qte));
     if(v.remise>0){ row(t("tkInitial"), money(v.brut)); row(t("tkDiscount"), "− "+money(v.remise)); }
     row(t("tkTotal"), money(v.net));
     add("stamp",t("rcPaidAll"));
@@ -5960,7 +6086,7 @@
     ov.appendChild(d);
     const L=LANG_MSG;
     const txt=["🧾 "+tt("rcTitle",L)+" — "+((BOUTIQUE&&BOUTIQUE.name)||""), nowLabel(L),
-      tt("tkItem",L)+" : "+v.nom+" ×"+(v.qteLbl||v.qte)]
+      ].concat(v.items ? v.items.map(x=>"• "+x.nom+" ×"+x.qteLbl+" : "+money(x.brut)) : [tt("tkItem",L)+" : "+v.nom+" ×"+(v.qteLbl||v.qte)])
       .concat(v.remise>0 ? [tt("tkInitial",L)+" : "+money(v.brut), tt("tkDiscount",L)+" : − "+money(v.remise)] : [])
       .concat([tt("tkTotal",L)+" : *"+money(v.net)+"*", "✅ "+tt("rcPaidAll",L), tt("rcThanks",L)+" 🙏"]).join("\n");
     const bar=document.createElement("div"); bar.className="tk-bar";
