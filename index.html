@@ -74,19 +74,25 @@
   .lbl-row .nm{ flex:1 }
   .lbl-row input[type=number]{ width:64px; margin:0; padding:6px }
   .lbl-row input[type=checkbox]{ width:auto; margin:0 }
-  .lbl-sheet{ background:#fff; color:#000; display:grid; grid-template-columns:repeat(3, 1fr); gap:0; max-width:620px; margin:14px auto 0 }
-  .lbl{ border:1px dashed #999; padding:2mm; text-align:center; font-family:Arial, sans-serif; break-inside:avoid; page-break-inside:avoid }
-  .lbl .ls{ font-size:8pt; color:#444; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-  .lbl img{ width:26mm; height:26mm; display:block; margin:1mm auto }
-  .lbl .ln{ font-size:9pt; font-weight:700; line-height:1.15; max-height:2.3em; overflow:hidden }
-  .lbl .lp{ font-size:12pt; font-weight:800; margin-top:1mm }
+  .lbl-sheet{ background:#fff; color:#111; display:grid; grid-template-columns:repeat(auto-fill, 30mm); gap:2.5mm; justify-content:center; padding:4mm; max-width:620px; margin:14px auto 0 }
+  .lbl{ position:relative; width:30mm; height:46mm; box-sizing:border-box; border:0.25mm solid #222; border-radius:2.5mm 2.5mm 2mm 2mm;
+    padding:5.5mm 1.8mm 1.8mm; text-align:center; font-family:Arial, Helvetica, sans-serif; display:flex; flex-direction:column; align-items:center;
+    break-inside:avoid; page-break-inside:avoid; overflow:hidden }
+  .lbl::before{ content:""; position:absolute; top:1.6mm; left:50%; width:2.6mm; height:2.6mm; margin-left:-1.3mm; border:0.25mm solid #222; border-radius:50% }
+  .lbl .ls{ font-family:Georgia, "Times New Roman", serif; font-size:6pt; letter-spacing:.9pt; text-transform:uppercase; color:#8a6d1f; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
+    padding-bottom:.8mm; border-bottom:0.2mm solid #c9a94a; width:100% }
+  .lbl img{ width:17mm; height:17mm; display:block; margin:1.4mm auto 1mm; image-rendering:pixelated }
+  .lbl .ln{ font-size:6.5pt; font-weight:600; line-height:1.2; max-height:2.4em; overflow:hidden; color:#222 }
+  .lbl .lp{ font-family:Georgia, "Times New Roman", serif; font-size:10pt; font-weight:700; margin-top:auto; letter-spacing:.2pt }
   .lbl-bar{ display:flex; gap:10px; max-width:520px; margin:12px auto 0 }
   .lbl-bar button{ flex:1; margin:0 }
   @media print{
     body.printlabels *{ visibility:hidden !important }
     body.printlabels .lbl-sheet, body.printlabels .lbl-sheet *{ visibility:visible !important }
-    body.printlabels .lbl-ov{ position:absolute; inset:auto; left:0; top:0; background:#fff; padding:0; overflow:visible }
-    body.printlabels .lbl-sheet{ position:absolute; left:0; top:0; margin:0; max-width:none; width:100% }
+    html:has(body.printlabels), body.printlabels{ background:#fff !important }
+    body.printlabels .lbl-ov{ position:absolute; inset:auto; left:0; top:0; width:100%; background:#fff; padding:0; overflow:visible }
+    body.printlabels .lbl-sheet{ position:absolute; left:0; top:0; margin:0; max-width:none; width:200mm; justify-content:start; padding:5mm }
+    body.printlabels .lbl{ -webkit-print-color-adjust:exact; print-color-adjust:exact }
   }
   #body-boutique.searching > .card{ display:none }
   .art-edit{ margin-top:11px; padding:11px; border:1px solid var(--line2); border-radius:10px; }
@@ -4355,7 +4361,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
 
   // ---- 🏷️ Étiquettes QR + 📷 scan à la caisse ----
   // Le code QR ne contient que l'identifiant de l'article : le prix lu est toujours celui du stock, jamais celui imprimé.
-  const qrArt = a => "SPA-"+a.id+" | "+(a.nom||"")+" | "+money(a.prix);
+  const qrArt = a => "SPA-"+a.id;   // court = code QR moins serré, plus facile à lire sur une petite étiquette
   function artFromQr(val){
     const m=String(val||"").match(/SPA-([A-Za-z0-9]{8,40})/); if(!m) return null;
     return STOCK.find(x=>x.id===m[1]) || { _absent:true };
