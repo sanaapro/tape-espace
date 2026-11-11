@@ -63,6 +63,13 @@
   .secttl{ font-family:var(--serif); font-size:16px; color:var(--gold); font-weight:700;
     margin:22px 0 2px; padding-bottom:9px; border-bottom:1px solid var(--line); }
   .selljs{ display:flex; gap:8px; margin-top:11px; }
+  .q-stock-wrap{ position:sticky; top:0; z-index:5; background:var(--bg,#0E0E0F); padding:10px 0 6px; margin-top:6px; }
+  .q-stock-wrap input{ margin:0 }
+  #body-boutique.searching > .card{ display:none }
+  .art-edit{ margin-top:11px; padding:11px; border:1px solid var(--line2); border-radius:10px; }
+  .art-edit .ae-btns{ display:flex; gap:8px; margin-top:10px; }
+  .art-edit .ae-btns button{ flex:1; margin:0; }
+  .rec .ed{ margin-top:11px; width:100%; padding:9px; border:1px solid var(--line2); border-radius:8px; background:none; color:var(--gold); font-size:14px; }
   #ar-kind, #ar-kind-hint{ display:none }
   body.shop-tissu #ar-kind{ display:flex } body.shop-tissu #ar-kind-hint{ display:block }
   body.shop-tissu #ar-kind button[data-k="article"]{ display:none }
@@ -1154,6 +1161,7 @@
         <div class="stat"><div class="n" id="b-qte">0</div><div class="l" data-i18n="statInStock">En stock</div></div>
         <div class="stat"><div class="n mgr-mask" id="b-rec">0</div><div class="l" data-i18n="statTodaySales">Recette du jour</div></div>
       </div>
+      <div class="q-stock-wrap"><input id="q-stock" type="search" autocomplete="off" data-i18n-ph="stockSearchPh" placeholder="Chercher un article ou un tissu…"></div>
       <div class="card">
         <h2 data-i18n="quickExpenseShop">Dépense rapide — Boutique</h2>
         <input id="db-cat" type="text" data-i18n-ph="expCatShopPh" placeholder="Catégorie (ex. réapprovisionnement)">
@@ -1204,7 +1212,6 @@
         <div style="margin-top:10px;text-align:right;font-size:11.5px;color:var(--muted);opacity:.85">📷 <span id="ar-ia-state"></span> · <button type="button" id="ar-ia-toggle" class="flink-sm" style="font-size:11.5px"></button></div>
       </div>
       <div id="st-title" class="secttl">Stock de la boutique</div>
-      <input id="q-stock" type="search" data-i18n-ph="stockSearchPh" placeholder="Chercher un article ou un tissu…" style="margin:0 0 10px">
       <div id="stock-list"></div>
       <div id="stock-empty" class="empty" data-i18n="noStock" hidden>Aucun article en stock.</div>
       </div>
@@ -1911,6 +1918,7 @@
       shopStock:"Stock de la boutique", noStock:"Aucun article en stock.",
       sell:"Vendre", sellDiscPh:"Réduction", scTitle:"Confirmer la vente", scOk:"✓ Confirmer la vente", scQte:"Quantité", scPu:"Prix unitaire", scDiscCode:"Une réduction demande le code du propriétaire.", saleOwnerMsg:"🛍️ Vente boutique — {shop}\n{when}\nArticle : {art} ×{q}\n{disc}Montant encaissé : *{net}*\nStock restant : {left}\nFaite sur le téléphone du manager.", notEnoughStock:"Quantité supérieure au stock disponible.",
       confirmDeleteArt:"Retirer cet article du stock ?",
+      editArt:"✏️ Corriger le nom ou le prix", editSave:"✓ Enregistrer", editCancel:"Annuler", editDup:"Un autre article porte déjà ce nom.",
       payment:"Paiement", paid:"Payé", due:"Reste à payer", cashIn:"Encaisser",
       cashedIn:"Encaissé :", amountRequired:"Indiquez un montant.",
       balance:"Bilan", income:"Recettes", expenses:"Dépenses", netBalance:"Solde",
@@ -2205,6 +2213,7 @@
       shopStock:"Shop stock", noStock:"No item in stock.",
       sell:"Sell", sellDiscPh:"Discount", scTitle:"Confirm the sale", scOk:"✓ Confirm the sale", scQte:"Quantity", scPu:"Unit price", scDiscCode:"A discount needs the owner's code.", saleOwnerMsg:"🛍️ Shop sale — {shop}\n{when}\nItem: {art} ×{q}\n{disc}Amount received: *{net}*\nStock left: {left}\nMade on the manager's phone.", notEnoughStock:"Quantity higher than available stock.",
       confirmDeleteArt:"Remove this item from stock?",
+      editArt:"✏️ Correct the name or price", editSave:"✓ Save", editCancel:"Cancel", editDup:"Another item already has this name.",
       payment:"Payment", paid:"Paid", due:"Left to pay", cashIn:"Collect",
       cashedIn:"Collected:", amountRequired:"Enter an amount.",
       balance:"Balance", income:"Income", expenses:"Expenses", netBalance:"Net",
@@ -3983,6 +3992,7 @@
     $("stock-empty").hidden = live.length>0;
     if($("ap-sales-n")){ $("ap-sales-n").textContent=nSales; $("ap-sales-d").textContent=recAll; $("ap-stock").textContent=shopAll.length; }
     const q=normNom(($("q-stock")||{}).value||"");
+    $("body-boutique").classList.toggle("searching", !!q);
     live.filter(a=>!q || normNom((a.nom||"")+" "+(a.type||"")).indexOf(q)>-1).forEach(a=>{
       const k=kindOf(a), u=uLbl(a.unite);
       const el=document.createElement("div"); el.className="rec";
@@ -4069,6 +4079,44 @@
         });
         el.appendChild(fin);
       }
+      // ✏️ Corriger le nom ou le prix (le prix demande le code du propriétaire sur le téléphone du manager)
+      const ed=document.createElement("button"); ed.type="button"; ed.className="ed"; ed.textContent=t("editArt");
+      ed.addEventListener("click", ()=>{
+        if(el.querySelector(".art-edit")) return;
+        ed.hidden=true;
+        const f=document.createElement("div"); f.className="art-edit";
+        const l1=document.createElement("label"); l1.textContent=t("artName");
+        const iN=document.createElement("input"); iN.type="text"; iN.value=a.nom||"";
+        const l2=document.createElement("label"); l2.textContent = k==="rouleau" ? t("fabPrixU").replace("{u}", u) : (k==="lot" ? t("fabPrixLot") : t("artPrix"));
+        const iP=document.createElement("input"); iP.type="number"; iP.step="1"; iP.inputMode="decimal"; iP.value=Number(a.prix)||0;
+        const bx=document.createElement("div"); bx.className="ae-btns";
+        const bc=document.createElement("button"); bc.type="button"; bc.className="ghost"; bc.textContent=t("editCancel");
+        const bs=document.createElement("button"); bs.type="button"; bs.className="primary"; bs.textContent=t("editSave");
+        bc.addEventListener("click", ()=>{ f.remove(); ed.hidden=false; });
+        bs.addEventListener("click", async ()=>{
+          const nom=String(iN.value||"").trim();
+          if(!nom){ iN.focus(); return; }
+          const pv=parseFloat(String(iP.value||"").replace(",", "."));
+          if(isNaN(pv) || pv<0){ iP.focus(); return; }
+          const nomChange = nom!==(a.nom||""), prixChange = pv!==(Number(a.prix)||0);
+          if(!nomChange && !prixChange){ f.remove(); ed.hidden=false; return; }
+          if(nomChange){
+            const dup=STOCK.find(x=>x.id!==a.id && !x.fini && x.usage!=="atelier" && normNom(x.nom||"")===normNom(nom));
+            if(dup){ alert(t("editDup")); iN.focus(); return; }
+          }
+          if(prixChange && isMgr() && !await askCode()) return;
+          const ch={ updatedAt:serverTimestamp() };
+          if(nomChange){ ch.nom=nom; a.nom=nom; }
+          if(prixChange){ ch.prix=pv; a.prix=pv; }
+          setDoc(doc(db,"boutiques",BID,"stock",a.id), ch, { merge:true }).catch(function(){});
+          renderLists();
+        });
+        bx.appendChild(bc); bx.appendChild(bs);
+        f.appendChild(l1); f.appendChild(iN); f.appendChild(l2); f.appendChild(iP); f.appendChild(bx);
+        el.insertBefore(f, ed.nextSibling);
+        iN.focus();
+      });
+      el.appendChild(ed);
       const rm=document.createElement("button"); rm.className="rm"; rm.textContent=t("remove");
       rm.addEventListener("click", async ()=>{
         if(!await askCode()) return;
