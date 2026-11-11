@@ -41,6 +41,7 @@
   .chips::-webkit-scrollbar{ display:none }
   .chip{ flex:none; border:1px solid var(--line); background:none; color:var(--muted); border-radius:999px; padding:8px 15px; font:inherit; font-size:14px; cursor:pointer }
   .chip.on{ background:var(--gold); border-color:var(--gold); color:#16130B; font-weight:600 }
+  #q{ width:100%; background:var(--panel); color:var(--ink); border:1px solid var(--gold); border-radius:12px; padding:13px 14px; font:inherit; font-size:16px; margin:4px 0 12px }
   select{ width:100%; background:var(--panel); color:var(--ink); border:1px solid var(--line); border-radius:10px; padding:11px 12px; font:inherit; margin-bottom:16px }
 
   .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px }
@@ -201,6 +202,7 @@
   <h1 id="h1"></h1>
   <p class="lead" id="lead"></p>
 
+  <input id="q" type="search" autocomplete="off" enterkeyhint="search">
   <div class="chips" id="chips"></div>
   <div class="chips" id="styles"></div>
   <select id="quartier" aria-label="Neighbourhood"></select>
@@ -286,7 +288,7 @@
   var BASE = "https://firestore.googleapis.com/v1/projects/sanaapro-app/databases/(default)/documents/";
   var KEY = "AIzaSyCqfAGGU7yFs_QYg70u3e5cNYPXQjRHzsI";
   var T = {
-    en:{ h1:"Tailors of The Gambia, in one catalogue.", lead:"Browse designs from workshops near you, then order directly from the tailor on WhatsApp.",
+    en:{ searchPh:"🔍 Search: linen shirt, boubou, perfume…", noMatch:"Nothing found for “{q}” yet. Try another word.", h1:"Tailors of The Gambia, in one catalogue.", lead:"Browse designs from workshops near you, then order directly from the tailor on WhatsApp.",
          all:"All", femme:"Women", homme:"Men", enfant:"Children", allShops:"All workshops",
          allStyles:"All styles", allAreas:"All neighbourhoods", S:{robe:"Dress", boubou:"Boubou", ensemble:"Outfit / suit", chemise:"Shirt", pantalon:"Trousers", jupe:"Skirt", kaftan:"Kaftan", ceremonie:"Wedding / ceremony", uniforme:"Uniform", autre:"Other"},
          loading:"Loading designs…", empty:"No designs here yet.", net:"Can't reach the catalogue. Check your connection and try again.",
@@ -309,7 +311,7 @@
          mSeeN:"📷 Photos:", mSee1:"📷 Photo:",
          shH:"Selection of {n} designs", shH1:"Selected design", shLead:"Designs chosen by a client on the SanaaPro catalogue.", shBack:"‹ Catalogue",
          shNone:"These designs are no longer in the catalogue.", shTotal:"Indicative total" },
-    fr:{ h1:"Les couturiers de Gambie, dans un seul catalogue.", lead:"Parcourez les modèles des ateliers près de chez vous, puis commandez directement au couturier sur WhatsApp.",
+    fr:{ searchPh:"🔍 Chercher : chemise en lin, boubou, parfum…", noMatch:"Rien trouvé pour « {q} » pour l'instant. Essayez un autre mot.", h1:"Les couturiers de Gambie, dans un seul catalogue.", lead:"Parcourez les modèles des ateliers près de chez vous, puis commandez directement au couturier sur WhatsApp.",
          all:"Tous", femme:"Femme", homme:"Homme", enfant:"Enfant", allShops:"Tous les ateliers",
          allStyles:"Tous les styles", allAreas:"Tous les quartiers", S:{robe:"Robe", boubou:"Boubou", ensemble:"Ensemble / complet", chemise:"Chemise", pantalon:"Pantalon", jupe:"Jupe", kaftan:"Kaftan", ceremonie:"Mariage / cérémonie", uniforme:"Uniforme", autre:"Autre"},
          loading:"Chargement des modèles…", empty:"Aucun modèle ici pour l'instant.", net:"Impossible de joindre le catalogue. Vérifiez votre connexion puis réessayez.",
@@ -546,14 +548,46 @@
   }
   function load(){
     if(ONLY) return loadShop();
-    if(LOADING) return; LOADING = true; paintState();
-    var url = BASE + "catalogue?pageSize=24&orderBy=createdMs%20desc&key=" + KEY + (NEXT ? "&pageToken=" + encodeURIComponent(NEXT) : "");
-    fetch(url, { cache:"no-store" }).then(function(r){ if(!r.ok) throw 0; return r.json(); })
+    if(LOADING) return Promise.resolve(); LOADING = true; paintState();
+    var url = BASE + "catalogue?pageSize=" + (Q ? 100 : 24) + "&orderBy=createdMs%20desc&key=" + KEY + (NEXT ? "&pageToken=" + encodeURIComponent(NEXT) : "");
+    return fetch(url, { cache:"no-store" }).then(function(r){ if(!r.ok) throw 0; return r.json(); })
     .then(function(j){
       (j.documents || []).forEach(function(d){ var o = parse(d); if(!hiddenShop(o)) ITEMS.push(o); });
       NEXT = j.nextPageToken || null; FAILED = false;
     }).catch(function(){ FAILED = true; })
     .then(function(){ LOADING = false; paint(); });
+  }
+
+  // ---- Recherche dans tout le catalogue : « chemise lin », « linen shirt », « parfum »… (sans accents, français ou anglais)
+  var Q = "", QT = null;
+  function nrm(x){ return String(x||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim(); }
+  var SYN = { chemise:["shirt"], shirt:["chemise"], lin:["linen"], linen:["lin"], pantalon:["trouser","pant"], trouser:["pantalon"], pant:["pantalon"],
+    robe:["dress"], dress:["robe"], jupe:["skirt"], skirt:["jupe"], veste:["jacket"], jacket:["veste"], costume:["suit"], suit:["costume","ensemble"],
+    ensemble:["outfit","suit"], outfit:["ensemble"], boubou:["bubu"], bubu:["boubou"], kaftan:["caftan","haftaan","kaftaan"], caftan:["kaftan"],
+    parfum:["perfume"], perfume:["parfum"], sac:["bag"], bag:["sac"], chaussure:["shoe"], shoe:["chaussure"], mariage:["wedding"], wedding:["mariage"],
+    enfant:["child","kid"], child:["enfant"], kid:["enfant"], homme:["men","man"], men:["homme"], man:["homme"], femme:["women","woman"], women:["femme"], woman:["femme"],
+    brode:["embroider"], embroider:["brode"], dentelle:["lace"], lace:["dentelle"], soie:["silk"], silk:["soie"], coton:["cotton"], cotton:["coton"],
+    blanc:["white"], white:["blanc","blanche"], noir:["black"], black:["noir","noire"], bleu:["blue"], blue:["bleu"], rouge:["red"], red:["rouge"], vert:["green"], green:["vert","verte"] };
+  function stem(w){ w = w.replace(/(es|s)$/, ""); if(w.length > 4) w = w.replace(/e$/, ""); return w; }
+  function matchQ(o, t){
+    var hay = " " + nrm([o.titre, o.desc, o.description, o.boutique, o.quartier, o.style, (t.S && t.S[o.style]) || "", o.genre, o.tissu, o.couleur].join(" ")) + " ";
+    var toks = hay.split(" ").map(stem).join(" ");
+    var STOP = { en:1, de:1, du:1, des:1, d:1, la:1, le:1, les:1, l:1, a:1, au:1, aux:1, pour:1, et:1, un:1, une:1, with:1, in:1, of:1, the:1, and:1, for:1, avec:1 };
+    var words = nrm(Q).split(" ").filter(function(w){ return w && !STOP[w]; });
+    return words.every(function(w){
+      var alts = [w].concat(SYN[stem(w)] || SYN[w] || []);
+      return alts.some(function(a){ var sa = stem(nrm(a)); return sa && (hay.indexOf(nrm(a)) !== -1 || toks.indexOf(" " + sa) !== -1); });
+    });
+  }
+  // Pour chercher dans TOUT le catalogue, on charge les pages restantes (au plus ~2 000 modèles)
+  function loadAllForSearch(n){
+    n = n || 0;
+    if(ONLY || !Q || !NEXT || n > 20) return;
+    var p = load(); if(p && p.then) p.then(function(){ loadAllForSearch(n + 1); });
+  }
+  function onSearch(){
+    Q = $("q").value.trim(); paint();
+    clearTimeout(QT); QT = setTimeout(function(){ loadAllForSearch(0); }, 300);
   }
 
   function paintState(){
@@ -569,6 +603,7 @@
     $("foot").textContent = t.foot; $("close").textContent = t.back; $("s-cta-t").textContent = t.order;
     $("more").textContent = t.more;
     $("allshops").hidden = !ONLY; $("allshops").textContent = t.seeAll;
+    $("q").placeholder = t.searchPh;
     if(ONLY && ITEMS.length){ $("h1").textContent = ITEMS[0].boutique || t.h1; $("lead").textContent = (ITEMS[0].quartier ? ITEMS[0].quartier + " · " : "") + t.shopLead; }
 
     var chips = $("chips"); chips.innerHTML = "";
@@ -646,6 +681,7 @@
     var NOW = Date.now();
     var list = ITEMS.filter(function(o){
       if(o.subExpMs && Number(o.subExpMs) < NOW) return false;
+      if(Q && !matchQ(o, t)) return false;
       return (GENRE==="all" || o.genre===GENRE) && (!SHOP || o.bid===SHOP)
         && (!STYLE || o.style===STYLE) && (!AREA || (o.quartier||"").trim().toLowerCase()===AREA);
     });
@@ -669,7 +705,7 @@
     var st = $("state");
     if(FAILED && !ITEMS.length){ st.textContent = t.net; st.hidden = false; }
     else if(LOADING && !ITEMS.length){ st.textContent = t.loading; st.hidden = false; }
-    else if(!list.length){ st.textContent = t.empty; st.hidden = false; }
+    else if(!list.length){ st.textContent = Q ? t.noMatch.replace("{q}", Q) : t.empty; st.hidden = false; }
     else st.hidden = true;
     $("more").hidden = !NEXT || LOADING;
     if(CURRENT) fillSheet(CURRENT);
@@ -758,6 +794,7 @@
   });
   $("shop").addEventListener("change", function(){ SHOP = $("shop").value; paint(); });
   $("quartier").addEventListener("change", function(){ AREA = $("quartier").value; paint(); });
+  $("q").addEventListener("input", onSearch);
   $("more").addEventListener("click", load);
   $("lang").addEventListener("click", function(){
     LANG = LANG==="en" ? "fr" : "en";
