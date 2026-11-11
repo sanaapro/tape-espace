@@ -74,16 +74,16 @@
   .lbl-row .nm{ flex:1 }
   .lbl-row input[type=number]{ width:64px; margin:0; padding:6px }
   .lbl-row input[type=checkbox]{ width:auto; margin:0 }
-  .lbl-sheet{ background:#fff; color:#111; display:grid; grid-template-columns:repeat(auto-fill, 30mm); gap:2.5mm; justify-content:center; padding:4mm; max-width:620px; margin:14px auto 0 }
-  .lbl{ position:relative; width:30mm; height:46mm; box-sizing:border-box; border:0.25mm solid #222; border-radius:2.5mm 2.5mm 2mm 2mm;
-    padding:5.5mm 1.8mm 1.8mm; text-align:center; font-family:Arial, Helvetica, sans-serif; display:flex; flex-direction:column; align-items:center;
+  .lbl-sheet{ background:#fff; color:#111; display:grid; grid-template-columns:repeat(auto-fill, 50mm); gap:4mm; justify-content:center; padding:5mm; max-width:620px; margin:14px auto 0 }
+  .lbl{ position:relative; width:50mm; height:90mm; box-sizing:border-box; border:0.3mm solid #222; border-radius:4mm 4mm 3mm 3mm;
+    padding:10mm 3.5mm 4mm; text-align:center; font-family:Arial, Helvetica, sans-serif; display:flex; flex-direction:column; align-items:center;
     break-inside:avoid; page-break-inside:avoid; overflow:hidden }
-  .lbl::before{ content:""; position:absolute; top:1.6mm; left:50%; width:2.6mm; height:2.6mm; margin-left:-1.3mm; border:0.25mm solid #222; border-radius:50% }
-  .lbl .ls{ font-family:Georgia, "Times New Roman", serif; font-size:6pt; letter-spacing:.9pt; text-transform:uppercase; color:#8a6d1f; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
-    padding-bottom:.8mm; border-bottom:0.2mm solid #c9a94a; width:100% }
-  .lbl img{ width:17mm; height:17mm; display:block; margin:1.4mm auto 1mm; image-rendering:pixelated }
-  .lbl .ln{ font-size:6.5pt; font-weight:600; line-height:1.2; max-height:2.4em; overflow:hidden; color:#222 }
-  .lbl .lp{ font-family:Georgia, "Times New Roman", serif; font-size:10pt; font-weight:700; margin-top:auto; letter-spacing:.2pt }
+  .lbl::before{ content:""; position:absolute; top:3mm; left:50%; width:4mm; height:4mm; margin-left:-2mm; border:0.3mm solid #222; border-radius:50% }
+  .lbl .ls{ font-family:Georgia, "Times New Roman", serif; font-size:9pt; letter-spacing:1.6pt; text-transform:uppercase; color:#8a6d1f; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
+    padding-bottom:1.5mm; border-bottom:0.3mm solid #c9a94a; width:100% }
+  .lbl img{ width:30mm; height:30mm; display:block; margin:4mm auto 3mm; image-rendering:pixelated }
+  .lbl .ln{ font-size:9.5pt; font-weight:600; line-height:1.25; max-height:3.75em; overflow:hidden; color:#222 }
+  .lbl .lp{ font-family:Georgia, "Times New Roman", serif; font-size:17pt; font-weight:700; margin-top:auto; padding-top:2mm; border-top:0.3mm solid #c9a94a; width:100% }
   .lbl-bar{ display:flex; gap:10px; max-width:520px; margin:12px auto 0 }
   .lbl-bar button{ flex:1; margin:0 }
   @media print{
@@ -91,7 +91,7 @@
     body.printlabels .lbl-sheet, body.printlabels .lbl-sheet *{ visibility:visible !important }
     html:has(body.printlabels), body.printlabels{ background:#fff !important }
     body.printlabels .lbl-ov{ position:absolute; inset:auto; left:0; top:0; width:100%; background:#fff; padding:0; overflow:visible }
-    body.printlabels .lbl-sheet{ position:absolute; left:0; top:0; margin:0; max-width:none; width:200mm; justify-content:start; padding:5mm }
+    body.printlabels .lbl-sheet{ position:absolute; left:0; top:0; margin:0; max-width:none; width:200mm; justify-content:center; padding:6mm 0 }
     body.printlabels .lbl{ -webkit-print-color-adjust:exact; print-color-adjust:exact }
   }
   #body-boutique.searching > .card{ display:none }
@@ -1960,7 +1960,7 @@
       shopStock:"Stock de la boutique", noStock:"Aucun article en stock.",
       sell:"Vendre", sellDiscPh:"Réduction", scTitle:"Confirmer la vente", scOk:"✓ Confirmer la vente", scQte:"Quantité", scPu:"Prix unitaire", scDiscCode:"Une réduction demande le code du propriétaire.", saleOwnerMsg:"🛍️ Vente boutique — {shop}\n{when}\nArticle : {art} ×{q}\n{disc}Montant encaissé : *{net}*\nStock restant : {left}\nFaite sur le téléphone du manager.", notEnoughStock:"Quantité supérieure au stock disponible.",
       confirmDeleteArt:"Retirer cet article du stock ?",
-      qrScanBtn:"📷 Scanner", qrCamHint:"Placez l'étiquette QR de l'article devant la caméra", qrNotOurs:"Ce code n'est pas une étiquette SanaaPro.", qrUnknown:"Cet article n'est plus dans votre stock.", qrHowMuch:"{n} : combien de {u} ?", qrAdded:"✓ Ajouté au panier : {a}\nTotal du panier : {t}\n\nOK = scanner l'article suivant\nAnnuler = voir le panier et encaisser", lblBtn:"🏷️ Imprimer les étiquettes QR", lblTitle:"🏷️ Étiquettes QR", lblHint:"Une étiquette par pièce, avec le nom, le prix et un code QR. À la caisse, touchez « 📷 Scanner » : l'article entre directement dans le panier.", lblAll:"Tout cocher", lblMake:"Préparer les étiquettes", lblWait:"Préparation…", lblTooMany:"Trop d'étiquettes d'un coup (400 au plus). Décochez des articles.", lblReady:"{n} étiquette(s) prêtes. Touchez Imprimer, ou choisissez « Enregistrer en PDF » pour les envoyer à un imprimeur.",
+      qrScanBtn:"📷 Scanner", qrCamHint:"Placez l'étiquette QR de l'article devant la caméra", qrNotOurs:"Ce code n'est pas une étiquette SanaaPro.", qrUnknown:"Cet article n'est plus dans votre stock.", qrHowMuch:"{n} : combien de {u} ?", qrAdded:"✓ Ajouté au panier : {a}\nTotal du panier : {t}\n\nOK = scanner l'article suivant\nAnnuler = voir le panier et encaisser", lblBtn:"🏷️ Imprimer les étiquettes QR", lblTitle:"🏷️ Étiquettes QR", lblHint:"Une étiquette par pièce, avec le nom, le prix et un code QR. À la caisse, touchez « 📷 Scanner » : l'article entre directement dans le panier.", lblAll:"Tout cocher", lblMake:"Préparer les étiquettes", lblWait:"Préparation…", lblTooMany:"Trop d'étiquettes d'un coup (400 au plus). Décochez des articles.", lblReady:"{n} étiquette(s) prêtes (5 × 9 cm, 9 par feuille A4). Touchez Imprimer, ou choisissez « Enregistrer en PDF » pour les envoyer à un imprimeur.",
       rnBtn:"🔤 Ranger {n} nom(s) : le genre d'article en premier", rnTitle:"🔤 Ranger les noms", rnHint:"Le genre d'article passe en premier (chemise, robe, sac…) pour que les articles du même genre se suivent. Décochez ceux que vous voulez garder tels quels.", rnGo:"✓ Ranger les noms cochés", rnDone:"{n} nom(s) rangé(s).",
       cartAdd:"🛒 Ajouter au panier", cartAdded:"Ajouté au panier", cartBar:"🛒 {n} article(s) · {t}", cartOpen:"Encaisser ›", cartTitle:"🛒 Panier de la cliente", cartDisc:"Réduction sur tout le panier (facultatif)", cartPay:"✓ Encaisser le panier", cartClear:"Vider", cartClearQ:"Vider le panier ?", cartLbl:"panier",
       editArt:"✏️ Corriger le nom ou le prix", editSave:"✓ Enregistrer", editCancel:"Annuler", editDup:"Un autre article porte déjà ce nom.",
@@ -2258,7 +2258,7 @@
       shopStock:"Shop stock", noStock:"No item in stock.",
       sell:"Sell", sellDiscPh:"Discount", scTitle:"Confirm the sale", scOk:"✓ Confirm the sale", scQte:"Quantity", scPu:"Unit price", scDiscCode:"A discount needs the owner's code.", saleOwnerMsg:"🛍️ Shop sale — {shop}\n{when}\nItem: {art} ×{q}\n{disc}Amount received: *{net}*\nStock left: {left}\nMade on the manager's phone.", notEnoughStock:"Quantity higher than available stock.",
       confirmDeleteArt:"Remove this item from stock?",
-      qrScanBtn:"📷 Scan", qrCamHint:"Hold the item's QR label in front of the camera", qrNotOurs:"This code is not a SanaaPro label.", qrUnknown:"This item is no longer in your stock.", qrHowMuch:"{n}: how many {u}?", qrAdded:"✓ Added to basket: {a}\nBasket total: {t}\n\nOK = scan the next item\nCancel = see the basket and take payment", lblBtn:"🏷️ Print QR labels", lblTitle:"🏷️ QR labels", lblHint:"One label per piece, with the name, price and a QR code. At the till, tap “📷 Scan”: the item goes straight into the basket.", lblAll:"Tick all", lblMake:"Prepare the labels", lblWait:"Preparing…", lblTooMany:"Too many labels at once (400 max). Untick some items.", lblReady:"{n} label(s) ready. Tap Print, or choose “Save as PDF” to send them to a printer shop.",
+      qrScanBtn:"📷 Scan", qrCamHint:"Hold the item's QR label in front of the camera", qrNotOurs:"This code is not a SanaaPro label.", qrUnknown:"This item is no longer in your stock.", qrHowMuch:"{n}: how many {u}?", qrAdded:"✓ Added to basket: {a}\nBasket total: {t}\n\nOK = scan the next item\nCancel = see the basket and take payment", lblBtn:"🏷️ Print QR labels", lblTitle:"🏷️ QR labels", lblHint:"One label per piece, with the name, price and a QR code. At the till, tap “📷 Scan”: the item goes straight into the basket.", lblAll:"Tick all", lblMake:"Prepare the labels", lblWait:"Preparing…", lblTooMany:"Too many labels at once (400 max). Untick some items.", lblReady:"{n} label(s) ready (5 × 9 cm, 9 per A4 sheet). Tap Print, or choose “Save as PDF” to send them to a printer shop.",
       rnBtn:"🔤 Tidy {n} name(s): item type first", rnTitle:"🔤 Tidy the names", rnHint:"The item type comes first (shirt, dress, bag…) so items of the same type sit together. Untick any you want to keep as they are.", rnGo:"✓ Tidy the ticked names", rnDone:"{n} name(s) tidied.",
       cartAdd:"🛒 Add to basket", cartAdded:"Added to basket", cartBar:"🛒 {n} item(s) · {t}", cartOpen:"Checkout ›", cartTitle:"🛒 Customer's basket", cartDisc:"Discount on the whole basket (optional)", cartPay:"✓ Take payment", cartClear:"Empty", cartClearQ:"Empty the basket?", cartLbl:"basket",
       editArt:"✏️ Correct the name or price", editSave:"✓ Save", editCancel:"Cancel", editDup:"Another item already has this name.",
