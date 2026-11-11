@@ -1946,7 +1946,7 @@
       vtShareT:"Envoyer mon catalogue aux clientes", vtShareBtn:"Partager sur WhatsApp", vtCopy:"Copier le lien",
       vtShareH:"Le lien ouvre le catalogue directement sur vos modèles. Envoyez-le à une cliente, à une liste de diffusion ou mettez-le en statut.",
       vtCopied:"Lien copié. Collez-le dans votre statut ou un message.",
-      vtShareMsg:"Bonjour ! Découvrez les modèles de {shop} en photo 👗\nChoisissez celui qui vous plaît et commandez directement sur WhatsApp :\n{url}",
+      vtShareMsg:"👗 Les modèles de {shop} :\n{url}",
       tabStaff:"Salariés", tabVisitors:"Visiteurs", tabFinances:"Finances", tabSettings:"Réglages", toSchool:"École", schoolOpen:"Ouvrir SanaaPro School", schoolCardTxt:"Vous avez aussi une école ? Ouvrez l'espace école : élèves, présence, notes, programme et finances de l'école, sans rien mélanger avec l'atelier.",
       statReady:"Prêtes", statDue:"À encaisser",
       statArticles:"Articles", statInStock:"En stock", statTodaySales:"Recette du jour",
@@ -2244,7 +2244,7 @@
       vtShareT:"Send my catalogue to clients", vtShareBtn:"Share on WhatsApp", vtCopy:"Copy the link",
       vtShareH:"The link opens the catalogue straight on your designs. Send it to a client, a broadcast list, or post it as your status.",
       vtCopied:"Link copied. Paste it in your status or a message.",
-      vtShareMsg:"Hello! See {shop}'s designs in photos 👗\nPick the one you like and order directly on WhatsApp:\n{url}",
+      vtShareMsg:"👗 {shop}'s designs:\n{url}",
       tabStaff:"Staff", tabVisitors:"Visitors", tabFinances:"Finances", tabSettings:"Settings", toSchool:"School", schoolOpen:"Open SanaaPro School", schoolCardTxt:"Do you also run a school? Open the school space: students, attendance, marks, programme and school finances, kept apart from the workshop.",
       statReady:"Ready", statDue:"To collect",
       statArticles:"Items", statInStock:"In stock", statTodaySales:"Today's sales",
@@ -5666,7 +5666,8 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       img.src = url;
     });
   }
-  function vitrineUrl(){ return "https://sanaapro.github.io/tape-espace/catalogue.html?a=" + encodeURIComponent((BOUTIQUE && BOUTIQUE.slug) || BID || ""); }
+  // Lien court et léger (petit aperçu WhatsApp) : sanaapro.github.io/style/?a=… renvoie vers le catalogue
+  function vitrineUrl(){ return "https://sanaapro.github.io/style/?a=" + encodeURIComponent((BOUTIQUE && BOUTIQUE.slug) || BID || ""); }
   function vitrineMsg(){
     return t("vtShareMsg").replace("{shop}", (BOUTIQUE && BOUTIQUE.name) || "SanaaPro").replace("{url}", vitrineUrl());
   }
