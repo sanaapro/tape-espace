@@ -294,7 +294,7 @@
   body.mgr #cmd-month, body.mgr #pz-tarifs, body.mgr #pz-tedit, body.mgr #pt-addstaff, body.mgr #sub-card,
   body.mgr #pane-finances, body.mgr #pane-staff, body.mgr #pane-reglages{ display:none !important; }
   body.mgr #go-ecole{ display:none !important; }
-  body.mgr #ar-card, body.mgr #stock-list .rm, body.mgr #stock-list .ed, body.mgr #stock-list .art-edit, body.mgr #mat-list .rm{ display:none !important; }
+  body.mgr #st-rename, body.mgr #ar-card, body.mgr #stock-list .rm, body.mgr #stock-list .ed, body.mgr #stock-list .art-edit, body.mgr #mat-list .rm{ display:none !important; }
   .sc-box{ background:var(--panel); border:1px solid var(--gold); border-radius:16px; padding:18px 16px; width:100%; max-width:340px; color:var(--ink,#eee) }
   .sc-box h3{ margin:0 0 12px; font-size:19px; color:var(--gold) }
   .sc-box .rw{ display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px solid var(--line2); font-size:16px }
@@ -1222,6 +1222,7 @@
         <div style="margin-top:10px;text-align:right;font-size:11.5px;color:var(--muted);opacity:.85">📷 <span id="ar-ia-state"></span> · <button type="button" id="ar-ia-toggle" class="flink-sm" style="font-size:11.5px"></button></div>
       </div>
       <div id="st-title" class="secttl">Stock de la boutique</div>
+      <button type="button" id="st-rename" class="flink-sm" hidden style="margin:8px 0 10px;font-size:13px;color:var(--gold)"></button>
       <div id="stock-list"></div>
       <div id="stock-empty" class="empty" data-i18n="noStock" hidden>Aucun article en stock.</div>
       <button type="button" id="cart-bar" hidden><span id="cart-bar-t"></span><b id="cart-bar-go"></b></button>
@@ -1929,6 +1930,7 @@
       shopStock:"Stock de la boutique", noStock:"Aucun article en stock.",
       sell:"Vendre", sellDiscPh:"Réduction", scTitle:"Confirmer la vente", scOk:"✓ Confirmer la vente", scQte:"Quantité", scPu:"Prix unitaire", scDiscCode:"Une réduction demande le code du propriétaire.", saleOwnerMsg:"🛍️ Vente boutique — {shop}\n{when}\nArticle : {art} ×{q}\n{disc}Montant encaissé : *{net}*\nStock restant : {left}\nFaite sur le téléphone du manager.", notEnoughStock:"Quantité supérieure au stock disponible.",
       confirmDeleteArt:"Retirer cet article du stock ?",
+      rnBtn:"🔤 Ranger {n} nom(s) : le genre d'article en premier", rnTitle:"🔤 Ranger les noms", rnHint:"Le genre d'article passe en premier (chemise, robe, sac…) pour que les articles du même genre se suivent. Décochez ceux que vous voulez garder tels quels.", rnGo:"✓ Ranger les noms cochés", rnDone:"{n} nom(s) rangé(s).",
       cartAdd:"🛒 Ajouter au panier", cartAdded:"Ajouté au panier", cartBar:"🛒 {n} article(s) · {t}", cartOpen:"Encaisser ›", cartTitle:"🛒 Panier de la cliente", cartDisc:"Réduction sur tout le panier (facultatif)", cartPay:"✓ Encaisser le panier", cartClear:"Vider", cartClearQ:"Vider le panier ?", cartLbl:"panier",
       editArt:"✏️ Corriger le nom ou le prix", editSave:"✓ Enregistrer", editCancel:"Annuler", editDup:"Un autre article porte déjà ce nom.",
       payment:"Paiement", paid:"Payé", due:"Reste à payer", cashIn:"Encaisser",
@@ -2225,6 +2227,7 @@
       shopStock:"Shop stock", noStock:"No item in stock.",
       sell:"Sell", sellDiscPh:"Discount", scTitle:"Confirm the sale", scOk:"✓ Confirm the sale", scQte:"Quantity", scPu:"Unit price", scDiscCode:"A discount needs the owner's code.", saleOwnerMsg:"🛍️ Shop sale — {shop}\n{when}\nItem: {art} ×{q}\n{disc}Amount received: *{net}*\nStock left: {left}\nMade on the manager's phone.", notEnoughStock:"Quantity higher than available stock.",
       confirmDeleteArt:"Remove this item from stock?",
+      rnBtn:"🔤 Tidy {n} name(s): item type first", rnTitle:"🔤 Tidy the names", rnHint:"The item type comes first (shirt, dress, bag…) so items of the same type sit together. Untick any you want to keep as they are.", rnGo:"✓ Tidy the ticked names", rnDone:"{n} name(s) tidied.",
       cartAdd:"🛒 Add to basket", cartAdded:"Added to basket", cartBar:"🛒 {n} item(s) · {t}", cartOpen:"Checkout ›", cartTitle:"🛒 Customer's basket", cartDisc:"Discount on the whole basket (optional)", cartPay:"✓ Take payment", cartClear:"Empty", cartClearQ:"Empty the basket?", cartLbl:"basket",
       editArt:"✏️ Correct the name or price", editSave:"✓ Save", editCancel:"Cancel", editDup:"Another item already has this name.",
       payment:"Payment", paid:"Paid", due:"Left to pay", cashIn:"Collect",
@@ -4003,6 +4006,7 @@
       const mk=kOf[m.articleId]||"article"; if(SHOP_MODE==="tissu" ? mk!=="article" : mk==="article") rec += Number(m.montant)||0; } });
     $("b-rec").textContent = rec;
     $("stock-empty").hidden = live.length>0;
+    try{ paintRename(); }catch(e){}
     if($("ap-sales-n")){ $("ap-sales-n").textContent=nSales; $("ap-sales-d").textContent=recAll; $("ap-stock").textContent=shopAll.length; }
     const q=normNom(($("q-stock")||{}).value||"");
     $("body-boutique").classList.toggle("searching", !!q);
@@ -4160,6 +4164,71 @@
     });
   }
   $("q-stock").addEventListener("input", renderStock);
+
+  // ---- 🔤 Le genre d'article d'abord (« Shirt White » et non « White Shirt ») : les chemises se suivent dans la liste
+const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse","pillow","pillows","cushion","hat","hats","cap","trousers","pants","outfit","suit","bubu","boubou","kaftan","haftaan","haftan","abaya","tunic","skirt","top","blouse","jacket","sifon","earrings","necklace","bracelet","belt","key holder","spoon","spoons","container","bowl","coaster","mug holder","napkin holder","napkin holders","place mat","place mats","table runner","runner","frame","laptop case","plate","tissue holder","flower pot","shoes","sandals","scarf","wrapper",
+    "chemise","chemises","robe","robes","sac","sacs","coussin","coussins","chapeau","chapeaux","pantalon","pantalons","ensemble","jupe","veste","boucles d'oreilles","ceinture","cuillère","assiette","bol","pot de fleurs","tunique","foulard","chaussures","pagne","caftan"];
+  function nomArticleDabord(nom){
+    const s=String(nom||"").trim(); if(!s) return s;
+    const m=s.match(/\s*(\+|,|:|\/|\(|\s(?:with|avec|for|pour)\s)/i);
+    const cut=m ? m.index : s.length;
+    const head=s.slice(0,cut), rest=s.slice(cut);
+    const low=head.toLowerCase();
+    let best=null;
+    ART_KW.forEach(k=>{
+      const re=new RegExp("(^|[^a-zà-ÿ])("+k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")(?=$|[^a-zà-ÿ])","gi");
+      let r; while((r=re.exec(low))){ const st=r.index+r[1].length, en=st+k.length;
+        if(!best || en>best.en || (en===best.en && st<best.st)) best={st,en}; }
+    });
+    if(!best || best.st===0) return s;
+    const kw=head.slice(best.st,best.en);
+    const autre=(head.slice(0,best.st)+" "+head.slice(best.en)).replace(/\s+/g," ").trim();
+    const k1=kw.charAt(0).toUpperCase()+kw.slice(1);
+    return (k1+(autre?" "+autre:"")+rest).replace(/\s+/g," ").trim();
+  }
+  function renameProposals(){
+    const live=STOCK.filter(a=>!a.fini && a.usage!=="atelier");
+    const taken=new Set(live.map(a=>normNom(a.nom||"")));
+    const out=[];
+    live.forEach(a=>{ const n=nomArticleDabord(a.nom); if(n && n!==(a.nom||"").trim() && !taken.has(normNom(n))){ out.push({ a, n }); taken.add(normNom(n)); } });
+    return out;
+  }
+  function paintRename(){
+    const b=$("st-rename"); if(!b) return;
+    const n=isMgr() ? 0 : renameProposals().length;
+    b.hidden = n===0; b.textContent=t("rnBtn").replace("{n}", n);
+  }
+  $("st-rename").addEventListener("click", ()=>{
+    if(isMgr()) return;
+    const P=renameProposals(); if(!P.length){ paintRename(); return; }
+    const ov=document.createElement("div"); ov.className="tk-ov";
+    const bx=document.createElement("div"); bx.className="sc-box";
+    const h=document.createElement("h3"); h.textContent=t("rnTitle"); bx.appendChild(h);
+    const hint=document.createElement("p"); hint.style.cssText="margin:0 0 8px;font-size:13px;color:var(--muted)"; hint.textContent=t("rnHint"); bx.appendChild(hint);
+    const checks=[];
+    P.forEach(p=>{
+      const r=document.createElement("label"); r.style.cssText="display:flex;gap:8px;align-items:flex-start;text-transform:none;letter-spacing:0;font-size:14px;color:inherit;margin:0;padding:7px 0;border-bottom:1px solid var(--line2)";
+      const c=document.createElement("input"); c.type="checkbox"; c.checked=true; c.style.cssText="width:auto;margin:3px 0 0";
+      const tx=document.createElement("span"); tx.innerHTML=""; 
+      const o=document.createElement("s"); o.style.opacity=".55"; o.textContent=p.a.nom; const nw=document.createElement("b"); nw.textContent=p.n;
+      tx.appendChild(o); tx.appendChild(document.createElement("br")); tx.appendChild(nw);
+      r.appendChild(c); r.appendChild(tx); bx.appendChild(r); checks.push(c);
+    });
+    const bt=document.createElement("div"); bt.className="sc-btns";
+    const no=document.createElement("button"); no.type="button"; no.textContent=t("editCancel"); no.addEventListener("click", ()=>ov.remove());
+    const yes=document.createElement("button"); yes.type="button"; yes.className="ok"; yes.textContent=t("rnGo");
+    yes.addEventListener("click", async ()=>{
+      const sel=P.filter((p,i)=>checks[i].checked); if(!sel.length){ ov.remove(); return; }
+      if(!await askCode()) return;
+      sel.forEach(p=>{ p.a.nom=p.n; setDoc(doc(db,"boutiques",BID,"stock",p.a.id), { nom:p.n, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){}); });
+      STOCK.sort((a,b)=>(a.nom||"").localeCompare(b.nom||""));
+      ov.remove(); renderLists(); paintRename();
+      alert(t("rnDone").replace("{n}", sel.length));
+    });
+    bt.appendChild(no); bt.appendChild(yes); bx.appendChild(bt);
+    ov.appendChild(bx); ov.addEventListener("click", e=>{ if(e.target===ov) ov.remove(); });
+    document.body.appendChild(ov);
+  });
 
   // ---- 🛒 Panier : plusieurs articles, une seule réduction, un seul reçu ----
   let CART=[];
@@ -4329,7 +4398,7 @@
       if(!r.ok){ st.textContent=t(r.status===429 ? "arIaLimit" : "arIaFail"); st.style.color="var(--warn)"; $("ar-name").focus(); return; }
       const nom = (LANG_UI==="en" && j.nomEn) ? j.nomEn : j.nom;
       if(!j.confiance || !nom){ st.textContent=t("arIaNone"); st.style.color="var(--warn)"; $("ar-name").focus(); return; }
-      $("ar-name").value = nom;
+      $("ar-name").value = nomArticleDabord(nom);
       if(j.type && !$("ar-type").value) $("ar-type").value = j.type;
       st.textContent=t("arIaOk");
       $("ar-prix").focus();
@@ -4342,7 +4411,7 @@
     // Sur le téléphone du manager, ajouter ou réapprovisionner un article demande le code du propriétaire
     if(isMgr() && !await askCode()) return;
     const msg=$("ar-msg");
-    const nom=$("ar-name").value.trim();
+    const nom=nomArticleDabord($("ar-name").value.trim());
     if(!nom){ msg.textContent=t("artNameRequired"); msg.className="msg err show"; return; }
     const k = SHOP_MODE==="tissu" ? (AR_KIND==="article" ? "rouleau" : AR_KIND) : "article";
     const q=parseFloat($("ar-qte").value)||0;
