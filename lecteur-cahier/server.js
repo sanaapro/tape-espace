@@ -207,12 +207,13 @@ function nettoieModele(r){
 
 // ---------- Boutique : reconnaître un article en photo (le boutiquier ne tape que le prix) ----------
 function promptArticle(){
-  return `Tu travailles dans une boutique de vêtements et de tissus en Afrique de l'Ouest (Gambie, Sénégal, Côte d'Ivoire).
+  return `Tu travailles dans une boutique en Afrique de l'Ouest (Gambie, Sénégal, Côte d'Ivoire) : vêtements et tissus, mais aussi parfums, cosmétiques, soins, mèches et perruques, bijoux, sacs, chaussures, articles de maison.
 Regarde la photo d'un article à mettre en vente. S'il y a plusieurs pièces posées ensemble (ex. haut + pantalon), c'est UN SEUL article : un ensemble.
 Donne :
 - "nom" : un nom court et vendeur en français, tel qu'un boutiquier l'écrirait : type de vêtement EN PREMIER MOT (jamais la couleur en premier) + tissu si reconnaissable + couleur principale + détail marquant (ex. « Kaftan bazin bleu brodé », « Ensemble wax jaune et vert », « Chemise lin blanche manches longues », « Robe dentelle bordeaux »). 2 à 6 mots, sans prix ni taille.
 - "nomEn" : le même nom en anglais, en gardant le GENRE D'ARTICLE EN PREMIER MOT, puis le tissu et la couleur (ex. « Kaftan bazin blue embroidered », « Shirt linen white long sleeves », « Dress lace burgundy », « Bag leather brown »). Jamais la couleur en premier : on écrit « Shirt white », pas « White shirt ».
-- "type" : une catégorie courte en français parmi : Boubou, Kaftan, Ensemble, Robe, Jupe, Chemise, Pantalon, Tunique, Abaya, Veste, Costume, T-shirt, Tissu, Chaussures, Sac, Accessoire, Autre.
+- "type" : une catégorie courte en français parmi : Boubou, Kaftan, Ensemble, Robe, Jupe, Chemise, Pantalon, Tunique, Abaya, Veste, Costume, T-shirt, Tissu, Chaussures, Sac, Accessoire, Parfum, Cosmétique, Soin, Maquillage, Cheveux, Bijoux, Maison, Autre.
+PRODUITS DE BEAUTÉ, PARFUMS, CHEVEUX (pas un vêtement) : le nom commence par le GENRE DE PRODUIT, puis la marque si elle est lisible sur l'étiquette, puis la contenance, la teinte ou la longueur si elles sont écrites (ex. « Parfum Dior Sauvage 100 ml », « Crème Nivea 400 ml », « Lait corporel Caro White », « Rouge à lèvres mat rouge », « Mèches brésiliennes 20 pouces », « Perruque bob noire »). En anglais pareil : « Perfume Dior Sauvage 100 ml », « Cream Nivea 400 ml », « Hair extensions Brazilian 20 inch ». N'invente jamais une marque ou une contenance que tu ne lis pas sur la photo. Pour ces produits, "tissu" vaut "".
 - "tissu" : wax, bazin, dentelle, kente, lin, coton, soie, satin, jean, mousseline, ou "" si tu n'es pas sûr.
 - "couleur" : couleur principale en français.
 - "confiance" : nombre entre 0 et 1.

@@ -1955,7 +1955,7 @@
       expDescPh:"Description (optionnel)", saveExpense:"Enregistrer la dépense",
       expenseRequired:"Indiquez une catégorie et un montant.", expenseSaved:"Dépense enregistrée :",
       newArticle:"Nouvel article", artName:"Nom de l'article", artNamePh:"Ex. Bazin riche 6 yards",
-      artType:"Type", artTypePh:"Ex. Tissu, prêt-à-porter", artQte:"Quantité", artPrix:"Prix de vente",
+      artType:"Type", artTypePh:"Ex. Prêt-à-porter, tissu, parfum, cosmétique, cheveux", artQte:"Quantité", artPrix:"Prix de vente",
       addStock:"Ajouter au stock", artAdded:"Article ajouté.", stockAdded:"Stock augmenté.",
       artNameRequired:"Le nom de l'article est obligatoire.",
       shopStock:"Stock de la boutique", noStock:"Aucun article en stock.",
@@ -2253,7 +2253,7 @@
       expDescPh:"Description (optional)", saveExpense:"Save the expense",
       expenseRequired:"Enter a category and an amount.", expenseSaved:"Expense saved:",
       newArticle:"New item", artName:"Item name", artNamePh:"e.g. Bazin riche 6 yards",
-      artType:"Type", artTypePh:"e.g. Fabric, ready-to-wear", artQte:"Quantity", artPrix:"Selling price",
+      artType:"Type", artTypePh:"e.g. Ready-to-wear, fabric, perfume, cosmetics, hair", artQte:"Quantity", artPrix:"Selling price",
       addStock:"Add to stock", artAdded:"Item added.", stockAdded:"Stock increased.",
       artNameRequired:"The item name is required.",
       shopStock:"Shop stock", noStock:"No item in stock.",
@@ -4208,7 +4208,9 @@
 
   // ---- 🔤 Le genre d'article d'abord (« Shirt White » et non « White Shirt ») : les chemises se suivent dans la liste
 const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse","pillow","pillows","cushion","hat","hats","cap","trousers","pants","outfit","suit","bubu","boubou","kaftan","haftaan","haftan","abaya","tunic","skirt","top","blouse","jacket","sifon","earrings","necklace","bracelet","belt","key holder","spoon","spoons","container","bowl","coaster","mug holder","napkin holder","napkin holders","place mat","place mats","table runner","runner","frame","laptop case","plate","tissue holder","flower pot","shoes","sandals","scarf","wrapper",
-    "chemise","chemises","robe","robes","sac","sacs","coussin","coussins","chapeau","chapeaux","pantalon","pantalons","ensemble","jupe","veste","boucles d'oreilles","ceinture","cuillère","assiette","bol","pot de fleurs","tunique","foulard","chaussures","pagne","caftan"];
+    "perfume","cream","lotion","soap","shampoo","conditioner","lipstick","nail polish","foundation","hair extensions","extensions","wig","wigs","necklace","ring","watch","sunglasses",
+  "parfum","parfums","crème","lotion","lait corporel","savon","shampooing","pommade","rouge à lèvres","vernis","fond de teint","mèches","perruque","perruques","collier","bague","montre","lunettes",
+  "chemise","chemises","robe","robes","sac","sacs","coussin","coussins","chapeau","chapeaux","pantalon","pantalons","ensemble","jupe","veste","boucles d'oreilles","ceinture","cuillère","assiette","bol","pot de fleurs","tunique","foulard","chaussures","pagne","caftan"];
   function nomArticleDabord(nom){
     const s=String(nom||"").trim(); if(!s) return s;
     const m=s.match(/\s*(\+|,|:|\/|\(|\s(?:with|avec|for|pour)\s)/i);
