@@ -64,7 +64,30 @@
     margin:22px 0 2px; padding-bottom:9px; border-bottom:1px solid var(--line); }
   .selljs{ display:flex; gap:8px; margin-top:11px; }
   .q-stock-wrap{ position:sticky; top:0; z-index:5; background:var(--bg,#0E0E0F); padding:10px 0 6px; margin-top:6px; }
-  .q-stock-wrap input{ margin:0 }
+  .q-stock-wrap{ display:flex; gap:8px }
+  .q-stock-wrap input{ margin:0; flex:1 }
+  .q-stock-wrap button{ flex:0 0 auto; width:auto; margin:0; padding:0 14px; border:1px solid var(--gold); background:none; color:var(--gold); border-radius:10px; font-weight:700 }
+  .lbl-ov{ position:fixed; inset:0; z-index:58; background:rgba(0,0,0,.85); overflow:auto; padding:14px }
+  .lbl-pick{ background:var(--panel); border:1px solid var(--gold); border-radius:16px; padding:16px; max-width:520px; margin:0 auto }
+  .lbl-pick h3{ margin:0 0 8px; color:var(--gold) }
+  .lbl-row{ display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--line2); font-size:14px }
+  .lbl-row .nm{ flex:1 }
+  .lbl-row input[type=number]{ width:64px; margin:0; padding:6px }
+  .lbl-row input[type=checkbox]{ width:auto; margin:0 }
+  .lbl-sheet{ background:#fff; color:#000; display:grid; grid-template-columns:repeat(3, 1fr); gap:0; max-width:620px; margin:14px auto 0 }
+  .lbl{ border:1px dashed #999; padding:2mm; text-align:center; font-family:Arial, sans-serif; break-inside:avoid; page-break-inside:avoid }
+  .lbl .ls{ font-size:8pt; color:#444; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+  .lbl img{ width:26mm; height:26mm; display:block; margin:1mm auto }
+  .lbl .ln{ font-size:9pt; font-weight:700; line-height:1.15; max-height:2.3em; overflow:hidden }
+  .lbl .lp{ font-size:12pt; font-weight:800; margin-top:1mm }
+  .lbl-bar{ display:flex; gap:10px; max-width:520px; margin:12px auto 0 }
+  .lbl-bar button{ flex:1; margin:0 }
+  @media print{
+    body.printlabels *{ visibility:hidden !important }
+    body.printlabels .lbl-sheet, body.printlabels .lbl-sheet *{ visibility:visible !important }
+    body.printlabels .lbl-ov{ position:absolute; inset:auto; left:0; top:0; background:#fff; padding:0; overflow:visible }
+    body.printlabels .lbl-sheet{ position:absolute; left:0; top:0; margin:0; max-width:none; width:100% }
+  }
   #body-boutique.searching > .card{ display:none }
   .art-edit{ margin-top:11px; padding:11px; border:1px solid var(--line2); border-radius:10px; }
   .art-edit .ae-btns{ display:flex; gap:8px; margin-top:10px; }
@@ -1171,7 +1194,7 @@
         <div class="stat"><div class="n" id="b-qte">0</div><div class="l" data-i18n="statInStock">En stock</div></div>
         <div class="stat"><div class="n mgr-mask" id="b-rec">0</div><div class="l" data-i18n="statTodaySales">Recette du jour</div></div>
       </div>
-      <div class="q-stock-wrap"><input id="q-stock" type="search" autocomplete="off" data-i18n-ph="stockSearchPh" placeholder="Chercher un article ou un tissu…"></div>
+      <div class="q-stock-wrap"><input id="q-stock" type="search" autocomplete="off" data-i18n-ph="stockSearchPh" placeholder="Chercher un article ou un tissu…"><button type="button" id="st-scan" data-i18n="qrScanBtn">📷 Scanner</button></div>
       <div class="card">
         <h2 data-i18n="quickExpenseShop">Dépense rapide — Boutique</h2>
         <input id="db-cat" type="text" data-i18n-ph="expCatShopPh" placeholder="Catégorie (ex. réapprovisionnement)">
@@ -1222,6 +1245,7 @@
         <div style="margin-top:10px;text-align:right;font-size:11.5px;color:var(--muted);opacity:.85">📷 <span id="ar-ia-state"></span> · <button type="button" id="ar-ia-toggle" class="flink-sm" style="font-size:11.5px"></button></div>
       </div>
       <div id="st-title" class="secttl">Stock de la boutique</div>
+      <button type="button" id="st-labels" class="flink-sm" style="margin:8px 14px 0 0;font-size:13px;color:var(--gold)" data-i18n="lblBtn">🏷️ Imprimer les étiquettes QR</button>
       <button type="button" id="st-rename" class="flink-sm" hidden style="margin:8px 0 10px;font-size:13px;color:var(--gold)"></button>
       <div id="stock-list"></div>
       <div id="stock-empty" class="empty" data-i18n="noStock" hidden>Aucun article en stock.</div>
@@ -1930,6 +1954,7 @@
       shopStock:"Stock de la boutique", noStock:"Aucun article en stock.",
       sell:"Vendre", sellDiscPh:"Réduction", scTitle:"Confirmer la vente", scOk:"✓ Confirmer la vente", scQte:"Quantité", scPu:"Prix unitaire", scDiscCode:"Une réduction demande le code du propriétaire.", saleOwnerMsg:"🛍️ Vente boutique — {shop}\n{when}\nArticle : {art} ×{q}\n{disc}Montant encaissé : *{net}*\nStock restant : {left}\nFaite sur le téléphone du manager.", notEnoughStock:"Quantité supérieure au stock disponible.",
       confirmDeleteArt:"Retirer cet article du stock ?",
+      qrScanBtn:"📷 Scanner", qrCamHint:"Placez l'étiquette QR de l'article devant la caméra", qrNotOurs:"Ce code n'est pas une étiquette SanaaPro.", qrUnknown:"Cet article n'est plus dans votre stock.", qrHowMuch:"{n} : combien de {u} ?", qrAdded:"✓ Ajouté au panier : {a}\nTotal du panier : {t}\n\nOK = scanner l'article suivant\nAnnuler = voir le panier et encaisser", lblBtn:"🏷️ Imprimer les étiquettes QR", lblTitle:"🏷️ Étiquettes QR", lblHint:"Une étiquette par pièce, avec le nom, le prix et un code QR. À la caisse, touchez « 📷 Scanner » : l'article entre directement dans le panier.", lblAll:"Tout cocher", lblMake:"Préparer les étiquettes", lblWait:"Préparation…", lblTooMany:"Trop d'étiquettes d'un coup (400 au plus). Décochez des articles.", lblReady:"{n} étiquette(s) prêtes. Touchez Imprimer, ou choisissez « Enregistrer en PDF » pour les envoyer à un imprimeur.",
       rnBtn:"🔤 Ranger {n} nom(s) : le genre d'article en premier", rnTitle:"🔤 Ranger les noms", rnHint:"Le genre d'article passe en premier (chemise, robe, sac…) pour que les articles du même genre se suivent. Décochez ceux que vous voulez garder tels quels.", rnGo:"✓ Ranger les noms cochés", rnDone:"{n} nom(s) rangé(s).",
       cartAdd:"🛒 Ajouter au panier", cartAdded:"Ajouté au panier", cartBar:"🛒 {n} article(s) · {t}", cartOpen:"Encaisser ›", cartTitle:"🛒 Panier de la cliente", cartDisc:"Réduction sur tout le panier (facultatif)", cartPay:"✓ Encaisser le panier", cartClear:"Vider", cartClearQ:"Vider le panier ?", cartLbl:"panier",
       editArt:"✏️ Corriger le nom ou le prix", editSave:"✓ Enregistrer", editCancel:"Annuler", editDup:"Un autre article porte déjà ce nom.",
@@ -2227,6 +2252,7 @@
       shopStock:"Shop stock", noStock:"No item in stock.",
       sell:"Sell", sellDiscPh:"Discount", scTitle:"Confirm the sale", scOk:"✓ Confirm the sale", scQte:"Quantity", scPu:"Unit price", scDiscCode:"A discount needs the owner's code.", saleOwnerMsg:"🛍️ Shop sale — {shop}\n{when}\nItem: {art} ×{q}\n{disc}Amount received: *{net}*\nStock left: {left}\nMade on the manager's phone.", notEnoughStock:"Quantity higher than available stock.",
       confirmDeleteArt:"Remove this item from stock?",
+      qrScanBtn:"📷 Scan", qrCamHint:"Hold the item's QR label in front of the camera", qrNotOurs:"This code is not a SanaaPro label.", qrUnknown:"This item is no longer in your stock.", qrHowMuch:"{n}: how many {u}?", qrAdded:"✓ Added to basket: {a}\nBasket total: {t}\n\nOK = scan the next item\nCancel = see the basket and take payment", lblBtn:"🏷️ Print QR labels", lblTitle:"🏷️ QR labels", lblHint:"One label per piece, with the name, price and a QR code. At the till, tap “📷 Scan”: the item goes straight into the basket.", lblAll:"Tick all", lblMake:"Prepare the labels", lblWait:"Preparing…", lblTooMany:"Too many labels at once (400 max). Untick some items.", lblReady:"{n} label(s) ready. Tap Print, or choose “Save as PDF” to send them to a printer shop.",
       rnBtn:"🔤 Tidy {n} name(s): item type first", rnTitle:"🔤 Tidy the names", rnHint:"The item type comes first (shirt, dress, bag…) so items of the same type sit together. Untick any you want to keep as they are.", rnGo:"✓ Tidy the ticked names", rnDone:"{n} name(s) tidied.",
       cartAdd:"🛒 Add to basket", cartAdded:"Added to basket", cartBar:"🛒 {n} item(s) · {t}", cartOpen:"Checkout ›", cartTitle:"🛒 Customer's basket", cartDisc:"Discount on the whole basket (optional)", cartPay:"✓ Take payment", cartClear:"Empty", cartClearQ:"Empty the basket?", cartLbl:"basket",
       editArt:"✏️ Correct the name or price", editSave:"✓ Save", editCancel:"Cancel", editDup:"Another item already has this name.",
@@ -4326,6 +4352,92 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     document.body.appendChild(ov);
     draw();
   }
+
+  // ---- 🏷️ Étiquettes QR + 📷 scan à la caisse ----
+  // Le code QR ne contient que l'identifiant de l'article : le prix lu est toujours celui du stock, jamais celui imprimé.
+  const qrArt = a => "SPA-"+a.id+" | "+(a.nom||"")+" | "+money(a.prix);
+  function artFromQr(val){
+    const m=String(val||"").match(/SPA-([A-Za-z0-9]{8,40})/); if(!m) return null;
+    return STOCK.find(x=>x.id===m[1]) || { _absent:true };
+  }
+  function scanToCart(val){
+    const a=artFromQr(val);
+    if(!a){ alert(t("qrNotOurs")); return; }
+    if(a._absent || a.fini){ alert(t("qrUnknown")); return; }
+    const k=kindOf(a), u=uLbl(a.unite);
+    let qv=1;
+    if(k==="rouleau"){ const r=prompt(t("qrHowMuch").replace("{n}", a.nom||"").replace("{u}", u)); if(r===null) return; qv=parseFloat(String(r).replace(",", "."))||0; if(qv<=0) return; }
+    const deja=CART.filter(c=>c.id===a.id).reduce((x,c)=>x+c.qte,0);
+    if(k==="rouleau"){ if(!a.entame && qv+deja>(Number(a.longueur)||0)+1e-9){ alert(t("fabTooMuch").replace("{n}", fmtL(a.longueur)+" "+u)); return; } }
+    else if(qv+deja>(Number(a.qte)||0)){ alert((a.nom||"")+" : "+t("notEnoughStock")); return; }
+    const ex=CART.find(c=>c.id===a.id);
+    if(ex) ex.qte=Math.round((ex.qte+qv)*100)/100; else CART.push({ id:a.id, qte:qv });
+    paintCart();
+    const tot=cartLines().reduce((x,l)=>x+l.brut,0);
+    if(confirm(t("qrAdded").replace("{a}", (a.nom||"")+" — "+money(a.prix)).replace("{t}", money(tot)))) scanCam();
+    else openCart();
+  }
+  function scanCam(){ openCam(scanToCart, "environment"); const f=document.querySelector(".pt-cam .frame"); if(f) f.textContent=t("qrCamHint"); }
+  $("st-scan").addEventListener("click", scanCam);
+  // Lecteur de code-barres branché : il « tape » le code dans la recherche puis Entrée
+  $("q-stock").addEventListener("keydown", e=>{
+    if(e.key!=="Enter") return;
+    const v=$("q-stock").value; if(!/SPA-/.test(v)) return;
+    e.preventDefault(); $("q-stock").value=""; renderStock(); scanToCart(v);
+  });
+  $("st-labels").addEventListener("click", ()=>{
+    const live=STOCK.filter(a=>!a.fini && a.usage!=="atelier" && (SHOP_MODE==="tissu" ? kindOf(a)!=="article" : kindOf(a)==="article"));
+    if(!live.length){ alert(t("noStock")); return; }
+    const ov=document.createElement("div"); ov.className="lbl-ov";
+    const pk=document.createElement("div"); pk.className="lbl-pick";
+    const h=document.createElement("h3"); h.textContent=t("lblTitle"); pk.appendChild(h);
+    const hint=document.createElement("p"); hint.style.cssText="margin:0 0 8px;font-size:13px;color:var(--muted)"; hint.textContent=t("lblHint"); pk.appendChild(hint);
+    const allRow=document.createElement("label"); allRow.className="lbl-row"; allRow.style.cssText+=";text-transform:none;letter-spacing:0;color:inherit;margin:0";
+    const all=document.createElement("input"); all.type="checkbox"; all.checked=true; const allT=document.createElement("b"); allT.textContent=t("lblAll");
+    allRow.appendChild(all); allRow.appendChild(allT); pk.appendChild(allRow);
+    const rows=[];
+    live.forEach(a=>{
+      const r=document.createElement("div"); r.className="lbl-row";
+      const c=document.createElement("input"); c.type="checkbox"; c.checked=true;
+      const nm=document.createElement("span"); nm.className="nm"; nm.textContent=(a.nom||"—")+" · "+money(a.prix);
+      const n=document.createElement("input"); n.type="number"; n.min="0"; n.step="1"; n.inputMode="numeric";
+      n.value = kindOf(a)==="rouleau" ? 1 : Math.max(1, Math.min(50, Number(a.qte)||1));
+      r.appendChild(c); r.appendChild(nm); r.appendChild(n); pk.appendChild(r); rows.push({ a, c, n });
+    });
+    all.addEventListener("change", ()=>rows.forEach(x=>{ x.c.checked=all.checked; }));
+    const bar=document.createElement("div"); bar.className="lbl-bar";
+    const no=document.createElement("button"); no.type="button"; no.className="ghost"; no.textContent=t("editCancel"); no.addEventListener("click", ()=>ov.remove());
+    const go=document.createElement("button"); go.type="button"; go.className="primary"; go.textContent=t("lblMake");
+    bar.appendChild(no); bar.appendChild(go); pk.appendChild(bar);
+    ov.appendChild(pk); document.body.appendChild(ov);
+    go.addEventListener("click", async ()=>{
+      const want=[]; rows.forEach(x=>{ if(x.c.checked){ const k=Math.min(200, Math.max(0, parseInt(x.n.value,10)||0)); for(let i=0;i<k;i++) want.push(x.a); } });
+      if(!want.length) return;
+      if(want.length>400){ alert(t("lblTooMany")); return; }
+      go.disabled=true; go.textContent=t("lblWait");
+      const sheet=document.createElement("div"); sheet.className="lbl-sheet";
+      const cache={};
+      try{
+        for(const a of want){
+          if(!cache[a.id]) cache[a.id]=await qrDataUrl(qrArt(a));
+          const l=document.createElement("div"); l.className="lbl";
+          const s1=document.createElement("div"); s1.className="ls"; s1.textContent=(BOUTIQUE&&BOUTIQUE.name)||"SanaaPro";
+          const im=document.createElement("img"); im.alt=""; im.src=cache[a.id];
+          const s2=document.createElement("div"); s2.className="ln"; s2.textContent=a.nom||"";
+          const s3=document.createElement("div"); s3.className="lp"; s3.textContent=money(a.prix)+(kindOf(a)==="rouleau" ? " / "+uLbl(a.unite) : "");
+          l.appendChild(s1); l.appendChild(im); l.appendChild(s2); l.appendChild(s3); sheet.appendChild(l);
+        }
+      }catch(e){ alert(t("tkQrFail")); go.disabled=false; go.textContent=t("lblMake"); return; }
+      pk.remove();
+      const b2=document.createElement("div"); b2.className="lbl-bar";
+      const cl=document.createElement("button"); cl.type="button"; cl.className="ghost"; cl.textContent=t("ptCamClose"); cl.addEventListener("click", ()=>ov.remove());
+      const pr=document.createElement("button"); pr.type="button"; pr.className="primary"; pr.textContent=t("tkPrint");
+      pr.addEventListener("click", ()=>{ document.body.classList.add("printlabels"); setTimeout(()=>{ window.print(); setTimeout(()=>document.body.classList.remove("printlabels"), 500); }, 200); });
+      b2.appendChild(cl); b2.appendChild(pr);
+      const info=document.createElement("p"); info.style.cssText="max-width:520px;margin:0 auto;font-size:13px;color:#ccc;text-align:center"; info.textContent=t("lblReady").replace("{n}", want.length);
+      ov.appendChild(info); ov.appendChild(b2); ov.appendChild(sheet);
+    });
+  });
 
   // ---- formulaire « Nouvel article » : article / rouleau / lot ----
   let AR_KIND="article", AR_UNIT="m", AR_PHOTO=null;
