@@ -2052,6 +2052,7 @@
       srLate:"Retards : {n} fois · {m} au total", srAbsAuto:"Jours de travail sans pointage : {n}", srCut:"Retenue", srCutDetail:"Retenue : {r} (retards) + {a} (absences) = {t}",
       srForgive:"Pardonner ce mois", srForgiveUndo:"Remettre la retenue", srForgiven:"Retenue pardonnée ce mois", srNoCut:"Aucun retard ni absence ce mois 👍",
       srCutOff:"Retenues désactivées : réglez les horaires dans 🕒 Pointage.",
+      phoneFix:"✏️ Changer", phoneFixQ:"Bon numéro WhatsApp de la cliente :", phoneFixBad:"Numéro trop court.", phoneFixSend:"Numéro changé. Renvoyer le ticket maintenant ?",
       cartPaid:"Payé maintenant (vide = tout payé)", cartLeft:"Avance {p} · reste à payer {r}", cartCliName:"Nom de la cliente (obligatoire)", cartCliTel:"Téléphone WhatsApp",
       cartTake:"👜 Elle emporte les habits", cartKeep:"🏪 Les habits restent ici", cartNeedName:"Écrivez le nom de la cliente : elle doit encore payer.",
       cartAdvLbl:"avance vente N° {n}", cartTakeNote:"Vente boutique : la cliente a emporté les habits.", cartKeepNote:"Vente boutique : les habits restent en boutique jusqu'au paiement complet.",
@@ -2361,6 +2362,7 @@
       srLate:"Late: {n} time(s) · {m} in total", srAbsAuto:"Working days with no clock-in: {n}", srCut:"Deduction", srCutDetail:"Deduction: {r} (late) + {a} (absences) = {t}",
       srForgive:"Forgive this month", srForgiveUndo:"Put the deduction back", srForgiven:"Deduction forgiven this month", srNoCut:"No late arrival or absence this month 👍",
       srCutOff:"Deductions are off: set the working hours in 🕒 Time clock.",
+      phoneFix:"✏️ Change", phoneFixQ:"Customer's correct WhatsApp number:", phoneFixBad:"Number too short.", phoneFixSend:"Number changed. Send the ticket again now?",
       cartPaid:"Paid now (empty = fully paid)", cartLeft:"Advance {p} · balance {r}", cartCliName:"Customer name (required)", cartCliTel:"WhatsApp number",
       cartTake:"👜 She takes the clothes", cartKeep:"🏪 Clothes stay here", cartNeedName:"Write the customer's name: she still has to pay.",
       cartAdvLbl:"advance sale No. {n}", cartTakeNote:"Shop sale: the customer took the clothes.", cartKeepNote:"Shop sale: the clothes stay in the shop until fully paid.",
@@ -7666,7 +7668,20 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     $("c-title").textContent = o.clienteName || t("shopOrder");
     $("c-num").textContent = fmtNum(o.numero);
     $("c-cliente").textContent = o.clienteName || t("noName");
-    if(o.clientePhone){ $("c-phone").innerHTML=""; $("c-phone").appendChild(phoneLinks(o.clientePhone)); $("c-phone-row").hidden=false; } else $("c-phone-row").hidden=true;
+    $("c-phone").innerHTML="";
+    if(o.clientePhone) $("c-phone").appendChild(phoneLinks(o.clientePhone)); else $("c-phone").appendChild(document.createTextNode("— "));
+    $("c-phone-row").hidden=false;
+    { const eb=document.createElement("button"); eb.type="button"; eb.className="flink-sm"; eb.style.marginLeft="8px"; eb.textContent=t("phoneFix");
+      eb.addEventListener("click", ()=>{
+        const v=prompt(t("phoneFixQ"), o.clientePhone||""); if(v===null) return;
+        const tel=String(v).replace(/[^\d+ ]/g,"").trim();
+        if(tel.replace(/\D/g,"").length<7){ alert(t("phoneFixBad")); return; }
+        o.clientePhone=tel; const loc=COMMANDES.find(x=>x.id===id)||PRESS.find(x=>x.id===id); if(loc && loc!==o) loc.clientePhone=tel;
+        setDoc(doc(db,"boutiques",BID,"commandes",id), { clientePhone:tel, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+        renderCmd(o, id); renderLists();
+        if(confirm(t("phoneFixSend"))){ o.id=o.id||id; showTicket(o); }
+      });
+      $("c-phone").appendChild(eb); }
     $("c-type").textContent = t(typeKey(o.type || "confection"));
     $("c-recu").textContent = t(o.recu==="materiel" ? "rcvMaterial" : (o.recu==="vetement" ? "rcvGarment" : "rcvFabric"));
     $("c-article").textContent = o.article || "—";
