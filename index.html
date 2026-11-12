@@ -322,7 +322,7 @@
      Le téléphone du gérant (sans accès aux salaires) garde l'onglet Pointage seul. */
   body:not(.mgr) #tabs button[data-tab="pointage"], #tool-chips button[data-tool="pointage"]{ display:none !important; }
   .st-seg{ display:flex; margin:0 0 14px; }
-  body.mgr .st-seg, body.kiosk .st-seg{ display:none !important; }
+  body.mgr .st-seg, body.kiosk .st-seg, body.mgr #hr-card{ display:none !important; }
   .st-today{ font-size:13px; margin-top:4px; }
   .st-today .here{ color:#4ade80; font-weight:600 }
   .st-today .abs{ color:var(--muted) }
@@ -1453,6 +1453,21 @@
           </div>
           <p class="sub" style="margin:10px 0 0;font-size:13px;color:var(--muted)" data-i18n="ptModeHint">Avec le badge, l'employé montre sa carte à la caméra du téléphone, ou la passe devant un lecteur de code-barres branché.</p>
         </div>
+        <div class="card" id="hr-card">
+          <h2 data-i18n="hrT">Horaires de travail et retenues</h2>
+          <p style="margin:0 0 6px;font-size:13px;color:var(--muted)" data-i18n="hrHint">SanaaPro compte les retards et les absences, et calcule la retenue sur le salaire : salaire ÷ 30 = un jour, un jour ÷ heures de travail = une heure.</p>
+          <div style="display:flex;gap:10px">
+            <div style="flex:1"><label data-i18n="hrStart">Début du travail</label><input id="hr-start" type="time" value="09:00"></div>
+            <div style="flex:1"><label data-i18n="hrEnd">Fin du travail</label><input id="hr-end" type="time" value="17:00"></div>
+          </div>
+          <label data-i18n="hrDays">Jours de travail</label>
+          <div class="chips sm" id="hr-days"></div>
+          <label data-i18n="hrTol">Retard toléré (minutes)</label>
+          <input id="hr-tol" type="number" inputmode="numeric" min="0" max="60" value="10">
+          <label style="display:flex;gap:8px;align-items:center;margin-top:12px"><input id="hr-on" type="checkbox" style="width:auto"> <span data-i18n="hrOn">Retirer les retards et absences du salaire</span></label>
+          <button class="primary" id="hr-save" type="button" style="margin-top:12px" data-i18n="hrSave">Enregistrer les horaires</button>
+          <div class="msg" id="hr-msg"></div>
+        </div>
         <div class="card" id="pt-badgecard">
           <h2 data-i18n="ptBadgesT">Badges des employés</h2>
           <p style="margin:0;font-size:13px;color:var(--muted)" data-i18n="ptBadgesHint">Créez un badge pour chaque employé, puis imprimez-les et plastifiez-les.</p>
@@ -2024,6 +2039,12 @@
       addVisitBtn:"Enregistrer le passage", noVisits:"Aucun passage enregistré.",
       searchVisitorPh:"Rechercher un visiteur…", visitNameRequired:"Le nom du visiteur est obligatoire.",
       confirmDeleteVisit:"Supprimer ce passage ?", remove:"Supprimer",
+      hrT:"Horaires de travail et retenues", hrHint:"SanaaPro compte les retards et les absences, et calcule la retenue sur le salaire : salaire ÷ 30 = un jour, un jour ÷ heures de travail = une heure.",
+      hrStart:"Début du travail", hrEnd:"Fin du travail", hrDays:"Jours de travail", hrTol:"Retard toléré (minutes)", hrOn:"Retirer les retards et absences du salaire",
+      hrSave:"Enregistrer les horaires", hrSaved:"Horaires enregistrés. Les retenues comptent à partir d'aujourd'hui.", hrDayN:["D","L","Ma","Me","J","V","S"],
+      srLate:"Retards : {n} fois · {m} au total", srAbsAuto:"Jours de travail sans pointage : {n}", srCut:"Retenue", srCutDetail:"Retenue : {r} (retards) + {a} (absences) = {t}",
+      srForgive:"Pardonner ce mois", srForgiveUndo:"Remettre la retenue", srForgiven:"Retenue pardonnée ce mois", srNoCut:"Aucun retard ni absence ce mois 👍",
+      srCutOff:"Retenues désactivées : réglez les horaires dans 🕒 Pointage.",
       segStaff:"👥 Salariés", segPoint:"🕒 Pointage", stTodayNone:"Pas encore pointé aujourd'hui",
       tabPointage:"Pointage", stCode:"Code de pointage (4 chiffres)", stCodeBad:"Le code doit faire exactement 4 chiffres.",
       stCodeUsed:"Ce code est déjà utilisé par un autre employé.", stCodeNone:"Pas de code de pointage", stCodeSet:"Code de pointage : ••••",
@@ -2323,6 +2344,12 @@
       addVisitBtn:"Record the visit", noVisits:"No visit recorded.",
       searchVisitorPh:"Search a visitor…", visitNameRequired:"The visitor name is required.",
       confirmDeleteVisit:"Delete this visit?", remove:"Delete",
+      hrT:"Working hours and deductions", hrHint:"SanaaPro counts late arrivals and absences and works out the deduction: wage ÷ 30 = one day, one day ÷ working hours = one hour.",
+      hrStart:"Work starts", hrEnd:"Work ends", hrDays:"Working days", hrTol:"Late allowance (minutes)", hrOn:"Deduct late arrivals and absences from the wage",
+      hrSave:"Save working hours", hrSaved:"Working hours saved. Deductions count from today.", hrDayN:["Su","M","Tu","W","Th","F","Sa"],
+      srLate:"Late: {n} time(s) · {m} in total", srAbsAuto:"Working days with no clock-in: {n}", srCut:"Deduction", srCutDetail:"Deduction: {r} (late) + {a} (absences) = {t}",
+      srForgive:"Forgive this month", srForgiveUndo:"Put the deduction back", srForgiven:"Deduction forgiven this month", srNoCut:"No late arrival or absence this month 👍",
+      srCutOff:"Deductions are off: set the working hours in 🕒 Time clock.",
       segStaff:"👥 Staff", segPoint:"🕒 Time clock", stTodayNone:"Not clocked in yet today",
       tabPointage:"Time clock", stCode:"Clock-in code (4 digits)", stCodeBad:"The code must be exactly 4 digits.",
       stCodeUsed:"This code is already used by another employee.", stCodeNone:"No clock-in code", stCodeSet:"Clock-in code: ••••",
@@ -2599,6 +2626,7 @@
     if(onBtn && onBtn.scrollIntoView) onBtn.scrollIntoView({ block:"nearest", inline:"center" });
     window.scrollTo(0,0);
     if(name==="vitrine") loadVitrine();
+    if(name==="pointage"){ try{ paintHoraires(); }catch(e){} }
     if(name==="reglages"){ paintLexique(); try{ paintCofSet(); }catch(e){} }
     navSync();
   }
@@ -5626,7 +5654,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     });
   })();
   function renderPointage(){
-    applyPtMode(); renderBadges();
+    applyPtMode(); renderBadges(); try{ if(!HR_PAINTED) paintHoraires(); }catch(e){}
     const box=$("pt-list"); if(!box) return; box.innerHTML="";
     const day=$("pt-day").value || dayKey(Date.now());
     $("pt-empty").hidden = SALARIES.length>0;
@@ -6179,6 +6207,61 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     let s0=0; MOUV.forEach(m=>{ if(m.type==="depense" && m.salId===salId && m.mois===mk && m.avance) s0+=Number(m.montant)||0; }); return s0;
   }
   function srMonth(){ const v=$("sr-month").value; return /^\d{4}-\d{2}$/.test(v) ? v : monthKey(Date.now()); }
+  // ---- Horaires et retenues : salaire ÷ 30 = un jour ; un jour ÷ heures de travail = une heure ----
+  function horaires(){
+    const h = (BOUTIQUE && BOUTIQUE.horaires) || {};
+    return { debut:h.debut||"09:00", fin:h.fin||"17:00", jours:Array.isArray(h.jours)?h.jours:[1,2,3,4,5,6],
+             tol:Number.isFinite(Number(h.tol))?Number(h.tol):10, on:!!h.on, depuis:Number(h.depuis)||0 };
+  }
+  const hmMin = v => { const m=/^(\d{1,2}):(\d{2})/.exec(String(v||"")); return m ? Number(m[1])*60+Number(m[2]) : 0; };
+  const minTxt = m => { m=Math.round(m); return m>=60 ? Math.floor(m/60)+"h"+String(m%60).padStart(2,"0") : m+" min"; };
+  function retenues(sx, mk){
+    const h=horaires(), out={ lateN:0, lateMin:0, absN:0, cutLate:0, cutAbs:0, total:0, on:h.on };
+    if(!h.on) return out;
+    const sal=Number(sx.salaire)||0, jour=sal/30, heures=Math.max(1, (hmMin(h.fin)-hmMin(h.debut))/60), parMin=jour/heures/60;
+    const [y,mo]=mk.split("-").map(Number), first=new Date(y,mo-1,1), last=new Date(y,mo,0);
+    const today=new Date(); today.setHours(0,0,0,0);
+    const from=Math.max(first.getTime(), h.depuis ? new Date(new Date(h.depuis).setHours(0,0,0,0)).getTime() : first.getTime(),
+                        sx.createdAtMs ? new Date(new Date(sx.createdAtMs).setHours(0,0,0,0)).getTime() : 0);
+    const recs=POINTAGES.filter(p=>p.salId===sx.id && String(p.day||"").slice(0,7)===mk);
+    for(let d=new Date(from); d<=last && d<=today; d.setDate(d.getDate()+1)){
+      if(h.jours.indexOf(d.getDay())===-1) continue;
+      const key=dayKey(d.getTime()), dr=recs.filter(p=>p.day===key);
+      if(!dr.length){ if(d<today) out.absN++; continue; }
+      const arr=Math.min.apply(null, dr.map(p=>Number(p.arriveeMs)||Infinity));
+      const ad=new Date(arr), late=ad.getHours()*60+ad.getMinutes()-hmMin(h.debut);
+      if(late>h.tol){ out.lateN++; out.lateMin+=late; }
+    }
+    out.cutLate=Math.round(out.lateMin*parMin);
+    out.cutAbs=Math.round(out.absN*jour);
+    out.total=Math.min(sal, out.cutLate+out.cutAbs);
+    if(((sx.pardon||{})[mk])) { out.forgiven=true; out.total=0; }
+    return out;
+  }
+  let HR_PAINTED=false;
+  function paintHoraires(){
+    const h=horaires(); if(!$("hr-start")) return; HR_PAINTED=true;
+    $("hr-start").value=h.debut; $("hr-end").value=h.fin; $("hr-tol").value=h.tol; $("hr-on").checked=h.on;
+    const box=$("hr-days"); box.innerHTML="";
+    [1,2,3,4,5,6,0].forEach(d=>{ const b=document.createElement("button"); b.type="button"; b.textContent=t("hrDayN")[d];
+      b.dataset.d=d; b.classList.toggle("on", h.jours.indexOf(d)!==-1);
+      b.addEventListener("click", ()=>b.classList.toggle("on")); box.appendChild(b); });
+  }
+  if($("hr-save")) $("hr-save").addEventListener("click", async ()=>{
+    if(!await askCode()) return;
+    const old=horaires(), on=$("hr-on").checked;
+    const jours=Array.from($("hr-days").querySelectorAll("button.on")).map(b=>Number(b.dataset.d));
+    const nv={ debut:$("hr-start").value||"09:00", fin:$("hr-end").value||"17:00", jours,
+               tol:Math.max(0, Math.min(60, Number($("hr-tol").value)||0)), on,
+               depuis: (on && !old.on) ? Date.now() : (old.depuis || Date.now()) };
+    if(BOUTIQUE) BOUTIQUE.horaires=nv;
+    const m=$("hr-msg");
+    setDoc(doc(db,"boutiques",BID), { horaires:nv, updatedAt:serverTimestamp() }, { merge:true })
+      .then(()=>{ m.className="msg ok show"; m.textContent=t("hrSaved"); })
+      .catch(e=>{ m.className="msg err show"; m.textContent=t("ptSaveFail").replace("{e}", (e&&(e.code||e.message))||"?"); });
+    renderWageRecap();
+  });
+
   function renderWageRecap(){
     const box=$("sr-list"); if(!box) return;
     if(!$("sr-month").value) $("sr-month").value=monthKey(Date.now());
@@ -6187,7 +6270,8 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     SALARIES.forEach(sx=>{
       const sal=Number(sx.salaire)||0, a=advancesOf(sx.id, mk);
       const paid=MOUV.find(m=>m.type==="depense" && m.salId===sx.id && m.mois===mk && !m.avance);
-      const rest=paid ? 0 : Math.max(0, sal-a);
+      const rt=retenues(sx, mk);
+      const rest=paid ? 0 : Math.max(0, sal-a-rt.total);
       due+=sal; adv+=a; left+=rest;
       const days=new Set(POINTAGES.filter(p=>p.salId===sx.id && String(p.day||"").slice(0,7)===mk).map(p=>p.day)).size;
       const abs=((sx.absences||{})[mk]||[]).length;
@@ -6205,6 +6289,16 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       const l2=document.createElement("div"); l2.className="ln"; l2.textContent=t("srDays").replace("{n}", days)+" · "+t("srAbs").replace("{n}", abs);
       if(abs>0) l2.style.color="var(--warn)";
       el.appendChild(l1); el.appendChild(l2);
+      const l3=document.createElement("div"); l3.className="ln";
+      if(!rt.on) l3.textContent=t("srCutOff");
+      else if(!rt.lateN && !rt.absN) l3.textContent=t("srNoCut");
+      else {
+        l3.innerHTML = escH(t("srLate").replace("{n}", rt.lateN).replace("{m}", minTxt(rt.lateMin))) + "<br>" +
+          escH(t("srAbsAuto").replace("{n}", rt.absN)) + "<br><b>" +
+          escH(rt.forgiven ? t("srForgiven") : t("srCutDetail").replace("{r}", money(rt.cutLate)).replace("{a}", money(rt.cutAbs)).replace("{t}", money(rt.total))) + "</b>";
+        l3.style.color = rt.forgiven ? "var(--ok)" : "var(--warn)";
+      }
+      el.appendChild(l3);
       const acts=document.createElement("div"); acts.className="pz-acts";
       const b1=document.createElement("button"); b1.type="button"; b1.textContent=t("srAdvBtn");
       b1.addEventListener("click", async ()=>{
@@ -6223,7 +6317,18 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
         setDoc(doc(db,"boutiques",BID,"salaries",sx.id), { absences:ab, updatedAt:serverTimestamp() }, { merge:true }).catch(e=>alert(t("ptSaveFail").replace("{e}", (e&&(e.code||e.message))||"?")));
         renderWageRecap();
       });
-      acts.appendChild(b1); acts.appendChild(b2); el.appendChild(acts);
+      acts.appendChild(b1); acts.appendChild(b2);
+      if(rt.on && (rt.lateN || rt.absN) && !paid){
+        const b3=document.createElement("button"); b3.type="button"; b3.textContent=rt.forgiven ? t("srForgiveUndo") : t("srForgive");
+        b3.addEventListener("click", async ()=>{
+          if(!await askCode()) return;
+          const pd=Object.assign({}, sx.pardon||{}); if(pd[mk]) delete pd[mk]; else pd[mk]=true; sx.pardon=pd;
+          setDoc(doc(db,"boutiques",BID,"salaries",sx.id), { pardon:pd, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+          renderWageRecap();
+        });
+        acts.appendChild(b3);
+      }
+      el.appendChild(acts);
       box.appendChild(el);
     });
     $("sr-due").textContent=money(due); $("sr-adv").textContent=money(adv); $("sr-left").textContent=money(left);
