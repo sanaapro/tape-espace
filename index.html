@@ -318,6 +318,14 @@
   .pt-row .hrs .abs{ color:#6A665F; }
   body.kiosk .head, body.kiosk #tabs, body.kiosk #off-dash, body.kiosk .foot, body.kiosk .pt-admin{ display:none !important; }
   body.kiosk .pt-screen{ margin-top:4vh; }
+  /* Salariés et pointage réunis : un seul onglet « Salariés » pour le propriétaire.
+     Le téléphone du gérant (sans accès aux salaires) garde l'onglet Pointage seul. */
+  body:not(.mgr) #tabs button[data-tab="pointage"], #tool-chips button[data-tool="pointage"]{ display:none !important; }
+  .st-seg{ display:flex; margin:0 0 14px; }
+  body.mgr .st-seg, body.kiosk .st-seg{ display:none !important; }
+  .st-today{ font-size:13px; margin-top:4px; }
+  .st-today .here{ color:#4ade80; font-weight:600 }
+  .st-today .abs{ color:var(--muted) }
   /* Mode manager : ce téléphone ne montre ni les chiffres de la semaine/du mois, ni les salaires, ni les réglages */
   body.mgr #tabs button[data-tab="finances"], body.mgr #tabs button[data-tab="staff"], body.mgr #tabs button[data-tab="reglages"],
   body.mgr #settings-btn, body.mgr #logout-btn, body.mgr #clo-hist-btn, body.mgr #clo-hist, body.mgr #clo-owner-btn,
@@ -1382,6 +1390,7 @@
     <div id="pane-staff" hidden>
       <div class="lock" id="lock-staff" hidden></div>
       <div id="body-staff">
+      <div class="seg big st-seg"><button type="button" data-go="staff" data-i18n="segStaff">👥 Salariés</button><button type="button" data-go="pointage" data-i18n="segPoint">🕒 Pointage</button></div>
       <div class="card">
         <h2 data-i18n="addStaff">Ajouter un employé</h2>
         <label data-i18n="staffName">Nom</label>
@@ -1419,6 +1428,7 @@
     <div id="pane-pointage" hidden>
       <div class="lock" id="lock-pointage" hidden></div>
       <div id="body-pointage">
+      <div class="seg big st-seg"><button type="button" data-go="staff" data-i18n="segStaff">👥 Salariés</button><button type="button" data-go="pointage" data-i18n="segPoint">🕒 Pointage</button></div>
       <div class="pt-screen">
         <div class="pt-clock" id="pt-clock">--:--</div>
         <div class="pt-date" id="pt-date"></div>
@@ -2014,6 +2024,7 @@
       addVisitBtn:"Enregistrer le passage", noVisits:"Aucun passage enregistré.",
       searchVisitorPh:"Rechercher un visiteur…", visitNameRequired:"Le nom du visiteur est obligatoire.",
       confirmDeleteVisit:"Supprimer ce passage ?", remove:"Supprimer",
+      segStaff:"👥 Salariés", segPoint:"🕒 Pointage", stTodayNone:"Pas encore pointé aujourd'hui",
       tabPointage:"Pointage", stCode:"Code de pointage (4 chiffres)", stCodeBad:"Le code doit faire exactement 4 chiffres.",
       stCodeUsed:"Ce code est déjà utilisé par un autre employé.", stCodeNone:"Pas de code de pointage", stCodeSet:"Code de pointage : ••••",
       stCodeBtn:"Changer le code de pointage", stCodeAsk:"Nouveau code à 4 chiffres pour {n} :",
@@ -2312,6 +2323,7 @@
       addVisitBtn:"Record the visit", noVisits:"No visit recorded.",
       searchVisitorPh:"Search a visitor…", visitNameRequired:"The visitor name is required.",
       confirmDeleteVisit:"Delete this visit?", remove:"Delete",
+      segStaff:"👥 Staff", segPoint:"🕒 Time clock", stTodayNone:"Not clocked in yet today",
       tabPointage:"Time clock", stCode:"Clock-in code (4 digits)", stCodeBad:"The code must be exactly 4 digits.",
       stCodeUsed:"This code is already used by another employee.", stCodeNone:"No clock-in code", stCodeSet:"Clock-in code: ••••",
       stCodeBtn:"Change clock-in code", stCodeAsk:"New 4-digit code for {n}:",
@@ -2578,10 +2590,12 @@
     const pane = name==="tissus" ? "boutique" : name;
     TABS.forEach(x=>{ const el=$("pane-"+x); if(el) el.hidden = (x!==pane); });
     if(name==="boutique" || name==="tissus"){ SHOP_MODE = name==="tissus" ? "tissu" : "article"; try{ if(SHOP_MODE==="tissu" && AR_KIND==="article") AR_KIND="rouleau"; paintArForm(); renderStock(); }catch(e){} }
+    const hl = (name==="pointage" && !isMgr()) ? "staff" : name;
     $("tabs").querySelectorAll("button").forEach(b=>{
-      b.classList.toggle("on", b.getAttribute("data-tab")===name);
+      b.classList.toggle("on", b.getAttribute("data-tab")===hl);
     });
-    const onBtn = $("tabs").querySelector('button[data-tab="'+name+'"]');
+    document.querySelectorAll(".st-seg button").forEach(b=>b.classList.toggle("on", b.getAttribute("data-go")===name));
+    const onBtn = $("tabs").querySelector('button[data-tab="'+hl+'"]');
     if(onBtn && onBtn.scrollIntoView) onBtn.scrollIntoView({ block:"nearest", inline:"center" });
     window.scrollTo(0,0);
     if(name==="vitrine") loadVitrine();
@@ -2590,6 +2604,9 @@
   }
   $("tabs").querySelectorAll("button").forEach(b=>{
     b.addEventListener("click", ()=>setTab(b.getAttribute("data-tab")));
+  });
+  document.querySelectorAll(".st-seg button").forEach(b=>{
+    b.addEventListener("click", ()=>setTab(b.getAttribute("data-go")));
   });
 
   // Glisser à gauche / à droite n'importe où dans l'app pour passer à l'onglet voisin,
@@ -2627,7 +2644,7 @@
       const dx=lx-sx, dy=ly-sy, fast=(Date.now()-st)<300;
       const go = horiz && (Math.abs(dx)>60 || (fast && Math.abs(dx)>30)) && Math.abs(dx)>Math.abs(dy)*0.9;
       if(!go){ reset(); return; }
-      const list=tabsList(), i=list.indexOf(TAB), j=dx<0 ? i+1 : i-1;
+      const list=tabsList(), i=list.indexOf((TAB==="pointage" && list.indexOf("pointage")===-1) ? "staff" : TAB), j=dx<0 ? i+1 : i-1;
       if(i<0 || j<0 || j>=list.length){ reset(); return; }
       if(pane){ pane.style.transform=""; pane.style.opacity=""; pane.style.transition=""; } pane=null;
       setTab(list[j]);
@@ -5339,6 +5356,14 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
         setDoc(doc(db,"boutiques",BID,"salaries",x.id), { code:x.code, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
         renderLists();
       });
+      const td=document.createElement("div"); td.className="ln st-today";
+      const today=dayKey(Date.now()), recs=POINTAGES.filter(p=>p.salId===x.id && p.day===today);
+      if(!recs.length){ td.innerHTML='<span class="abs">'+escH(t("stTodayNone"))+'</span>'; }
+      else {
+        const last=recs[recs.length-1];
+        td.innerHTML = escH(t("ptIn2")+" "+hhmm(recs[0].arriveeMs)) + (last.departMs ? " → "+escH(t("ptOut2")+" "+hhmm(last.departMs)) : ' · <span class="here">'+escH(t("ptHere"))+'</span>');
+      }
+      td.style.cursor="pointer"; td.addEventListener("click", ()=>setTab("pointage"));
       el.appendChild(l3); el.appendChild(cb);
       const rm=document.createElement("button"); rm.className="rm"; rm.textContent=t("remove");
       rm.addEventListener("click", async ()=>{
@@ -5348,7 +5373,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
         SALARIES = SALARIES.filter(y=>y.id!==x.id);
         renderLists();
       });
-      el.appendChild(nm); el.appendChild(l1); el.appendChild(l2); el.appendChild(rm);
+      el.prepend(nm, l1, l2, td); el.appendChild(rm);
       box.appendChild(el);
     });
   }
@@ -5403,7 +5428,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       POINTAGES.push(Object.assign({ id:ref.id }, data));
       ptShow("in", "<b>"+escH(t("ptIn").replace("{n}", s.nom||""))+"</b>"+escH(t("ptInT").replace("{h}", hhmm(now))));
     }
-    renderPointage();
+    renderPointage(); try{ renderStaff(); }catch(e){}
   }
   function ptKey(k){
     if(k==="del"){ PT_CODE=PT_CODE.slice(0,-1); ptDots(); return; }
@@ -6099,7 +6124,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     if(!ms || ms < SIMPLE_START_MS) return TOOL_TABS.slice();
     return ms < LIGHT_START_MS ? ["materiel"] : [];
   }
-  function hasTool(k){ return outils().indexOf(k) !== -1; }
+  function hasTool(k){ const o = outils(); return o.indexOf(k) !== -1 || (k === "pointage" && o.indexOf("staff") !== -1); }
   function applyActivities(){
     const hide = new Set();
     Object.keys(ACT_TABS).forEach(k=>{ if(!hasAct(k)) ACT_TABS[k].forEach(x=>hide.add(x)); });
