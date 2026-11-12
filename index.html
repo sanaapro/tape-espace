@@ -1820,7 +1820,7 @@
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { initializeFirestore, enableIndexedDbPersistence, onSnapshot, terminate, clearIndexedDbPersistence,
            doc, getDoc, getDocFromCache, collection, setDoc as _setDoc, getDocs, getDocsFromCache,
-           deleteDoc as _deleteDoc, query, orderBy, where, serverTimestamp, writeBatch }
+           deleteDoc as _deleteDoc, query, orderBy, where, serverTimestamp, writeBatch, deleteField }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -3076,19 +3076,37 @@
     COMMANDES.forEach(o=>{ const n=Number(o.numero)||0; if(n>mx) mx=n; });
     return mx+1;
   }
+  // ---- Code du propriétaire : jamais stocké en clair (empreinte SHA-256 liée à la boutique) ----
+  function hasCode(b){ b = b || BOUTIQUE; return !!(b && (b.codeAdminH || b.codeAdmin)); }
+  async function codeHash(v, kind){
+    const data = new TextEncoder().encode("sanaapro:" + (kind||"admin") + ":" + BID + ":" + String(v).trim());
+    const buf = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(buf)).map(x => x.toString(16).padStart(2, "0")).join("");
+  }
+  async function checkCode(given){
+    const g = String(given||"").trim(); if(!g || !BOUTIQUE) return false;
+    if(BOUTIQUE.codeAdminH) return (await codeHash(g)) === BOUTIQUE.codeAdminH;
+    if(BOUTIQUE.codeAdmin && g === String(BOUTIQUE.codeAdmin)){
+      // ancien code en clair : on le remplace tout de suite par son empreinte
+      try{ const h = await codeHash(g); BOUTIQUE.codeAdminH = h; delete BOUTIQUE.codeAdmin;
+        setDoc(doc(db,"boutiques",BID), { codeAdminH:h, codeAdmin:deleteField() }, { merge:true }).catch(function(){}); }catch(e){}
+      return true;
+    }
+    return false;
+  }
   async function askCode(){
-    const admin = (BOUTIQUE && BOUTIQUE.codeAdmin) ? String(BOUTIQUE.codeAdmin) : "";
-    if(!admin) return true;
+    if(!hasCode()) return true;
     const given = prompt(t("codeAsk"));
     if(given === null) return false;
     const g = String(given).trim();
-    if(g === admin) return true;
+    if(await checkCode(g)) return true;
     try{
       const snap = await getDocSmart(doc(db,"boutiques",BID));
       if(snap.exists()){
         BOUTIQUE = snap.data();
         const o = BOUTIQUE.otp;
-        if(o && o.code && !o.used && String(o.code) === g){
+        const otpOk = o && !o.used && (o.h ? (await codeHash(g, "otp")) === o.h : (o.code && String(o.code) === g));
+        if(otpOk){
           let fresh = true;
           if(o.createdAt && o.createdAt.toDate){
             fresh = (Date.now() - o.createdAt.toDate().getTime()) < 86400000;
@@ -3238,7 +3256,7 @@
     if(act !== $("b-devise")) $("b-devise").value = b.devise||CUR;
     if(document.activeElement !== $("b-code")){
       $("b-code").value = "";
-      $("b-code").placeholder = b.codeAdmin ? "••••••" : t("ownerCodePh");
+      $("b-code").placeholder = hasCode(b) ? "••••••" : t("ownerCodePh");
     }
     const sub=b.subscription||{}, badge=$("d-badge"), note=$("d-subnote");
     note.hidden=true; note.className="sub-note";
@@ -9602,8 +9620,11 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     if(!await askCode()) return;
     const v=$("b-code").value.replace(/\D/g,"").slice(0,6);
     $("b-code").value=v;
-    if(BOUTIQUE) BOUTIQUE.codeAdmin=v;
-    setDoc(doc(db,"boutiques",BID), { codeAdmin:v, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+    if(!v){ alert(t("codeWrong")); return; }
+    const h = await codeHash(v);
+    if(BOUTIQUE){ BOUTIQUE.codeAdminH=h; delete BOUTIQUE.codeAdmin; }
+    try{ localStorage.setItem("sanaapro_owner", BID); }catch(e){}
+    setDoc(doc(db,"boutiques",BID), { codeAdminH:h, codeAdmin:deleteField(), updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
     $("b-code").value=""; $("b-code").placeholder = v ? "••••••" : t("ownerCodePh");
     alert(t("codeSaved"));
   });
@@ -9724,11 +9745,9 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       if(opts.mode==="unlock"){
         const f=document.createElement("button"); f.type="button"; f.textContent=t("pinForgot");
         f.addEventListener("click", ()=>{
-          const admin=(BOUTIQUE && BOUTIQUE.codeAdmin) ? String(BOUTIQUE.codeAdmin) : "";
-          if(!admin){ if(confirm(t("pinForgotLogout"))){ done(false); signOut(auth); } return; }
+          if(!hasCode()){ if(confirm(t("pinForgotLogout"))){ done(false); signOut(auth); } return; }
           const g=prompt(t("pinForgotAsk")); if(g===null) return;
-          if(String(g).trim()===admin){ pinSave(null); done(true); alert(t("pinRemoved")); }
-          else { err.textContent=t("codeWrong"); shake(); }
+          checkCode(g).then(ok=>{ if(ok){ pinSave(null); done(true); alert(t("pinRemoved")); } else { err.textContent=t("codeWrong"); shake(); } });
         });
         links.appendChild(f);
         const lo=document.createElement("button"); lo.type="button"; lo.textContent=t("pinLogout"); lo.style.color="var(--muted)";
@@ -9767,28 +9786,36 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
   // Le téléphone du manager garde la même connexion que la boutique, mais cache les chiffres
   // de la semaine / du mois, les salaires et les réglages. Seul le code administrateur
   // (jamais un code à usage unique) permet d'en sortir.
-  function isMgr(){ try{ return !!BID && localStorage.getItem("sanaapro_mgr")===BID; }catch(e){ return false; } }
+  // Mode manager : dès qu'un code propriétaire existe, un téléphone NON reconnu comme celui du propriétaire
+  // est en mode manager (effacer les données du navigateur ne donne donc plus l'accès complet).
+  function isMgr(){ try{
+    if(!BID) return false;
+    if(localStorage.getItem("sanaapro_mgr")===BID) return true;
+    if(hasCode() && BOUTIQUE && BOUTIQUE.mgrV2 && localStorage.getItem("sanaapro_owner")!==BID) return true;
+    return false; }catch(e){ return false; } }
   function applyMgr(){
+    // Passage au nouveau système : le premier téléphone en mode propriétaire qui s'ouvre est reconnu comme celui du propriétaire
+    try{ if(BID && hasCode() && BOUTIQUE && !BOUTIQUE.mgrV2 && localStorage.getItem("sanaapro_mgr")!==BID){
+      localStorage.setItem("sanaapro_owner", BID); BOUTIQUE.mgrV2 = true;
+      setDoc(doc(db,"boutiques",BID), { mgrV2:true }, { merge:true }).catch(function(){}); } }catch(e){}
     const on=isMgr();
     document.body.classList.toggle("mgr", on);
     $("mgr-badge").hidden=!on;
     if(on && ["finances","staff","reglages"].indexOf(TAB)!==-1) setTab("apercu");
   }
   $("mgr-on").addEventListener("click", async ()=>{
-    const admin=(BOUTIQUE && BOUTIQUE.codeAdmin) ? String(BOUTIQUE.codeAdmin) : "";
-    if(!admin){ alert(t("mgrNeedCode")); try{ $("b-code").focus(); $("b-code").scrollIntoView({block:"center"}); }catch(e){} return; }
+    if(!hasCode()){ alert(t("mgrNeedCode")); try{ $("b-code").focus(); $("b-code").scrollIntoView({block:"center"}); }catch(e){} return; }
     if(!confirm(t("mgrConfirm"))) return;
-    try{ localStorage.setItem("sanaapro_mgr", BID); }catch(e){}
+    try{ localStorage.setItem("sanaapro_mgr", BID); localStorage.removeItem("sanaapro_owner"); }catch(e){}
     applyMgr(); setTab("apercu");
     alert(t("mgrDone"));
     if(!pinGet() && confirm(t("pinMgrAsk"))){ if(await pinPad({ mode:"new" })) alert(t("pinSaved")); }
   });
-  $("mgr-badge").addEventListener("click", ()=>{
-    const admin=(BOUTIQUE && BOUTIQUE.codeAdmin) ? String(BOUTIQUE.codeAdmin) : "";
+  $("mgr-badge").addEventListener("click", async ()=>{
     const given=prompt(t("mgrExitAsk"));
     if(given===null) return;
-    if(admin && String(given).trim()!==admin){ alert(t("codeWrong")); return; }
-    try{ localStorage.removeItem("sanaapro_mgr"); }catch(e){}
+    if(hasCode() && !(await checkCode(given))){ alert(t("codeWrong")); return; }
+    try{ localStorage.removeItem("sanaapro_mgr"); localStorage.setItem("sanaapro_owner", BID); }catch(e){}
     applyMgr();
     alert(t("mgrOff"));
   });
@@ -9796,8 +9823,9 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
   $("b-otp-gen").addEventListener("click", async ()=>{
     if(!await askCode()) return;
     const code = String(Math.floor(100000 + Math.random()*900000));
-    setDoc(doc(db,"boutiques",BID), { otp:{ code, createdAt:serverTimestamp(), used:false } }, { merge:true }).catch(function(){});
-    if(BOUTIQUE) BOUTIQUE.otp = { code, used:false };
+    const oh = await codeHash(code, "otp");
+    setDoc(doc(db,"boutiques",BID), { otp:{ h:oh, code:deleteField(), createdAt:serverTimestamp(), used:false } }, { merge:true }).catch(function(){});
+    if(BOUTIQUE) BOUTIQUE.otp = { h:oh, used:false };
     $("b-otp-code").textContent = code;
     $("b-otp").hidden = false;
   });
