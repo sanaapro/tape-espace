@@ -2052,6 +2052,9 @@
       srLate:"Retards : {n} fois · {m} au total", srAbsAuto:"Jours de travail sans pointage : {n}", srCut:"Retenue", srCutDetail:"Retenue : {r} (retards) + {a} (absences) = {t}",
       srForgive:"Pardonner ce mois", srForgiveUndo:"Remettre la retenue", srForgiven:"Retenue pardonnée ce mois", srNoCut:"Aucun retard ni absence ce mois 👍",
       srCutOff:"Retenues désactivées : réglez les horaires dans 🕒 Pointage.",
+      cartPaid:"Payé maintenant (vide = tout payé)", cartLeft:"Avance {p} · reste à payer {r}", cartCliName:"Nom de la cliente (obligatoire)", cartCliTel:"Téléphone WhatsApp",
+      cartTake:"👜 Elle emporte les habits", cartKeep:"🏪 Les habits restent ici", cartNeedName:"Écrivez le nom de la cliente : elle doit encore payer.",
+      cartAdvLbl:"avance vente N° {n}", cartTakeNote:"Vente boutique : la cliente a emporté les habits.", cartKeepNote:"Vente boutique : les habits restent en boutique jusqu'au paiement complet.",
       artSize:"Taille (facultatif)", artSizePh:"Ex. M, XL, 42, 6 ans", lblRef:"Réf.",
       segStaff:"👥 Salariés", segPoint:"🕒 Pointage", stTodayNone:"Pas encore pointé aujourd'hui",
       tabPointage:"Pointage", stCode:"Code de pointage (4 chiffres)", stCodeBad:"Le code doit faire exactement 4 chiffres.",
@@ -2358,6 +2361,9 @@
       srLate:"Late: {n} time(s) · {m} in total", srAbsAuto:"Working days with no clock-in: {n}", srCut:"Deduction", srCutDetail:"Deduction: {r} (late) + {a} (absences) = {t}",
       srForgive:"Forgive this month", srForgiveUndo:"Put the deduction back", srForgiven:"Deduction forgiven this month", srNoCut:"No late arrival or absence this month 👍",
       srCutOff:"Deductions are off: set the working hours in 🕒 Time clock.",
+      cartPaid:"Paid now (empty = fully paid)", cartLeft:"Advance {p} · balance {r}", cartCliName:"Customer name (required)", cartCliTel:"WhatsApp number",
+      cartTake:"👜 She takes the clothes", cartKeep:"🏪 Clothes stay here", cartNeedName:"Write the customer's name: she still has to pay.",
+      cartAdvLbl:"advance sale No. {n}", cartTakeNote:"Shop sale: the customer took the clothes.", cartKeepNote:"Shop sale: the clothes stay in the shop until fully paid.",
       artSize:"Size (optional)", artSizePh:"E.g. M, XL, 42, 6 yrs", lblRef:"Ref.",
       segStaff:"👥 Staff", segPoint:"🕒 Time clock", stTodayNone:"Not clocked in yet today",
       tabPointage:"Time clock", stCode:"Clock-in code (4 digits)", stCodeBad:"The code must be exactly 4 digits.",
@@ -4407,8 +4413,25 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       const remise=(isNaN(rv)||rv<=0) ? 0 : Math.min(rv, brut);
       tot.textContent = remise>0 ? money(brut)+" − "+money(remise)+" = "+money(brut-remise) : money(brut);
     }
-    rmi.addEventListener("input", draw);
-    bx.appendChild(lab); bx.appendChild(rmi); bx.appendChild(tot);
+    // Payé maintenant : vide = tout payé. Moins que le total = vente avec avance (ticket QR + reste à payer)
+    const labP=document.createElement("label"); labP.textContent=t("cartPaid"); labP.style.marginTop="12px";
+    const pai=document.createElement("input"); pai.type="number"; pai.step="1"; pai.min="0"; pai.inputMode="decimal";
+    const cBox=document.createElement("div"); cBox.hidden=true; cBox.style.cssText="margin-top:10px;padding:10px;border:1px solid var(--warn);border-radius:12px";
+    const left=document.createElement("div"); left.style.cssText="font-weight:700;color:var(--warn);margin-bottom:6px";
+    const cN=document.createElement("input"); cN.type="text"; cN.placeholder=t("cartCliName");
+    const cT=document.createElement("input"); cT.type="tel"; cT.inputMode="tel"; cT.placeholder=t("cartCliTel"); cT.style.marginTop="8px";
+    const seg=document.createElement("div"); seg.className="seg"; seg.style.cssText="width:100%;margin-top:8px";
+    let EMPORTE=true;
+    [["take",true],["keep",false]].forEach(([k,v])=>{ const b=document.createElement("button"); b.type="button"; b.style.flex="1"; b.textContent=t(k==="take"?"cartTake":"cartKeep");
+      b.classList.toggle("on", v===EMPORTE); b.addEventListener("click", ()=>{ EMPORTE=v; seg.querySelectorAll("button").forEach(x=>x.classList.toggle("on", x===b)); }); seg.appendChild(b); });
+    cBox.appendChild(left); cBox.appendChild(cN); cBox.appendChild(cT); cBox.appendChild(seg);
+    function netNow(){ const L=cartLines(); const brut=L.reduce((s,l)=>s+l.brut,0); const rv=parseFloat(String(rmi.value||"").replace(",", ".")); return brut-((isNaN(rv)||rv<=0)?0:Math.min(rv,brut)); }
+    function paidNow(net){ const v=String(pai.value||"").trim(); if(v==="") return net; const n=parseFloat(v.replace(",", ".")); return isNaN(n) ? net : Math.max(0, Math.min(n, net)); }
+    function drawPaid(){ const net=netNow(), pv=paidNow(net); pai.placeholder=String(net); cBox.hidden = !(pv<net);
+      left.textContent=t("cartLeft").replace("{p}", money(pv)).replace("{r}", money(net-pv)); }
+    rmi.addEventListener("input", ()=>{ draw(); drawPaid(); });
+    pai.addEventListener("input", drawPaid);
+    bx.appendChild(lab); bx.appendChild(rmi); bx.appendChild(tot); bx.appendChild(labP); bx.appendChild(pai); bx.appendChild(cBox);
     const bt=document.createElement("div"); bt.className="sc-btns";
     const no=document.createElement("button"); no.type="button"; no.textContent=t("cartClear");
     no.addEventListener("click", ()=>{ if(!confirm(t("cartClearQ"))) return; CART=[]; paintCart(); close(); });
@@ -4424,7 +4447,14 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       const rv=parseFloat(String(rmi.value||"").replace(",", "."));
       const remise=(isNaN(rv)||rv<=0) ? 0 : Math.min(rv, brut);
       if(remise>0 && isMgr()){ alert(t("scDiscCode")); if(!await askCode()) return; }
+      const net=brut-remise, paid=paidNow(net), partiel=paid<net;
+      if(partiel && !cN.value.trim()){ alert(t("cartNeedName")); cN.focus(); return; }
       close();
+      // Vente avec avance : une commande « vente » garde le reste à payer et donne le ticket QR
+      let vRef=null, vNum=null;
+      if(partiel){ vRef=doc(collection(db,"boutiques",BID,"commandes")); vNum=nextNumero(); }
+      const ratio = net>0 ? paid/net : 1;
+      let restePaye=paid;
       // La réduction est répartie entre les articles au prorata (la dernière ligne prend l'arrondi)
       let resteRemise=remise;
       L.forEach((l,i)=>{
@@ -4438,9 +4468,26 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
         setDoc(doc(db,"boutiques",BID,"stock",a.id), ch, { merge:true }).catch(function(){});
         const part = i===L.length-1 ? resteRemise : Math.round(remise*l.brut/(brut||1));
         resteRemise -= part;
-        addMouv("recette","boutique", l.brut-part, l.nom+" ×"+l.qteLbl+" ("+t("cartLbl")+(part>0 ? " · "+t("tkDiscount")+" "+money(part) : "")+")",
-          Object.assign({ articleId:a.id, qte:l.qte, panier:true }, l.k==="rouleau" ? { unite:l.u } : {}, part>0 ? { remise:part, prixInitial:l.brut } : {}, isMgr() ? { parManager:true } : {}));
+        l.net=l.brut-part;
+        const enc = partiel ? (i===L.length-1 ? restePaye : Math.round(l.net*ratio)) : l.net;
+        if(partiel) restePaye -= enc;
+        if(enc>0 || !partiel) addMouv("recette","boutique", enc, l.nom+" ×"+l.qteLbl+" ("+(partiel ? t("cartAdvLbl").replace("{n}", fmtNum(vNum)) : t("cartLbl"))+(part>0 ? " · "+t("tkDiscount")+" "+money(part) : "")+")",
+          Object.assign({ articleId:a.id, qte:l.qte, panier:true }, l.k==="rouleau" ? { unite:l.u } : {}, part>0 ? { remise:part, prixInitial:l.brut } : {}, isMgr() ? { parManager:true } : {}, partiel ? { commandeId:vRef.id, avance:true } : {}));
       });
+      if(partiel){
+        const data={ clienteName:cN.value.trim(), clientePhone:cT.value.trim(), vente:true, type:"pap", recu:"vetement",
+          article:L.map(l=>l.nom+" ×"+l.qteLbl).join(", ").slice(0,200),
+          articles:L.map(l=>({ nom:(l.nom+" ×"+l.qteLbl).slice(0,80), prix:l.brut, etat:"pret" })),
+          prix:net, paye:paid, remise:remise>0?remise:0, prixInitial:remise>0?brut:null,
+          statut: EMPORTE ? "livre" : "pret", numero:vNum, notes:t(EMPORTE?"cartTakeNote":"cartKeepNote"),
+          createdAt:serverTimestamp(), createdAtMs:Date.now(), updatedAt:serverTimestamp() };
+        setDoc(vRef, data, { merge:true }).catch(function(){});
+        const o=Object.assign({ id:vRef.id }, data); COMMANDES.unshift(o);
+        syncSuivi(o, vRef.id);
+        CART=[]; renderLists(); paintCart();
+        setTimeout(()=>showTicket(o), 150);
+        return;
+      }
       CART=[]; renderLists(); paintCart();
       const items=L.map(l=>({ nom:l.nom, qteLbl:l.qteLbl, brut:l.brut }));
       const onClose = isMgr() && ownerNum() ? ()=>{
@@ -4455,7 +4502,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     bt.appendChild(no); bt.appendChild(yes); bx.appendChild(bt);
     ov.appendChild(bx); ov.addEventListener("click", e=>{ if(e.target===ov) close(); });
     document.body.appendChild(ov);
-    draw();
+    draw(); drawPaid();
   }
 
   // ---- 🏷️ Étiquettes QR + 📷 scan à la caisse ----
@@ -6366,6 +6413,8 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
   // Un seul QR par commande : il contient le lien de suivi. La cliente le scanne → page de suivi ;
   // l'atelier le scanne dans l'app → toute la fiche de la cliente s'ouvre.
   const isPz = o => o && o.kind==="pressing";
+  // Une vente boutique payée en partie devient une « commande » (ticket QR, reste à payer) ; ses paiements restent des recettes BOUTIQUE.
+  const srcOf = o => isPz(o) ? "pressing" : (o && o.vente ? "boutique" : "atelier");
   const stLbl = o => isPz(o) ? pzStepLabel(o.statut||"recu") : t("st"+String(o.statut||"recu").charAt(0).toUpperCase()+String(o.statut||"recu").slice(1));
   const isDone = o => isPz(o) ? (o.statut==="recupere") : (o.statut==="livre");
   function nowLabel(lang){ const d=new Date(); return d.toLocaleDateString(lang==="en"?"en-GB":"fr-FR")+" "+d.toLocaleTimeString(lang==="en"?"en-GB":"fr-FR",{hour:"2-digit",minute:"2-digit"}); }
@@ -6613,7 +6662,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     setDoc(doc(db,"boutiques",BID,"commandes",x.id), { paye, updatedAt:serverTimestamp() }, { merge:true })
       .catch(e=>{ x.paye=old; renderLists(); if(isPz(x)) pzFail(e); });
     if(isPz(x)) addMouv("recette","pressing",amt, t("pzTicket")+" "+fmtNum(x.numero)+" — "+(x.clienteName||""), { commandeId:x.id });
-    else addMouv("recette","atelier",amt, t("shopOrder")+" "+fmtNum(x.numero)+" — "+(x.clienteName||""), { commandeId:x.id });
+    else addMouv("recette",srcOf(x),amt, t("shopOrder")+" "+fmtNum(x.numero)+" — "+(x.clienteName||""), { commandeId:x.id });
     renderLists();
     showReceipt(x, amt);
     return true;
@@ -6838,7 +6887,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     const paye=(Number(ORD.paye)||0)+re; ORD.paye=paye;
     const local=COMMANDES.find(x=>x.id===ORDID); if(local && local!==ORD) local.paye=paye;
     setDoc(doc(db,"boutiques",BID,"commandes",ORDID), { paye, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
-    addMouv("recette","atelier",re, t("soldeLabel")+" "+fmtNum(ORD.numero)+" — "+(ORD.clienteName||""), { commandeId:ORDID });
+    addMouv("recette",srcOf(ORD),re, t("soldeLabel")+" "+fmtNum(ORD.numero)+" — "+(ORD.clienteName||""), { commandeId:ORDID });
     syncSuivi(ORD, ORDID); renderCmd(ORD, ORDID); renderLists();
     const m=$("p-msg"); m.textContent=t("cashedIn")+" "+money(re); m.className="msg ok show"; setTimeout(()=>m.classList.remove("show"), 4000);
     showReceipt(ORD, re);
@@ -6920,7 +6969,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     // Commande importée de l'ancienne gestion : son « payé » n'est jamais entré
     // dans les Finances de SanaaPro (l'historique des recettes arrive à part),
     // donc corriger une faute de frappe ne doit pas créer de recette négative.
-    if(!ORD.importe) addMouv("recette","atelier", nv-old, t("qFixLabel")+" "+fmtNum(ORD.numero)+" — "+(ORD.clienteName||""), { commandeId:ORDID });
+    if(!ORD.importe) addMouv("recette",srcOf(ORD), nv-old, t("qFixLabel")+" "+fmtNum(ORD.numero)+" — "+(ORD.clienteName||""), { commandeId:ORDID });
     syncSuivi(ORD, ORDID); renderCmd(ORD, ORDID); renderLists();
     const m=$("p-msg"); m.textContent=t("qFixDone").replace("{v}", money(nv)); m.className="msg ok show";
     setTimeout(()=>m.classList.remove("show"), 4000);
@@ -7735,7 +7784,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     if(local) local.paye=paye;
     setDoc(doc(db,"boutiques",BID,"commandes",ORDID), { paye, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
     syncSuivi(ORD, ORDID);
-    addMouv("recette","atelier",amt, t("shopOrder")+" "+fmtNum(ORD.numero)+" — "+(ORD.clienteName||""), { commandeId:ORDID });
+    addMouv("recette",srcOf(ORD),amt, t("shopOrder")+" "+fmtNum(ORD.numero)+" — "+(ORD.clienteName||""), { commandeId:ORDID });
     $("p-amt").value="";
     msg.textContent=t("cashedIn")+" "+money(amt); msg.className="msg ok show";
     setTimeout(()=>{ msg.classList.remove("show"); }, 4000);
