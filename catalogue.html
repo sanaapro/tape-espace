@@ -293,6 +293,19 @@
 (function(){
   var BASE = "https://firestore.googleapis.com/v1/projects/sanaapro-app/databases/(default)/documents/";
   var KEY = "AIzaSyCqfAGGU7yFs_QYg70u3e5cNYPXQjRHzsI";
+  // Compteur de visites (une par téléphone et par jour, anonyme) — lu seulement par l'admin.
+  (function(){
+    try{
+      var d = new Date(), p = function(n){ return String(n).padStart(2,"0"); };
+      var day = d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate());
+      if(localStorage.getItem("sanaapro_cat_seen") === day) return;
+      localStorage.setItem("sanaapro_cat_seen", day);
+      fetch(BASE.replace(/\/documents\/$/, "/documents:commit") + "?key=" + KEY, { method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ writes:[{ update:{ name:"projects/sanaapro-app/databases/(default)/documents/catalogue_stats/" + day, fields:{} },
+          updateMask:{ fieldPaths:[] }, updateTransforms:[{ fieldPath:"n", increment:{ integerValue:"1" } }] }] }) }).catch(function(){});
+    }catch(e){}
+  })();
   var T = {
     en:{ searchPh:"🔍 Search: linen shirt, boubou, perfume…", noMatch:"Nothing found for “{q}” yet. Try another word.", h1:"Tailors of The Gambia, in one catalogue.", lead:"Browse designs from workshops near you, then order directly from the tailor on WhatsApp.",
          all:"All", femme:"Women", homme:"Men", enfant:"Children", allShops:"All workshops",

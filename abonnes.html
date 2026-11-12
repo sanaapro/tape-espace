@@ -302,6 +302,14 @@
       L.sort((a,b)=>b.ms-a.ms);
       const week=Date.now()-7*DAY, actifs=L.filter(c=>c.ms>week).length;
       box.innerHTML="";
+      try{
+        const st=await getDocs(collection(db,"catalogue_stats")); let tot=0, wk=0, td=0; const today=new Date().toISOString().slice(0,10);
+        const wkStart=new Date(Date.now()-7*DAY).toISOString().slice(0,10);
+        st.forEach(d=>{ const n=Number((d.data()||{}).n)||0; tot+=n; if(d.id>=wkStart) wk+=n; if(d.id===today) td+=n; });
+        const v=document.createElement("div"); v.className="sl"; v.style.marginBottom="8px";
+        v.textContent="👀 Visiteurs (sans compte aussi) : "+td+" aujourd'hui · "+wk+" cette semaine · "+tot+" en tout";
+        box.appendChild(v);
+      }catch(e){}
       const h=document.createElement("div"); h.className="nm";
       h.textContent=L.length+" inscrit"+(L.length>1?"s":"")+" · "+actifs+" actif"+(actifs>1?"s":"")+" cette semaine";
       box.appendChild(h);
