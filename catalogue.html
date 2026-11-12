@@ -910,6 +910,9 @@
          sentReset:"A reset link was sent to {e}. Check your spam folder too.",
          ok:"Your designs are saved in your account", out:"Sign out", outQ:"Sign out? Your designs stay safe in your account.",
          gone:"No longer available", wait:"Please wait…",
+         nudge:"♥ Saved on this phone. Create your free account so you never lose it.", nudgeBtn:"Create my account",
+         profH:"Last step: how should tailors know you?", profName:"First name", profTel:"WhatsApp number",
+         profGo:"Save", profOk:"Thank you {n}!", profSkip:"Later",
          e:{ "auth/email-already-in-use":"This email already has an account: choose “I already have an account”.",
              "auth/invalid-credential":"Wrong email or password.", "auth/wrong-password":"Wrong email or password.", "auth/user-not-found":"Wrong email or password.",
              "auth/invalid-email":"This email address is not valid.", "auth/weak-password":"The password needs at least 6 characters.",
@@ -929,6 +932,9 @@
          sentReset:"Un lien de réinitialisation a été envoyé à {e}. Regardez aussi dans les spams.",
          ok:"Vos modèles sont sauvegardés dans votre compte", out:"Me déconnecter", outQ:"Vous déconnecter ? Vos modèles restent en sécurité dans votre compte.",
          gone:"N'est plus disponible", wait:"Un instant…",
+         nudge:"♥ Gardé dans ce téléphone. Créez votre compte gratuit pour ne jamais le perdre.", nudgeBtn:"Créer mon compte",
+         profH:"Dernière étape : comment vous appeler ?", profName:"Prénom", profTel:"Numéro WhatsApp",
+         profGo:"Enregistrer", profOk:"Merci {n} !", profSkip:"Plus tard",
          e:{ "auth/email-already-in-use":"Cet email a déjà un compte : choisissez « J'ai déjà un compte ».",
              "auth/invalid-credential":"Email ou mot de passe incorrect.", "auth/wrong-password":"Email ou mot de passe incorrect.", "auth/user-not-found":"Email ou mot de passe incorrect.",
              "auth/invalid-email":"Cette adresse email n'est pas valide.", "auth/weak-password":"Le mot de passe doit avoir au moins 6 caractères.",
@@ -962,8 +968,25 @@
   function ids(){ return FAV.map(function(x){ return x.id; }); }
   function toggle(o){
     if(has(o.id)) FAV = FAV.filter(function(x){ return x.id !== o.id; });
-    else { FAV.unshift(snap(o)); if(FAV.length > MAX) FAV.length = MAX; }
+    else { FAV.unshift(snap(o)); if(FAV.length > MAX) FAV.length = MAX; nudge(); }
     store(); refresh(); pushSoon();
+  }
+
+  // Premier cœur sans compte : on propose (sans obliger) de créer le compte.
+  var NUDGED = false;
+  function nudge(){
+    if(USER || NUDGED) return;
+    var signed = false; try{ signed = localStorage.getItem(KEY_SIGNED) === "1"; }catch(e){}
+    if(signed) return;
+    var last = 0; try{ last = Number(localStorage.getItem("sanaapro_nudge_ms")) || 0; }catch(e){}
+    if(Date.now() - last < 3 * 86400000) return;
+    NUDGED = true; try{ localStorage.setItem("sanaapro_nudge_ms", String(Date.now())); }catch(e){}
+    var el = $("toast"); el.innerHTML = "";
+    var sp = document.createElement("span"); sp.textContent = t().nudge; el.appendChild(sp);
+    var b = document.createElement("button"); b.type = "button"; b.textContent = t().nudgeBtn;
+    b.addEventListener("click", function(){ el.hidden = true; openPage(); });
+    el.appendChild(b); el.hidden = false;
+    setTimeout(function(){ el.hidden = true; }, 9000);
   }
 
   // ---- cœurs sur les vignettes et dans la fiche ----
@@ -1121,8 +1144,16 @@
     var x = t(), h = "";
     var keepMail = $("ac-mail") ? $("ac-mail").value : "", keepPass = $("ac-pass") ? $("ac-pass").value : "";
     if(USER){
-      h = '<p class="ok">✓ ' + esc(x.ok) + '<br><b>' + esc(USER.email || "") + '</b></p>' +
-          '<button type="button" class="btn" id="ac-out">' + esc(x.out) + '</button>';
+      var pr = prof();
+      h = '<p class="ok">✓ ' + esc(x.ok) + '<br><b>' + esc(pr.name ? pr.name + " · " : "") + esc(USER.email || "") + '</b></p>';
+      if(!pr.name && !pr.skip){
+        h += '<p>' + esc(x.profH) + '</p>' +
+             '<input id="pf-name" autocomplete="given-name" placeholder="' + esc(x.profName) + '" value="' + esc(USER.displayName ? String(USER.displayName).split(" ")[0] : "") + '">' +
+             '<input id="pf-tel" type="tel" autocomplete="tel" inputmode="tel" placeholder="' + esc(x.profTel) + '">' +
+             '<button type="button" class="btn gold" id="pf-go">' + esc(x.profGo) + '</button>' +
+             '<button type="button" class="lnk" id="pf-skip">' + esc(x.profSkip) + '</button>';
+      }
+      h += '<button type="button" class="btn" id="ac-out">' + esc(x.out) + '</button>';
     } else {
       h = '<p>' + esc(x.pitch) + '</p>' +
           '<button type="button" class="btn g" id="ac-g">' + GLOGO + esc(x.google) + '</button>';
@@ -1140,12 +1171,31 @@
     box.innerHTML = h;
     if($("ac-mail")){ $("ac-mail").value = keepMail; $("ac-pass").value = keepPass; }
     on("ac-out", signOut); on("ac-g", google);
+    on("pf-go", saveProf);
+    on("pf-skip", function(){ var p = prof(); p.skip = 1; setProf(p); paintAcct(); });
     on("ac-e", function(){ SHOW_FORM = true; ERR = ""; paintAcct(); setTimeout(function(){ if($("ac-mail")) $("ac-mail").focus(); }, 30); });
     on("ac-tn", function(){ MODE = "new"; ERR = ""; MSG = ""; paintAcct(); });
     on("ac-to", function(){ MODE = "old"; ERR = ""; MSG = ""; paintAcct(); });
     on("ac-go", function(){ if(!BUSY) emailGo(); });
     on("ac-fg", reset);
     if($("ac-pass")) $("ac-pass").addEventListener("keydown", function(e){ if(e.key === "Enter" && !BUSY) emailGo(); });
+  }
+  function profKey(){ return "sanaapro_client_prof_" + (USER ? USER.uid : ""); }
+  function prof(){ try{ return JSON.parse(localStorage.getItem(profKey()) || "{}") || {}; }catch(e){ return {}; } }
+  function setProf(p){ try{ localStorage.setItem(profKey(), JSON.stringify(p)); }catch(e){} }
+  function saveProf(){
+    var n = ($("pf-name").value || "").trim().slice(0, 40), tel = ($("pf-tel").value || "").replace(/[^\d+ ]/g, "").trim().slice(0, 20);
+    if(!n){ $("pf-name").focus(); return; }
+    setProf({ name:n, tel:tel }); MSG = t().profOk.replace("{n}", n); paintAcct();
+    patch({ name:{ stringValue:n }, tel:{ stringValue:tel } });
+  }
+  function patch(fields){
+    if(!USER) return Promise.resolve();
+    var mask = Object.keys(fields).map(function(k){ return "updateMask.fieldPaths=" + k; }).join("&");
+    return USER.getIdToken().then(function(tok){
+      return fetch(docUrl() + "?" + mask, { method:"PATCH", headers:{ "Content-Type":"application/json", Authorization:"Bearer " + tok },
+        body: JSON.stringify({ fields: fields }) });
+    }).catch(function(){});
   }
   function on(id, fn){ var el = $(id); if(el) el.addEventListener("click", fn); }
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]; }); }
@@ -1156,7 +1206,7 @@
     if(!USER) return;
     USER.getIdToken().then(function(tok){
       return fetch(docUrl(), { headers:{ Authorization:"Bearer " + tok } }).then(function(r){
-        if(r.status === 404) return [];
+        if(r.status === 404){ push(); return []; }
         return r.ok ? r.json().then(function(d){
           var v = (((d.fields || {}).ids || {}).arrayValue || {}).values || [];
           return v.map(function(x){ return x.stringValue; }).filter(Boolean);
@@ -1184,13 +1234,10 @@
   function push(){
     if(!USER) return;
     var list = FAV.filter(function(x){ return !x._gone; }).map(function(x){ return x.id; }).slice(0, MAX);
-    USER.getIdToken().then(function(tok){
-      return fetch(docUrl(), { method:"PATCH", headers:{ "Content-Type":"application/json", Authorization:"Bearer " + tok },
-        body: JSON.stringify({ fields:{
-          ids:{ arrayValue:{ values: list.map(function(id){ return { stringValue:id }; }) } },
-          updatedMs:{ integerValue: String(Date.now()) },
-          email:{ stringValue: USER.email || "" } } }) });
-    }).catch(function(){});
+    patch({
+      ids:{ arrayValue:{ values: list.map(function(id){ return { stringValue:id }; }) } },
+      updatedMs:{ integerValue: String(Date.now()) },
+      email:{ stringValue: USER.email || "" } });
   }
 
   // ---- démarrage ----

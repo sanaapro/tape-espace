@@ -149,6 +149,8 @@
     <div id="list"></div>
     <div class="name" style="margin:22px 0 10px;font-size:18px">🎓 Écoles (SanaaPro School)</div>
     <div id="schools"></div>
+    <div class="name" style="margin:22px 0 10px;font-size:18px">❤️ Clients du catalogue</div>
+    <div id="fans" class="shop"></div>
     <div class="newsbox" id="orphans" hidden>
       <div class="txt" id="orph-text"></div>
       <button id="orph-del">Supprimer ces modèles</button>
@@ -288,7 +290,26 @@
     show("loading"); $("loading").textContent="Lecture des abonnements…";
     await loadShops();
     loadSchools();
+    loadFans();
   });
+
+  async function loadFans(){
+    const box=$("fans");
+    try{
+      const snap = await getDocs(collection(db,"clients"));
+      const L=[]; snap.forEach(d=>{ const c=d.data()||{}; L.push({ name:c.name||"", tel:c.tel||"", email:c.email||"",
+        n:Array.isArray(c.ids)?c.ids.length:0, ms:Number(c.updatedMs)||0 }); });
+      L.sort((a,b)=>b.ms-a.ms);
+      const week=Date.now()-7*DAY, actifs=L.filter(c=>c.ms>week).length;
+      box.innerHTML="";
+      const h=document.createElement("div"); h.className="nm";
+      h.textContent=L.length+" inscrit"+(L.length>1?"s":"")+" · "+actifs+" actif"+(actifs>1?"s":"")+" cette semaine";
+      box.appendChild(h);
+      L.slice(0,30).forEach(c=>{ const r=document.createElement("div"); r.className="sl"; r.style.marginTop="6px";
+        r.textContent=(c.name||"(sans prénom)")+(c.tel?" · "+c.tel:"")+" · "+c.email+" · "+c.n+" modèle"+(c.n>1?"s":"");
+        box.appendChild(r); });
+    }catch(e){ box.textContent="Liste des clients pas encore ouverte à l'admin (règle à ajouter)."; }
+  }
 
   let SCHOOLS = [];
   async function loadSchools(){
