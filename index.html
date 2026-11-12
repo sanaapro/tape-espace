@@ -5650,17 +5650,37 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
 
   /* ---------- Vitrine : modèles publiés dans le catalogue commun ---------- */
   let VITRINE = [], VT_LOADED = false, VT_FILE = null; let VT_SYNC_ERR = "";
+  // Garde-fou : un document Firestore ne dépasse pas 1 Mo → on réduit la qualité, puis la taille, jusqu'à passer
+  async function compressUnder(file, max, q, limit){
+    let d = await compressImage(file, max, q);
+    while(d.length > limit && (q > 0.55 || max > 700)){
+      if(q > 0.55) q = Math.round((q - 0.08) * 100) / 100; else max = Math.round(max * 0.85);
+      d = await compressImage(file, max, q);
+    }
+    return d;
+  }
   function compressImage(file, max, q){
     return new Promise((res, rej)=>{
       const url = URL.createObjectURL(file);
       const img = new Image();
       img.onload = ()=>{
+        // Réduction par étapes (moitié par moitié) + lissage « high » : une photo nette au lieu d'une image pâteuse
         const r = Math.min(1, max / Math.max(img.width, img.height));
-        const c = document.createElement("canvas");
-        c.width = Math.round(img.width*r); c.height = Math.round(img.height*r);
-        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        const W = Math.round(img.width*r), H = Math.round(img.height*r);
+        let src = img, sw = img.width, sh = img.height;
+        while(sw / 2 >= W && sh / 2 >= H){
+          const t = document.createElement("canvas"); t.width = Math.round(sw/2); t.height = Math.round(sh/2);
+          const tx = t.getContext("2d"); tx.imageSmoothingEnabled = true; tx.imageSmoothingQuality = "high";
+          tx.drawImage(src, 0, 0, t.width, t.height); src = t; sw = t.width; sh = t.height;
+        }
+        const c = document.createElement("canvas"); c.width = W; c.height = H;
+        const cx = c.getContext("2d"); cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = "high";
+        cx.fillStyle = "#fff"; cx.fillRect(0, 0, W, H);
+        cx.drawImage(src, 0, 0, W, H);
         URL.revokeObjectURL(url);
-        res(c.toDataURL("image/jpeg", q));
+        // WebP quand le téléphone sait le faire (plus léger à qualité égale), sinon JPEG
+        const w = c.toDataURL("image/webp", q);
+        res(w.indexOf("data:image/webp") === 0 ? w : c.toDataURL("image/jpeg", q));
       };
       img.onerror = ()=>{ URL.revokeObjectURL(url); rej(new Error("img")); };
       img.src = url;
@@ -5838,8 +5858,8 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     if(!$("vt-style").value) return fail("vtNeedStyle");
     btn.disabled=true; msg.textContent=t("vtWorking"); msg.className="msg ok show";
     try{
-      const thumb = await compressImage(VT_FILE, 360, 0.6);
-      const photo = await compressImage(VT_FILE, 1000, 0.72);
+      const thumb = await compressUnder(VT_FILE, 480, 0.72, 70000);
+      const photo = await compressUnder(VT_FILE, 1400, 0.82, 700000);
       const pv=$("vt-prix").value.trim();
       const ref = doc(collection(db,"catalogue"));
       const data = {
@@ -5902,8 +5922,8 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       const it = todo[i];
       msg.textContent = t("vtProgress").replace("{i}", i+1).replace("{n}", todo.length); msg.className="msg ok show";
       try{
-        const thumb = await compressImage(it.file, 360, 0.6);
-        const photo = await compressImage(it.file, 1000, 0.72);
+        const thumb = await compressUnder(it.file, 480, 0.72, 70000);
+        const photo = await compressUnder(it.file, 1400, 0.82, 700000);
         const ref = doc(collection(db,"catalogue"));
         const data = vtModelData(String(it.titre).trim(), it.prix, thumb);
         data.createdMs = base + (todo.length - i); // la 1re photo choisie apparaît en premier
