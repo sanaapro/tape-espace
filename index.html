@@ -83,6 +83,8 @@
     padding-bottom:1.5mm; border-bottom:0.3mm solid #c9a94a; width:100% }
   .lbl img{ width:30mm; height:30mm; display:block; margin:4mm auto 3mm; image-rendering:pixelated }
   .lbl .ln{ font-size:9.5pt; font-weight:600; line-height:1.25; max-height:3.75em; overflow:hidden; color:#222 }
+  .lbl .lsz{ display:inline-block; font-size:15pt; font-weight:800; border:0.5mm solid #111; border-radius:2mm; padding:0 2.2mm; margin-top:1.5mm; line-height:1.35 }
+  .sz-badge{ display:inline-block; font-size:12px; font-weight:800; border:1px solid var(--gold); color:var(--gold); border-radius:6px; padding:0 6px; margin-left:6px; vertical-align:1px }
   .lbl .lnum{ font-size:6.5pt; color:#777; margin-top:1mm; letter-spacing:.5pt }
   .lbl .lp{ font-family:Georgia, "Times New Roman", serif; font-size:17pt; font-weight:700; margin-top:auto; padding-top:2mm; border-top:0.3mm solid #c9a94a; width:100% }
   .lbl-bar{ display:flex; gap:10px; max-width:520px; margin:12px auto 0 }
@@ -1251,6 +1253,11 @@
           <div class="ph-btns"><label><input type="file" id="ar-photo" accept="image/*" capture="environment"><span data-i18n="fabPhoto">📷 Photo du tissu (facultatif)</span></label></div>
           <img id="ar-photo-prev" alt="" hidden style="width:64px;height:64px;object-fit:cover;border-radius:10px;margin-top:8px;border:1px solid var(--line2)">
         </div>
+        <div id="ar-size-box">
+          <label data-i18n="artSize">Taille (facultatif)</label>
+          <div class="chips sm" id="ar-size-chips"></div>
+          <input id="ar-size" type="text" maxlength="12" data-i18n-ph="artSizePh" placeholder="Ex. M, XL, 42, 6 ans">
+        </div>
         <div class="mgrid">
           <div id="ar-qte-box"><label id="ar-qte-lbl">Quantité</label><input id="ar-qte" type="number" step="1" inputmode="numeric" placeholder="0"></div>
           <div><label id="ar-prix-lbl">Prix de vente</label><input id="ar-prix" type="number" step="1" inputmode="decimal" placeholder="0"></div>
@@ -2045,6 +2052,7 @@
       srLate:"Retards : {n} fois · {m} au total", srAbsAuto:"Jours de travail sans pointage : {n}", srCut:"Retenue", srCutDetail:"Retenue : {r} (retards) + {a} (absences) = {t}",
       srForgive:"Pardonner ce mois", srForgiveUndo:"Remettre la retenue", srForgiven:"Retenue pardonnée ce mois", srNoCut:"Aucun retard ni absence ce mois 👍",
       srCutOff:"Retenues désactivées : réglez les horaires dans 🕒 Pointage.",
+      artSize:"Taille (facultatif)", artSizePh:"Ex. M, XL, 42, 6 ans", lblRef:"Réf.",
       segStaff:"👥 Salariés", segPoint:"🕒 Pointage", stTodayNone:"Pas encore pointé aujourd'hui",
       tabPointage:"Pointage", stCode:"Code de pointage (4 chiffres)", stCodeBad:"Le code doit faire exactement 4 chiffres.",
       stCodeUsed:"Ce code est déjà utilisé par un autre employé.", stCodeNone:"Pas de code de pointage", stCodeSet:"Code de pointage : ••••",
@@ -2350,6 +2358,7 @@
       srLate:"Late: {n} time(s) · {m} in total", srAbsAuto:"Working days with no clock-in: {n}", srCut:"Deduction", srCutDetail:"Deduction: {r} (late) + {a} (absences) = {t}",
       srForgive:"Forgive this month", srForgiveUndo:"Put the deduction back", srForgiven:"Deduction forgiven this month", srNoCut:"No late arrival or absence this month 👍",
       srCutOff:"Deductions are off: set the working hours in 🕒 Time clock.",
+      artSize:"Size (optional)", artSizePh:"E.g. M, XL, 42, 6 yrs", lblRef:"Ref.",
       segStaff:"👥 Staff", segPoint:"🕒 Time clock", stTodayNone:"Not clocked in yet today",
       tabPointage:"Time clock", stCode:"Clock-in code (4 digits)", stCodeBad:"The code must be exactly 4 digits.",
       stCodeUsed:"This code is already used by another employee.", stCodeNone:"No clock-in code", stCodeSet:"Clock-in code: ••••",
@@ -4106,7 +4115,7 @@
     if($("ap-sales-n")){ $("ap-sales-n").textContent=nSales; $("ap-sales-d").textContent=recAll; $("ap-stock").textContent=shopAll.length; }
     const q=normNom(($("q-stock")||{}).value||"");
     $("body-boutique").classList.toggle("searching", !!q);
-    live.filter(a=>!q || normNom((a.nom||"")+" "+(a.type||"")).indexOf(q)>-1).forEach(a=>{
+    live.filter(a=>!q || normNom((a.nom||"")+" "+(a.type||"")+" "+(a.taille||"")).indexOf(q)>-1).forEach(a=>{
       const k=kindOf(a), u=uLbl(a.unite);
       const el=document.createElement("div"); el.className="rec";
       const top=document.createElement("div"); top.className="st-row";
@@ -4117,6 +4126,7 @@
       const nm=document.createElement("div"); nm.className="nm";
       if(k!=="article"){ const bd=document.createElement("span"); bd.className="st-badge"; bd.textContent = k==="rouleau" ? t("kRouleau") : t("lotOf").replace("{n}", fmtL(a.lotLen)+" "+u); nm.appendChild(bd); }
       nm.appendChild(document.createTextNode(a.nom||"—"));
+      if(a.taille){ const sz=document.createElement("span"); sz.className="sz-badge"; sz.textContent=a.taille; nm.appendChild(sz); }
       const l1=document.createElement("div"); l1.className="ln";
       l1.textContent = k==="rouleau"
         ? (a.type ? a.type+" · " : "") + stockReste(a) + " · " + money(a.prix)+" / "+u
@@ -4151,7 +4161,7 @@
         if(remise>0 && isMgr()){ alert(t("scDiscCode")); if(!await askCode()) return; }
         const qLbl = k==="rouleau" ? fmtL(qv)+" "+u : String(qv);
         const puLbl = k==="rouleau" ? money(a.prix)+" / "+u : null;
-        const nomV = k==="lot" ? (a.nom||"")+" ("+t("lotOf").replace("{n}", fmtL(a.lotLen)+" "+u)+")" : (a.nom||"");
+        const nomV = k==="lot" ? (a.nom||"")+" ("+t("lotOf").replace("{n}", fmtL(a.lotLen)+" "+u)+")" : (a.nom||"")+(a.taille ? " — "+a.taille : "");
         // Une seule touche ne vend plus rien : on montre la vente en grand et on demande de confirmer
         if(!await confirmSale({ nom:nomV, qte:qv, qteLbl:qLbl, pu:Number(a.prix)||0, puLbl, brut, remise, net:brut-remise })) return;
         const ch={ updatedAt:serverTimestamp() };
@@ -4218,7 +4228,8 @@
         const iN=document.createElement("input"); iN.type="text"; iN.value=a.nom||"";
         const l2=document.createElement("label"); l2.textContent = k==="rouleau" ? t("fabPrixU").replace("{u}", u) : (k==="lot" ? t("fabPrixLot") : t("artPrix"));
         const iP=document.createElement("input"); iP.type="number"; iP.step="1"; iP.inputMode="decimal"; iP.value=Number(a.prix)||0;
-        let iQ=null, l3=null;
+        let iQ=null, l3=null, iS=null, l4=null;
+        if(k==="article"){ l4=document.createElement("label"); l4.textContent=t("artSize"); iS=document.createElement("input"); iS.type="text"; iS.maxLength=12; iS.value=a.taille||""; iS.placeholder=t("artSizePh"); }
         if(k!=="rouleau"){
           l3=document.createElement("label"); l3.textContent=t("editAddQ").replace("{n}", fmtL(a.qte));
           iQ=document.createElement("input"); iQ.type="number"; iQ.step="1"; iQ.min="0"; iQ.inputMode="numeric"; iQ.placeholder="0";
@@ -4232,16 +4243,17 @@
           if(!nom){ iN.focus(); return; }
           const pv=parseFloat(String(iP.value||"").replace(",", "."));
           if(isNaN(pv) || pv<0){ iP.focus(); return; }
-          const nomChange = nom!==(a.nom||""), prixChange = pv!==(Number(a.prix)||0);
+          const sz = iS ? normSz(iS.value) : (a.taille||"");
+          const nomChange = nom!==(a.nom||"") || sz!==(a.taille||""), prixChange = pv!==(Number(a.prix)||0);
           const ajout = iQ ? Math.max(0, Math.floor(parseFloat(String(iQ.value||"").replace(",", "."))||0)) : 0;
           if(!nomChange && !prixChange && !ajout){ f.remove(); ed.hidden=false; return; }
           if(nomChange){
-            const dup=STOCK.find(x=>x.id!==a.id && !x.fini && x.usage!=="atelier" && normNom(x.nom||"")===normNom(nom));
+            const dup=STOCK.find(x=>x.id!==a.id && !x.fini && x.usage!=="atelier" && normNom(x.nom||"")===normNom(nom) && normSz(x.taille)===sz);
             if(dup){ alert(t("editDup")); iN.focus(); return; }
           }
           if((nomChange || prixChange || isMgr()) && !await askCode()) return;
           const ch={ updatedAt:serverTimestamp() };
-          if(nomChange){ ch.nom=nom; a.nom=nom; }
+          if(nomChange){ ch.nom=nom; a.nom=nom; if(iS){ ch.taille=sz; a.taille=sz; } }
           if(prixChange){ ch.prix=pv; a.prix=pv; }
           if(ajout){ a.qte=(Number(a.qte)||0)+ajout; ch.qte=a.qte; }
           setDoc(doc(db,"boutiques",BID,"stock",a.id), ch, { merge:true }).catch(function(){});
@@ -4250,7 +4262,7 @@
           if(ajout) offerLabels(a, ajout);
         });
         bx.appendChild(bc); bx.appendChild(bs);
-        f.appendChild(l1); f.appendChild(iN); f.appendChild(l2); f.appendChild(iP); if(iQ){ f.appendChild(l3); f.appendChild(iQ); } f.appendChild(bx);
+        f.appendChild(l1); f.appendChild(iN); if(iS){ f.appendChild(l4); f.appendChild(iS); } f.appendChild(l2); f.appendChild(iP); if(iQ){ f.appendChild(l3); f.appendChild(iQ); } f.appendChild(bx);
         el.insertBefore(f, ed.nextSibling);
         iN.focus();
       });
@@ -4274,6 +4286,17 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     "perfume","cream","lotion","soap","shampoo","conditioner","lipstick","nail polish","foundation","hair extensions","extensions","wig","wigs","necklace","ring","watch","sunglasses",
   "parfum","parfums","crème","lotion","lait corporel","savon","shampooing","pommade","rouge à lèvres","vernis","fond de teint","mèches","perruque","perruques","collier","bague","montre","lunettes",
   "chemise","chemises","robe","robes","sac","sacs","coussin","coussins","chapeau","chapeaux","pantalon","pantalons","ensemble","jupe","veste","boucles d'oreilles","ceinture","cuillère","assiette","bol","pot de fleurs","tunique","foulard","chaussures","pagne","caftan"];
+  // ---- Taille : un article par taille (« Shirt White » M et L = deux articles) ----
+  const SIZES=["XS","S","M","L","XL","XXL","3XL"];
+  const normSz = v => String(v||"").trim().toUpperCase().replace(/\s+/g," ").slice(0,12);
+  const artRef = a => String(a.id||"").slice(-5).toUpperCase();
+  (function(){ const box=$("ar-size-chips"); if(!box) return;
+    SIZES.forEach(z=>{ const b=document.createElement("button"); b.type="button"; b.textContent=z;
+      b.addEventListener("click", ()=>{ const on=normSz($("ar-size").value)===z; $("ar-size").value = on ? "" : z; paintSz(); }); box.appendChild(b); });
+    $("ar-size").addEventListener("input", paintSz);
+    function paintSz(){ const v=normSz($("ar-size").value); box.querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.textContent===v)); }
+    window.__paintSz=paintSz;
+  })();
   function nomArticleDabord(nom){
     const s=String(nom||"").trim(); if(!s) return s;
     const m=s.match(/\s*(\+|,|:|\/|\(|\s(?:with|avec|for|pour)\s)/i);
@@ -4343,7 +4366,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     CART.forEach(c=>{
       const a=STOCK.find(x=>x.id===c.id); if(!a || a.fini) return;
       const k=kindOf(a), u=uLbl(a.unite);
-      const nom = k==="lot" ? (a.nom||"")+" ("+t("lotOf").replace("{n}", fmtL(a.lotLen)+" "+u)+")" : (a.nom||"");
+      const nom = k==="lot" ? (a.nom||"")+" ("+t("lotOf").replace("{n}", fmtL(a.lotLen)+" "+u)+")" : (a.nom||"")+(a.taille ? " — "+a.taille : "");
       out.push({ a, k, u, qte:c.qte, serials:(c.serials||[]).slice(), nom, qteLbl: k==="rouleau" ? fmtL(c.qte)+" "+u : String(c.qte), pu:Number(a.prix)||0, brut:Math.round((Number(a.prix)||0)*c.qte) });
     });
     return out;
@@ -4529,8 +4552,10 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
         const im=document.createElement("img"); im.alt=""; im.src=await qrDataUrl(qrArt(a,n));
         const s2=document.createElement("div"); s2.className="ln"; s2.textContent=a.nom||"";
         const s3=document.createElement("div"); s3.className="lp"; s3.textContent=money(a.prix)+(kindOf(a)==="rouleau" ? " / "+uLbl(a.unite) : "");
-        const s4=document.createElement("div"); s4.className="lnum"; s4.textContent="N° "+n;
-        l.appendChild(s1); l.appendChild(im); l.appendChild(s2); l.appendChild(s3); l.appendChild(s4); sheet.appendChild(l);
+        const s4=document.createElement("div"); s4.className="lnum"; s4.textContent=t("lblRef")+" "+artRef(a)+"-"+n;
+        l.appendChild(s1); l.appendChild(im); l.appendChild(s2);
+        if(a.taille){ const s5=document.createElement("div"); s5.className="lsz"; s5.textContent=a.taille; l.appendChild(s5); }
+        l.appendChild(s3); l.appendChild(s4); sheet.appendChild(l);
       }
     }catch(e){ alert(t("tkQrFail")); ov.remove(); return; }
     Object.keys(used).forEach(id=>{ const a=STOCK.find(x=>x.id===id); if(!a) return; a.etq=used[id];
@@ -4573,6 +4598,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     $("ar-roll-box").hidden = k!=="rouleau";
     $("ar-lot-box").hidden = k!=="lot";
     $("ar-qte-box").hidden = k==="rouleau";
+    if($("ar-size-box")) $("ar-size-box").hidden = k!=="article";
     $("ar-len").disabled = $("ar-entame").checked;
     const u = AR_UNIT==="yd" ? t("uYard").toLowerCase() : t("uMetre").toLowerCase();
     $("ar-qte-lbl").textContent = k==="lot" ? t("fabNbLots") : t("artQte");
@@ -4639,8 +4665,9 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     const q=parseFloat($("ar-qte").value)||0;
     const p=parseFloat($("ar-prix").value)||0;
     const type=$("ar-type").value.trim();
+    const taille = k==="article" ? normSz($("ar-size").value) : "";
     const done=(key)=>{ msg.textContent=t(key); msg.className="msg ok show";
-      $("ar-name").value=""; $("ar-type").value=""; $("ar-qte").value=""; $("ar-prix").value=""; $("ar-len").value=""; $("ar-lotlen").value="";
+      $("ar-name").value=""; $("ar-type").value=""; $("ar-size").value=""; try{ window.__paintSz(); }catch(e){} $("ar-qte").value=""; $("ar-prix").value=""; $("ar-len").value=""; $("ar-lotlen").value="";
       $("ar-entame").checked=false; AR_PHOTO=null; $("ar-photo-prev").hidden=true; paintArForm();
       $("ar-ia-prev").hidden=true; $("ar-ia-clear").hidden=true; $("ar-ia-st").style.color=""; $("ar-ia-st").textContent = AR_IA_USED ? t("arIaNext") : ""; AR_IA_USED=false;
       setTimeout(()=>{ msg.classList.remove("show"); }, 4000); renderLists(); };
@@ -4661,7 +4688,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       const ro=create({ nom, type, kind:"rouleau", unite:AR_UNIT, prix:p, entame, longueur: entame ? null : len, vendu:0, qte:0 });
       done("artAdded"); offerLabels(ro, 1); return;
     }
-    const exist = STOCK.find(x => !x.fini && x.usage!=="atelier" && kindOf(x)===k && (x.nom||"").toLowerCase() === nom.toLowerCase());
+    const exist = STOCK.find(x => !x.fini && x.usage!=="atelier" && kindOf(x)===k && (x.nom||"").toLowerCase() === nom.toLowerCase() && normSz(x.taille)===taille);
     if(exist){
       exist.qte = (Number(exist.qte)||0) + q;
       if(p>0) exist.prix = p;
@@ -4676,7 +4703,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       const lo=create({ nom, type, kind:"lot", unite:AR_UNIT, lotLen:ll, qte:q, prix:p });
       done("artAdded"); offerLabels(lo, q); return;
     }
-    const ar=create({ nom, type, qte:q, prix:p });
+    const ar=create(taille ? { nom, type, taille, qte:q, prix:p } : { nom, type, qte:q, prix:p });
     done("artAdded"); offerLabels(ar, q);
   });
 
