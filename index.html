@@ -2028,8 +2028,8 @@
       expBlock:"Votre abonnement est arrivé à échéance. Vos données restent visibles, mais vous ne pouvez plus rien enregistrer tant qu'il n'est pas renouvelé.\n\nVoulez-vous renouveler maintenant sur WhatsApp ?",
       renewMsg:"Bonjour, je souhaite renouveler l'abonnement de ma boutique {shop} ({slug}).",
       renewBtn:"Renouveler mon abonnement",
-      planPickEnding:"Votre essai gratuit se termine dans {n} jour(s)", planPickEnded:"Votre essai gratuit est terminé", planPickT2:"Choisissez votre formule", planPickHint:"Pendant l'essai vous avez tout vu. Choisissez maintenant la formule qui vous convient : vos données restent intactes.", planMonth:"mois", planChoose:"Choisir {p}", planLater:"Plus tard", planPickPrem:"Passer au Premium", planMsg:"Bonjour, je choisis la formule {p} pour ma boutique {shop} ({slug}).", planStdFeats:"Une activité au choix (couture ou pressing) : commandes, mesures, reçus WhatsApp, finances.", cpLockTitle:"Couture + pressing ensemble : formule Premium", cpLockText:"En Standard, vous choisissez une seule activité : la couture ou le pressing. Pour utiliser les deux, passez au Premium. Vos données sont gardées.", cpAsk:"La couture et le pressing ensemble, c\u2019est la formule Premium ({b} {cur}/mois).\n\nDemander le Premium sur WhatsApp ?", planPremFeats:"Tout le Standard + couture et pressing ensemble, boutique et stock, reconnaissance des articles par photo, assistant vocal, plan de charge, salariés, pointage, visiteurs, catalogue illimité.", lockTitle:"Réservé à la formule Premium",
-      lockText:"La boutique avec son stock, le plan de charge, le suivi des salariés et la pointeuse du personnel font partie de la formule Premium.",
+      planPickEnding:"Votre essai gratuit se termine dans {n} jour(s)", planPickEnded:"Votre essai gratuit est terminé", planPickT2:"Choisissez votre formule", planPickHint:"Pendant l'essai vous avez tout vu. Choisissez maintenant la formule qui vous convient : vos données restent intactes.", planMonth:"mois", planChoose:"Choisir {p}", planLater:"Plus tard", planPickPrem:"Passer au Premium", planMsg:"Bonjour, je choisis la formule {p} pour ma boutique {shop} ({slug}).", planStdFeats:"Un seul métier au choix (couture, pressing ou boutique) : commandes, mesures, reçus et notifications WhatsApp, finances, catalogue jusqu\u2019à 10 modèles.", cpLockTitle:"Plusieurs métiers ensemble : formule Premium", cpLockText:"En Standard, vous choisissez un seul métier : la couture, le pressing ou la boutique. Pour en utiliser plusieurs, passez au Premium. Vos données sont gardées.", cpAsk:"Plusieurs métiers ensemble (couture, pressing, boutique), c\u2019est la formule Premium ({b} {cur}/mois).\n\nDemander le Premium sur WhatsApp ?", planPremFeats:"Tout le Standard + plusieurs métiers ensemble (couture, pressing, boutique), reconnaissance des articles par photo, assistant vocal, plan de charge, salariés, pointage, visiteurs, catalogue illimité.", lockTitle:"Réservé à la formule Premium",
+      lockText:"Le plan de charge, le suivi des salariés et la pointeuse du personnel font partie de la formule Premium.",
       lockPrice:"Standard {a} {cur}/mois · Premium {b} {cur}/mois",
       lockBtn:"Passer au premium sur WhatsApp",
       lockTrial:"Pendant votre essai gratuit, tout est ouvert — vous pouvez essayer ces pages librement.",
@@ -2338,8 +2338,8 @@
       expBlock:"Your subscription has expired. Your data is still visible, but nothing can be saved until it is renewed.\n\nWould you like to renew now on WhatsApp?",
       renewMsg:"Hello, I would like to renew the subscription for my shop {shop} ({slug}).",
       renewBtn:"Renew my subscription",
-      planPickEnding:"Your free trial ends in {n} day(s)", planPickEnded:"Your free trial has ended", planPickT2:"Choose your plan", planPickHint:"During the trial you saw everything. Now choose the plan that suits you: your data stays intact.", planMonth:"month", planChoose:"Choose {p}", planLater:"Later", planPickPrem:"Go Premium", planMsg:"Hello, I choose the {p} plan for my shop {shop} ({slug}).", planStdFeats:"One activity of your choice (tailoring or dry cleaning): orders, measurements, WhatsApp receipts, finances.", cpLockTitle:"Tailoring + dry cleaning together: Premium plan", cpLockText:"On Standard you choose one activity: tailoring or dry cleaning. To use both, upgrade to Premium. Your data is kept.", cpAsk:"Tailoring and dry cleaning together is the Premium plan ({b} {cur}/month).\n\nAsk for Premium on WhatsApp?", planPremFeats:"Everything in Standard + tailoring and dry cleaning together, shop and stock, photo recognition of items, voice assistant, workload plan, staff, attendance, visitors, unlimited catalogue.", lockTitle:"Premium plan only",
-      lockText:"The shop with its stock, the delivery load plan, staff records and the staff time clock are part of the Premium plan.",
+      planPickEnding:"Your free trial ends in {n} day(s)", planPickEnded:"Your free trial has ended", planPickT2:"Choose your plan", planPickHint:"During the trial you saw everything. Now choose the plan that suits you: your data stays intact.", planMonth:"month", planChoose:"Choose {p}", planLater:"Later", planPickPrem:"Go Premium", planMsg:"Hello, I choose the {p} plan for my shop {shop} ({slug}).", planStdFeats:"One business of your choice (tailoring, dry cleaning or shop): orders, measurements, WhatsApp receipts and alerts, finances, catalogue up to 10 designs.", cpLockTitle:"Several businesses together: Premium plan", cpLockText:"On Standard you choose one business: tailoring, dry cleaning or shop. To use several, upgrade to Premium. Your data is kept.", cpAsk:"Several businesses together (tailoring, dry cleaning, shop) is the Premium plan ({b} {cur}/month).\n\nAsk for Premium on WhatsApp?", planPremFeats:"Everything in Standard + several businesses together (tailoring, dry cleaning, shop), photo recognition of items, voice assistant, workload plan, staff, attendance, visitors, unlimited catalogue.", lockTitle:"Premium plan only",
+      lockText:"The delivery load plan, staff records and the staff time clock are part of the Premium plan.",
       lockPrice:"Standard {a} {cur}/month · Premium {b} {cur}/month",
       lockBtn:"Upgrade on WhatsApp",
       lockTrial:"During your free trial everything is open — feel free to try these pages.",
@@ -2789,21 +2789,23 @@
     ov.appendChild(box); ov.addEventListener("click", e=>{ if(e.target===ov) ov.remove(); });
     document.body.appendChild(ov);
   }
-  // Couture + pressing ensemble = Premium. En Standard, la 2e activité ajoutée est verrouillée (données gardées).
-  function cpLockedAct(){
+  // Standard = UN seul métier (couture, pressing OU vente). Deux métiers ou plus = Premium.
+  // Les métiers ajoutés après le premier sont verrouillés en Standard (données gardées).
+  const BIZ = { couture:"couture", pressing:"pressing", boutique:"vente", tissu:"vente" };
+  const BIZ_PANES = { couture:["atelier","charge","mesures","vitrine","materiel"], pressing:["pressing"], vente:["boutique"] };
+  function bizList(){ const out=[]; activites().forEach(k=>{ const g=BIZ[k]; if(g && out.indexOf(g)===-1) out.push(g); }); return out; }
+  function lockedBiz(){
     let prem=true; try{ prem=subInfo().premium; }catch(e){}
-    if(prem || !hasAct("couture") || !hasAct("pressing")) return null;
-    const a=activites();
-    return a.indexOf("pressing") > a.indexOf("couture") ? "pressing" : "couture";
+    return prem ? [] : bizList().slice(1);
   }
   function paintCpLock(){
-    const locked=cpLockedAct();
-    ["couture","pressing"].forEach(k=>{
-      ACT_TABS[k].forEach(x=>{
+    const locked=lockedBiz();
+    Object.keys(BIZ_PANES).forEach(g=>{
+      BIZ_PANES[g].forEach(x=>{
         const pane=$("pane-"+x); if(!pane) return;
         pane.querySelectorAll(":scope > .cp-lock").forEach(el=>el.remove());
         Array.from(pane.children).forEach(ch=>{ if(ch.dataset.cpPrev!==undefined){ ch.hidden = ch.dataset.cpPrev==="1"; delete ch.dataset.cpPrev; } });
-        if(k!==locked) return;
+        if(locked.indexOf(g)===-1) return;
         Array.from(pane.children).forEach(ch=>{ ch.dataset.cpPrev = ch.hidden ? "1" : "0"; ch.hidden=true; });
         const lock=document.createElement("div"); lock.className="lock cp-lock";
         const h=document.createElement("h3"); h.textContent=t("cpLockTitle");
@@ -2818,11 +2820,12 @@
     });
   }
   function paintLocks(){
+    try{ $("lock-boutique").hidden=true; $("body-boutique").hidden=false; }catch(e){}
     try{ paintCpLock(); }catch(e){}
     try{ paintArIA(); }catch(e){}
     try{ applyVoix(); }catch(e){}
     const i = subInfo();
-    [["staff"],["boutique"],["charge"],["pointage"],["visits"]].forEach(([k])=>{
+    [["staff"],["charge"],["pointage"],["visits"]].forEach(([k])=>{ if(k==="boutique") return;
       const lock=$("lock-"+k), body=$("body-"+k);
       if(i.premium){ lock.hidden=true; body.hidden=false; return; }
       body.hidden=true; lock.hidden=false;
@@ -5894,7 +5897,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     } else prompt("", u);
   });
 
-  const VT_MAX_STD = 5;
+  const VT_MAX_STD = 10;
   // Catalogue : chaque modèle porte l'échéance de son atelier (subExpMs).
   // Le catalogue public cache les modèles dont l'échéance est passée.
   function subExpMs(){
@@ -6282,7 +6285,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       let a=activites().slice();
       if(a.indexOf(k)!==-1) a=a.filter(x=>x!==k); else a.push(k);
       if(!a.length){ alert(t("actNeedOne")); return; }
-      if((k==="couture"||k==="pressing") && a.indexOf("couture")!==-1 && a.indexOf("pressing")!==-1 && activites().indexOf(k)===-1 && !subInfo().premium){
+      if(activites().indexOf(k)===-1 && BIZ[k] && bizList().length && bizList().indexOf(BIZ[k])===-1 && !subInfo().premium){
         if(confirm(t("cpAsk").replace("{b}",PRICE_PREM).replace("{cur}",CUR))) openWa(SANAAPRO_WA, t("upgradeMsg").replace("{shop}", (BOUTIQUE && BOUTIQUE.name) || "").replace("{slug}", (BOUTIQUE && BOUTIQUE.slug) || ""));
         return;
       }
