@@ -350,6 +350,10 @@
   .pt-scan{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; max-width:340px; margin:14px auto 0; padding:16px;
              border:1px solid var(--gold); border-radius:14px; background:var(--gold); color:#141310; font:600 17px var(--sans); cursor:pointer }
   .pt-scan svg{ width:22px; height:22px }
+  .pt-live{ margin:14px auto 0; max-width:360px; text-align:center }
+  .pt-live video{ width:100%; max-height:36vh; border-radius:14px; background:#111; object-fit:cover; border:2px solid var(--gold) }
+  .pt-live-h{ margin-top:8px; font-size:16px; color:var(--gold) }
+  body.ptlive #pt-scan{ display:none !important }
   .pt-cam{ position:fixed; inset:0; z-index:60; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:20px }
   .pt-cam video{ width:100%; max-width:480px; max-height:60vh; border-radius:14px; background:#111; object-fit:cover }
   .pt-cam .frame{ color:#ddd; font-size:15px; text-align:center }
@@ -1445,6 +1449,7 @@
         <div class="pt-pad" id="pt-pad"></div>
         </div>
         <button class="pt-scan" id="pt-scan" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10"/></svg><span data-i18n="ptScan">Scanner mon badge</span></button>
+        <div class="pt-live" id="pt-live" hidden><video id="pt-live-v" playsinline muted></video><div class="pt-live-h" data-i18n="ptLiveHint">Montrez votre badge à la caméra</div></div>
         <div class="pt-res" id="pt-res" role="status" aria-live="polite"></div>
         <button class="pt-exit" id="pt-exit" data-i18n="ptExit">Quitter le mode tablette</button>
       </div>
@@ -2174,7 +2179,7 @@
       nbTitle:"Page du cahier", nbHint:"Photographiez la page de l'ancien cahier : les mesures se remplissent toutes seules et la page reste dans la fiche.", aiReading:"📖 Lecture du cahier en cours…", aiWaking:"📖 Lecture en cours… le lecteur se réveille, cela peut prendre jusqu'à une minute.", aiDone:"✅ {n} mesure(s) lue(s) dans le cahier. Vérifiez les cases vertes avant d'enregistrer.", aiMany:"Plusieurs personnes sur la page : seule la première a été lue.", aiNone:"Aucune mesure lisible sur cette photo. Reprenez-la plus près, bien éclairée, ou dictez les mesures.", aiFail:"La lecture n'a pas abouti. La photo est gardée ; vous pouvez dicter les mesures.", aiOffline:"Pas de réseau : la photo est gardée, la lecture automatique demande Internet.", aiLimit:"Limite de lectures du jour atteinte. Dictez les mesures ou réessayez demain.", aiNoKey:"Le lecteur de cahier n'est pas encore activé.", aiAuth:"Reconnectez-vous pour utiliser la lecture du cahier.", nbBtn:"📷 Photographier la page du cahier", nbNone:"Aucune page de cahier.", nbTag:"Cahier", dictBtn:"🎤 Dicter les mesures", dictStop:"⏹ Arrêter la dictée", dictGo:"Je vous écoute… dites par exemple « épaule 42, poitrine 96 ».", dictHeard:"Entendu : « {t} » · {n} case(s) remplie(s). Vérifiez avant d'enregistrer.", dictNo:"La dictée n'est pas disponible sur ce téléphone (utilisez Chrome).", dictDenied:"Autorisez le micro pour SanaaPro dans les réglages du navigateur.", dictNet:"La dictée a besoin d'Internet. Réessayez quand le réseau revient.", dictErr:"La dictée s'est arrêtée. Touchez à nouveau le micro.",
       pinTitle:"Code d'ouverture de ce téléphone", pinHint:"Même si quelqu'un a votre téléphone déverrouillé, il ne pourra pas ouvrir SanaaPro sans ce code. L'app se verrouille quand on la quitte plus d'une minute.", pinSet:"🔐 Choisir un code d'ouverture", pinChange:"🔐 Changer le code d'ouverture", pinOff:"Retirer le code d'ouverture", pinOnState:"✅ Activé sur ce téléphone", pinOffState:"Pas de code d'ouverture sur ce téléphone.", pinLockNow:"🔐 Verrouiller", pinEnter:"Tapez votre code d'ouverture", pinNew:"Choisissez un code de 4 chiffres", pinConfirm:"Retapez le même code", pinMismatch:"Les deux codes ne sont pas pareils. Recommencez.", pinWrong:"Code incorrect.", pinWait:"Trop d'essais. Attendez 30 secondes.", pinDel:"Effacer", pinForgot:"Code oublié ?", pinForgotAsk:"Tapez le code administrateur de la boutique pour retirer le code d'ouverture :", pinForgotLogout:"Pas de code administrateur. Pour rentrer, il faudra se reconnecter avec l'email et le mot de passe. Se déconnecter ?", pinLogout:"Se déconnecter", pinLogoutQ:"Se déconnecter de SanaaPro sur ce téléphone ? Il faudra l'email et le mot de passe pour revenir.", pinCancel:"Annuler", pinSaved:"Code d'ouverture enregistré sur ce téléphone.", pinRemoved:"Code d'ouverture retiré de ce téléphone.", pinOffQ:"Retirer le code d'ouverture de ce téléphone ?", pinMgrAsk:"Voulez-vous aussi mettre un code d'ouverture sur ce téléphone ?\n\nSi le téléphone reste dans d'autres mains, personne ne pourra ouvrir SanaaPro sans ce code.",
       kickTitle:"Téléphone perdu ou prêté", kickHint:"Déconnecte SanaaPro sur tous les autres téléphones (celui du manager compris), à distance. Ce téléphone-ci reste connecté. Pour revenir, il faudra l'email et le mot de passe.", kickBtn:"📵 Déconnecter tous les autres téléphones", kickQ:"Déconnecter SanaaPro sur TOUS les autres téléphones, y compris celui du manager ?\n\nIls devront se reconnecter avec l'email et le mot de passe.", kickDone:"✅ C'est envoyé. Chaque autre téléphone sera déconnecté dès qu'il a Internet et que SanaaPro est ouvert ou rouvert.", kickOffline:"Pas de réseau : la déconnexion partira dès que ce téléphone retrouvera Internet.", kickedMsg:"Ce téléphone a été déconnecté par le propriétaire de la boutique.",
-      ptScan:"Scanner mon badge", ptAddStaff:"＋ Ajouter un employé", ptModeT:"Comment vos employés pointent",
+      ptScan:"Scanner mon badge", ptLiveHint:"Montrez votre badge à la caméra", ptAddStaff:"＋ Ajouter un employé", ptModeT:"Comment vos employés pointent",
       ptModeCode:"Code à 4 chiffres", ptModeBadge:"Badge (code-barres)", ptModeBoth:"Les deux",
       ptModeHint:"Avec le badge, l'employé montre sa carte à la caméra du téléphone, ou la passe devant un lecteur de code-barres branché.",
       ptBadgesT:"Badges des employés", ptBadgesHint:"Créez un badge pour chaque employé, puis imprimez-les et plastifiez-les.",
@@ -2484,7 +2489,7 @@
       nbTitle:"Notebook page", nbHint:"Take a photo of the old notebook page: the measurements fill in by themselves and the page stays in the file.", aiReading:"📖 Reading the notebook…", aiWaking:"📖 Still reading… the reader is waking up, this can take up to a minute.", aiDone:"✅ {n} measurement(s) read from the notebook. Check the green fields before saving.", aiMany:"Several people on the page: only the first one was read.", aiNone:"No readable measurement in this photo. Retake it closer and well lit, or dictate.", aiFail:"Reading didn't work. The photo is kept; you can dictate the measurements.", aiOffline:"No network: the photo is kept, automatic reading needs internet.", aiLimit:"Daily reading limit reached. Dictate or try again tomorrow.", aiNoKey:"The notebook reader isn't switched on yet.", aiAuth:"Sign in again to use notebook reading.", nbBtn:"📷 Photograph the notebook page", nbNone:"No notebook page.", nbTag:"Notebook", dictBtn:"🎤 Dictate measurements", dictStop:"⏹ Stop dictation", dictGo:"Listening… say for example \"shoulder 42, chest 96\".", dictHeard:"Heard: \"{t}\" · {n} field(s) filled. Check before saving.", dictNo:"Dictation isn't available on this phone (use Chrome).", dictDenied:"Allow the microphone for SanaaPro in the browser settings.", dictNet:"Dictation needs internet. Try again when the network is back.", dictErr:"Dictation stopped. Tap the microphone again.",
       pinTitle:"Opening code for this phone", pinHint:"Even if someone has your phone unlocked, they can't open SanaaPro without this code. The app locks when you leave it for more than a minute.", pinSet:"🔐 Choose an opening code", pinChange:"🔐 Change the opening code", pinOff:"Remove the opening code", pinOnState:"✅ On for this phone", pinOffState:"No opening code on this phone.", pinLockNow:"🔐 Lock", pinEnter:"Enter your opening code", pinNew:"Choose a 4-digit code", pinConfirm:"Enter the same code again", pinMismatch:"The two codes don't match. Try again.", pinWrong:"Wrong code.", pinWait:"Too many tries. Wait 30 seconds.", pinDel:"Delete", pinForgot:"Forgot the code?", pinForgotAsk:"Enter the shop admin code to remove the opening code:", pinForgotLogout:"No admin code set. To get back in you'll need the email and password. Sign out?", pinLogout:"Sign out", pinLogoutQ:"Sign out of SanaaPro on this phone? You'll need the email and password to come back.", pinCancel:"Cancel", pinSaved:"Opening code saved on this phone.", pinRemoved:"Opening code removed from this phone.", pinOffQ:"Remove the opening code from this phone?", pinMgrAsk:"Do you also want an opening code on this phone?\n\nIf the phone ends up in someone else's hands, nobody can open SanaaPro without it.",
       kickTitle:"Lost or lent phone", kickHint:"Signs SanaaPro out on every other phone (the manager's too), remotely. This phone stays signed in. To come back, the email and password will be needed.", kickBtn:"📵 Sign out all other phones", kickQ:"Sign SanaaPro out on ALL other phones, including the manager's?\n\nThey will have to sign in again with the email and password.", kickDone:"✅ Sent. Each other phone will be signed out as soon as it has internet and SanaaPro is open or reopened.", kickOffline:"No network: the sign-out will go as soon as this phone is back online.", kickedMsg:"This phone was signed out by the shop owner.",
-      ptScan:"Scan my badge", ptAddStaff:"＋ Add an employee", ptModeT:"How your staff clock in",
+      ptScan:"Scan my badge", ptLiveHint:"Show your badge to the camera", ptAddStaff:"＋ Add an employee", ptModeT:"How your staff clock in",
       ptModeCode:"4-digit code", ptModeBadge:"Badge (barcode)", ptModeBoth:"Both",
       ptModeHint:"With a badge, the employee shows their card to the phone camera, or passes it in front of a plugged-in barcode reader.",
       ptBadgesT:"Employee badges", ptBadgesHint:"Create a badge for each employee, then print and laminate them.",
@@ -5717,6 +5722,61 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     };
     loop();
   }
+  // Mode tablette + badge : caméra toujours allumée, sans toucher l'écran, et écran qui ne s'éteint pas
+  const PTL = { on:false, stream:null, lock:null, last:"", lastMs:0, pause:0 };
+  async function ptWake(){ try{ if(PTL.on && navigator.wakeLock && document.visibilityState==="visible") PTL.lock = await navigator.wakeLock.request("screen"); }catch(e){} }
+  async function ptLiveStart(){
+    if(PTL.on || ptMode()==="code" || !document.body.classList.contains("kiosk")) return;
+    PTL.on = true; ptWake(); beepInit();
+    const box=$("pt-live"), v=$("pt-live-v");
+    try{
+      PTL.stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ ideal:"user" }, width:{ ideal:640 } }, audio:false });
+      if(!PTL.on){ PTL.stream.getTracks().forEach(tr=>tr.stop()); PTL.stream=null; return; }
+      v.srcObject = PTL.stream; await v.play();
+    }catch(e){ PTL.on=false; ptShow("bad", escH(t("ptCamFail"))); return; }
+    box.hidden = false; document.body.classList.add("ptlive");
+    let detect=null;
+    if("BarcodeDetector" in window){
+      try{ const bd = new BarcodeDetector({ formats:["qr_code","code_128","code_39"] }); detect = async ()=>{ const r = await bd.detect(v); return r && r[0] && r[0].rawValue; }; }catch(e){}
+    }
+    if(!detect){
+      try{ if(!window.jsQR) await loadScript("https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"); }catch(e){ ptLiveStop(); ptShow("bad", escH(t("ptCamFail"))); return; }
+      const cv=document.createElement("canvas"), cx=cv.getContext("2d", { willReadFrequently:true });
+      detect = async ()=>{
+        if(!v.videoWidth) return null;
+        const k = Math.min(1, 640 / v.videoWidth);
+        cv.width=Math.round(v.videoWidth*k); cv.height=Math.round(v.videoHeight*k); cx.drawImage(v,0,0,cv.width,cv.height);
+        const r = window.jsQR(cx.getImageData(0,0,cv.width,cv.height).data, cv.width, cv.height);
+        return r && r.data;
+      };
+    }
+    const loop = async ()=>{
+      if(!PTL.on) return;
+      const now = Date.now();
+      if(now >= PTL.pause){
+        let val=null; try{ val = await detect(); }catch(e){}
+        if(val){
+          val = String(val).trim();
+          if(!(val===PTL.last && now-PTL.lastMs < 15000)){ PTL.last=val; PTL.lastMs=now; beep(); ptPunchBadge(val); }
+          PTL.pause = Date.now() + 2500;
+        }
+      }
+      setTimeout(loop, 350);
+    };
+    loop();
+  }
+  function ptLiveStop(){
+    PTL.on = false;
+    if(PTL.stream){ PTL.stream.getTracks().forEach(tr=>tr.stop()); PTL.stream=null; }
+    try{ if(PTL.lock) PTL.lock.release(); }catch(e){} PTL.lock=null;
+    const box=$("pt-live"); if(box) box.hidden=true; document.body.classList.remove("ptlive");
+  }
+  document.addEventListener("visibilitychange", ()=>{
+    if(document.visibilityState==="visible" && document.body.classList.contains("kiosk")){
+      if(PTL.on && (!PTL.stream || !PTL.stream.getTracks().some(tr=>tr.readyState==="live"))){ ptLiveStop(); }
+      if(PTL.on) ptWake(); else ptLiveStart();
+    }
+  });
   // Lecteur de code-barres branché (il « tape » SP12345678 puis Entrée)
   let SCAN_BUF="", SCAN_T=0;
   function scanKey(e){
@@ -5758,12 +5818,14 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     });
     $("pt-kiosk").addEventListener("click", ()=>{
       document.body.classList.add("kiosk");
+      setTimeout(ptLiveStart, 400);
       try{ if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function(){}); }catch(e){}
       window.scrollTo(0,0);
     });
     $("pt-exit").addEventListener("click", async ()=>{
       if(!await askCode()) return;
       document.body.classList.remove("kiosk");
+      ptLiveStop();
       try{ if(document.fullscreenElement) document.exitFullscreen().catch(function(){}); }catch(e){}
     });
     document.addEventListener("keydown", e=>{
