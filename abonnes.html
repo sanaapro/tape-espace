@@ -202,6 +202,13 @@
   const PRICE_STD = 500, PRICE_PREM = 750, CUR = "D";
   let SHOPS = [];
 
+  // Pays de la boutique d'après son numéro WhatsApp (sans indicatif : Gambie)
+  function flagOf(wa){
+    let d=String(wa||"").replace(/\D/g,""); if(d.indexOf("00")===0) d=d.slice(2);
+    const F={"220":"🇬🇲","221":"🇸🇳","225":"🇨🇮","234":"🇳🇬","223":"🇲🇱","224":"🇬🇳","226":"🇧🇫","228":"🇹🇬","229":"🇧🇯","233":"🇬🇭","237":"🇨🇲","245":"🇬🇼","232":"🇸🇱","231":"🇱🇷","222":"🇲🇷"};
+    if(!d) return "";
+    return F[d.slice(0,3)] || (d.length<=9 ? "🇬🇲" : "🌍");
+  }
   function daysLeft(exp){ return exp ? Math.ceil((exp - new Date())/DAY) : null; }
   function fmt(d){
     return d ? d.toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"}) : "—";
@@ -383,7 +390,7 @@
         let createdMs = 0;
         if(b.createdAt && b.createdAt.toDate) createdMs = b.createdAt.toDate().getTime();
         else if(sub.startAt && sub.startAt.toDate) createdMs = sub.startAt.toDate().getTime();
-        SHOPS.push({ id:d.id, name:b.name||"(sans nom)", slug:b.slug||"—",
+        SHOPS.push({ id:d.id, name:b.name||"(sans nom)", slug:b.slug||"—", flag:flagOf(b.whatsapp),
                      plan:sub.plan||"—", tier:sub.tier||"standard", exp, createdMs });
       });
       SHOPS.sort((a,b)=>{
@@ -470,7 +477,7 @@
 
       const top=document.createElement("div"); top.className="top";
       const left=document.createElement("div");
-      const nm=document.createElement("div"); nm.className="nm"; nm.textContent=s.name;
+      const nm=document.createElement("div"); nm.className="nm"; nm.textContent=(s.flag?s.flag+" ":"")+s.name;
       if(s.createdMs && s.createdMs > LAST_SEEN){
         news++;
         const tag=document.createElement("span"); tag.className="newtag"; tag.textContent="NOUVEAU";

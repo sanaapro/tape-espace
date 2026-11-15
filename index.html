@@ -3181,7 +3181,15 @@
     let d=(raw||"").replace(/\D/g,"");
     if(d.indexOf("00")===0) d=d.slice(2);
     if(!d) return "";
-    if(d.length<=9 && d.indexOf(DEFAULT_CC)!==0) d=DEFAULT_CC+d;
+    if(/^\s*(\+|00)/.test(String(raw)) && d.length>9) return d;   // déjà écrit avec l'indicatif (+225…, 00221…)
+    // Indicatif par défaut = celui du WhatsApp de la boutique (+225 à Abidjan, +221 à Dakar…), sinon Gambie
+    let cc=DEFAULT_CC;
+    try{ const bw=String((BOUTIQUE && BOUTIQUE.whatsapp)||"").replace(/\D/g,"").replace(/^00/,""); const p=bw.slice(0,3);
+      if(bw.length>9 && /^(22[0-9]|23[0-9]|24[0-9])$/.test(p)) cc=p; }catch(e){}
+    if(d.indexOf(cc)===0 && d.length>9) return d;
+    if(cc==="225" && d.length===10) return cc+d;               // Côte d'Ivoire : 10 chiffres, le 0 fait partie du numéro
+    if(cc==="234" && d.length===11 && d[0]==="0") return cc+d.slice(1); // Nigeria : 0803… → 234803…
+    if(d.length<=9 && d.indexOf(cc)!==0) d=cc+d;
     return d;
   }
   const fmtNum = n => n ? String(n).padStart(3,"0") : "—";

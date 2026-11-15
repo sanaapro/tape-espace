@@ -211,6 +211,7 @@
   <input id="q" type="search" autocomplete="off" enterkeyhint="search">
   <div class="chips" id="chips"></div>
   <div class="chips" id="styles"></div>
+  <select id="pays" aria-label="Country" hidden></select>
   <select id="quartier" aria-label="Neighbourhood"></select>
   <select id="shop" aria-label="Workshop" hidden></select>
   <div id="shopsbox" hidden>
@@ -307,7 +308,7 @@
     }catch(e){}
   })();
   var T = {
-    en:{ searchPh:"🔍 Search: linen shirt, boubou, perfume…", noMatch:"Nothing found for “{q}” yet. Try another word.", h1:"Tailors of The Gambia, in one catalogue.", lead:"Browse designs from workshops near you, then order directly from the tailor on WhatsApp.",
+    en:{ searchPh:"🔍 Search: linen shirt, boubou, perfume…", noMatch:"Nothing found for “{q}” yet. Try another word.", h1:"Tailors of The Gambia, in one catalogue.", h1c:"Tailors of {c}, in one catalogue.", h1all:"Tailors and shops, in one catalogue.", allCountries:"🌍 All countries", lead:"Browse designs from workshops near you, then order directly from the tailor on WhatsApp.",
          all:"All", femme:"Women", homme:"Men", enfant:"Children", allShops:"All workshops",
          allStyles:"All styles", allAreas:"All neighbourhoods", S:{robe:"Dress", robe_mousseline_brodee:"Embroidered chiffon dress", robe_mousseline:"Plain chiffon dress", boubou:"Boubou", ensemble:"Outfit / suit", chemise:"Shirt", chemise_lin_mc:"Linen shirt, short sleeve", chemise_lin_ml:"Linen shirt, long sleeve", chemise_lin_mix:"Linen blend shirt", chemise_lin:"Plain linen shirt", pantalon:"Trousers", pantalon_classique:"Classic trousers", jupe:"Skirt", kaftan:"Kaftan", kaftan_ml:"Kaftan, long sleeve", kaftan_mc:"Kaftan, short sleeve", kaftan_bazin:"Bazin kaftan", kaftan_simple:"Very simple kaftan", kaftan_dame:"Women's kaftan", ambassadeur:"Ambassador suit", ambassadeur_mc:"Ambassador suit, short sleeve", ambassadeur_dame:"Women's ambassador suit", ceremonie:"Wedding / ceremony", uniforme:"Uniform", autre:"Other"},
          loading:"Loading designs…", empty:"No designs here yet.", net:"Can't reach the catalogue. Check your connection and try again.",
@@ -330,7 +331,7 @@
          mSeeN:"📷 Photos:", mSee1:"📷 Photo:",
          shH:"Selection of {n} designs", shH1:"Selected design", shLead:"Designs chosen by a client on the SanaaPro catalogue.", shBack:"‹ Catalogue",
          shNone:"These designs are no longer in the catalogue.", shTotal:"Indicative total" },
-    fr:{ searchPh:"🔍 Chercher : chemise en lin, boubou, parfum…", noMatch:"Rien trouvé pour « {q} » pour l'instant. Essayez un autre mot.", h1:"Les couturiers de Gambie, dans un seul catalogue.", lead:"Parcourez les modèles des ateliers près de chez vous, puis commandez directement au couturier sur WhatsApp.",
+    fr:{ searchPh:"🔍 Chercher : chemise en lin, boubou, parfum…", noMatch:"Rien trouvé pour « {q} » pour l'instant. Essayez un autre mot.", h1:"Les couturiers de Gambie, dans un seul catalogue.", h1c:"Les couturiers {c}, dans un seul catalogue.", h1all:"Couturiers et boutiques, dans un seul catalogue.", allCountries:"🌍 Tous les pays", lead:"Parcourez les modèles des ateliers près de chez vous, puis commandez directement au couturier sur WhatsApp.",
          all:"Tous", femme:"Femme", homme:"Homme", enfant:"Enfant", allShops:"Tous les ateliers",
          allStyles:"Tous les styles", allAreas:"Tous les quartiers", S:{robe:"Robe", robe_mousseline_brodee:"Robe mousseline brodée", robe_mousseline:"Robe mousseline simple", boubou:"Boubou", ensemble:"Ensemble / complet", chemise:"Chemise", chemise_lin_mc:"Chemise en lin, manche courte", chemise_lin_ml:"Chemise en lin, manche longue", chemise_lin_mix:"Chemise en lin, mélange", chemise_lin:"Chemise en lin, simple", pantalon:"Pantalon", pantalon_classique:"Pantalon classique", jupe:"Jupe", kaftan:"Kaftan", kaftan_ml:"Kaftan, manche longue", kaftan_mc:"Kaftan, manche courte", kaftan_bazin:"Kaftan bazin", kaftan_simple:"Kaftan super simple", kaftan_dame:"Kaftan dame", ambassadeur:"Ambassadeur suit", ambassadeur_mc:"Ambassadeur suit, manche courte", ambassadeur_dame:"Ambassadeur suit dame", ceremonie:"Mariage / cérémonie", uniforme:"Uniforme", autre:"Autre"},
          loading:"Chargement des modèles…", empty:"Aucun modèle ici pour l'instant.", net:"Impossible de joindre le catalogue. Vérifiez votre connexion puis réessayez.",
@@ -364,6 +365,31 @@
     if(fromApp) document.getElementById("toapp").hidden = false;
   }catch(e){}
   try{ LANG = localStorage.getItem("sanaapro_site_lang") === "fr" ? "fr" : "en"; }catch(e){}
+  // ---- Pays : trouvé d'après le numéro WhatsApp de la boutique (+220 Gambie, +225 Côte d'Ivoire…) ----
+  var PAYS_T = {
+    "220":["GM","🇬🇲","The Gambia","de Gambie","Gambie"], "221":["SN","🇸🇳","Senegal","du Sénégal","Sénégal"], "225":["CI","🇨🇮","Côte d'Ivoire","de Côte d'Ivoire","Côte d'Ivoire"],
+    "234":["NG","🇳🇬","Nigeria","du Nigeria","Nigeria"], "223":["ML","🇲🇱","Mali","du Mali","Mali"], "224":["GN","🇬🇳","Guinea","de Guinée","Guinée"],
+    "226":["BF","🇧🇫","Burkina Faso","du Burkina Faso","Burkina Faso"], "228":["TG","🇹🇬","Togo","du Togo","Togo"], "229":["BJ","🇧🇯","Benin","du Bénin","Bénin"],
+    "233":["GH","🇬🇭","Ghana","du Ghana","Ghana"], "237":["CM","🇨🇲","Cameroon","du Cameroun","Cameroun"], "245":["GW","🇬🇼","Guinea-Bissau","de Guinée-Bissau","Guinée-Bissau"],
+    "232":["SL","🇸🇱","Sierra Leone","de Sierra Leone","Sierra Leone"], "231":["LR","🇱🇷","Liberia","du Liberia","Liberia"], "222":["MR","🇲🇷","Mauritania","de Mauritanie","Mauritanie"]
+  };
+  var PAYS_BY = {}; Object.keys(PAYS_T).forEach(function(k){ PAYS_BY[PAYS_T[k][0]] = PAYS_T[k]; });
+  function countryOf(o){
+    if(o.pays && PAYS_BY[o.pays]) return o.pays;
+    var w = String(o.wa||"").replace(/\D/g, "");
+    return PAYS_T[w.slice(0,3)] ? PAYS_T[w.slice(0,3)][0] : "GM";
+  }
+  function guessPays(){
+    try{ var v = localStorage.getItem("sanaapro_cat_pays"); if(v !== null) return v; }catch(e){}
+    var tz = ""; try{ tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; }catch(e){}
+    var fr = /^fr/i.test(navigator.language || "");
+    var m = { "Africa/Banjul":"GM", "Africa/Dakar":"SN", "Africa/Lagos":"NG", "Africa/Bamako":"ML", "Africa/Conakry":"GN", "Africa/Ouagadougou":"BF",
+      "Africa/Lome":"TG", "Africa/Porto-Novo":"BJ", "Africa/Douala":"CM", "Africa/Bissau":"GW", "Africa/Freetown":"SL", "Africa/Monrovia":"LR", "Africa/Nouakchott":"MR", "Africa/Accra":"GH" };
+    if(tz === "Africa/Abidjan") return fr ? "CI" : "GM";  // la Gambie partage parfois le fuseau d'Abidjan
+    return m[tz] || "";
+  }
+  var PAYS = guessPays(), PAYS_AUTO = 0;
+  function inPays(o){ return !PAYS || countryOf(o) === PAYS; }
   var STYLE = "", AREA = "", ITEMS = [], NEXT = null, GENRE = "all", SHOP = "", LOADING = false, FAILED = false, CURRENT = null;
   var ONLY = "", PICK = "", SHARED = [], PREFIXES = [];
   try{
@@ -574,7 +600,7 @@
       (j.documents || []).forEach(function(d){ var o = parse(d); if(!hiddenShop(o)) ITEMS.push(o); });
       NEXT = j.nextPageToken || null; FAILED = false;
     }).catch(function(){ FAILED = true; })
-    .then(function(){ LOADING = false; paint(); });
+    .then(function(){ LOADING = false; paint(); morePays(); });
   }
 
   // ---- Recherche dans tout le catalogue : « chemise lin », « linen shirt », « parfum »… (sans accents, français ou anglais)
@@ -604,6 +630,12 @@
     if(ONLY || !Q || !NEXT || n > 20) return;
     var p = load(); if(p && p.then) p.then(function(){ loadAllForSearch(n + 1); });
   }
+  // Peu de modèles du pays choisi dans les pages déjà chargées : on charge la suite (au plus 10 pages)
+  function morePays(){
+    if(ONLY || !PAYS || !NEXT || LOADING || PAYS_AUTO >= 10) return;
+    if(ITEMS.filter(inPays).length >= 12) return;
+    PAYS_AUTO++; setTimeout(load, 50);
+  }
   function onSearch(){
     Q = $("q").value.trim(); paint();
     clearTimeout(QT); QT = setTimeout(function(){ loadAllForSearch(0); }, 300);
@@ -618,7 +650,19 @@
   function paint(){
     var t = L();
     document.documentElement.lang = LANG;
-    $("lang").textContent = t.other; $("h1").textContent = t.h1; $("lead").textContent = t.lead;
+    var present = {}; ITEMS.forEach(function(o){ present[countryOf(o)] = 1; });
+    var pk = Object.keys(present);
+    if(PAYS && !present[PAYS] && pk.length) PAYS = (pk.length === 1 ? pk[0] : "");
+    if(ONLY) PAYS = "";
+    var ps = $("pays"); ps.innerHTML = "";
+    var p0 = document.createElement("option"); p0.value = ""; p0.textContent = t.allCountries; ps.appendChild(p0);
+    pk.sort(function(a,b){ return PAYS_BY[a][LANG==="fr"?4:2].localeCompare(PAYS_BY[b][LANG==="fr"?4:2]); }).forEach(function(k){
+      var o = document.createElement("option"); o.value = k; o.textContent = PAYS_BY[k][1] + " " + PAYS_BY[k][LANG==="fr"?4:2]; ps.appendChild(o);
+    });
+    ps.value = PAYS; ps.hidden = ONLY || pk.length < 2;
+    var h1 = pk.length < 2 ? (pk[0] && pk[0] !== "GM" ? t.h1c.replace("{c}", PAYS_BY[pk[0]][LANG==="fr"?3:2]) : t.h1)
+           : (PAYS ? (PAYS === "GM" ? t.h1 : t.h1c.replace("{c}", PAYS_BY[PAYS][LANG==="fr"?3:2])) : t.h1all);
+    $("lang").textContent = t.other; $("h1").textContent = h1; $("lead").textContent = t.lead;
     $("toapp").textContent = t.toApp;
     $("foot").textContent = t.foot; $("close").textContent = t.back; $("s-cta-t").textContent = t.order;
     $("more").textContent = t.more;
@@ -647,7 +691,7 @@
       });
     }
 
-    var areas = {}; ITEMS.forEach(function(o){ var q = (o.quartier||"").trim(); if(q && !areas[q.toLowerCase()]) areas[q.toLowerCase()] = q; });
+    var areas = {}; ITEMS.filter(inPays).forEach(function(o){ var q = (o.quartier||"").trim(); if(q && !areas[q.toLowerCase()]) areas[q.toLowerCase()] = q; });
     var qs = $("quartier"); qs.innerHTML = "";
     var q0 = document.createElement("option"); q0.value = ""; q0.textContent = t.allAreas; qs.appendChild(q0);
     Object.keys(areas).sort().forEach(function(k){
@@ -671,7 +715,7 @@
     } else $("shopbar").hidden = true;
 
     var byShop = {};
-    liveItems.forEach(function(o){
+    liveItems.filter(inPays).forEach(function(o){
       var k = o.bid; if(!k) return;
       if(!byShop[k]) byShop[k] = { o:o, n:0 };
       byShop[k].n++;
@@ -702,7 +746,7 @@
     var list = ITEMS.filter(function(o){
       if(o.subExpMs && Number(o.subExpMs) < NOW) return false;
       if(Q && !matchQ(o, t)) return false;
-      return (GENRE==="all" || o.genre===GENRE) && (!SHOP || o.bid===SHOP)
+      return inPays(o) && (GENRE==="all" || o.genre===GENRE) && (!SHOP || o.bid===SHOP)
         && (!STYLE || o.style===STYLE) && (!AREA || (o.quartier||"").trim().toLowerCase()===AREA);
     });
     var grid = $("grid"); grid.innerHTML = ""; grid.classList.add("masonry");
@@ -826,6 +870,8 @@
   });
   $("shop").addEventListener("change", function(){ SHOP = $("shop").value; paint(); });
   $("quartier").addEventListener("change", function(){ AREA = $("quartier").value; paint(); });
+  $("pays").addEventListener("change", function(){ PAYS = $("pays").value; AREA = ""; PAYS_AUTO = 0;
+    try{ localStorage.setItem("sanaapro_cat_pays", PAYS); }catch(e){} paint(); morePays(); });
   $("q").addEventListener("input", onSearch);
   var LASTCOLS = 0; window.addEventListener("resize", function(){ var n = window.innerWidth >= 900 ? 4 : window.innerWidth >= 600 ? 3 : 2; if(n !== LASTCOLS){ LASTCOLS = n; paint(); } });
   $("more").addEventListener("click", load);
