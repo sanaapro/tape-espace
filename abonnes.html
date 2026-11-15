@@ -207,7 +207,8 @@
     let d=String(wa||"").replace(/\D/g,""); if(d.indexOf("00")===0) d=d.slice(2);
     const F={"220":"🇬🇲","221":"🇸🇳","225":"🇨🇮","234":"🇳🇬","223":"🇲🇱","224":"🇬🇳","226":"🇧🇫","228":"🇹🇬","229":"🇧🇯","233":"🇬🇭","237":"🇨🇲","245":"🇬🇼","232":"🇸🇱","231":"🇱🇷","222":"🇲🇷"};
     if(!d) return "";
-    return F[d.slice(0,3)] || (d.length<=9 ? "🇬🇲" : "🌍");
+    if(d.length<=9) return "🇬🇲";          // numéro local sans indicatif = Gambie (ex. 2221234 n'est pas la Mauritanie)
+    return F[d.slice(0,3)] || "🌍";
   }
   function daysLeft(exp){ return exp ? Math.ceil((exp - new Date())/DAY) : null; }
   function fmt(d){

@@ -376,7 +376,8 @@
   var PAYS_BY = {}; Object.keys(PAYS_T).forEach(function(k){ PAYS_BY[PAYS_T[k][0]] = PAYS_T[k]; });
   function countryOf(o){
     if(o.pays && PAYS_BY[o.pays]) return o.pays;
-    var w = String(o.wa||"").replace(/\D/g, "");
+    var w = String(o.wa||"").replace(/\D/g, "").replace(/^00/, "");
+    if(w.length <= 9) return "GM";   // numéro local sans indicatif = Gambie
     return PAYS_T[w.slice(0,3)] ? PAYS_T[w.slice(0,3)][0] : "GM";
   }
   function guessPays(){
