@@ -2867,7 +2867,7 @@
     b.addEventListener("click", ()=>{
       if(WAVE_ON) return payWave(formule, b);
       alert(t("waveManual").replace("{p}", price+" "+CUR));
-      try{ window.open(WAVE_LINK, "_blank"); }catch(e){ location.href=WAVE_LINK; }
+      let w=null; try{ w=window.open(WAVE_LINK, "_blank"); }catch(e){} if(!w) location.href=WAVE_LINK;   // fenêtre bloquée : on ouvre Wave dans la même page
       if(waBtn && waBtn.parentNode){
         const nb=waBtn.cloneNode(false); waBtn.replaceWith(nb); waBtn=nb;   // copie sans l'ancien message WhatsApp
         nb.className="wa"; nb.style.marginTop="8px"; nb.textContent=t("wavePaidBtn");
