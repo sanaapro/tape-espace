@@ -118,7 +118,7 @@ async function equipeARepondu(contact){
 }
 
 async function envoyer(contact, texte){
-  await bird("POST", "/v1/whatsapp/messages", { from: BUSINESS, to: contact, text: { body: texte }, tags: { source: "assistant" } });
+  await bird("POST", "/v1/whatsapp/messages", { from: BUSINESS, to: contact, text: { body: texte }, tags: [{ name: "source", value: "assistant" }] });
 }
 
 async function rediger(contact, geminiKey){
