@@ -6,6 +6,7 @@ import http from "node:http";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { spawn } from "node:child_process";
 import ffmpegPath from "ffmpeg-static";
+import { webhookBird } from "./whatsapp.js";
 
 const PORT = process.env.PORT || 10000;
 const KEY = process.env.GEMINI_API_KEY || "";
@@ -365,6 +366,11 @@ http.createServer(async (req, res) => {
   cors(req, res);
   if(req.method === "OPTIONS"){ res.writeHead(204); return res.end(); }
   const path = (req.url || "/").split("?")[0];
+  // Assistant WhatsApp : Bird envoie les messages reçus sur le 762 8683
+  if(req.method === "POST" && path === "/bird-whatsapp"){
+    let raw = ""; try{ raw = await readBody(req); }catch(e){ return send(res, 413, { error: "body" }); }
+    return webhookBird(req, res, raw, KEY);
+  }
   if(req.method === "GET") return send(res, 200, { ok: true, service: "sanaapro-lecteur-cahier", pret: !!KEY });
   if(req.method !== "POST" || (path !== "/lire" && path !== "/modele" && path !== "/voix" && path !== "/assistant" && path !== "/article")) return send(res, 404, { error: "not_found" });
   if(!KEY) return send(res, 503, { error: "no_key" });
