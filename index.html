@@ -3974,8 +3974,9 @@
         reste: resteDe(o),
         devise: cur(),
         lang: LANG_MSG,
+        ...(subExpMs()!=null ? { subExpMs: subExpMs() } : {}),   // exigé par la règle pour créer un suivi
         updatedMs: Date.now()
-      }, { merge:true }).catch(function(){});
+      }, { merge:true }).catch(function(e){ console.warn("suivi", e && e.code); });
     }catch(e){}
   }
   // Lien envoyé au client (WhatsApp, copie) : « client=1 » garantit qu'il voit toujours la page
