@@ -546,6 +546,16 @@
   .art-row button{ border:1px solid var(--line2); border-radius:9px; background:none; color:var(--err); cursor:pointer; font-size:15px; }
   .art-ph{ grid-column:1/-1; display:flex; gap:6px; align-items:center; flex-wrap:wrap; padding:6px 0 8px; border-bottom:1px solid var(--line); }
   .art-ph .ph-item{ width:64px; height:64px; aspect-ratio:auto; border:3px solid var(--ac,var(--line2)); }
+  .ph-pair{ display:flex; border:3px solid var(--ac,var(--line2)); border-radius:12px; overflow:hidden; background:#111; }
+  .ph-pair .ph-item{ border:none !important; border-radius:0; width:66px !important; height:66px !important; }
+  .ph-pair .ph-item + .ph-item{ border-left:2px solid var(--ac,var(--line2)) !important; }
+  .pair-view{ flex-direction:column; gap:8px; justify-content:flex-start; overflow:auto; }
+  .pair-view .pv-h{ color:#fff; font:700 16px Georgia,serif; text-align:center; padding:4px 40px 0; }
+  .pair-view .pv-box{ border:4px solid var(--ac,var(--gold)); border-radius:14px; overflow:hidden; background:#000; width:100%; max-width:520px; }
+  .pair-view .pv-box img{ display:block; width:100%; max-height:38vh; object-fit:contain; border-radius:0; background:#000; }
+  .pair-view .pv-lbl{ background:var(--ac,var(--gold)); color:#fff; font-weight:700; font-size:13px; padding:4px 10px; }
+  .pair-view .pv-bar{ display:flex; gap:8px; width:100%; max-width:520px; }
+  .pair-view .pv-bar button{ flex:1; padding:12px; border-radius:10px; border:1px solid var(--gold); background:#17140A; color:var(--gold); font-weight:700; font-size:14px; }
   .art-ph .ph-item .tag{ background:var(--ac,rgba(0,0,0,.65)); font-weight:700; }
   #cf-arts .art-row{ border-left:5px solid var(--ac,transparent); padding-left:8px; border-radius:6px; }
   .c-art-wrap{ border-left:5px solid var(--ac,transparent); padding-left:10px; border-radius:6px; margin-top:6px; }
@@ -2121,7 +2131,7 @@
       mClo:"📊 Clôture du {d} — {shop}", mCloTot:"TOTAL REÇU : {v}", mCloDep:"Dépenses : {v}", mCloSol:"Solde du jour : {v}",
       todoTitle:"À faire aujourd'hui", todoReady:"✅ {n} commande(s) prête(s) — la cliente doit passer", todoLate:"en RETARD de {n} j", todoToday:"AUJOURD'HUI",
       todoSoon:"dans {n} j", todoDeliv:"livraison", todoPick:"retrait", statTickets:"Tickets",
-      phTitle:"Photos du tissu et du modèle", phOther:"Autres photos (facultatif)", phArtFab:"📷 Tissu", phArtMod:"🖼️ Modèle", phFabric:"📷 Photo du tissu", phModel:"🖼️ Modèle (galerie)", phTagFabric:"Tissu", phTagModel:"Modèle",
+      phTitle:"Photos du tissu et du modèle", phOther:"Autres photos (facultatif)", phArtFab:"📷 Tissu", phArtMod:"🖼️ Modèle", pvShare:"📤 Partager la photo", pvClose:"Fermer", phFabric:"📷 Photo du tissu", phModel:"🖼️ Modèle (galerie)", phTagFabric:"Tissu", phTagModel:"Modèle",
       phNone:"Aucune photo pour cette commande.", phLoading:"Chargement des photos…", phSaving:"Envoi des photos…", phSaved:"Photo(s) enregistrée(s).",
       phDelQ:"Supprimer cette photo ?", phFail:"Photo non enregistrée : {e}",
       csEncours:"⏳ En cours", csPret:"✅ Prêts", csImpaye:"💰 Impayés", csTermine:"📦 Terminés", csTout:"Tout voir",
@@ -2432,7 +2442,7 @@
       mClo:"📊 Close of {d} — {shop}", mCloTot:"TOTAL RECEIVED: {v}", mCloDep:"Expenses: {v}", mCloSol:"Balance for the day: {v}",
       todoTitle:"To do today", todoReady:"✅ {n} order(s) ready — the customer must come", todoLate:"{n} days LATE", todoToday:"TODAY",
       todoSoon:"in {n} days", todoDeliv:"delivery", todoPick:"pick-up", statTickets:"Tickets",
-      phTitle:"Fabric and model photos", phOther:"Other photos (optional)", phArtFab:"📷 Fabric", phArtMod:"🖼️ Model", phFabric:"📷 Fabric photo", phModel:"🖼️ Model (gallery)", phTagFabric:"Fabric", phTagModel:"Model",
+      phTitle:"Fabric and model photos", phOther:"Other photos (optional)", phArtFab:"📷 Fabric", phArtMod:"🖼️ Model", pvShare:"📤 Share the photo", pvClose:"Close", phFabric:"📷 Fabric photo", phModel:"🖼️ Model (gallery)", phTagFabric:"Fabric", phTagModel:"Model",
       phNone:"No photos for this order.", phLoading:"Loading photos…", phSaving:"Sending photos…", phSaved:"Photo(s) saved.",
       phDelQ:"Delete this photo?", phFail:"Photo not saved: {e}",
       csEncours:"⏳ In progress", csPret:"✅ Ready", csImpaye:"💰 Unpaid", csTermine:"📦 Finished", csTout:"See all",
@@ -7028,22 +7038,76 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     document.querySelectorAll("#cf-arts .art-row").forEach(paintArtPh);
     paintArtColors();
   }
-  // Sous chaque article du formulaire : boutons Tissu / Modèle et les deux photos côte à côte
+  // Zone photo d'un vêtement : le tissu et le modèle COLLÉS dans une seule case (collage).
+  // Touchée, la case s'ouvre en grand : le tissu en haut, le modèle en bas, à partager d'un coup.
+  function artPhotoZone(bx, list, nom, color, onDel, onAdd){
+    bx.innerHTML="";
+    const ts=list.filter(p=>p.role==="tissu"), ms=list.filter(p=>p.role==="modele");
+    const pairs=[]; const n=Math.max(ts.length, ms.length);
+    for(let i=0;i<n;i++) pairs.push([ts[i]||null, ms[i]||null]);
+    pairs.forEach(([pt,pm])=>{
+      if(pt && pm){
+        const box=document.createElement("div"); box.className="ph-pair";
+        [pt,pm].forEach(p=>{ phThumb(box, p, ()=>onDel(p)); });
+        box.querySelectorAll("img").forEach(im=>{ const c=im.cloneNode(true); im.replaceWith(c); c.addEventListener("click", ()=>openPair(pt, pm, nom, color)); });
+        bx.appendChild(box);
+      } else { const p=pt||pm; phThumb(bx, p, ()=>onDel(p)); }
+    });
+    ["tissu","modele"].forEach(role=>{
+      const lb=document.createElement("label"); const inp=document.createElement("input"); inp.type="file"; inp.accept="image/*";
+      if(role==="tissu") inp.setAttribute("capture","environment");
+      const sp=document.createElement("span"); sp.textContent=t(role==="tissu"?"phArtFab":"phArtMod");
+      inp.addEventListener("change", e=>onAdd(role, e.target.files, inp));
+      lb.appendChild(inp); lb.appendChild(sp); bx.appendChild(lb);
+    });
+  }
+  function loadImg(src){ return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=src; }); }
+  // Image unique : tissu en haut, modèle en bas, avec le nom du vêtement — à envoyer sur WhatsApp
+  async function pairCanvas(pt, pm, nom, color){
+    const W=900, pad=24, head=nom?80:pad, lbl=46;
+    const a=await loadImg(pt.data), b=await loadImg(pm.data);
+    const h1=Math.round(a.height*(W-2*pad)/a.width), h2=Math.round(b.height*(W-2*pad)/b.width);
+    const cv=document.createElement("canvas"); cv.width=W; cv.height=head+lbl+h1+pad+lbl+h2+pad;
+    const g=cv.getContext("2d"); g.fillStyle="#ffffff"; g.fillRect(0,0,W,cv.height);
+    let y=pad;
+    if(nom){ g.fillStyle="#111"; g.font="700 40px Georgia,serif"; g.textAlign="center"; g.fillText(nom, W/2, 58); y=head; }
+    const block=(im,h,txt)=>{ g.fillStyle=color||"#C9A227"; g.fillRect(pad,y,W-2*pad,lbl); g.fillStyle="#fff"; g.font="700 26px Arial,sans-serif"; g.textAlign="left"; g.fillText(txt, pad+16, y+32); y+=lbl; g.drawImage(im,pad,y,W-2*pad,h); g.strokeStyle=color||"#C9A227"; g.lineWidth=6; g.strokeRect(pad,y-lbl,W-2*pad,h+lbl); y+=h+pad; };
+    block(a,h1,t("phTagFabric")); block(b,h2,t("phTagModel"));
+    return cv;
+  }
+  function openPair(pt, pm, nom, color){
+    const v=document.createElement("div"); v.className="ph-view pair-view"; if(color) v.style.setProperty("--ac", color);
+    if(nom){ const h=document.createElement("div"); h.className="pv-h"; h.textContent=nom; v.appendChild(h); }
+    [[pt,"phTagFabric"],[pm,"phTagModel"]].forEach(([p,k])=>{
+      const bx=document.createElement("div"); bx.className="pv-box";
+      const l=document.createElement("div"); l.className="pv-lbl"; l.textContent=t(k);
+      const im=document.createElement("img"); im.src=p.data; im.alt="";
+      bx.appendChild(l); bx.appendChild(im); v.appendChild(bx);
+    });
+    const bar=document.createElement("div"); bar.className="pv-bar";
+    const sh=document.createElement("button"); sh.type="button"; sh.textContent=t("pvShare");
+    sh.addEventListener("click", async e=>{ e.stopPropagation();
+      try{ const cv=await pairCanvas(pt, pm, nom, color); const blob=await new Promise(r=>cv.toBlob(r,"image/jpeg",0.85));
+        const f=new File([blob], "tissu-modele.jpg", { type:"image/jpeg" });
+        if(navigator.canShare && navigator.canShare({ files:[f] })){ await navigator.share({ files:[f], text:nom||"" }); return; }
+        const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="tissu-modele.jpg"; document.body.appendChild(a); a.click(); a.remove();
+      }catch(err){} });
+    const cl=document.createElement("button"); cl.type="button"; cl.textContent=t("pvClose"); cl.addEventListener("click", ()=>v.remove());
+    bar.appendChild(sh); bar.appendChild(cl); v.appendChild(bar);
+    v.addEventListener("click", e=>{ if(e.target===v) v.remove(); });
+    document.body.appendChild(v);
+  }
+  // Sous chaque article du formulaire : boutons Tissu / Modèle et les deux photos réunies
   function paintArtPh(r){
     let bx=r.querySelector(".art-ph");
     if(!bx){
       bx=document.createElement("div"); bx.className="art-ph"; r.appendChild(bx);
     }
-    bx.innerHTML="";
     const k=r.dataset.k;
-    ["tissu","modele"].forEach(role=>{
-      CF_PH.forEach((p,i)=>{ if(p.k===k && p.role===role) phThumb(bx, p, ()=>{ CF_PH.splice(i,1); renderCfPh(); }); });
-      const lb=document.createElement("label"); const inp=document.createElement("input"); inp.type="file"; inp.accept="image/*";
-      if(role==="tissu") inp.setAttribute("capture","environment");
-      const sp=document.createElement("span"); sp.textContent=t(role==="tissu"?"phArtFab":"phArtMod");
-      inp.addEventListener("change", async e=>{ await addPhotos(e.target.files, role, CF_PH, k); e.target.value=""; renderCfPh(); });
-      lb.appendChild(inp); lb.appendChild(sp); bx.appendChild(lb);
-    });
+    const idx=Array.from(document.querySelectorAll("#cf-arts .art-row")).indexOf(r);
+    artPhotoZone(bx, CF_PH.filter(p=>p.k===k), (r.children[0].value||"").trim(), artColor(Math.max(0,idx)),
+      p=>{ const i=CF_PH.indexOf(p); if(i>-1) CF_PH.splice(i,1); renderCfPh(); },
+      async (role, files, inp)=>{ await addPhotos(files, role, CF_PH, k); inp.value=""; renderCfPh(); });
   }
   ["tissu","modele"].forEach(role=>{
     $("cf-ph-"+role).addEventListener("change", async e=>{ await addPhotos(e.target.files, role, CF_PH); e.target.value=""; renderCfPh(); });
@@ -7189,18 +7253,14 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     const arts=articlesOf(ORD), all=PH_CACHE[id]||[];
     document.querySelectorAll("#c-vt .art-ph").forEach(pz=>{
       const i=Number(pz.dataset.i), a=arts[i]; if(!a) return;
-      pz.innerHTML="";
-      ["tissu","modele"].forEach(role=>{
-        all.forEach(p=>{ if(a.k && p.artK===a.k && p.role===role) phThumb(pz, p, async ()=>{
+      artPhotoZone(pz, a.k ? all.filter(p=>p.artK===a.k) : [], a.nom||"", artColor(i),
+        async p=>{
           if(!confirm(t("phDelQ"))) return;
           if(!await askCode()) return;
           PH_CACHE[id]=(PH_CACHE[id]||[]).filter(x=>x!==p); paintVtPh(id);
           deleteDoc(doc(db,"boutiques",BID,"clientes",p.id)).catch(function(){});
-        }); });
-        const lb=document.createElement("label"); const inp=document.createElement("input"); inp.type="file"; inp.accept="image/*";
-        if(role==="tissu") inp.setAttribute("capture","environment");
-        const sp=document.createElement("span"); sp.textContent=t(role==="tissu"?"phArtFab":"phArtMod");
-        inp.addEventListener("change", async e=>{
+        },
+        async (role, files, inp)=>{
           if(!ORDID) return; const oid=ORDID;
           let list2=articlesOf(ORD), k=list2[i] && list2[i].k;
           if(!k){ // ancienne commande : on donne une clé à chaque article une fois pour toutes
@@ -7208,11 +7268,9 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
             ORD.articles=list2; const loc=COMMANDES.find(x=>x.id===oid); if(loc && loc!==ORD) loc.articles=list2;
             setDoc(doc(db,"boutiques",BID,"commandes",oid), { articles:list2, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
           }
-          const list=[]; await addPhotos(e.target.files, role, list, k); e.target.value="";
+          const list=[]; await addPhotos(files, role, list, k); inp.value="";
           await savePhotos(oid, list, $("c-ph-msg")); renderCmdPhotos(oid);
         });
-        lb.appendChild(inp); lb.appendChild(sp); pz.appendChild(lb);
-      });
     });
   }
   $("q-solde").addEventListener("click", ()=>{
