@@ -1739,6 +1739,7 @@
       </div>
       <label data-i18n="client">Cliente</label>
       <select id="cf-cliente"></select>
+      <button type="button" id="cf-cli-clear" hidden style="margin-top:8px;width:100%;padding:10px;border-radius:10px;border:1px solid var(--err);background:none;color:var(--err);font-weight:700;font-size:14px" data-i18n="cfCliClear">✕ Effacer la cliente (nom, numéro, mesures)</button>
       <div id="cf-new" hidden>
         <label data-i18n="newClientNameLabel">Nom du nouveau client</label>
         <input id="cf-new-name" type="text" list="cf-new-list" autocomplete="off" data-i18n-ph="newClientNamePh" placeholder="Ex. Awa Diallo">
@@ -2062,7 +2063,7 @@
       standard:"Standard", premium:"Premium",
       typeLabel:"Type de commande", typeHint:"Type de commande (à choisir avant de remplir)", tConfection:"Confection", tRetouche:"Retouche", tPap:"Prêt-à-porter",
       genreLabel:"Genre du client", gFemme:"Femme", gHomme:"Homme",
-      newClientOpt:"+ Nouvelle cliente", cfFindHint:"Tapez le nom : si la cliente existe déjà, ses mesures s'affichent toutes seules.", cfFound:"Cliente trouvée : {n} — ses mesures sont affichées.", cfMaybe:"Même cliente ? Touchez son nom :", cfNbMes:"{k} mesures", newClientNameLabel:"Nom du nouveau client",
+      newClientOpt:"+ Nouvelle cliente", cfCliClear:"✕ Effacer la cliente (nom, numéro, mesures)", cfFindHint:"Tapez le nom : si la cliente existe déjà, ses mesures s'affichent toutes seules.", cfFound:"Cliente trouvée : {n} — ses mesures sont affichées.", cfMaybe:"Même cliente ? Touchez son nom :", cfNbMes:"{k} mesures", newClientNameLabel:"Nom du nouveau client",
       newClientNamePh:"Ex. Awa Diallo", newPhonePh:"+220 …",
       rcvGarment:"vêtement",
       autoNotify:"Notification WhatsApp automatique",
@@ -2373,7 +2374,7 @@
       standard:"Standard", premium:"Premium",
       typeLabel:"Order type", typeHint:"Order type (choose before filling in)", tConfection:"Tailoring", tRetouche:"Alteration", tPap:"Ready-to-wear",
       genreLabel:"Client gender", gFemme:"Woman", gHomme:"Man",
-      newClientOpt:"+ New client", cfFindHint:"Type the name: if the client already exists, her measurements appear automatically.", cfFound:"Client found: {n} — measurements shown.", cfMaybe:"Same client? Tap the name:", cfNbMes:"{k} measurements", newClientNameLabel:"New client name",
+      newClientOpt:"+ New client", cfCliClear:"✕ Clear the client (name, number, measurements)", cfFindHint:"Type the name: if the client already exists, her measurements appear automatically.", cfFound:"Client found: {n} — measurements shown.", cfMaybe:"Same client? Tap the name:", cfNbMes:"{k} measurements", newClientNameLabel:"New client name",
       newClientNamePh:"e.g. Awa Diallo", newPhonePh:"+220 …",
       rcvGarment:"garment",
       autoNotify:"Automatic WhatsApp notification",
@@ -8335,7 +8336,21 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     const c = (v && v!=="__new") ? CLIENTES.find(x=>x.id===v) : null;
     $("cf-new-phone").value = c ? (c.phone||"") : "";
     buildCmdGrid(c ? (c.mesures||{}) : {});
+    paintCliClear();
   }
+  // Croix « Effacer la cliente » : visible dès qu'une cliente est choisie ou qu'un nom / numéro est tapé
+  function paintCliClear(){
+    const b=$("cf-cli-clear"); if(!b) return;
+    b.hidden = !!editingOrd || !($("cf-cliente").value!=="__new" || $("cf-new-name").value.trim() || $("cf-new-phone").value.trim());
+  }
+  ["cf-new-name","cf-new-phone"].forEach(id=>$(id).addEventListener("input", paintCliClear));
+  $("cf-cli-clear").addEventListener("click", ()=>{
+    $("cf-cliente").value="__new"; $("cf-new-name").value=""; $("cf-new-phone").value="";
+    paintSugg([]); toggleNewCliente();
+    try{ CF_NB=[]; $("cf-nb-st").textContent=""; }catch(e){}
+    try{ localStorage.removeItem(draftKey("cf")); }catch(e){}
+    $("cf-new-name").focus();
+  });
 
   async function openCmdForm(id){
     $("cf-msg").classList.remove("show");
