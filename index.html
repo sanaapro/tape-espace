@@ -1777,6 +1777,8 @@
     <div class="card">
       <h2 data-i18n="measures">Mesures (cm)</h2>
       <p style="margin:0 0 8px;font-size:13px;color:var(--muted)" data-i18n="measuresHint">Elles rejoignent automatiquement la fiche de la cliente.</p>
+      <div class="ph-btns" style="margin:0 0 8px"><label><input type="file" id="cf-nb-file" accept="image/*" capture="environment"><span data-i18n="nbBtnCf">📷 Photographier la feuille de mesures</span></label></div>
+      <div class="dict-st" id="cf-nb-st"></div>
       <div class="dict-bar"><button type="button" class="dict-btn" id="cf-dict" data-i18n="dictBtn">🎤 Dicter les mesures</button><div class="dict-st" id="cf-dict-st"></div></div>
       <div class="mgrid" id="cf-mesures"></div>
     </div>
@@ -2193,7 +2195,7 @@
       pmRecupere:"Merci {nom} d'avoir choisi {boutique}. À très bientôt !",
       pmTicket:"Ticket n° {v}", pmItems:"Articles : {v}", pmTotal:"Total : {v}", pmAdvance:"Avance : {v}",
       scTicket:"Scanner un ticket client", qTicket:"🔳 Ticket avec QR code", tkOrder:"Commande n°", rcTitle:"REÇU DE PAIEMENT", rcAmt:"Montant reçu", rcDate:"Date", rcPaidAll:"SOLDÉ", rcThanks:"Merci de votre confiance", rcWa:"💬 Envoyer par WhatsApp", rcAsk:"🧾 Reçu", tkHint:"Scannez pour suivre votre commande", tkClient:"Client", tkItem:"Article", tkDate:"Date prévue", tkDeposit:"Déposé", tkTotal:"Total", tkPaid:"Payé", tkLeft:"Reste à payer", tkPrint:"🖨️ Imprimer", tkShare:"📤 Partager", tkCopied:"Lien de suivi copié.", tkNoLink:"Impossible de créer le ticket : abonnement expiré ou commande non enregistrée.", tkQrFail:"QR indisponible (pas de réseau ?)", scNotFound:"Ticket introuvable dans cette boutique. Vérifiez qu'il vient bien de votre atelier.", scCount:"{n} article(s) en cours", scTotal:"Reste à payer en tout", scAgain:"Scanner un autre ticket",
-      nbTitle:"Page du cahier", nbHint:"Photographiez la page de l'ancien cahier : les mesures se remplissent toutes seules et la page reste dans la fiche.", aiReading:"📖 Lecture du cahier en cours…", aiWaking:"📖 Lecture en cours… le lecteur se réveille, cela peut prendre jusqu'à une minute.", aiDone:"✅ {n} mesure(s) lue(s) dans le cahier. Vérifiez les cases vertes avant d'enregistrer.", aiMany:"Plusieurs personnes sur la page : seule la première a été lue.", aiNone:"Aucune mesure lisible sur cette photo. Reprenez-la plus près, bien éclairée, ou dictez les mesures.", aiFail:"La lecture n'a pas abouti. La photo est gardée ; vous pouvez dicter les mesures.", aiOffline:"Pas de réseau : la photo est gardée, la lecture automatique demande Internet.", aiLimit:"Limite de lectures du jour atteinte. Dictez les mesures ou réessayez demain.", aiNoKey:"Le lecteur de cahier n'est pas encore activé.", aiAuth:"Reconnectez-vous pour utiliser la lecture du cahier.", nbBtn:"📷 Photographier la page du cahier", nbNone:"Aucune page de cahier.", nbTag:"Cahier", dictBtn:"🎤 Dicter les mesures", dictStop:"⏹ Arrêter la dictée", dictGo:"Je vous écoute… dites par exemple « épaule 42, poitrine 96 ».", dictHeard:"Entendu : « {t} » · {n} case(s) remplie(s). Vérifiez avant d'enregistrer.", dictNo:"La dictée n'est pas disponible sur ce téléphone (utilisez Chrome).", dictDenied:"Autorisez le micro pour SanaaPro dans les réglages du navigateur.", dictNet:"La dictée a besoin d'Internet. Réessayez quand le réseau revient.", dictErr:"La dictée s'est arrêtée. Touchez à nouveau le micro.",
+      nbTitle:"Page du cahier", nbHint:"Photographiez la page de l'ancien cahier : les mesures se remplissent toutes seules et la page reste dans la fiche.", aiReading:"📖 Lecture du cahier en cours…", aiWaking:"📖 Lecture en cours… le lecteur se réveille, cela peut prendre jusqu'à une minute.", aiDone:"✅ {n} mesure(s) lue(s) dans le cahier. Vérifiez les cases vertes avant d'enregistrer.", aiMany:"Plusieurs personnes sur la page : seule la première a été lue.", aiNone:"Aucune mesure lisible sur cette photo. Reprenez-la plus près, bien éclairée, ou dictez les mesures.", aiFail:"La lecture n'a pas abouti. La photo est gardée ; vous pouvez dicter les mesures.", aiOffline:"Pas de réseau : la photo est gardée, la lecture automatique demande Internet.", aiLimit:"Limite de lectures du jour atteinte. Dictez les mesures ou réessayez demain.", aiNoKey:"Le lecteur de cahier n'est pas encore activé.", aiAuth:"Reconnectez-vous pour utiliser la lecture du cahier.", nbBtn:"📷 Photographier la page du cahier", nbBtnCf:"📷 Photographier la feuille de mesures", nbNone:"Aucune page de cahier.", nbTag:"Cahier", dictBtn:"🎤 Dicter les mesures", dictStop:"⏹ Arrêter la dictée", dictGo:"Je vous écoute… dites par exemple « épaule 42, poitrine 96 ».", dictHeard:"Entendu : « {t} » · {n} case(s) remplie(s). Vérifiez avant d'enregistrer.", dictNo:"La dictée n'est pas disponible sur ce téléphone (utilisez Chrome).", dictDenied:"Autorisez le micro pour SanaaPro dans les réglages du navigateur.", dictNet:"La dictée a besoin d'Internet. Réessayez quand le réseau revient.", dictErr:"La dictée s'est arrêtée. Touchez à nouveau le micro.",
       pinTitle:"Code d'ouverture de ce téléphone", pinHint:"Même si quelqu'un a votre téléphone déverrouillé, il ne pourra pas ouvrir SanaaPro sans ce code. L'app se verrouille quand on la quitte plus d'une minute.", pinSet:"🔐 Choisir un code d'ouverture", pinChange:"🔐 Changer le code d'ouverture", pinOff:"Retirer le code d'ouverture", pinOnState:"✅ Activé sur ce téléphone", pinOffState:"Pas de code d'ouverture sur ce téléphone.", pinLockNow:"🔐 Verrouiller", pinEnter:"Tapez votre code d'ouverture", pinNew:"Choisissez un code de 4 chiffres", pinConfirm:"Retapez le même code", pinMismatch:"Les deux codes ne sont pas pareils. Recommencez.", pinWrong:"Code incorrect.", pinWait:"Trop d'essais. Attendez 30 secondes.", pinDel:"Effacer", pinForgot:"Code oublié ?", pinForgotAsk:"Tapez le code administrateur de la boutique pour retirer le code d'ouverture :", pinForgotLogout:"Pas de code administrateur. Pour rentrer, il faudra se reconnecter avec l'email et le mot de passe. Se déconnecter ?", pinLogout:"Se déconnecter", pinLogoutQ:"Se déconnecter de SanaaPro sur ce téléphone ? Il faudra l'email et le mot de passe pour revenir.", pinCancel:"Annuler", pinSaved:"Code d'ouverture enregistré sur ce téléphone.", pinRemoved:"Code d'ouverture retiré de ce téléphone.", pinOffQ:"Retirer le code d'ouverture de ce téléphone ?", pinMgrAsk:"Voulez-vous aussi mettre un code d'ouverture sur ce téléphone ?\n\nSi le téléphone reste dans d'autres mains, personne ne pourra ouvrir SanaaPro sans ce code.",
       kickTitle:"Téléphone perdu ou prêté", kickHint:"Déconnecte SanaaPro sur tous les autres téléphones (celui du manager compris), à distance. Ce téléphone-ci reste connecté. Pour revenir, il faudra l'email et le mot de passe.", kickBtn:"📵 Déconnecter tous les autres téléphones", kickQ:"Déconnecter SanaaPro sur TOUS les autres téléphones, y compris celui du manager ?\n\nIls devront se reconnecter avec l'email et le mot de passe.", kickDone:"✅ C'est envoyé. Chaque autre téléphone sera déconnecté dès qu'il a Internet et que SanaaPro est ouvert ou rouvert.", kickOffline:"Pas de réseau : la déconnexion partira dès que ce téléphone retrouvera Internet.", kickedMsg:"Ce téléphone a été déconnecté par le propriétaire de la boutique.",
       ptScan:"Scanner mon badge", ptLiveHint:"Montrez votre badge à la caméra", ptAddStaff:"＋ Ajouter un employé", ptModeT:"Comment vos employés pointent",
@@ -2504,7 +2506,7 @@
       pmRecupere:"Thank you {nom} for choosing {boutique}. See you soon!",
       pmTicket:"Ticket no. {v}", pmItems:"Items: {v}", pmTotal:"Total: {v}", pmAdvance:"Deposit: {v}",
       scTicket:"Scan a customer ticket", qTicket:"🔳 Ticket with QR code", tkOrder:"Order no.", rcTitle:"PAYMENT RECEIPT", rcAmt:"Amount received", rcDate:"Date", rcPaidAll:"PAID IN FULL", rcThanks:"Thank you for your trust", rcWa:"💬 Send on WhatsApp", rcAsk:"🧾 Receipt", tkHint:"Scan to follow your order", tkClient:"Customer", tkItem:"Item", tkDate:"Due date", tkDeposit:"Dropped off", tkTotal:"Total", tkPaid:"Paid", tkLeft:"Balance due", tkPrint:"🖨️ Print", tkShare:"📤 Share", tkCopied:"Tracking link copied.", tkNoLink:"Cannot create the ticket: subscription expired or order not saved.", tkQrFail:"QR unavailable (no network?)", scNotFound:"Ticket not found in this shop. Check it comes from your workshop.", scCount:"{n} item(s) in progress", scTotal:"Total balance due", scAgain:"Scan another ticket",
-      nbTitle:"Notebook page", nbHint:"Take a photo of the old notebook page: the measurements fill in by themselves and the page stays in the file.", aiReading:"📖 Reading the notebook…", aiWaking:"📖 Still reading… the reader is waking up, this can take up to a minute.", aiDone:"✅ {n} measurement(s) read from the notebook. Check the green fields before saving.", aiMany:"Several people on the page: only the first one was read.", aiNone:"No readable measurement in this photo. Retake it closer and well lit, or dictate.", aiFail:"Reading didn't work. The photo is kept; you can dictate the measurements.", aiOffline:"No network: the photo is kept, automatic reading needs internet.", aiLimit:"Daily reading limit reached. Dictate or try again tomorrow.", aiNoKey:"The notebook reader isn't switched on yet.", aiAuth:"Sign in again to use notebook reading.", nbBtn:"📷 Photograph the notebook page", nbNone:"No notebook page.", nbTag:"Notebook", dictBtn:"🎤 Dictate measurements", dictStop:"⏹ Stop dictation", dictGo:"Listening… say for example \"shoulder 42, chest 96\".", dictHeard:"Heard: \"{t}\" · {n} field(s) filled. Check before saving.", dictNo:"Dictation isn't available on this phone (use Chrome).", dictDenied:"Allow the microphone for SanaaPro in the browser settings.", dictNet:"Dictation needs internet. Try again when the network is back.", dictErr:"Dictation stopped. Tap the microphone again.",
+      nbTitle:"Notebook page", nbHint:"Take a photo of the old notebook page: the measurements fill in by themselves and the page stays in the file.", aiReading:"📖 Reading the notebook…", aiWaking:"📖 Still reading… the reader is waking up, this can take up to a minute.", aiDone:"✅ {n} measurement(s) read from the notebook. Check the green fields before saving.", aiMany:"Several people on the page: only the first one was read.", aiNone:"No readable measurement in this photo. Retake it closer and well lit, or dictate.", aiFail:"Reading didn't work. The photo is kept; you can dictate the measurements.", aiOffline:"No network: the photo is kept, automatic reading needs internet.", aiLimit:"Daily reading limit reached. Dictate or try again tomorrow.", aiNoKey:"The notebook reader isn't switched on yet.", aiAuth:"Sign in again to use notebook reading.", nbBtn:"📷 Photograph the notebook page", nbBtnCf:"📷 Photograph the measurement sheet", nbNone:"No notebook page.", nbTag:"Notebook", dictBtn:"🎤 Dictate measurements", dictStop:"⏹ Stop dictation", dictGo:"Listening… say for example \"shoulder 42, chest 96\".", dictHeard:"Heard: \"{t}\" · {n} field(s) filled. Check before saving.", dictNo:"Dictation isn't available on this phone (use Chrome).", dictDenied:"Allow the microphone for SanaaPro in the browser settings.", dictNet:"Dictation needs internet. Try again when the network is back.", dictErr:"Dictation stopped. Tap the microphone again.",
       pinTitle:"Opening code for this phone", pinHint:"Even if someone has your phone unlocked, they can't open SanaaPro without this code. The app locks when you leave it for more than a minute.", pinSet:"🔐 Choose an opening code", pinChange:"🔐 Change the opening code", pinOff:"Remove the opening code", pinOnState:"✅ On for this phone", pinOffState:"No opening code on this phone.", pinLockNow:"🔐 Lock", pinEnter:"Enter your opening code", pinNew:"Choose a 4-digit code", pinConfirm:"Enter the same code again", pinMismatch:"The two codes don't match. Try again.", pinWrong:"Wrong code.", pinWait:"Too many tries. Wait 30 seconds.", pinDel:"Delete", pinForgot:"Forgot the code?", pinForgotAsk:"Enter the shop admin code to remove the opening code:", pinForgotLogout:"No admin code set. To get back in you'll need the email and password. Sign out?", pinLogout:"Sign out", pinLogoutQ:"Sign out of SanaaPro on this phone? You'll need the email and password to come back.", pinCancel:"Cancel", pinSaved:"Opening code saved on this phone.", pinRemoved:"Opening code removed from this phone.", pinOffQ:"Remove the opening code from this phone?", pinMgrAsk:"Do you also want an opening code on this phone?\n\nIf the phone ends up in someone else's hands, nobody can open SanaaPro without it.",
       kickTitle:"Lost or lent phone", kickHint:"Signs SanaaPro out on every other phone (the manager's too), remotely. This phone stays signed in. To come back, the email and password will be needed.", kickBtn:"📵 Sign out all other phones", kickQ:"Sign SanaaPro out on ALL other phones, including the manager's?\n\nThey will have to sign in again with the email and password.", kickDone:"✅ Sent. Each other phone will be signed out as soon as it has internet and SanaaPro is open or reopened.", kickOffline:"No network: the sign-out will go as soon as this phone is back online.", kickedMsg:"This phone was signed out by the shop owner.",
       ptScan:"Scan my badge", ptLiveHint:"Show your badge to the camera", ptAddStaff:"＋ Add an employee", ptModeT:"How your staff clock in",
@@ -8277,7 +8279,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       $("cf-new-name").value=""; $("cf-new-phone").value="";
       $("cf-avance").value=""; $("cf-av-box").hidden=false; $("cf-remise").value="";
       buildArtRows([{ nom:"", prix:"" }]);
-      CF_PH=[]; renderCfPh();
+      CF_PH=[]; renderCfPh(); CF_NB=[]; $("cf-nb-st").textContent="";
       $("cf-depot").value=todayISO(); $("cf-done").checked=false; $("cf-done-row").hidden=false;
       $("cf-gift").checked=false; $("cf-gift-name").value=""; $("cf-gift-tel").value=""; $("cf-gift-box").hidden=true; $("cf-more").open=false;
       TYPE_CF="confection"; paintTypes();
@@ -8305,7 +8307,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     $("cf-remise").value=(Number(o.remise)>0)?o.remise:"";
     buildArtRows(Array.isArray(o.articles) && o.articles.length ? o.articles : [{ nom:o.article||"", prix:(o.prix||o.prix===0)?((Number(o.prix)||0)+(Number(o.remise)||0)):"" }]);
     $("cf-depot").value=o.depot||""; $("cf-done-row").hidden=true;
-    CF_PH=[]; renderCfPh();
+    CF_PH=[]; renderCfPh(); CF_NB=[]; $("cf-nb-st").textContent="";
     $("cf-gift").checked=!!o.beneficiaire; $("cf-gift-name").value=o.beneficiaire||""; $("cf-gift-tel").value=o.beneficiaireTel||""; $("cf-gift-box").hidden=!o.beneficiaire; $("cf-more").open=!!(o.beneficiaire || Number(o.remise)>0 || (o.notes||"").trim());
     show("cform");
   }
@@ -8393,6 +8395,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     if(!editingOrd) clearDraft("cf");
     editingOrd=null;
     if(CF_PH.length){ const pend=CF_PH.slice(); CF_PH=[]; renderCfPh(); savePhotos(id, pend, $("c-ph-msg")).then(()=>{ if(ORDID===id) renderCmdPhotos(id); }); }
+    if(CF_NB.length && cid){ const pnb=CF_NB.slice(); CF_NB=[]; $("cf-nb-st").textContent=""; delete PH_CACHE[nbKey(cid)]; savePhotos(nbKey(cid), pnb, null); }
     syncSuivi(COMMANDES.find(x=>x.id===id), id);
     renderLists();
     renderCmd(COMMANDES.find(x=>x.id===id), id);
@@ -9019,6 +9022,14 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     if(IN_NB.length>before) lireCahier(IN_NB[IN_NB.length-1].data, IN_NB[IN_NB.length-1]);
   });
 
+  // Formulaire de commande : la feuille de mesures se photographie ici, sans passer par l'onglet Mesures
+  let CF_NB=[];
+  const NB_CF={ grid:"cf-mesures", pre:"cm-", st:"cf-nb-st", genre:()=>GENRE_CF, name:"cf-new-name", phone:"cf-new-phone", draft:"cf", nameOk:()=>$("cf-cliente").value==="__new" };
+  $("cf-nb-file").addEventListener("change", async e=>{
+    const before=CF_NB.length;
+    await addPhotos(e.target.files, "cahier", CF_NB); e.target.value="";
+    if(CF_NB.length>before){ wakeLecteur(); lireCahier(CF_NB[CF_NB.length-1].data, CF_NB[CF_NB.length-1], NB_CF); }
+  });
   // =================== LECTURE AUTOMATIQUE DU CAHIER (serveur + IA) ===================
   const LECTEUR_URL = "https://sanaapro-lecteur.onrender.com";
   function wakeLecteur(){ try{ fetch(LECTEUR_URL+"/", { cache:"no-store" }).catch(function(){}); }catch(e){} }
@@ -9027,21 +9038,23 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
   setInterval(function(){ if(BID && document.visibilityState==="visible" && navigator.onLine) wakeLecteur(); }, 10*60*1000);
   document.addEventListener("visibilitychange", function(){ if(BID && document.visibilityState==="visible" && navigator.onLine) wakeLecteur(); });
   // Efface ce que la lecture d'une page de cahier a rempli (mesures, et nom / numéro s'ils venaient d'elle)
+  const NB_IN={ grid:"in-mesures", pre:"m-", st:"in-nb-st", genre:()=>GENRE_FORM, name:"in-name", phone:"in-phone", draft:"in" };
   function effacerLecture(p, quiet){
-    if(!p || !p.read) return 0; let n=0;
-    Object.keys(p.read.mes).forEach(k=>{ const el=$("m-"+k); if(el){ el.value=p.read.mes[k]; if(!el.value) el.classList.remove("dict-hit"); n++; } });
-    if(p.read.name!==null && $("in-name").value===p.read.nameSet) $("in-name").value=p.read.name;
-    if(p.read.phone!==null && $("in-phone").value===p.read.phoneSet) $("in-phone").value=p.read.phone;
+    if(!p || !p.read) return 0; let n=0; const c=p.read.cfg||NB_IN;
+    Object.keys(p.read.mes).forEach(k=>{ const el=$(c.pre+k); if(el){ el.value=p.read.mes[k]; if(!el.value) el.classList.remove("dict-hit"); n++; } });
+    if(p.read.name!==null && $(c.name).value===p.read.nameSet) $(c.name).value=p.read.name;
+    if(p.read.phone!==null && $(c.phone).value===p.read.phoneSet) $(c.phone).value=p.read.phone;
     p.read=null;
-    const st=$("in-nb-st"); if(!quiet){ st.textContent=(LANG_UI==="en"?"🗑 The {n} measurement(s) read from the notebook were erased.":"🗑 Les {n} mesure(s) lues dans le cahier ont été effacées.").replace("{n}", n); st.style.color=""; }
-    try{ saveDraft("in"); }catch(e){}
+    const st=$(c.st); if(!quiet){ st.textContent=(LANG_UI==="en"?"🗑 The {n} measurement(s) read from the notebook were erased.":"🗑 Les {n} mesure(s) lues dans le cahier ont été effacées.").replace("{n}", n); st.style.color=""; }
+    try{ saveDraft(c.draft); }catch(e){}
     return n;
   }
-  async function lireCahier(img, photo){
-    const st=$("in-nb-st"); st.style.color="";
+  async function lireCahier(img, photo, cfg){
+    const c=cfg||NB_IN;
+    const st=$(c.st); st.style.color="";
     if(!navigator.onLine){ st.textContent=t("aiOffline"); return; }
-    const inputs=Array.from($("in-mesures").querySelectorAll("input"));
-    const champs=inputs.map(i=>{ const lb=$("in-mesures").querySelector('label[for="'+i.id+'"]'); return [i.id.replace(/^m-/,""), lb?lb.textContent:i.id]; });
+    const inputs=Array.from($(c.grid).querySelectorAll("input"));
+    const champs=inputs.map(i=>{ const lb=$(c.grid).querySelector('label[for="'+i.id+'"]'); return [i.id.slice(c.pre.length), lb?lb.textContent:i.id]; });
     st.textContent=t("aiReading");
     const slow=setTimeout(()=>{ st.textContent=t("aiWaking"); }, 9000);
     const ac=new AbortController(); const kill=setTimeout(()=>ac.abort(), 110000);
@@ -9049,20 +9062,21 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       const tok = auth.currentUser ? await auth.currentUser.getIdToken() : "";
       const r = await fetch(LECTEUR_URL+"/lire", { method:"POST", signal:ac.signal,
         headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+tok },
-        body: JSON.stringify({ image:img, genre:GENRE_FORM, champs }) });
+        body: JSON.stringify({ image:img, genre:c.genre(), champs }) });
       const j = await r.json().catch(()=>({}));
       if(!r.ok){ st.textContent = t(r.status===429?"aiLimit":(r.status===503?"aiNoKey":(r.status===401?"aiAuth":"aiFail"))); st.style.color="var(--warn)"; return; }
-      let n=0; const read={ mes:{}, name:null, phone:null, nameSet:null, phoneSet:null };
-      Object.keys(j.mesures||{}).forEach(k=>{ const el=$("m-"+k); if(el){ read.mes[k]=el.value; el.value=j.mesures[k]; el.classList.add("dict-hit"); n++; } });
-      if(j.nom && !$("in-name").value.trim()){ read.name=""; read.nameSet=j.nom; $("in-name").value=j.nom; }
-      if(j.telephone && !$("in-phone").value.trim()){ read.phone=""; read.phoneSet=j.telephone; $("in-phone").value=j.telephone; }
+      let n=0; const read={ mes:{}, name:null, phone:null, nameSet:null, phoneSet:null, cfg:c };
+      Object.keys(j.mesures||{}).forEach(k=>{ const el=$(c.pre+k); if(el){ read.mes[k]=el.value; el.value=j.mesures[k]; el.classList.add("dict-hit"); n++; } });
+      const nameOk = !c.nameOk || c.nameOk();
+      if(nameOk && j.nom && !$(c.name).value.trim()){ read.name=""; read.nameSet=j.nom; $(c.name).value=j.nom; }
+      if(nameOk && j.telephone && !$(c.phone).value.trim()){ read.phone=""; read.phoneSet=j.telephone; $(c.phone).value=j.telephone; }
       if(photo && n) photo.read=read;
       st.textContent = n ? t("aiDone").replace("{n}", n)+(j.plusieurs?" "+t("aiMany"):"") : t("aiNone");
       st.style.color = n ? "var(--ok)" : "var(--warn)";
       if(photo && n){ const b=document.createElement("button"); b.type="button"; b.className="ghost"; b.style.marginTop="8px";
         b.textContent = LANG_UI==="en" ? "🗑 Erase the measurements read from this page" : "🗑 Effacer les mesures lues sur cette page";
         b.addEventListener("click", ()=>effacerLecture(photo)); st.appendChild(document.createElement("br")); st.appendChild(b); }
-      try{ saveDraft("in"); }catch(e){}
+      try{ saveDraft(c.draft); }catch(e){}
     }catch(e){ st.textContent=t("aiFail"); st.style.color="var(--warn)"; }
     finally{ clearTimeout(slow); clearTimeout(kill); }
   }
