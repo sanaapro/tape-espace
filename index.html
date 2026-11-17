@@ -545,7 +545,11 @@
   .art-row input{ margin:0; }
   .art-row button{ border:1px solid var(--line2); border-radius:9px; background:none; color:var(--err); cursor:pointer; font-size:15px; }
   .art-ph{ grid-column:1/-1; display:flex; gap:6px; align-items:center; flex-wrap:wrap; padding:6px 0 8px; border-bottom:1px solid var(--line); }
-  .art-ph .ph-item{ width:64px; height:64px; aspect-ratio:auto; }
+  .art-ph .ph-item{ width:64px; height:64px; aspect-ratio:auto; border:3px solid var(--ac,var(--line2)); }
+  .art-ph .ph-item .tag{ background:var(--ac,rgba(0,0,0,.65)); font-weight:700; }
+  #cf-arts .art-row{ border-left:5px solid var(--ac,transparent); padding-left:8px; border-radius:6px; }
+  .c-art-wrap{ border-left:5px solid var(--ac,transparent); padding-left:10px; border-radius:6px; margin-top:6px; }
+  .c-art-wrap .nm{ color:var(--ac); font-weight:700; }
   .art-ph label{ display:flex; align-items:center; gap:4px; padding:7px 9px; border:1px dashed var(--gold); border-radius:9px; color:var(--gold); font-size:12px; cursor:pointer; margin:0; text-transform:none; letter-spacing:0; }
   .art-ph label input{ display:none; }
   .c-art-wrap{ border-bottom:1px solid var(--line); padding-bottom:6px; } .c-art-wrap .c-art{ border-bottom:none; }
@@ -7004,6 +7008,10 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     }
   }
   // Clé fixe d'un article : relie le tissu et le modèle au bon vêtement, même si l'ordre des lignes change
+  // Une couleur par vêtement : son tissu et son modèle portent la même couleur
+  const ART_COLORS=["#E5484D","#3E7BFA","#2EAD5B","#F08C2E","#9B5DE5","#E54FA0","#13A8A8","#C9A227"];
+  const artColor = i => ART_COLORS[i % ART_COLORS.length];
+  function paintArtColors(){ document.querySelectorAll("#cf-arts .art-row").forEach((r,i)=>r.style.setProperty("--ac", artColor(i))); }
   const newArtK = () => "a"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   function phThumb(box, p, onDel){
     const it=document.createElement("div"); it.className="ph-item";
@@ -7018,6 +7026,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     const box=$("cf-ph"); box.innerHTML="";
     CF_PH.forEach((p,i)=>{ if(!p.k) phThumb(box, p, ()=>{ CF_PH.splice(i,1); renderCfPh(); }); });
     document.querySelectorAll("#cf-arts .art-row").forEach(paintArtPh);
+    paintArtColors();
   }
   // Sous chaque article du formulaire : boutons Tissu / Modèle et les deux photos côte à côte
   function paintArtPh(r){
@@ -7121,13 +7130,13 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     p.addEventListener("input", artTotal);
     x.addEventListener("click", ()=>{
       const k=r.dataset.k; for(let i=CF_PH.length-1;i>=0;i--) if(CF_PH[i].k===k) CF_PH.splice(i,1);
-      if($("cf-arts").children.length>1){ r.remove(); artTotal(); } else { n.value=""; p.value=""; r.dataset.k=newArtK(); artTotal(); renderCfPh(); }
+      if($("cf-arts").children.length>1){ r.remove(); artTotal(); paintArtColors(); } else { n.value=""; p.value=""; r.dataset.k=newArtK(); artTotal(); renderCfPh(); }
     });
     r.appendChild(n); r.appendChild(p); r.appendChild(x);
     paintArtPh(r);
     return r;
   }
-  function buildArtRows(arts){ const box=$("cf-arts"); box.innerHTML=""; arts.forEach(a=>box.appendChild(artRow(a))); artTotal(); }
+  function buildArtRows(arts){ const box=$("cf-arts"); box.innerHTML=""; arts.forEach(a=>box.appendChild(artRow(a))); artTotal(); paintArtColors(); }
   function readArts(){
     const out=[];
     $("cf-arts").querySelectorAll(".art-row").forEach(r=>{
@@ -7137,13 +7146,13 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     });
     return out;
   }
-  $("cf-art-add").addEventListener("click", ()=>{ const r=artRow({ nom:"", prix:"" }); $("cf-arts").appendChild(r); r.children[0].focus(); });
+  $("cf-art-add").addEventListener("click", ()=>{ const r=artRow({ nom:"", prix:"" }); $("cf-arts").appendChild(r); paintArtColors(); r.children[0].focus(); });
   $("cf-gift").addEventListener("change", ()=>{ $("cf-gift-box").hidden=!$("cf-gift").checked; });
   function renderVt(o){
     const arts=articlesOf(o), box=$("c-vt"); box.innerHTML="";
     $("c-vt-card").hidden = arts.length<1;
     arts.forEach((a,i)=>{
-      const wr=document.createElement("div"); wr.className="c-art-wrap";
+      const wr=document.createElement("div"); wr.className="c-art-wrap"; wr.style.setProperty("--ac", artColor(i));
       const r=document.createElement("div"); r.className="c-art";
       const l=document.createElement("div");
       const nm=document.createElement("div"); nm.className="nm"; nm.textContent=a.nom||"—";
