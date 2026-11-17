@@ -2287,6 +2287,7 @@
       mCoupe:"Bonjour {nom}, la coupe de votre {article} commence à l'atelier {boutique}.",
       mEssayage:"Bonjour {nom}, votre {article} est prêt pour l'essayage. Vous pouvez passer à l'atelier {boutique} quand cela vous arrange.",
       mPret:"Bonjour {nom}, votre {article} est terminé et vous attend à l'atelier {boutique}.",
+      mPretS:"Bonjour {nom}, votre {article} est {pret} à l'atelier {boutique} ✅", mPretSPl:"Bonjour {nom}, vos vêtements sont prêts à l'atelier {boutique} ✅", pmPretS:"Bonjour {nom}, votre linge est prêt au pressing {boutique} ✅", mReste:"Reste à payer : {prix} {cur}", lineWaveS:"Payer par Wave : {v}", lineWaveNumS:"Wave : {v}",
       mLivre:"Bonjour {nom}, votre {article} vous a bien été remis. Merci d'avoir choisi l'atelier {boutique}.",
       mAmount:"Montant à régler : {prix} {cur}.",
       shopOrder:"Commande"
@@ -2597,6 +2598,7 @@
       mCoupe:"Hello {nom}, cutting has started on your {article} at {boutique}.",
       mEssayage:"Hello {nom}, your {article} is ready for fitting. Please come to {boutique} whenever it suits you.",
       mPret:"Hello {nom}, your {article} is finished and waiting for you at {boutique}.",
+      mPretS:"Hello {nom}, your {article} is ready at {boutique} ✅", mPretSPl:"Hello {nom}, your clothes are ready at {boutique} ✅", pmPretS:"Hello {nom}, your laundry is ready at {boutique} ✅", mReste:"To pay: {prix} {cur}", lineWaveS:"Pay with Wave: {v}", lineWaveNumS:"Wave: {v}",
       mLivre:"Hello {nom}, your {article} has been handed over. Thank you for choosing {boutique}.",
       mAmount:"Amount due: {prix} {cur}.",
       shopOrder:"Order"
@@ -7605,6 +7607,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
   function pzMessage(o){
     const st=o.statut||"recu";
     const key="pm"+st.charAt(0).toUpperCase()+st.slice(1);
+    if(st==="pret"){ if(o.id) syncSuivi(o, o.id); return readyShort(o, true); }
     let msg=tm(key).replace("{nom}", o.clienteName||"").replace("{boutique}", (BOUTIQUE && BOUTIQUE.name) || "");
     const re=resteDe(o);
     if(st!=="recupere") msg += "\n" + tm("pmTicket").replace("{v}", fmtNum(o.numero));
@@ -7984,18 +7987,44 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     });
   });
 
-  function waveLines(){
+  function waveLines(short){
     const link=(BOUTIQUE && BOUTIQUE.waveLink) || "";
     const num=String((BOUTIQUE && BOUTIQUE.wave) || "").trim();
     const bank = ["banque","banque2"].map(k=>(BOUTIQUE && BOUTIQUE[k]) || {}).filter(bk=>bk.numero)
       .map(bk=>"\n" + tm("lineBank").replace("{b}", bk.nom||"").replace("{t}", bk.titulaire||"").replace("{n}", bk.numero)).join("");
+    if(short){
+      if(link) return "\n" + tm("lineWaveS").replace("{v}", link) + bank;
+      if(num)  return "\n" + tm("lineWaveNumS").replace("{v}", num) + bank;
+      return bank;
+    }
     if(link) return "\n" + tm("lineWave").replace("{v}", link) + bank + "\n" + tm("lineWaveShot");
     if(num)  return "\n" + tm("lineWaveNum").replace("{v}", num) + bank + "\n" + tm("lineWaveShot");
     if(bank) return bank + "\n" + tm("lineWaveShot");
     return "";
   }
+  // Message court quand le vêtement est prêt : prénom, prêt(e), reste à payer, lien Wave. Rien d'autre.
+  const FEM_FR=/^(robe|jupe|chemise|veste|tenue|blouse|camisole|tunique|combinaison|abaya|kaba|camisole|culotte|salopette|cape|redingote|gandoura|djellaba|marinière|chemisette|taille basse|grande robe)\b/i;
+  function prenom(n){ return String(n||"").trim().split(/\s+/)[0] || ""; }
+  function artMin(a){ return LANG_MSG==="en" ? a : a.charAt(0).toLowerCase()+a.slice(1); }
+  function readyShort(o, pressing){
+    const b=(BOUTIQUE && BOUTIQUE.name) || "", nom=prenom(o.clienteName);
+    let msg;
+    if(pressing) msg=tm("pmPretS").replace("{nom}", nom).replace("{boutique}", b);
+    else {
+      const a=artMsg(o.article);
+      const many = !a || /,|×/.test(a);
+      msg = many ? tm("mPretSPl").replace("{nom}", nom).replace("{boutique}", b)
+        : tm("mPretS").replace("{nom}", nom).replace("{article}", artMin(a)).replace("{boutique}", b).replace("{pret}", FEM_FR.test(a.trim()) ? "prête" : "prêt");
+    }
+    if(pressing && o.numero) msg += "\n" + tm("pmTicket").replace("{v}", fmtNum(o.numero));
+    const re=resteDe(o);
+    if(re>0) msg += "\n" + tm("mReste").replace("{prix}", Math.round(re)).replace("{cur}", cur()) + waveLines(true);
+    else if(o.prix) msg += "\n" + tm("mPaid");
+    return msg;
+  }
   function clientMessage(o){
     const st=o.statut||"recu";
+    if(st==="pret") return readyShort(o, false);
     const base = (st==="recu" && o.type==="pap") ? "mRecuPap" : msgKey(st);
     let msg = tm(base)
       .replace("{nom}", o.clienteName||"")
