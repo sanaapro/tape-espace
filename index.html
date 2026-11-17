@@ -7057,7 +7057,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     });
     ["tissu","modele"].forEach(role=>{
       const lb=document.createElement("label"); const inp=document.createElement("input"); inp.type="file"; inp.accept="image/*";
-      if(role==="tissu") inp.setAttribute("capture","environment");
+      // pas de « capture » : le téléphone propose l'appareil photo OU la galerie (tissu reçu par WhatsApp)
       const sp=document.createElement("span"); sp.textContent=t(role==="tissu"?"phArtFab":"phArtMod");
       inp.addEventListener("change", e=>onAdd(role, e.target.files, inp));
       lb.appendChild(inp); lb.appendChild(sp); bx.appendChild(lb);
