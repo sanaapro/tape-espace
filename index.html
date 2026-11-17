@@ -544,6 +544,11 @@
   .art-row{ display:grid; grid-template-columns:1fr 96px 36px; gap:6px; margin-top:6px; }
   .art-row input{ margin:0; }
   .art-row button{ border:1px solid var(--line2); border-radius:9px; background:none; color:var(--err); cursor:pointer; font-size:15px; }
+  .art-ph{ grid-column:1/-1; display:flex; gap:6px; align-items:center; flex-wrap:wrap; padding:6px 0 8px; border-bottom:1px solid var(--line); }
+  .art-ph .ph-item{ width:64px; height:64px; aspect-ratio:auto; }
+  .art-ph label{ display:flex; align-items:center; gap:4px; padding:7px 9px; border:1px dashed var(--gold); border-radius:9px; color:var(--gold); font-size:12px; cursor:pointer; margin:0; text-transform:none; letter-spacing:0; }
+  .art-ph label input{ display:none; }
+  .c-art-wrap{ border-bottom:1px solid var(--line); padding-bottom:6px; } .c-art-wrap .c-art{ border-bottom:none; }
   .chk{ display:flex; gap:10px; align-items:center; margin-top:12px; font-size:14px; color:var(--txt); text-transform:none; letter-spacing:0; cursor:pointer; }
   .chk input{ width:20px; height:20px; margin:0; flex:0 0 auto; }
   .c-art{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); }
@@ -1645,7 +1650,7 @@
       <div class="row" id="c-notes-row"><span class="k" data-i18n="notes">Notes</span><span class="v" id="c-notes"></span></div>
     </div>
     <div class="card" id="c-ph-card">
-      <h2 data-i18n="phTitle">Photos du tissu et du modèle</h2>
+      <h2 data-i18n="phOther">Autres photos (facultatif)</h2>
       <div class="ph-grid" id="c-ph"></div>
       <div class="ph-btns">
         <label><input type="file" id="c-ph-tissu" accept="image/*" capture="environment"><span data-i18n="phFabric">📷 Photo du tissu</span></label>
@@ -1761,7 +1766,7 @@
       </div>
       <label data-i18n="notesOpt">Notes (optionnel)</label>
       <textarea id="cf-notes" rows="2" data-i18n-ph="orderNotesPh" placeholder="Couleur, broderie, remarques…"></textarea>
-      <label data-i18n="phTitle">Photos du tissu et du modèle</label>
+      <label data-i18n="phOther">Autres photos (facultatif)</label>
       <div class="ph-btns">
         <label><input type="file" id="cf-ph-tissu" accept="image/*" capture="environment"><span data-i18n="phFabric">📷 Photo du tissu</span></label>
         <label><input type="file" id="cf-ph-modele" accept="image/*" multiple><span data-i18n="phModel">🖼️ Modèle (galerie)</span></label>
@@ -2110,7 +2115,7 @@
       mClo:"📊 Clôture du {d} — {shop}", mCloTot:"TOTAL REÇU : {v}", mCloDep:"Dépenses : {v}", mCloSol:"Solde du jour : {v}",
       todoTitle:"À faire aujourd'hui", todoReady:"✅ {n} commande(s) prête(s) — la cliente doit passer", todoLate:"en RETARD de {n} j", todoToday:"AUJOURD'HUI",
       todoSoon:"dans {n} j", todoDeliv:"livraison", todoPick:"retrait", statTickets:"Tickets",
-      phTitle:"Photos du tissu et du modèle", phFabric:"📷 Photo du tissu", phModel:"🖼️ Modèle (galerie)", phTagFabric:"Tissu", phTagModel:"Modèle",
+      phTitle:"Photos du tissu et du modèle", phOther:"Autres photos (facultatif)", phArtFab:"📷 Tissu", phArtMod:"🖼️ Modèle", phFabric:"📷 Photo du tissu", phModel:"🖼️ Modèle (galerie)", phTagFabric:"Tissu", phTagModel:"Modèle",
       phNone:"Aucune photo pour cette commande.", phLoading:"Chargement des photos…", phSaving:"Envoi des photos…", phSaved:"Photo(s) enregistrée(s).",
       phDelQ:"Supprimer cette photo ?", phFail:"Photo non enregistrée : {e}",
       csEncours:"⏳ En cours", csPret:"✅ Prêts", csImpaye:"💰 Impayés", csTermine:"📦 Terminés", csTout:"Tout voir",
@@ -2421,7 +2426,7 @@
       mClo:"📊 Close of {d} — {shop}", mCloTot:"TOTAL RECEIVED: {v}", mCloDep:"Expenses: {v}", mCloSol:"Balance for the day: {v}",
       todoTitle:"To do today", todoReady:"✅ {n} order(s) ready — the customer must come", todoLate:"{n} days LATE", todoToday:"TODAY",
       todoSoon:"in {n} days", todoDeliv:"delivery", todoPick:"pick-up", statTickets:"Tickets",
-      phTitle:"Fabric and model photos", phFabric:"📷 Fabric photo", phModel:"🖼️ Model (gallery)", phTagFabric:"Fabric", phTagModel:"Model",
+      phTitle:"Fabric and model photos", phOther:"Other photos (optional)", phArtFab:"📷 Fabric", phArtMod:"🖼️ Model", phFabric:"📷 Fabric photo", phModel:"🖼️ Model (gallery)", phTagFabric:"Fabric", phTagModel:"Model",
       phNone:"No photos for this order.", phLoading:"Loading photos…", phSaving:"Sending photos…", phSaved:"Photo(s) saved.",
       phDelQ:"Delete this photo?", phFail:"Photo not saved: {e}",
       csEncours:"⏳ In progress", csPret:"✅ Ready", csImpaye:"💰 Unpaid", csTermine:"📦 Finished", csTout:"See all",
@@ -6668,12 +6673,14 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
   const stLbl = o => isPz(o) ? pzStepLabel(o.statut||"recu") : t("st"+String(o.statut||"recu").charAt(0).toUpperCase()+String(o.statut||"recu").slice(1));
   const isDone = o => isPz(o) ? (o.statut==="recupere") : (o.statut==="livre");
   function nowLabel(lang){ const d=new Date(); return d.toLocaleDateString(lang==="en"?"en-GB":"fr-FR")+" "+d.toLocaleTimeString(lang==="en"?"en-GB":"fr-FR",{hour:"2-digit",minute:"2-digit"}); }
+  // Chaque vêtement avec son prix (commandes d'atelier à plusieurs articles)
+  const artLines = o => (!isPz(o) && Array.isArray(o.articles)) ? o.articles.filter(a=>a && a.nom).map(a=>({ nom:a.nom, prix:Number(a.prix)||0 })) : [];
   function receiptMsg(o, amt){
     const L=LANG_MSG, re=resteDe(o);
     const lines=[ "🧾 "+tt("rcTitle",L)+" — "+((BOUTIQUE&&BOUTIQUE.name)||""),
       (isPz(o)?tt("pzTicket",L):tt("tkOrder",L))+" "+fmtNum(o.numero)+" · "+nowLabel(L),
       tt("tkClient",L)+" : "+(o.clienteName||"—"),
-      tt("tkItem",L)+" : "+(artMsg(isPz(o)?o.resume:o.article)||"—"),
+      ...(artLines(o).length>1 ? artLines(o).map(a=>"• "+a.nom+" : "+money(a.prix)) : [tt("tkItem",L)+" : "+(artMsg(isPz(o)?o.resume:o.article)||"—")]),
       tt("rcAmt",L)+" : *"+money(amt)+"*" ];
     remiseRows(o, L).forEach(r=>lines.push(r[0]+" : "+r[1]));
     if(o.prix||o.prix===0) lines.push(tt("tkTotal",L)+" : "+money(o.prix));
@@ -6703,7 +6710,8 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     const qurl=ticketUrl(o); let qim=null;
     if(qurl){ qim=document.createElement("img"); qim.alt="QR"; d.appendChild(qim); qrDataUrl(qurl).then(u=>{ qim.src=u; }).catch(()=>{ qim.remove(); }); }
     row(t("tkClient"), o.clienteName||"—");
-    row(t("tkItem"), String((isPz(o)?o.resume:o.article)||"—").slice(0,60));
+    if(artLines(o).length>1) artLines(o).forEach(a=>row(String(a.nom||"—").slice(0,60), money(a.prix)));
+    else row(t("tkItem"), String((isPz(o)?o.resume:o.article)||"—").slice(0,60));
     remiseRows(o).forEach(r=>row(r[0], r[1]));
     if(o.prix||o.prix===0) row(t("tkTotal"), money(o.prix));
     row(t("tkPaid"), money(Number(o.paye)||0));
@@ -6988,11 +6996,13 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
   // jamais : la liste reste légère. On les charge seulement à l'ouverture d'une commande.
   let CF_PH=[];   // photos en attente dans le formulaire : { role, data }
   const PH_CACHE={};
-  async function addPhotos(files, role, list){
+  async function addPhotos(files, role, list, k){
     for(const f of Array.from(files||[])){
-      try{ list.push({ role, data: role==="cahier" ? await compressImage(f, 1400, 0.65) : await compressImage(f, 1100, 0.62) }); }catch(e){}
+      try{ const it={ role, data: role==="cahier" ? await compressImage(f, 1400, 0.65) : await compressImage(f, 1100, 0.62) }; if(k) it.k=k; list.push(it); }catch(e){}
     }
   }
+  // Clé fixe d'un article : relie le tissu et le modèle au bon vêtement, même si l'ordre des lignes change
+  const newArtK = () => "a"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   function phThumb(box, p, onDel){
     const it=document.createElement("div"); it.className="ph-item";
     const im=document.createElement("img"); im.src=p.data; im.alt="";
@@ -7002,7 +7012,28 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     if(onDel){ const x=document.createElement("button"); x.type="button"; x.className="x"; x.textContent="✕"; x.addEventListener("click", onDel); it.appendChild(x); }
     box.appendChild(it);
   }
-  function renderCfPh(){ const box=$("cf-ph"); box.innerHTML=""; CF_PH.forEach((p,i)=>phThumb(box, p, ()=>{ CF_PH.splice(i,1); renderCfPh(); })); }
+  function renderCfPh(){
+    const box=$("cf-ph"); box.innerHTML="";
+    CF_PH.forEach((p,i)=>{ if(!p.k) phThumb(box, p, ()=>{ CF_PH.splice(i,1); renderCfPh(); }); });
+    document.querySelectorAll("#cf-arts .art-row").forEach(paintArtPh);
+  }
+  // Sous chaque article du formulaire : boutons Tissu / Modèle et les deux photos côte à côte
+  function paintArtPh(r){
+    let bx=r.querySelector(".art-ph");
+    if(!bx){
+      bx=document.createElement("div"); bx.className="art-ph"; r.appendChild(bx);
+    }
+    bx.innerHTML="";
+    const k=r.dataset.k;
+    ["tissu","modele"].forEach(role=>{
+      CF_PH.forEach((p,i)=>{ if(p.k===k && p.role===role) phThumb(bx, p, ()=>{ CF_PH.splice(i,1); renderCfPh(); }); });
+      const lb=document.createElement("label"); const inp=document.createElement("input"); inp.type="file"; inp.accept="image/*";
+      if(role==="tissu") inp.setAttribute("capture","environment");
+      const sp=document.createElement("span"); sp.textContent=t(role==="tissu"?"phArtFab":"phArtMod");
+      inp.addEventListener("change", async e=>{ await addPhotos(e.target.files, role, CF_PH, k); e.target.value=""; renderCfPh(); });
+      lb.appendChild(inp); lb.appendChild(sp); bx.appendChild(lb);
+    });
+  }
   ["tissu","modele"].forEach(role=>{
     $("cf-ph-"+role).addEventListener("change", async e=>{ await addPhotos(e.target.files, role, CF_PH); e.target.value=""; renderCfPh(); });
   });
@@ -7012,7 +7043,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     let ok=0;
     for(const p of list){
       const ref=doc(db,"boutiques",BID,"clientes","ph-"+cmdId+"-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
-      const data={ photo:true, cmdId, role:p.role, data:p.data, createdAtMs:Date.now() };
+      const data={ photo:true, cmdId, role:p.role, data:p.data, createdAtMs:Date.now() }; if(p.k) data.artK=p.k;
       try{ await Promise.race([ setDoc(ref, data), timeout(30000) ]); ok++; (PH_CACHE[cmdId]=PH_CACHE[cmdId]||[]).push(Object.assign({ id:ref.id }, data)); }
       catch(e){ if(msgEl){ msgEl.textContent=t("phFail").replace("{e}", (e&&(e.code||e.message))||"?"); msgEl.className="msg err show"; } }
     }
@@ -7024,12 +7055,15 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     const box=$("c-ph"); if(!box) return; box.innerHTML="";
     const draw=()=>{
       box.innerHTML="";
-      const list=PH_CACHE[id]||[];
+      const all=PH_CACHE[id]||[];
+      const ks=new Set(articlesOf(ORD||{}).map(a=>a.k).filter(Boolean));
+      const list=all.filter(p=>!(p.artK && ks.has(p.artK)));
+      if(ORD && ORDID===id) paintVtPh(id);
       if(!list.length){ const e=document.createElement("div"); e.className="empty"; e.style.cssText="padding:6px 0;grid-column:1/-1"; e.textContent=t("phNone"); box.appendChild(e); return; }
       list.forEach(p=>phThumb(box, p, async ()=>{
         if(!confirm(t("phDelQ"))) return;
         if(!await askCode()) return;
-        PH_CACHE[id]=list.filter(x=>x!==p); draw();
+        PH_CACHE[id]=all.filter(x=>x!==p); draw();
         deleteDoc(doc(db,"boutiques",BID,"clientes",p.id)).catch(function(){});
       }));
     };
@@ -7078,13 +7112,17 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     return [[tr("tkInitial"), money(ini)], [tr("tkDiscount"), "− "+money(r)]];
   }
   function artRow(a){
-    const r=document.createElement("div"); r.className="art-row"; r.dataset.etat=a.etat||"a_faire";
+    const r=document.createElement("div"); r.className="art-row"; r.dataset.etat=a.etat||"a_faire"; r.dataset.k=a.k||newArtK();
     const n=document.createElement("input"); n.type="text"; n.placeholder=t("artNamePh2"); n.value=a.nom||"";
     const p=document.createElement("input"); p.type="number"; p.inputMode="decimal"; p.step="1"; p.placeholder=t("artPricePh"); p.value=(a.prix||a.prix===0)&&a.prix!==""?a.prix:"";
     const x=document.createElement("button"); x.type="button"; x.textContent="✕";
     p.addEventListener("input", artTotal);
-    x.addEventListener("click", ()=>{ if($("cf-arts").children.length>1){ r.remove(); artTotal(); } else { n.value=""; p.value=""; artTotal(); } });
+    x.addEventListener("click", ()=>{
+      const k=r.dataset.k; for(let i=CF_PH.length-1;i>=0;i--) if(CF_PH[i].k===k) CF_PH.splice(i,1);
+      if($("cf-arts").children.length>1){ r.remove(); artTotal(); } else { n.value=""; p.value=""; r.dataset.k=newArtK(); artTotal(); renderCfPh(); }
+    });
     r.appendChild(n); r.appendChild(p); r.appendChild(x);
+    paintArtPh(r);
     return r;
   }
   function buildArtRows(arts){ const box=$("cf-arts"); box.innerHTML=""; arts.forEach(a=>box.appendChild(artRow(a))); artTotal(); }
@@ -7093,7 +7131,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     $("cf-arts").querySelectorAll(".art-row").forEach(r=>{
       const nom=r.children[0].value.trim(); if(!nom) return;
       const pv=r.children[1].value.trim();
-      out.push({ nom, prix: pv==="" ? "" : (parseFloat(pv)||0), etat:r.dataset.etat||"a_faire" });
+      out.push({ nom, prix: pv==="" ? "" : (parseFloat(pv)||0), etat:r.dataset.etat||"a_faire", k:r.dataset.k });
     });
     return out;
   }
@@ -7103,6 +7141,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     const arts=articlesOf(o), box=$("c-vt"); box.innerHTML="";
     $("c-vt-card").hidden = arts.length<1;
     arts.forEach((a,i)=>{
+      const wr=document.createElement("div"); wr.className="c-art-wrap";
       const r=document.createElement("div"); r.className="c-art";
       const l=document.createElement("div");
       const nm=document.createElement("div"); nm.className="nm"; nm.textContent=a.nom||"—";
@@ -7127,7 +7166,42 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
           if(autoNotifyOn()){ const num=waNumber(ORD.clientePhone); if(num){ logRelance(ORD, "pret"); openWa(num, clientMessage(ORD)); } }
         }
       });
-      r.appendChild(l); r.appendChild(b); box.appendChild(r);
+      r.appendChild(l); r.appendChild(b); wr.appendChild(r);
+      const pz=document.createElement("div"); pz.className="art-ph"; pz.style.borderBottom="none"; pz.dataset.i=i; wr.appendChild(pz);
+      box.appendChild(wr);
+    });
+    if(ORDID) paintVtPh(ORDID);
+  }
+  // Fiche commande : sous chaque vêtement, son tissu et son modèle côte à côte (+ boutons pour en ajouter)
+  function paintVtPh(id){
+    if(!ORD || ORDID!==id) return;
+    const arts=articlesOf(ORD), all=PH_CACHE[id]||[];
+    document.querySelectorAll("#c-vt .art-ph").forEach(pz=>{
+      const i=Number(pz.dataset.i), a=arts[i]; if(!a) return;
+      pz.innerHTML="";
+      ["tissu","modele"].forEach(role=>{
+        all.forEach(p=>{ if(a.k && p.artK===a.k && p.role===role) phThumb(pz, p, async ()=>{
+          if(!confirm(t("phDelQ"))) return;
+          if(!await askCode()) return;
+          PH_CACHE[id]=(PH_CACHE[id]||[]).filter(x=>x!==p); paintVtPh(id);
+          deleteDoc(doc(db,"boutiques",BID,"clientes",p.id)).catch(function(){});
+        }); });
+        const lb=document.createElement("label"); const inp=document.createElement("input"); inp.type="file"; inp.accept="image/*";
+        if(role==="tissu") inp.setAttribute("capture","environment");
+        const sp=document.createElement("span"); sp.textContent=t(role==="tissu"?"phArtFab":"phArtMod");
+        inp.addEventListener("change", async e=>{
+          if(!ORDID) return; const oid=ORDID;
+          let list2=articlesOf(ORD), k=list2[i] && list2[i].k;
+          if(!k){ // ancienne commande : on donne une clé à chaque article une fois pour toutes
+            list2.forEach(x=>{ if(!x.k) x.k=newArtK(); }); k=list2[i].k;
+            ORD.articles=list2; const loc=COMMANDES.find(x=>x.id===oid); if(loc && loc!==ORD) loc.articles=list2;
+            setDoc(doc(db,"boutiques",BID,"commandes",oid), { articles:list2, updatedAt:serverTimestamp() }, { merge:true }).catch(function(){});
+          }
+          const list=[]; await addPhotos(e.target.files, role, list, k); e.target.value="";
+          await savePhotos(oid, list, $("c-ph-msg")); renderCmdPhotos(oid);
+        });
+        lb.appendChild(inp); lb.appendChild(sp); pz.appendChild(lb);
+      });
     });
   }
   $("q-solde").addEventListener("click", ()=>{
@@ -7174,7 +7248,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     const pv=prompt(t("qArtPrice"), ""); if(pv===null) return;
     const px=parseFloat(String(pv).replace(",", "."));
     if(isNaN(px) || px<0){ alert(t("amountRequired")); return; }
-    const arts=articlesOf(ORD).concat([{ nom:nom.trim(), prix:px, etat:"a_faire" }]);
+    const arts=articlesOf(ORD).concat([{ nom:nom.trim(), prix:px, etat:"a_faire", k:newArtK() }]);
     const article=arts.map(a=>a.nom).join(", ");
     const prix=(Number(ORD.prix)||0)+px;
     const upd={ article, prix, articles:arts };
@@ -8291,7 +8365,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       article, type:TYPE_CF, recu:$("cf-recu").value, livraison:$("cf-liv").value||null,
       notes:$("cf-notes").value.trim(),
       prix: (pv!=="" && !isNaN(parseFloat(pv))) ? parseFloat(pv) : null,
-      articles: ARTS.map(a=>({ nom:a.nom, prix:Number(a.prix)||0, etat:a.etat||"a_faire" })),
+      articles: ARTS.map(a=>({ nom:a.nom, prix:Number(a.prix)||0, etat:a.etat||"a_faire", k:a.k||newArtK() })),
       remise: REMISE>0 ? REMISE : 0,
       prixInitial: REMISE>0 ? sumArts : null,
       depot: $("cf-depot").value||"",
