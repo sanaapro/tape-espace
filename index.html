@@ -9794,7 +9794,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       const e=prompt(t("lexAskHeard")); if(e===null || !e.trim()){ CONT=was; if(was && !busy) listen(); return; }
       const c=prompt(t("lexAskGood")); if(c===null || !c.trim()){ CONT=was; if(was && !busy) listen(); return; }
       if(addLex(e, c)){ const fx=x=>{ ["cf-new-name","in-name","cf-notes","in-notes"].forEach(id=>{ const el=$(id); if(el && el.value) el.value=applyLex(el.value); });
-          document.querySelectorAll("#cf-arts .art-row input:first-child").forEach(el=>{ el.value=applyLex(el.value); }); }; fx();
+          document.querySelectorAll("#cf-arts .art-row > input:first-child").forEach(el=>{ el.value=applyLex(el.value); }); }; fx();
         done(L("C'est noté : "+e.trim()+" s'écrit "+c.trim()+".","Noted: "+e.trim()+" is written "+c.trim()+".")); }
       CONT=was; if(was) relisten();
     });
