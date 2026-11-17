@@ -674,6 +674,8 @@
     cursor:pointer; padding:0; transition:transform .35s cubic-bezier(.3,1.6,.5,1); }
   #cof-fab svg{ width:38px; height:38px; }
   #cof-fab.pop{ transform:scale(1.35); }
+  /* le coffre flottant ne doit jamais cacher le bas d'une page (montants payé / reste) */
+  body:has(#cof-fab:not([hidden])){ padding-bottom:110px; }
   #cof-fab .pct{ position:absolute; top:-6px; right:-6px; background:var(--gold); color:#141310; font:800 11px var(--sans); border-radius:10px; padding:2px 6px; }
   .cof-coin{ position:fixed; z-index:901; pointer-events:none; white-space:nowrap; font:800 17px Georgia,serif; color:#E8C55A; text-shadow:0 2px 8px rgba(0,0,0,.8);
     animation:cofCoin 1.6s ease-in forwards; }
