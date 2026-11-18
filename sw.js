@@ -2,11 +2,10 @@
    Nom de cache PRÉFIXÉ PAR L'APP : toutes les boutiques SanaaPro partagent
    le domaine sanaapro.github.io, donc un nom générique effacerait le cache
    des autres applications du même domaine. Ne jamais retirer ce préfixe. */
-const CACHE = "sanaapro-tape-espace-v3";
+const CACHE = "sanaapro-tape-espace-v4";
 const PREFIX = "sanaapro-tape-espace-";
 
 const CORE = [
-  "./",
   "./index.html",
   "./manifest.json",
   "./icon-192.png",
@@ -75,8 +74,10 @@ self.addEventListener("fetch", (e) => {
   if (url.origin === self.location.origin && isPage) {
     e.respondWith((async () => {
       const cache = await caches.open(CACHE);
-      let hit = await cache.match(req, { ignoreSearch: true });
-      if (!hit && url.pathname.endsWith("/")) hit = await cache.match(new URL("index.html", url).href);
+      /* UNE seule copie par page, sans le « ?… » de l'adresse : sinon une vieille
+         copie (ouverte un jour avec ?v=…) pouvait ressortir à la place de la dernière. */
+      const key = url.origin + (url.pathname.endsWith("/") ? url.pathname + "index.html" : url.pathname);
+      const hit = await cache.match(key);
       const net = fetch(req, { cache: "no-cache" }).then(async (res) => {
         if (res && res.ok) {
           const fresh = res.clone();
@@ -87,7 +88,7 @@ self.addEventListener("fetch", (e) => {
             if (a && b) changed = a !== b;
             else { try { changed = (await hit.clone().text()) !== (await res.clone().text()); } catch (_) { changed = false; } }
           }
-          await cache.put(req, fresh).catch(() => {});
+          await cache.put(key, fresh).catch(() => {});
           if (hit && changed) {
             let list = [];
             const id = e.resultingClientId || e.clientId;
