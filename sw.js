@@ -65,29 +65,43 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  /* Pages HTML : réseau d'abord, pour toujours servir la dernière version
-     mise en ligne. La copie en cache ne sert qu'en cas de coupure ou si le
-     réseau ne répond pas en 6 secondes (débit très faible). */
+  /* Pages HTML : la copie du téléphone s'ouvre TOUT DE SUITE (l'app pèse
+     plus de 200 Ko : sur un réseau lent, la retélécharger à chaque ouverture
+     prenait parfois une minute). La nouvelle version se télécharge en
+     arrière-plan ; quand elle est différente, la page reçoit un message
+     « sanaapro-update » et propose de l'ouvrir. Sans copie sur le téléphone
+     (première ouverture), on passe par le réseau comme avant. */
   const isPage = req.mode === "navigate" || /\.html$/.test(url.pathname) || url.pathname.endsWith("/");
   if (url.origin === self.location.origin && isPage) {
-    e.respondWith(new Promise((resolve) => {
-      let done = false;
-      const fromCache = () => caches.match(req, { ignoreSearch: true });
-      const timer = setTimeout(() => {
-        fromCache().then((hit) => { if (hit && !done) { done = true; resolve(hit); } });
-      }, 6000);
-      fetch(req, { cache: "no-cache" }).then((res) => {
+    e.respondWith((async () => {
+      const cache = await caches.open(CACHE);
+      let hit = await cache.match(req, { ignoreSearch: true });
+      if (!hit && url.pathname.endsWith("/")) hit = await cache.match(new URL("index.html", url).href);
+      const net = fetch(req, { cache: "no-cache" }).then(async (res) => {
         if (res && res.ok) {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+          const fresh = res.clone();
+          let changed = !hit;
+          if (hit) {
+            const a = hit.headers.get("etag") || hit.headers.get("last-modified");
+            const b = res.headers.get("etag") || res.headers.get("last-modified");
+            if (a && b) changed = a !== b;
+            else { try { changed = (await hit.clone().text()) !== (await res.clone().text()); } catch (_) { changed = false; } }
+          }
+          await cache.put(req, fresh).catch(() => {});
+          if (hit && changed) {
+            let list = [];
+            const id = e.resultingClientId || e.clientId;
+            const one = id ? await self.clients.get(id) : null;
+            if (one) list = [one];
+            else list = (await self.clients.matchAll({ type: "window" })).filter((c) => new URL(c.url).pathname === url.pathname);
+            list.forEach((c) => c.postMessage({ type: "sanaapro-update" }));
+          }
         }
-        if (!done) { done = true; clearTimeout(timer); resolve(res); }
-      }).catch(() => {
-        fromCache().then((hit) => {
-          if (!done) { done = true; clearTimeout(timer); resolve(hit || Response.error()); }
-        });
+        return res;
       });
-    }));
+      if (hit) { e.waitUntil(net.catch(() => {})); return hit; }
+      try { return await net; } catch (_) { return Response.error(); }
+    })());
     return;
   }
 
