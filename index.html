@@ -1219,6 +1219,25 @@
           <button type="button" data-tool="visits" data-i18n="tabVisitors">Visiteurs</button>
         </div>
       </div>
+      <div class="card" id="bk-card" style="margin-top:18px">
+        <h2 data-i18n="bkTitle">💾 Sauvegarder mon activité</h2>
+        <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:10px" data-i18n="bkHint">Un fichier Excel avec vos clientes et leurs mesures, vos commandes, le pressing et vos finances. Envoyez-le sur votre email ou votre Google Drive.</div>
+        <div class="chips sm" id="bk-per">
+          <button type="button" data-p="semaine" data-i18n="bkWeek">Cette semaine</button>
+          <button type="button" data-p="mois" class="on" data-i18n="bkMonth">Ce mois</button>
+          <button type="button" data-p="annee" data-i18n="bkYear">Cette année</button>
+          <button type="button" data-p="tout" data-i18n="bkAll">Tout</button>
+        </div>
+        <button type="button" class="primary" id="bk-go" style="margin-top:12px" data-i18n="bkGo">📤 Créer et envoyer le fichier</button>
+        <div class="msg" id="bk-msg"></div>
+        <div style="margin-top:12px;font-size:12.5px;color:var(--muted)" data-i18n="bkRemind">Me rappeler de sauvegarder :</div>
+        <div class="chips sm" id="bk-freq">
+          <button type="button" data-f="" data-i18n="bkNever">Jamais</button>
+          <button type="button" data-f="semaine" data-i18n="bkEveryWeek">Chaque semaine</button>
+          <button type="button" data-f="mois" data-i18n="bkEveryMonth">Chaque mois</button>
+          <button type="button" data-f="annee" data-i18n="bkEveryYear">Chaque année</button>
+        </div>
+      </div>
       <div id="cof-set" style="margin:14px 4px 4px;font-size:12.5px;color:var(--muted);line-height:1.6">
         🔒 <span id="cof-set-state"></span>
         <button type="button" id="cof-set-go" class="flink-sm" data-i18n="cofSetGo">Activer ou régler mon coffre</button>
@@ -2202,7 +2221,7 @@
       pzCash:"Encaisser", pzCashAsk:"Montant reçu de {n} :", pzReceipt:"Reçu WhatsApp", pzDelete:"Supprimer",
       pzDeleteQ:"Supprimer le ticket n° {n} de {c} ?", pzPaidAll:"Payé", pzDueShort:"Reste {v}",
       pzWaMsg:"WhatsApp", noPhonePz:"Pas de numéro pour ce client.",
-      actTitle:"Mes activités", moreTitle:"Activer d\u2019autres fonctions", moreHint:"Au départ, SanaaPro reste simple. Touchez une fonction pour l\u2019ajouter en haut de l\u2019écran ; touchez encore pour la retirer.", actHint:"Choisissez ce que fait votre commerce. Seuls les onglets utiles s'affichent.",
+      bkTitle:"💾 Sauvegarder mon activité", bkHint:"Un fichier Excel avec vos clientes et leurs mesures, vos commandes, le pressing et vos finances. Envoyez-le sur votre email ou votre Google Drive.", bkWeek:"Cette semaine", bkMonth:"Ce mois", bkYear:"Cette année", bkAll:"Tout", bkGo:"📤 Créer et envoyer le fichier", bkRemind:"Me rappeler de sauvegarder :", bkNever:"Jamais", bkEveryWeek:"Chaque semaine", bkEveryMonth:"Chaque mois", bkEveryYear:"Chaque année", bkMaking:"Préparation du fichier…", bkShared:"✓ Fichier prêt. Choisissez Gmail ou Drive pour le garder.", bkDownloaded:"✓ Fichier téléchargé. Envoyez-le sur votre email ou mettez-le dans Google Drive.", bkFail:"Le fichier n'a pas pu être créé : {e}", bkDue:"💾 C'est le moment de sauvegarder votre activité — touchez ici", bkSaved:"✓ Rappel enregistré.", logoutQ:"Se déconnecter ?\n\nPour revenir, il faudra votre email :\n{e}\net votre mot de passe.\n\nNotez-les avant de continuer.", actTitle:"Mes activités", moreTitle:"Activer d\u2019autres fonctions", moreHint:"Au départ, SanaaPro reste simple. Touchez une fonction pour l\u2019ajouter en haut de l\u2019écran ; touchez encore pour la retirer.", actHint:"Choisissez ce que fait votre commerce. Seuls les onglets utiles s'affichent.",
       actCouture:"Couture", actPressing:"Pressing", actBoutique:"Boutique", actTissu:"Vente de tissu", pzRdv:"📅 Rendez-vous", pzRdvAsk:"Nouvelle date de retrait (AAAA-MM-JJ)", pzRdvWaQ:"Prévenir le client de la nouvelle date sur WhatsApp ?", pzRdvMsg:"Bonjour {n}, votre linge (ticket n° {t}) sera prêt le {d}. Merci de votre confiance — {shop}", pzCashConfirm:"Confirmer : {n} a payé {v} ?", cofSetTitle:"🔒 Mon coffre (épargne)", cofSetHint:"À chaque paiement d\u2019un client, une part (vous choisissez le pourcentage) est mise de côté pour vos projets, et une autre peut être réservée aux salaires.", cofSetGo:"Activer ou régler mon coffre", cofSetSee:"Voir et régler mon coffre", cofSetOff:"Pas encore activé.", cofSetOn:"Coffre activé : {p} % de chaque recette", cofSetSal:"Salaires : {p} %", tabTissu:"Tissus", tabBoutiqueTissu:"Boutique · Tissus", actTissuOn:"✅ Vente de tissu activée : un onglet « Tissus » est apparu, pour les rouleaux et les lots.", actTissuGo:"Ouvrir l\u2019onglet Tissus", fabStock:"Stock de tissu", fabNew:"Nouveau tissu", apSalesN:"Ventes du jour", apSalesD:"Recette du jour", apInStock:"En stock", actSaveFail:"Réglage non enregistré : {e}",
       arIaClear:"✕ Effacer", arIaBtn:"📷 Photographier l'article", arIaOn:"Reconnaissance par photo activée", arIaOff:"Reconnaissance par photo", arIaAct:"Activer", arIaDes:"Désactiver", arIaReading:"🔎 Je regarde l'article…", arIaSlow:"🔎 Le lecteur se réveille, cela peut prendre une minute…", arIaOk:"✓ Reconnu. Vérifiez le nom, puis tapez le prix.", arIaNone:"Aucun article reconnu. Écrivez le nom vous-même.", arIaFail:"Pas de réponse. Écrivez le nom vous-même.", arIaLimit:"Limite de photos du jour atteinte.", arIaNoNet:"Pas de réseau : écrivez le nom vous-même.", arIaNext:"✓ Enregistré. Photographiez l'article suivant.", kArticle:"Article", kRouleau:"Rouleau", kLot:"Lot / coupon", kHintArticle:"Un article vendu à la pièce (chemise, sac, bazin plié…).", kHintRouleau:"Un rouleau vendu au mètre ou au yard. Déjà entamé ? Cochez la case : pas besoin de le mesurer.", kHintLot:"Des lots déjà coupés (ex. 5 mètres), vendus entiers.", fabUnit:"Unité", uMetre:"Mètre", uYard:"Yard", fabLen:"Longueur du rouleau", fabEntame:"Rouleau déjà entamé (longueur inconnue)", fabLotLen:"Longueur d\u2019un lot", fabPhoto:"📷 Photo du tissu (facultatif)", fabNbLots:"Nombre de lots", fabPrixLot:"Prix d\u2019un lot", fabPrixU:"Prix par {u}", fabLenNeed:"Indiquez la longueur, ou cochez « déjà entamé ».", fabEntameShort:"entamé", fabLeft:"reste {n}", fabUnknown:"longueur inconnue", fabDone:"Terminé", fabDoneQ:"Ce rouleau est fini ? Il disparaîtra de la liste.", fabTooMuch:"Il ne reste que {n} sur ce rouleau.", fabRollsLbl:"rouleau(x)", stockSearchPh:"Chercher un article ou un tissu…", lotOf:"lot de {n}", actNeedOne:"Gardez au moins une activité.", callBtn:"Appeler",
       toolTitle:"Outils avancés", toolHint:"Activez seulement ce dont vous avez besoin. Les onglets s'ajoutent en haut de l'écran.",
@@ -2513,7 +2532,7 @@
       pzCash:"Take payment", pzCashAsk:"Amount received from {n}:", pzReceipt:"WhatsApp receipt", pzDelete:"Delete",
       pzDeleteQ:"Delete ticket no. {n} for {c}?", pzPaidAll:"Paid", pzDueShort:"Due {v}",
       pzWaMsg:"WhatsApp", noPhonePz:"No phone number for this customer.",
-      actTitle:"My activities", moreTitle:"Turn on more features", moreHint:"SanaaPro starts simple. Tap a feature to add it at the top of the screen; tap again to remove it.", actHint:"Choose what your business does. Only the useful tabs are shown.",
+      bkTitle:"💾 Back up my activity", bkHint:"An Excel file with your clients and their measurements, your orders, the laundry and your finances. Send it to your email or your Google Drive.", bkWeek:"This week", bkMonth:"This month", bkYear:"This year", bkAll:"Everything", bkGo:"📤 Create and send the file", bkRemind:"Remind me to back up:", bkNever:"Never", bkEveryWeek:"Every week", bkEveryMonth:"Every month", bkEveryYear:"Every year", bkMaking:"Preparing the file…", bkShared:"✓ File ready. Choose Gmail or Drive to keep it.", bkDownloaded:"✓ File downloaded. Send it to your email or put it in Google Drive.", bkFail:"The file could not be created: {e}", bkDue:"💾 Time to back up your activity — tap here", bkSaved:"✓ Reminder saved.", logoutQ:"Sign out?\n\nTo come back you will need your email:\n{e}\nand your password.\n\nWrite them down before you continue.", actTitle:"My activities", moreTitle:"Turn on more features", moreHint:"SanaaPro starts simple. Tap a feature to add it at the top of the screen; tap again to remove it.", actHint:"Choose what your business does. Only the useful tabs are shown.",
       actCouture:"Tailoring", actPressing:"Dry cleaning", actBoutique:"Shop", actTissu:"Fabric sales", pzRdv:"📅 Pick-up date", pzRdvAsk:"New pick-up date (YYYY-MM-DD)", pzRdvWaQ:"Tell the client the new date on WhatsApp?", pzRdvMsg:"Hello {n}, your laundry (ticket no. {t}) will be ready on {d}. Thank you — {shop}", pzCashConfirm:"Confirm: {n} paid {v}?", cofSetTitle:"🔒 My savings vault", cofSetHint:"Every time a client pays, a share (you choose the percentage) is put aside for your projects, and another can be kept for wages.", cofSetGo:"Turn on or set my vault", cofSetSee:"See and set my vault", cofSetOff:"Not turned on yet.", cofSetOn:"Vault on: {p} % of every payment", cofSetSal:"Wages: {p} %", tabTissu:"Fabrics", tabBoutiqueTissu:"Shop · Fabrics", actTissuOn:"✅ Fabric sales switched on: a “Fabrics” tab has appeared, for rolls and lots.", actTissuGo:"Open the Fabrics tab", fabStock:"Fabric stock", fabNew:"New fabric", apSalesN:"Sales today", apSalesD:"Today\u2019s takings", apInStock:"In stock", actSaveFail:"Setting not saved: {e}",
       arIaClear:"✕ Clear", arIaBtn:"📷 Photograph the item", arIaOn:"Photo recognition on", arIaOff:"Photo recognition", arIaAct:"Turn on", arIaDes:"Turn off", arIaReading:"🔎 Looking at the item…", arIaSlow:"🔎 The reader is waking up, this can take a minute…", arIaOk:"✓ Recognised. Check the name, then type the price.", arIaNone:"No item recognised. Type the name yourself.", arIaFail:"No answer. Type the name yourself.", arIaLimit:"Daily photo limit reached.", arIaNoNet:"No network: type the name yourself.", arIaNext:"✓ Saved. Photograph the next item.", kArticle:"Item", kRouleau:"Roll", kLot:"Lot / cut piece", kHintArticle:"An item sold by the piece (shirt, bag, folded bazin…).", kHintRouleau:"A roll sold by the metre or yard. Already started? Tick the box: no need to measure it.", kHintLot:"Pieces already cut (e.g. 5 metres), sold whole.", fabUnit:"Unit", uMetre:"Metre", uYard:"Yard", fabLen:"Roll length", fabEntame:"Roll already started (length unknown)", fabLotLen:"Length of one lot", fabPhoto:"📷 Fabric photo (optional)", fabNbLots:"Number of lots", fabPrixLot:"Price of one lot", fabPrixU:"Price per {u}", fabLenNeed:"Enter the length, or tick “already started”.", fabEntameShort:"started", fabLeft:"{n} left", fabUnknown:"length unknown", fabDone:"Finished", fabDoneQ:"Is this roll finished? It will leave the list.", fabTooMuch:"Only {n} left on this roll.", fabRollsLbl:"roll(s)", stockSearchPh:"Search an item or fabric…", lotOf:"lot of {n}", actNeedOne:"Keep at least one activity.", callBtn:"Call",
       toolTitle:"Advanced tools", toolHint:"Turn on only what you need. The tabs appear at the top of the screen.",
@@ -2674,6 +2693,7 @@
   });
 
   let BID=null, BOUTIQUE=null, TAB="apercu", SHOP_MODE="article";
+  let QUICK = null;
   let editingId=null, currentCliente=null, CLIDATA=null;
   let CLIENTES=[], COMMANDES=[], ORD=null, ORDID=null, editingOrd=null;
   let SALARIES=[], VISITEURS=[], POINTAGES=[], ROLE=null;
@@ -3149,6 +3169,7 @@
     try{ return await Promise.race([getDoc(ref), timeout(8000)]); }
     catch(e){ try{ return await getDocFromCache(ref); }catch(_){ throw e; } }
   }
+  const getDocsSmartNet = q => getDocsSmart(q);
   async function getDocsSmart(q){
     try{ return await Promise.race([getDocs(q), timeout(8000)]); }
     catch(e){ try{ return await getDocsFromCache(q); }catch(_){ throw e; } }
@@ -3435,14 +3456,22 @@
       loginMsg(m, "err"); $("login-btn").disabled=false;
     }
   });
-  $("logout-btn").addEventListener("click", () => signOut(auth));
+  async function safeLogout(){
+    if(hasCode() && !(await askCode())) return false;
+    const em=(auth.currentUser && auth.currentUser.email) || (BOUTIQUE && BOUTIQUE.email) || "";
+    if(!confirm(t("logoutQ").replace("{e}", em))) return false;
+    try{ localStorage.removeItem("sanaapro_owner_bid"); }catch(e){}
+    signOut(auth); return true;
+  }
+  $("logout-btn").addEventListener("click", () => { safeLogout(); });
   $("settings-btn").addEventListener("click", () => setTab("reglages"));
   $("vt-warn-go").addEventListener("click", () => setTab("reglages"));
 
   onAuthStateChanged(auth, async (user) => {
     window.__loaded = true;
+    const quick = QUICK && user && user.uid === QUICK; QUICK = null;
     if(!user){ try{ localStorage.removeItem("sanaapro_owner_bid"); }catch(e){} try{ cofFab(false); }catch(e){} show("login"); $("login-btn").disabled=false; return; }
-    show("loading"); $("loading").textContent=t("loading");
+    if(!quick){ show("loading"); $("loading").textContent=t("loading"); }
     try{
       const snap = await getDocSmart(doc(db,"boutiques",user.uid));
       if(!snap.exists() || (snap.data()||{}).deleted){
@@ -3467,7 +3496,7 @@
       try{ localStorage.setItem("sanaapro_owner_bid", BID); }catch(e){}
       if(pinGet()) pinLock();
       paintPinCard();
-      renderDashboard(BOUTIQUE); paintLocks(); setTimeout(()=>{ try{ showPlanPick(false); }catch(e){} }, 2500); updateOffline(); applyMgr(); setTab("apercu"); show("dash"); setTimeout(() => { try{ checkRdv(false); }catch(e){} }, 5000); try{ if(navigator.onLine) wakeLecteur(); }catch(e){}
+      renderDashboard(BOUTIQUE); paintLocks(); setTimeout(()=>{ try{ showPlanPick(false); }catch(e){} }, 2500); updateOffline(); applyMgr(); if(!quick) setTab("apercu"); show("dash"); setTimeout(()=>{ try{ bkCheckDue(); }catch(e){} }, 3000); setTimeout(() => { try{ checkRdv(false); }catch(e){} }, 5000); try{ if(navigator.onLine) wakeLecteur(); }catch(e){}
       loadAll().then(scanFromUrl);
       syncCatalogueExpiry();
     }catch(e){ $("loading").textContent=t("loadFail"); show("loading"); }
@@ -3535,7 +3564,8 @@
     wp.textContent=t("wavePayAhead"); wp.hidden = !waveDispo() || isMgr();
   }
 
-  async function loadAll(){
+  async function loadAll(cacheOnly){
+    const getDocsSmart = q => cacheOnly ? getDocsFromCache(q) : getDocsSmartNet(q);
     try{
       const s = await getDocsSmart(query(collection(db,"boutiques",BID,"clientes"), orderBy("name")));
       CLIENTES=[]; s.forEach(d=>{ const c=d.data(); if(c && c.photo) return; CLIENTES.push(Object.assign({ id:d.id }, c)); });
@@ -10425,7 +10455,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
         });
         links.appendChild(f);
         const lo=document.createElement("button"); lo.type="button"; lo.textContent=t("pinLogout"); lo.style.color="var(--muted)";
-        lo.addEventListener("click", ()=>{ if(confirm(t("pinLogoutQ"))){ done(false); signOut(auth); } });
+        lo.addEventListener("click", async ()=>{ if(hasCode()){ if(!(await askCode())) return; } if(confirm(t("pinLogoutQ"))){ done(false); signOut(auth); } });
         links.appendChild(lo);
       } else {
         const c=document.createElement("button"); c.type="button"; c.textContent=t("pinCancel"); c.style.color="var(--muted)";
@@ -10505,6 +10535,167 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
   });
 
   applyLang();
+
+  /* ===== OUVERTURE RAPIDE =====
+     Sans attendre Internet : si ce téléphone était déjà connecté, on affiche tout de suite
+     la boutique gardée dans le téléphone. Quand la connexion est confirmée, les données
+     se rafraîchissent d'elles-mêmes. Si le compte n'est plus valable, l'écran de connexion revient. */
+  (async function quickStart(){
+    try{
+      const bid = localStorage.getItem("sanaapro_owner_bid");
+      if(!bid || window.__loaded) return;
+      const snap = await getDocFromCache(doc(db,"boutiques",bid));
+      if(window.__loaded || !snap.exists()) return;
+      const b = snap.data()||{};
+      if(b.deleted || (b.kickAt && b.kickBy!==DEVICE)) return;
+      BID = bid; BOUTIQUE = b; QUICK = bid;
+      if(pinGet()) pinLock();
+      paintPinCard();
+      renderDashboard(b); paintLocks(); updateOffline(); applyMgr(); setTab("apercu"); show("dash");
+      loadAll(true).catch(function(){});
+    }catch(e){}
+  })();
+
+  /* ===== SAUVEGARDE : fichier Excel (.xlsx) fabriqué dans le téléphone ===== */
+  function bkCrc(u8){ let c, crc=0xFFFFFFFF; for(let i=0;i<u8.length;i++){ c=(crc^u8[i])&0xFF; for(let k=0;k<8;k++) c = c&1 ? (c>>>1)^0xEDB88320 : c>>>1; crc=(crc>>>8)^c; } return (crc^0xFFFFFFFF)>>>0; }
+  function bkZip(files){
+    const enc=new TextEncoder(), parts=[], central=[]; let off=0;
+    const u16=n=>[n&255,(n>>>8)&255], u32=n=>[n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255];
+    files.forEach(f=>{
+      const name=enc.encode(f.name), data=enc.encode(f.data), crc=bkCrc(data);
+      const head=new Uint8Array([].concat([0x50,0x4b,3,4],u16(20),u16(0x0800),u16(0),u16(0),u16(0x21),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0)));
+      parts.push(head,name,data);
+      central.push(new Uint8Array([].concat([0x50,0x4b,1,2],u16(20),u16(20),u16(0x0800),u16(0),u16(0),u16(0x21),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(off))), name);
+      off += head.length+name.length+data.length;
+    });
+    let csize=0; central.forEach(c=>csize+=c.length);
+    const end=new Uint8Array([].concat([0x50,0x4b,5,6],u16(0),u16(0),u16(files.length),u16(files.length),u32(csize),u32(off),u16(0)));
+    return new Blob(parts.concat(central,[end]), { type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  }
+  function bkXlsx(sheets){
+    const x=s=>String(s==null?"":s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    const col=i=>{ let s=""; i++; while(i>0){ const m=(i-1)%26; s=String.fromCharCode(65+m)+s; i=Math.floor((i-1)/26); } return s; };
+    const files=[], seen={};
+    sheets.forEach((sh,si)=>{
+      const rows=sh.rows.map((r,ri)=>'<row r="'+(ri+1)+'">'+r.map((v,ci)=>{
+        const ref=col(ci)+(ri+1), st=(ri===0||(r.bold))?' s="1"':'';
+        if(typeof v==="number" && isFinite(v)) return '<c r="'+ref+'"'+st+'><v>'+v+'</v></c>';
+        if(v==null || v==="") return '';
+        return '<c r="'+ref+'" t="inlineStr"'+st+'><is><t xml:space="preserve">'+x(v)+'</t></is></c>';
+      }).join("")+'</row>').join("");
+      const w=(sh.widths||[]).map((wd,i)=>'<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+wd+'" customWidth="1"/>').join("");
+      files.push({ name:"xl/worksheets/sheet"+(si+1)+".xml", data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'+(w?'<cols>'+w+'</cols>':'')+'<sheetData>'+rows+'</sheetData></worksheet>' });
+    });
+    const names=sheets.map(s=>{ let n=String(s.name).replace(/[\\\/\?\*\[\]:]/g," ").slice(0,31)||"Feuille"; while(seen[n]) n=n.slice(0,29)+"_"; seen[n]=1; return n; });
+    files.unshift(
+      { name:"[Content_Types].xml", data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+sheets.map((s,i)=>'<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join("")+'</Types>' },
+      { name:"_rels/.rels", data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
+      { name:"xl/workbook.xml", data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'+names.map((n,i)=>'<sheet name="'+x(n)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>').join("")+'</sheets></workbook>' },
+      { name:"xl/_rels/workbook.xml.rels", data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+sheets.map((s,i)=>'<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>').join("")+'<Relationship Id="rId'+(sheets.length+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>' },
+      { name:"xl/styles.xml", data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>' }
+    );
+    return bkZip(files);
+  }
+  function bkDate(ms){ if(!ms) return ""; const d=new Date(Number(ms)); return isNaN(d) ? "" : isoOf(d).split("-").reverse().join("/"); }
+  function bkLivr(v){ if(!v) return ""; const p=String(v).split("-"); return p.length===3 ? p[2]+"/"+p[1]+"/"+p[0] : String(v); }
+  function bkSheets(per){
+    const en = LANG_UI==="en", L=(f,e)=>en?e:f;
+    const from = per==="tout" ? 0 : periodStart(per);
+    const inPer = ms => (Number(ms)||0) >= from;
+    const stLbl = s => ({ recu:t("stRecu"), coupe:t("stCoupe"), essayage:t("stEssayage"), pret:t("stPret"), livre:t("stLivre"), recupere:L("Récupéré","Collected") })[s||"recu"] || s;
+    const sheets=[];
+    // 1) clientes et mesures (toujours toutes : ce sont les fiches)
+    const MM=[]; MESURES_F.concat(MESURES_H).forEach(m=>{ if(!MM.some(x=>x[0]===m[0])) MM.push(m); });
+    const used=MM.filter(m=>CLIENTES.some(c=>c.mesures && c.mesures[m[0]]!==undefined && c.mesures[m[0]]!==""));
+    const cr=[[L("Nom","Name"), L("Téléphone","Phone"), L("Genre","Gender")].concat(used.map(m=>en?m[2]:m[1]))];
+    CLIENTES.slice().sort((a,b)=>(a.name||"").localeCompare(b.name||"")).forEach(c=>{
+      cr.push([c.name||"", c.phone||"", c.genre==="homme"?L("Homme","Man"):L("Femme","Woman")].concat(used.map(m=>{ const v=c.mesures?c.mesures[m[0]]:""; const n=Number(String(v).replace(",",".")); return v===undefined||v==="" ? "" : (isFinite(n)&&String(v).trim()!=="" ? n : String(v)); })));
+    });
+    sheets.push({ name:L("Clientes et mesures","Clients and measurements"), rows:cr, widths:[24,16,9].concat(used.map(()=>12)) });
+    // 2) commandes atelier
+    const hd=[L("N°","No."), L("Date de dépôt","Drop-off date"), L("Cliente","Client"), L("Téléphone","Phone"), L("Articles","Items"), L("Prix","Price"), L("Payé","Paid"), L("Reste","Balance"), L("Étape","Stage"), L("Livraison","Delivery")];
+    const rowOf=o=>[Number(o.numero)||"", bkDate(o.createdAtMs), o.clienteName||"", o.clientePhone||"", articlesOf(o).map(a=>a.nom).filter(Boolean).join(", ")||o.article||"", Number(o.prix)||0, Number(o.paye)||0, resteDe(o), stLbl(o.statut), bkLivr(o.livraison||o.retrait)];
+    const byNum=(a,b)=>(Number(a.createdAtMs)||0)-(Number(b.createdAtMs)||0);
+    if(hasAct("couture") || COMMANDES.length){
+      const at=COMMANDES.filter(o=>inPer(o.createdAtMs)).sort(byNum);
+      const r=[hd].concat(at.map(rowOf));
+      if(at.length) r.push(["","","","",L("TOTAL","TOTAL"), at.reduce((s,o)=>s+(Number(o.prix)||0),0), at.reduce((s,o)=>s+(Number(o.paye)||0),0), at.reduce((s,o)=>s+resteDe(o),0)]), r[r.length-1].bold=true;
+      sheets.push({ name:L("Commandes atelier","Workshop orders"), rows:r, widths:[6,13,22,15,40,10,10,10,11,12] });
+    }
+    if(hasAct("pressing") || PRESS.length){
+      const pz=PRESS.filter(o=>inPer(o.createdAtMs)).sort(byNum);
+      const r=[hd].concat(pz.map(rowOf));
+      if(pz.length) r.push(["","","","",L("TOTAL","TOTAL"), pz.reduce((s,o)=>s+(Number(o.prix)||0),0), pz.reduce((s,o)=>s+(Number(o.paye)||0),0), pz.reduce((s,o)=>s+resteDe(o),0)]), r[r.length-1].bold=true;
+      sheets.push({ name:"Pressing", rows:r, widths:[6,13,22,15,40,10,10,10,11,12] });
+    }
+    // 3) finances
+    const mv=MOUV.filter(m=>inPer(m.ms)).sort((a,b)=>(Number(a.ms)||0)-(Number(b.ms)||0));
+    const srcL=s=>({ atelier:L("Atelier","Workshop"), pressing:"Pressing", boutique:L("Boutique","Shop") })[s]||s||"";
+    const fr=[[L("Date","Date"), L("Recette ou dépense","Income or expense"), L("Activité","Activity"), L("Libellé","Description"), L("Montant","Amount")]];
+    let rec=0, dep=0;
+    mv.forEach(m=>{ const a=Number(m.montant)||0; if(m.type==="depense") dep+=a; else rec+=a;
+      fr.push([bkDate(m.ms), m.type==="depense"?L("Dépense","Expense"):L("Recette","Income"), srcL(m.source), m.label||"", m.type==="depense"?-a:a]); });
+    fr.push([]); const t1=["",L("Total des recettes","Total income"),"","",rec]; t1.bold=true; fr.push(t1);
+    const t2=["",L("Total des dépenses","Total expenses"),"","",-dep]; t2.bold=true; fr.push(t2);
+    const t3=["",L("Solde","Balance"),"","",rec-dep]; t3.bold=true; fr.push(t3);
+    sheets.push({ name:L("Finances","Finances"), rows:fr, widths:[12,18,12,40,12] });
+    // 4) stock du jour
+    if(STOCK.length){
+      const sr=[[L("Article","Item"), L("Quantité","Quantity"), L("Prix","Price")]];
+      STOCK.forEach(s=>sr.push([s.nom||"", Number(s.qte)||0, Number(s.prix)||0]));
+      sheets.push({ name:L("Stock","Stock"), rows:sr, widths:[30,10,10] });
+    }
+    return sheets;
+  }
+  const BK_KEY = k => "sanaapro_bk_"+k+"_"+(BID||"");
+  function bkPer(){ const b=$("bk-per").querySelector("button.on"); return b ? b.getAttribute("data-p") : "mois"; }
+  $("bk-per").querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{
+    $("bk-per").querySelectorAll("button").forEach(x=>x.classList.toggle("on", x===b));
+  }));
+  function bkPaintFreq(){ let f=""; try{ f=localStorage.getItem(BK_KEY("freq"))||""; }catch(e){}
+    $("bk-freq").querySelectorAll("button").forEach(x=>x.classList.toggle("on", x.getAttribute("data-f")===f)); }
+  $("bk-freq").querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{
+    const f=b.getAttribute("data-f");
+    try{ if(f) localStorage.setItem(BK_KEY("freq"), f); else localStorage.removeItem(BK_KEY("freq"));
+         if(f && !localStorage.getItem(BK_KEY("last"))) localStorage.setItem(BK_KEY("last"), String(Date.now())); }catch(e){}
+    bkPaintFreq();
+    if(f){ $("bk-per").querySelectorAll("button").forEach(x=>x.classList.toggle("on", x.getAttribute("data-p")===f)); }
+    const m=$("bk-msg"); m.textContent=t("bkSaved"); m.className="msg ok show"; setTimeout(()=>m.classList.remove("show"), 2500);
+  }));
+  $("bk-go").addEventListener("click", async ()=>{
+    if(isMgr()) return;
+    if(!(await askCode())) return;
+    const m=$("bk-msg"), per=bkPer();
+    m.textContent=t("bkMaking"); m.className="msg ok show";
+    try{
+      const blob=bkXlsx(bkSheets(per));
+      const lbl={ semaine:LANG_UI==="en"?"week":"semaine", mois:LANG_UI==="en"?"month":"mois", annee:LANG_UI==="en"?"year":"annee", tout:LANG_UI==="en"?"all":"tout" }[per]||per;
+      const shop=String((BOUTIQUE&&(BOUTIQUE.slug||BOUTIQUE.name))||"boutique").replace(/[^A-Za-z0-9_-]+/g,"-");
+      const name="SanaaPro-"+shop+"-"+lbl+"-"+isoOf(new Date())+".xlsx";
+      try{ localStorage.setItem(BK_KEY("last"), String(Date.now())); }catch(e){}
+      const bar=$("bk-due"); if(bar) bar.remove();
+      const file=new File([blob], name, { type:blob.type });
+      if(navigator.canShare && navigator.canShare({ files:[file] })){
+        try{ await navigator.share({ files:[file], title:name }); m.textContent=t("bkShared"); m.className="msg ok show"; return; }
+        catch(e){ if(e && e.name==="AbortError"){ m.classList.remove("show"); return; } }
+      }
+      const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+      m.textContent=t("bkDownloaded"); m.className="msg ok show";
+    }catch(e){ m.textContent=t("bkFail").replace("{e}", (e&&e.message)||"?"); m.className="msg err show"; }
+  });
+  function bkCheckDue(){
+    bkPaintFreq();
+    if(isMgr() || $("bk-due")) return;
+    let f="", last=0; try{ f=localStorage.getItem(BK_KEY("freq"))||""; last=Number(localStorage.getItem(BK_KEY("last")))||0; }catch(e){}
+    if(!f) return;
+    const days={ semaine:7, mois:30, annee:365 }[f]||0;
+    if(!days || Date.now()-last < days*86400000) return;
+    const b=document.createElement("button"); b.id="bk-due"; b.type="button"; b.textContent=t("bkDue");
+    b.style.cssText="position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));z-index:9998;max-width:92vw;padding:11px 18px;border:1px solid var(--gold);border-radius:22px;background:#17140A;color:var(--gold);font-size:13.5px;font-weight:600;box-shadow:0 4px 18px rgba(0,0,0,.5)";
+    b.addEventListener("click", ()=>{ b.remove(); setTab("reglages"); $("bk-per").querySelectorAll("button").forEach(x=>x.classList.toggle("on", x.getAttribute("data-p")===f)); setTimeout(()=>{ try{ $("bk-card").scrollIntoView({ block:"start", behavior:"smooth" }); }catch(e){} }, 150); });
+    document.body.appendChild(b);
+  }
 
   if("serviceWorker" in navigator){
     window.addEventListener("load", function(){
