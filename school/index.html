@@ -475,7 +475,7 @@
       badLogin:"Email ou mot de passe incorrect.", resetSent:"Lien envoyé à {e}. Regardez aussi dans les spams.", needEmail:"Écrivez d'abord votre email.",
       setupTitle:"Créer votre école", setupSub:"Une seule fois. Tout reste modifiable dans Réglages.", schoolName:"Nom de l'école",
       schoolSub:"Sous-titre (facultatif)", schoolWa:"Numéro WhatsApp de l'école", setupModel:"Remplir avec la grille d'une école de couture (classes, frais, 6 trimestres)",
-      setupGo:"Créer mon école", needName:"Écrivez le nom de l'école.", logout:"Déconnexion", backAtelier:"← Retour à mon atelier",
+      setupGo:"Créer mon école", needName:"Écrivez le nom de l'école.", logout:"Déconnexion", logoutQ:"Se déconnecter ?\n\nPour revenir, il faudra votre email :\n{e}\net votre mot de passe.\n\nNotez-les avant de continuer.", backAtelier:"← Retour à mon atelier",
       subOver:"Abonnement terminé : renouvelez pour enregistrer.",
       rulesMissing:"Le serveur refuse l'accès à l'école : les règles Firestore pour « ecoles » ne sont pas encore publiées.",
       loadFail:"Chargement impossible. Vérifiez la connexion puis rouvrez l'app.",
@@ -529,7 +529,7 @@
       badLogin:"Wrong email or password.", resetSent:"Link sent to {e}. Check your spam folder too.", needEmail:"Type your email first.",
       setupTitle:"Create your school", setupSub:"Only once. Everything can be changed later in Settings.", schoolName:"School name",
       schoolSub:"Subtitle (optional)", schoolWa:"School WhatsApp number", setupModel:"Fill with a fashion school template (classes, fees, 6 terms)",
-      setupGo:"Create my school", needName:"Type the school name.", logout:"Sign out", backAtelier:"← Back to my workshop",
+      setupGo:"Create my school", needName:"Type the school name.", logout:"Sign out", logoutQ:"Sign out?\n\nTo come back you will need your email:\n{e}\nand your password.\n\nWrite them down before you continue.", backAtelier:"← Back to my workshop",
       subOver:"Subscription ended: renew to save.",
       rulesMissing:"The server refuses access to the school: the Firestore rules for “ecoles” are not published yet.",
       loadFail:"Could not load. Check the connection and reopen the app.",
@@ -707,9 +707,21 @@
     catch(x){ m.className = "msg err"; m.textContent = t("badLogin"); }
   });
   $("l-signup").addEventListener("click", () => { location.href = "../../inscription/"; });
-  $("s-out").addEventListener("click", () => signOut(auth));
+  /* Déconnexion protégée : code du propriétaire (même si l'école est déjà déverrouillée), puis rappel de l'email */
+  function safeOut(){
+    if(hasCode()){
+      const c = prompt(t("askCode"));
+      if(c == null) return;
+      if(!codeOk(c)){ alert(t("badCode")); return; }
+    }
+    const em = (auth.currentUser && auth.currentUser.email) || "";
+    if(!confirm(fmt(t("logoutQ"), { e: em }))) return;
+    UNSUB.forEach(f => { try{ f(); }catch(e){} });
+    signOut(auth);
+  }
+  $("s-out").addEventListener("click", safeOut);
   $("s-back").addEventListener("click", () => { location.href = "../index.html"; });
-  $("r-out").addEventListener("click", () => { UNSUB.forEach(f => f()); signOut(auth); });
+  $("r-out").addEventListener("click", safeOut);
 
   onAuthStateChanged(auth, async (user) => {
     UNSUB.splice(0).forEach(f => { try{ f(); }catch(e){} });
