@@ -240,6 +240,7 @@
   .cp-tr{ margin:12px 0 4px; } .cp-tr summary{ color:var(--gold); font-size:14px; cursor:pointer; padding:6px 0; }
   .cp-trs{ display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start; }
   .cp-trs figure{ flex:1 1 150px; margin:0; padding:6px; border:1px solid var(--line); border-radius:12px; background:rgba(255,255,255,.02); cursor:zoom-in; }
+  .cp-trs figure.wide{ flex-basis:100%; }
   .cp-trs figure.big{ position:fixed; inset:0; z-index:9999; border:none; border-radius:0; background:var(--bg); overflow:auto; padding:14px; cursor:zoom-out; }
   .cp-trs figure.big .cp-tr-svg{ width:auto; min-width:100%; height:auto; max-height:none; }
   .cp-trs figcaption{ font-size:13px; color:var(--muted); text-align:center; margin-top:4px; } .cp-trs figcaption b{ color:var(--txt); }
@@ -8824,6 +8825,67 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     out.push(NOTE("Dos milieu coupé en 2 pour la fermeture éclair invisible.","Centre back cut in 2 for the invisible zip."));
     return out;
   }
+  // ---- Taille princesse : découpes de l'épaule jusqu'en bas, sans pince arrêtée ----
+  // Devant : la découpe part du milieu de l'épaule, passe par la pointe de sein. Dos : elle part du milieu de
+  // l'épaule et passe par l'omoplate (haut du dos). La couture se resserre à la taille, s'ouvre aux hanches,
+  // puis chaque bord de panneau s'évase jusqu'au bas. Option col tailleur : croisure, revers, point de cassure.
+  function cpPrincesse(m, A, o){
+    const P=m.P, T=m.T, B=m.B||(m.P+8), a=A.ajuste, ab=A.bassin, out=[], WL=m.LT, rev=o.encol==="revers";
+    const L=o.L||null;
+    const HD=B/6+2, HY=WL+HD;
+    const sh={droite:1.5, crayon:-1, evasee:7, sirene:5, cercle:12, demicercle:9, froncee:7, plissee:7, portefeuille:5}[o.jupe||"evasee"];
+    const below = L ? Math.max(0, L-HY) : 0, FL = L && L>HY+5 ? Math.round(sh*below/60*2)/2 : 0;
+    const e=rev?"v":(o.encol||"ronde"), C=m.C||P/2.7, NW=C/6+({ronde:1,col:1,v:1,carree:3,bateau:5,coeur:2}[e]||1);
+    const ND = e==="v"||e==="coeur" ? P/8+4 : e==="carree" ? C/6+6 : e==="bateau" ? 3 : C/6+2;
+    const SH=m.E?m.E/2:(P+a)/4-5, AD=P/4+0.5, Mx=(NW+SH)/2;
+    const pan=(front)=>{
+      const W=(P+a)/4+(front?1:-1), ww=(T+a)/4+(front?1:-1), HP=(B+ab)/4+(front?1:-1);
+      const ex=Math.max(0,W-ww), d=ex*(front?0.6:0.55), sd=ex-d, xb=front?P/10:W*0.42;
+      const w1=xb-d/2, w2=xb+d/2, ws=W-sd;
+      const cH=w1+(HP-(w1+(ws-w2)))*0.42, sH=HP-cH;
+      return { W, ww, HP, d, sd, xb, w1, w2, ws, cH, sH };
+    };
+    const F=pan(true), Bk=pan(false), fm=x=>cpN1(x);
+    const piece=(front,X)=>{
+      const nm = front ? ["Robe princesse — devant","Princess dress — front","princF"] : ["Robe princesse — dos","Princess dress — back","princB"];
+      out.push(S(nm[0],nm[1],nm[2]));
+      out.push(R("Largeur poitrine / taille / hanches (milieu + côté)","Bust / waist / hip width (centre + side)",[X.W,X.ww,X.HP],
+        "("+P+" + "+a+") ÷ 4 / ("+T+" + "+a+") ÷ 4 / ("+B+" + "+ab+") ÷ 4 "+(front?"+ 1":"− 1"),"W"));
+      out.push(R(front?"Découpe : du milieu de l'épaule à la pointe de sein":"Découpe : du milieu de l'épaule à l'omoplate", front?"Seam: mid-shoulder to bust point":"Seam: mid-shoulder to shoulder blade",
+        [Mx, X.xb], "("+fm(NW)+" + "+fm(SH)+") ÷ 2 / "+(front?P+" ÷ 10":fm(X.W)+" × 0,42"),"MX"));
+      if(front) out.push(R("Hauteur de la pointe de sein (depuis l'épaule)","Bust point height (from shoulder)",WL*0.6,fm(WL)+" × 0,6","BP"));
+      else out.push(R("Hauteur de l'omoplate (depuis la nuque)","Shoulder blade height (from nape)",AD*0.55,fm(AD)+" × 0,55","BP"));
+      out.push(R("Repris dans la découpe à la taille","Taken in the seam at the waist",X.d,"("+fm(X.W)+" − "+fm(X.ww)+") × "+(front?"0,6":"0,55"),"DA"));
+      out.push(R("Repris au côté à la taille","Taken at the side at the waist",X.sd,"("+fm(X.W)+" − "+fm(X.ww)+") − "+fm(X.d),"SD"));
+      out.push(R((front?"Devant":"Dos")+" milieu : poitrine / taille / hanches / bas",(front?"Centre front":"Centre back")+": bust / waist / hip / hem",
+        [X.xb,X.w1,X.cH,X.cH+FL],cpL("largeurs du panneau","panel widths")));
+      out.push(R("Côté "+(front?"devant":"dos")+" : poitrine / taille / hanches / bas","Side "+(front?"front":"back")+": bust / waist / hip / hem",
+        [X.W-X.xb,X.ws-X.w2,X.sH,X.sH+2*FL],cpL("largeurs du panneau","panel widths")));
+      out.push(R("Encolure : largeur / profondeur","Neckline: width / depth",[NW,front?ND:2.5],fm(C)+" ÷ 6 + … / "+(front?(e==="v"||e==="coeur"?P+" ÷ 8 + 4":fm(C)+" ÷ 6 + 2"):fxL()),"NW"));
+      out.push(R("Demi-épaule","Half shoulder",SH,m.E?m.E+" ÷ 2":cpL("estimée","estimated"),"SH"));
+      out.push(R("Profondeur d'emmanchure (depuis la nuque)","Armhole depth (from nape)",AD,P+" ÷ 4 + 0,5","AD"));
+      out.push(R("Ligne de taille / ligne de hanches (depuis la nuque)","Waist line / hip line (from nape)",[WL,HY],prL()+" / "+fm(WL)+" + "+fm(HD),"WL"));
+      if(L) out.push(R("Longueur totale","Total length",L,o.Lf||prL(),"L"));
+      if(FL) out.push(R("Évasement au bas, à chaque bord de couture","Flare at the hem, on each seam edge",FL,cpN1(sh)+" × "+fm(below)+" ÷ 60","FL"));
+      if(front && rev){
+        out.push(R("Croisure (au-delà du milieu devant)","Overlap (beyond centre front)",3,fxL(),"CR"));
+        out.push(R("Point de cassure : le revers s'arrête ici, au bouton","Break point: the lapel stops here, at the button",WL-2,fm(WL)+" − 2","BK"));
+        out.push(R("Largeur du revers","Lapel width",9,fxL(),"LW"));
+        out.push(NOTE("Ligne de cassure = du haut de l'épaule (2 cm au-dessus du point d'encolure) jusqu'au point de cassure. Le revers se rabat sur cette ligne.",
+                      "Roll line = from the shoulder (2 cm above the neck point) down to the break point. The lapel folds back on this line."));
+      }
+      if(!front) out.push(NOTE("Dos milieu coupé en 2 (couture milieu dos). Fente : au milieu devant, à partir des genoux.","Centre back cut in 2 (centre back seam). Slit: at centre front, from the knees."));
+    };
+    piece(true,F); piece(false,Bk);
+    if(rev){
+      const cl=C*0.42;
+      out.push(S("Col tailleur (col à revers)","Tailored collar (lapel collar)","colT"));
+      out.push(R("Longueur du col (du milieu dos au cran)","Collar length (centre back to notch)",cl,fm(C)+" × 0,42","K1"));
+      out.push(R("Hauteur du col (pied 3 + tombant 4,5)","Collar height (stand 3 + fall 4.5)",7.5,fxL(),"K2"));
+      out.push(R("Cran (écart entre col et revers)","Notch (gap between collar and lapel)",3.5,fxL()));
+    }
+    return out;
+  }
   // ---- Manche montée ----
   function cpManche(m, A, kind, TE, TEf, o){
     o=o||{}; const K=CP_KIND[kind], out=[];
@@ -8981,8 +9043,8 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
   let CP_AI = null, CP_PH = "";
   const CP_OL = {
     structure:{ t:["Type","Type"], v:{ robe:["Robe (une pièce)","Dress (one piece)"], ensemble:["Ensemble haut + bas","Top + bottom set"], haut:["Haut seul","Top only"], jupe:["Jupe seule","Skirt only"], pantalon:["Pantalon seul","Trousers only"], kaftan:["Kaftan + pantalon (manche montée)","Kaftan + trousers (set-in sleeve)"], boubou:["Grand boubou (manche tombante)","Grand boubou (dropped sleeve)"] } },
-    haut:{ t:["Corsage","Bodice"], v:{ ajuste:["Ajusté (pinces)","Fitted (darts)"], corset:["Corset (découpes princesse)","Corset (princess seams)"], ample:["Ample","Loose"] } },
-    encolure:{ t:["Encolure","Neckline"], v:{ ronde:["Ronde","Round"], v:["En V","V-neck"], carree:["Carrée","Square"], bateau:["Bateau","Boat"], coeur:["En cœur","Sweetheart"], col:["Col chemise / montant","Shirt / stand collar"], sans:["Sans bretelles","Strapless"] } },
+    haut:{ t:["Corsage","Bodice"], v:{ ajuste:["Ajusté (pinces)","Fitted (darts)"], corset:["Corset (découpes princesse)","Corset (princess seams)"], princesse:["Taille princesse (découpes jusqu'en bas)","Princess line (seams to the hem)"], ample:["Ample","Loose"] } },
+    encolure:{ t:["Encolure","Neckline"], v:{ ronde:["Ronde","Round"], v:["En V","V-neck"], carree:["Carrée","Square"], bateau:["Bateau","Boat"], coeur:["En cœur","Sweetheart"], col:["Col chemise / montant","Shirt / stand collar"], revers:["Col tailleur à revers","Tailored lapel collar"], sans:["Sans bretelles","Strapless"] } },
     manche:{ t:["Manche","Sleeve"], v:{ sans:["Sans manche","Sleeveless"], courte:["Courte","Short"], troisquarts:["Trois-quarts","Three-quarter"], longue:["Longue","Long"], bouffante:["Bouffante","Puff"], evasee:["Évasée","Flared"], kimono:["Kimono / chauve-souris","Kimono / batwing"] } },
     bas:{ t:["Bas de l'ensemble","Bottom of the set"], v:{ jupe:["Jupe","Skirt"], pantalon:["Pantalon","Trousers"] } },
     jupe:{ t:["Forme de la jupe","Skirt shape"], v:{ droite:["Droite","Straight"], crayon:["Crayon","Pencil"], evasee:["Évasée (trapèze)","A-line"], sirene:["Sirène","Mermaid"], cercle:["Cercle complet","Full circle"], demicercle:["Demi-cercle","Half circle"], froncee:["Froncée","Gathered"], plissee:["Plissée","Pleated"], portefeuille:["Portefeuille","Wrap"] } },
@@ -8999,14 +9061,25 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     let man=[];
     if(top){
       if(!m.P) return null;
-      const kind = (o.haut==="ajuste"||o.haut==="corset") ? "ajuste" : (m.H ? "chemise" : "ample");
+      const kind = (o.haut==="ajuste"||o.haut==="corset"||o.haut==="princesse") ? "ajuste" : (m.H ? "chemise" : "ample");
       if(kind==="ajuste"){ const fe=cpFitEst(m); m=fe.m; out.push(...fe.warn); }
       const sansM = o.manche==="sans", kimono = o.manche==="kimono";
       const L = st!=="robe" ? (m.LH||(m.LT?m.LT+(kind==="ajuste"?6:22):null)) : (m.LT||null);
       const Lf = st!=="robe" ? (m.LH?prL():m.LT+" + "+(kind==="ajuste"?6:22)) : prL();
       const c=cpCorps(m,A,kind,{ encol:o.encolure, L, Lf, Lt: st!=="robe"?null:["Longueur du corsage (nuque → taille)","Bodice length (nape → waist)"],
         Lmiss: st!=="robe" ? ["Il manque la longueur du haut.","Top length missing."] : null });
-      if(o.haut==="corset") out.push(...cpCorset(m,A,{ encol:o.encolure })); else out.push(...c.rows);
+      if(o.haut==="princesse"){
+        const k={mini:.42,genou:.6,mimollet:.8,maxi:1}[o.longueur]||1;
+        const full = st==="robe" ? (m.LR ? m.LR*(k===1?1:(m.LT+(m.LR-m.LT)*k)/m.LR) : (m.LT && m.LJ ? m.LT+m.LJ*k : null)) : (m.LH||(m.LT?m.LT+22:null));
+        const fullF = st==="robe" ? (m.LR ? (k===1?prL():m.LT+" + ("+m.LR+" − "+m.LT+") × "+String(k).replace(".",",")) : m.LT+" + "+m.LJ+(k===1?"":" × "+String(k).replace(".",","))) : (m.LH?prL():m.LT+" + 22");
+        if(!full) out.push(WARN("Il manque la longueur de la robe (épaule → bas).","Dress length (shoulder → hem) missing."));
+        if(!m.B) out.push(WARN("Tour de bassin absent : estimé à poitrine + 8.","Hips missing: estimated at chest + 8."));
+        out.push(...cpPrincesse(m,A,{ encol:o.encolure, L:full, Lf:fullF, jupe: st==="robe"?o.jupe:"droite" }));
+      }
+      else if(o.haut==="corset") out.push(...cpCorset(m,A,{ encol:o.encolure })); else out.push(...c.rows);
+      if(o.encolure==="revers" && o.haut!=="princesse" && m.C){ out.push(S("Col tailleur (col à revers)","Tailored collar (lapel collar)","colT"));
+        out.push(R("Longueur du col (du milieu dos au cran)","Collar length (centre back to notch)",m.C*0.42,m.C+" × 0,42","K1"));
+        out.push(R("Hauteur du col (pied 3 + tombant 4,5)","Collar height (stand 3 + fall 4.5)",7.5,fxL(),"K2")); }
       if(o.encolure==="col") out.push(...cpCol(m, m.H?"chemise":"officier").filter(r=>!/Poignet|Cuff/.test(r[1]||"")));
       if(sansM){ const i=out.findIndex(r=>r[5]==="AD"); if(i>-1){ out[i]=R("Profondeur d'emmanchure (sans manche)","Armhole depth (sleeveless)",m.P/4-1.5,m.P+" ÷ 4 − 1,5","AD"); } }
       else if(kimono){
@@ -9026,9 +9099,10 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
                  : (mh==="courte"||mh==="troisquarts") && m.TM ? ["Largeur en bas de manche (pliée)","Sleeve hem width (folded)",(m.TM+A.manche)/2-1,"("+m.TM+" + "+A.manche+") ÷ 2 − 1"] : null;
         man=cpManche(m,A,kind,c.TE,c.TEf,{ L:Lm, Lf:Lmf, wr, extra, capPlus: mh==="bouffante"?5:0, wPlus: mh==="bouffante"?16:0 });
       }
+      if(o.haut==="princesse" && o.ceinture && (m.T||m.Ce)){ const T=m.T||m.Ce; out.push(S("Ceinture","Belt","")); out.push(R("Ceinture : longueur","Belt: length",T+20,T+" + 20 ("+cpL("croisement","overlap")+")")); out.push(R("Ceinture : hauteur","Belt: height",5,fxL())); }
       if(o.peplum){ const T=m.T||m.Ce; out.push(S("Péplum (cercle)","Peplum (circle)","")); out.push(R("Rayon de taille","Waist radius",T?(T+2)/6.28:null,"("+T+" + 2) ÷ 6,28")); out.push(R("Hauteur du péplum","Peplum height",15,fxL())); }
     }
-    if(skirt){
+    if(skirt && !(st==="robe" && o.haut==="princesse")){
       if(!m.B && o.jupe!=="cercle" && o.jupe!=="demicercle") out.push(WARN("Jupe : il manque le tour de bassin.","Skirt: hips measurement missing."));
       else {
         const Lmax = st==="robe" ? ((m.LR&&m.LT)?m.LR-m.LT:(m.LJ||null)) : (m.LJ||((m.LR&&m.LT)?m.LR-m.LT:null));
@@ -9259,6 +9333,43 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       dims:[[X(xb),yb,X(W),yb,cpT(W-xb),-0.9],[X(w2),WL,X(ws),WL,cpT(ws-w2),1.6],[X(W),0,X(W),WL,cpT(WL),1.3]] };
     return [ctr, side];
   }
+  // Panneaux de la taille princesse (repères du tableau : W, MX, BP, DA, SD, NW, SH, AD, WL, L, FL, CR, BK, LW)
+  function cpTrPrinc(v, front){
+    const W=cpA(v.W,0), ww=cpA(v.W,1), HP=cpA(v.W,2), WL=cpA(v.WL,0), HY=cpA(v.WL,1), AD=v.AD, L=v.L||HY;
+    if(!W || !ww || !HP || !WL || !AD) return null;
+    const Mx=cpA(v.MX,0), xb=cpA(v.MX,1), yb=v.BP||AD, D=v.DA||0, SD=v.SD||0, FL=v.FL||0, NW=cpA(v.NW,0)||7, ND=cpA(v.NW,1)||(front?9:2.5), SH=v.SH||W-4, SL=4.5;
+    const My=SL*(Mx-NW)/Math.max(1,SH-NW), C=W-3-(front?1.5:0);
+    const w1=xb-D/2, w2=xb+D/2, ws=W-SD, cH=w1+(HP-(w1+(ws-w2)))*0.42;
+    const rev = front && v.CR, CR=v.CR||0, BK=v.BK||WL-2, LW=v.LW||9, left = rev ? -CR : 0;
+    const prin = " L"+cpP([Mx,My])+" Q"+cpP([xb+(front?1.2:0.5),(My+yb)/2])+" "+cpP([xb,yb])+" Q"+cpP([xb-0.2,(yb+WL)/2])+" "+cpP([w1,WL])+" Q"+cpP([w1,(WL+HY)/2])+" "+cpP([cH,HY])+" L"+cpP([cH+FL,L]);
+    let d, cons=[[left,AD,xb,AD],[left,WL,cH,WL],[left,HY,cH,HY]], notes=[], darts=[];
+    if(rev){
+      const lx=left-LW*0.62, ly=ND+2, gx=NW*0.35, gy=ND*0.62;
+      d="M"+cpP([NW,0])+prin+" L"+cpP([left,L])+" L"+cpP([left,BK])+" L"+cpP([lx,ly])+" L"+cpP([lx+LW*0.28,ly-3])+" L"+cpP([gx,gy])+" Q"+cpP([NW*0.8,gy*0.6])+" "+cpP([NW,0])+" Z";
+      darts.push("M"+cpP([NW+0.8,-2])+" L"+cpP([left,BK]));            // ligne de cassure (pliure du revers)
+      darts.push("M"+cpP([0,BK-3])+" L"+cpP([0,L]));                   // milieu devant
+      notes.push([left+0.6,BK+3.4,cpL("● cassure (bouton)","● break (button)")]);
+      notes.push([lx-0.5,ly-2,cpL("revers","lapel")]);
+    } else d="M"+cpP([0,ND])+(front?" C"+cpP([NW*0.55,ND])+" "+cpP([NW,ND*0.55])+" "+cpP([NW,0]):" Q"+cpP([NW*0.75,ND])+" "+cpP([NW,0]))+prin+" L"+cpP([0,L])+" Z";
+    if(front) notes.push([xb+0.8,yb+3,cpL("◂ pointe de sein","◂ bust point")]);
+    const xr=Math.max(Mx,xb,cH+FL);
+    const ctr={ d, box:[rev?left-LW*0.62:0,rev?-2:0,xr,L], fold:!front?false:!rev, hem:[left,L,cH+FL,L], cons, darts, notes,
+      dims:[[left,AD,xb,AD,cpT(xb-left),-0.9],[left,WL,w1,WL,cpT(w1-left),-0.9],[left,HY,cH,HY,cpT(cH-left),-0.9],[left,L,cH+FL,L,cpT(cH+FL-left),1.6],[xr,0,xr,WL,cpT(WL),1.3],[xr,0,xr,L,cpT(L),3.4]] };
+    if(rev) ctr.dims.push([-CR,BK,-CR,L,cpT(L-BK),-1.3]);
+    const ox=Math.min(Mx,xb,w2,cH-FL)-1, X=x=>x-ox, yA=SL+(AD-SL)*0.62;
+    const arm=" C"+cpP([X(SH-0.5),SL+(AD-SL)*0.3])+" "+cpP([X(C),SL+(AD-SL)*0.45])+" "+cpP([X(C),yA])+" Q"+cpP([X(C+(front?-0.4:0.2)),AD])+" "+cpP([X(W),AD]);
+    const sd="M"+cpP([X(Mx),My])+" L"+cpP([X(SH),SL])+arm+" L"+cpP([X(ws),WL])+" Q"+cpP([X(HP),(WL+HY)/2])+" "+cpP([X(HP),HY])+" L"+cpP([X(HP+FL),L])+" L"+cpP([X(cH-FL),L])
+      +" L"+cpP([X(cH),HY])+" Q"+cpP([X(w2),(WL+HY)/2])+" "+cpP([X(w2),WL])+" Q"+cpP([X(xb+0.2),(yb+WL)/2])+" "+cpP([X(xb),yb])+" Q"+cpP([X(xb+(front?2:0.8)),(My+yb)/2])+" "+cpP([X(Mx),My])+" Z";
+    const side={ d:sd, box:[X(cH-FL),0,X(HP+FL),L], fold:false, hem:[X(cH-FL),L,X(HP+FL),L], cons:[[X(xb),AD,X(W),AD],[X(w2),WL,X(ws),WL],[X(cH),HY,X(HP),HY]],
+      dims:[[X(xb),AD,X(W),AD,cpT(W-xb),-0.9],[X(w2),WL,X(ws),WL,cpT(ws-w2),-0.9],[X(cH),HY,X(HP),HY,cpT(HP-cH),-0.9],[X(cH-FL),L,X(HP+FL),L,cpT(HP-cH+2*FL),1.6],[X(HP+FL),0,X(HP+FL),L,cpT(L),1.3]] };
+    return [ctr, side];
+  }
+  function cpTrColT(v){
+    if(!v.K1) return null; const K=v.K1, h=v.K2||7.5;
+    const d="M0,0 L"+cpP([K-2,0])+" Q"+cpP([K,0.5])+" "+cpP([K+1.5,h*0.35])+" L"+cpP([K+2.5,h])+" Q"+cpP([K*0.5,h+1.2])+" "+cpP([0,h+1.2])+" Z";
+    return { d, box:[0,0,K+2.5,h+1.2], fold:true, hem:null, darts:["M"+cpP([0,3])+" Q"+cpP([K*0.6,3])+" "+cpP([K+1,3.3])],
+      dims:[[0,0,K,0,cpT(K),-1.2],[K+2.5,0,K+2.5,h,cpT(h),1.3]], notes:[[1,2.2,cpL("pied de col","stand")]] };
+  }
   function cpTrRect(w,h,fold){ return { d:"M0,0 L"+cpP([w,0])+" L"+cpP([w,h])+" L"+cpP([0,h])+" Z", box:[0,0,w,h], fold, hem:[0,h,w,h], dims:[[0,0,w,0,cpT(w),-1.4],[w,0,w,h,cpT(h),1.3]] }; }
   // Bloc du tableau → pièces à tracer, avec combien en couper.
   function cpTraceParts(b){
@@ -9273,6 +9384,16 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     else if(piece==="jupe") add("Jupe","Skirt",cpL("devant × 1 et dos × 1 au pli","front × 1 and back × 1 on fold"),cpTrJupe(v));
     else if(piece==="pantalon"){ add("Pantalon devant","Trousers front","× 2",cpTrPantalon(v,0)); add("Pantalon dos","Trousers back","× 2",cpTrPantalon(v,1)); }
     else if(piece==="boubou") add("Boubou","Boubou",cpL("dos × 1 et devant × 1 au pli","back × 1 and front × 1 on fold"),cpTrBoubou(v));
+    else if(piece==="princF" || piece==="princB"){ const f=piece==="princF", pr=cpTrPrinc(v,f), rev=f && v.CR;
+      if(pr){ const cut0=(f&&!rev)?cpL("× 1 au pli","× 1 on fold"):"× 2", yz=cpA(v.WL,1)+4;
+              // vue agrandie du haut (encolure, revers, emmanchure, découpe), puis la pièce entière
+              const zoom=q=>Object.assign({}, q, { wide:true, box:[q.box[0],q.box[1],q.box[2],Math.min(q.box[3],yz)], hem:null,
+                dims:(q.dims||[]).filter(d=>Math.max(d[1],d[3])<=yz+0.5) });
+              add(f?"Devant milieu — haut":"Dos milieu — haut", f?"Centre front — top":"Centre back — top", cut0, zoom(pr[0]));
+              add(f?"Côté devant — haut":"Côté dos — haut", f?"Side front — top":"Side back — top", "× 2", zoom(pr[1]));
+              add(f?"Devant milieu — entier":"Dos milieu — entier", f?"Centre front — whole":"Centre back — whole", cut0, pr[0]);
+              add(f?"Côté devant — entier":"Côté dos — entier", f?"Side front — whole":"Side back — whole", "× 2", pr[1]); } }
+    else if(piece==="colT") add("Col tailleur","Tailored collar",cpL("× 2 au pli (dessus + dessous)","× 2 on fold (upper + under)"),cpTrColT(v));
     else if(piece==="corsetF" || piece==="corsetB"){ const f=piece==="corsetF", pr=cpTrCorset(v,f);
       if(pr){ add(f?"Devant milieu":"Dos milieu", f?"Centre front":"Centre back", f?cpL("× 1 au pli","× 1 on fold"):cpL("× 2 (fermeture au dos)","× 2 (zip at back)"), pr[0]);
               add(f?"Côté devant":"Côté dos", f?"Side front":"Side back", "× 2", pr[1]); } }
@@ -9284,7 +9405,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     const det=document.createElement("details"); det.className="cp-tr"; det.open=true;
     const sm=document.createElement("summary"); sm.textContent=cpL("📐 Tracé à l'échelle ("+(UNIT==="in"?"inch":"cm")+") — courbes, pinces, marges","📐 Drawn to scale ("+(UNIT==="in"?"inch":"cm")+") — curves, darts, allowances"); det.appendChild(sm);
     const row=document.createElement("div"); row.className="cp-trs";
-    parts.forEach(x=>{ const f=document.createElement("figure"); f.innerHTML=cpTraceSvg(x.name, x.p);
+    parts.forEach(x=>{ const f=document.createElement("figure"); if(x.p.wide) f.classList.add("wide"); f.innerHTML=cpTraceSvg(x.name, x.p);
       const cap=document.createElement("figcaption"); const bb=document.createElement("b"); bb.textContent=x.name; cap.appendChild(bb); cap.appendChild(document.createTextNode(" · "+cpL("couper ","cut ")+x.n)); f.appendChild(cap);
       f.addEventListener("click", ()=>{ f.classList.toggle("big"); document.body.style.overflow = f.classList.contains("big") ? "hidden" : ""; });
       row.appendChild(f); });
@@ -9317,7 +9438,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
                                        : cpL("Choisir la forme du modèle","Choose the model's shape");
     if(!CP_AI) $("cp-ph-det").open=true;
     const tips=$("cp-ph-tips"); tips.innerHTML="";
-    (CP_AI&&CP_AI.conseils||[]).forEach(x=>{ const li=document.createElement("li"); li.textContent=x; tips.appendChild(li); });
+    (CP_AI ? (cpEN() ? (CP_AI.conseilsEn||[]) : (CP_AI.conseils||[])) : []).forEach(x=>{ const li=document.createElement("li"); li.textContent=x; tips.appendChild(li); });
   }
   function cpShrink(file){
     return new Promise((ok,ko)=>{ const fr=new FileReader(); fr.onerror=ko; fr.onload=()=>{ const img=new Image(); img.onerror=ko; img.onload=()=>{
@@ -9341,7 +9462,9 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       if(!r.ok){ st.textContent = r.status===429 ? cpL("Limite de lectures du jour atteinte. Choisissez la forme ci-dessous.","Daily reading limit reached. Choose the shape below.") : cpL("Le modèle n'a pas pu être lu. Choisissez la forme ci-dessous.","The model could not be read. Choose the shape below."); st.style.color="var(--warn)"; return; }
       if(!j.confiance){ st.textContent=cpL("Aucun vêtement reconnu sur cette photo. Choisissez la forme ci-dessous.","No garment recognised in this photo. Choose the shape below."); st.style.color="var(--warn)"; return; }
       CP_AI=j; ["structure","haut","encolure","manche","bas","jupe","longueur","volantBas","volantManche","peplum","ceinture","fente"].forEach(k=>{ if(j[k]!==undefined) CP_OPT[k]=j[k]; });
-      if(CP_OPT.haut!=="ample" && /corset|bustier|princess|baleine/i.test((j.nom||"")+" "+(j.nomEn||"")+" "+(j.conseils||[]).join(" "))) CP_OPT.haut="corset";
+      const aiTxt=((j.nom||"")+" "+(j.nomEn||"")+" "+(j.conseils||[]).join(" "));
+      if(/blazer|tailleur|revers|lapel|manteau|coat/i.test(aiTxt)){ if(CP_OPT.encolure==="col"||CP_OPT.encolure==="v") CP_OPT.encolure="revers"; if(CP_OPT.structure==="robe" && CP_OPT.haut!=="corset") CP_OPT.haut="princesse"; }
+      if(CP_OPT.haut!=="ample" && CP_OPT.haut!=="princesse" && /corset|bustier|baleine/i.test((j.nom||"")+" "+(j.nomEn||"")+" "+(j.conseils||[]).join(" "))) CP_OPT.haut="corset";
       st.textContent=cpL("✓ Modèle reconnu. La coupe est juste en dessous ↓","✓ Model recognised. The cut is just below ↓");
       $("cp-ph-det").open=false; renderCoupe();
       setTimeout(()=>{ try{ $("cp-tbl-t").scrollIntoView({ behavior:"smooth", block:"start" }); }catch(e){} }, 250);

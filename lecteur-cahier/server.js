@@ -171,8 +171,8 @@ async function audioPourGemini(dataUrl){
 // Les chiffres sont calculés dans l'app avec les formules de coupe et les mesures de la cliente.
 const OPTS = {
   structure: ["robe","ensemble","haut","jupe","pantalon","boubou","kaftan"],
-  haut: ["ajuste","corset","ample"],
-  encolure: ["ronde","v","carree","bateau","coeur","col","sans"],
+  haut: ["ajuste","corset","princesse","ample"],
+  encolure: ["ronde","v","carree","bateau","coeur","col","revers","sans"],
   manche: ["sans","courte","troisquarts","longue","bouffante","evasee","kimono"],
   jupe: ["droite","crayon","evasee","sirene","cercle","demicercle","froncee","plissee","portefeuille"],
   longueur: ["mini","genou","mimollet","maxi"],
@@ -182,8 +182,8 @@ function promptModele(genre){
   return `Tu es modéliste en Afrique de l'Ouest. Regarde la photo d'un vêtement (${genre === "homme" ? "pour homme" : "pour femme"}) qu'une cliente veut faire coudre.
 Décris seulement sa FORME, avec ces choix (une seule valeur par champ, exactement comme écrit) :
 - "structure" : ${OPTS.structure.join(" | ")}  (robe = une pièce ; ensemble = haut + bas séparés ; kaftan = tunique ou chemise longue AVEC de vraies manches montées (couture d'épaule visible, manche près du bras), souvent col officier, portée avec un pantalon ; boubou = grand vêtement très ample dont la manche fait partie du corps ou tombe largement de l'épaule, sans emmanchure marquée. Une tenue homme ajustée à manches longues avec pantalon est un kaftan, pas un boubou.)
-- "haut" : ${OPTS.haut.join(" | ")}  (ajuste = corsage près du corps avec des pinces ; corset = corsage très ajusté coupé en panneaux, avec des découpes verticales qui passent sur la poitrine (découpes princesse), souvent baleiné, souvent avec péplum ; ample = loin du corps)
-- "encolure" : ${OPTS.encolure.join(" | ")}  (coeur = décolleté en cœur ; col = col chemise ou col montant)
+- "haut" : ${OPTS.haut.join(" | ")}  (ajuste = corsage près du corps avec des pinces ; princesse = robe ou manteau en taille princesse, avec des découpes verticales qui descendent de l'épaule jusqu'en bas sans couture de taille (robe-manteau, robe blazer) ; corset = corsage très ajusté coupé en panneaux, avec des découpes verticales qui passent sur la poitrine (découpes princesse), souvent baleiné, souvent avec péplum ; ample = loin du corps)
+- "encolure" : ${OPTS.encolure.join(" | ")}  (coeur = décolleté en cœur ; col = col chemise ou col montant ; revers = col tailleur à revers, comme une veste ou un blazer)
 - "manche" : ${OPTS.manche.join(" | ")}
 - "bas" (seulement pour un ensemble) : ${OPTS.bas.join(" | ")}
 - "jupe" (forme de la jupe ou du bas de robe) : ${OPTS.jupe.join(" | ")}
@@ -192,6 +192,7 @@ Décris seulement sa FORME, avec ces choix (une seule valeur par champ, exacteme
 - "nom" : un nom court du modèle en français (ex. « Robe sirène à manches bouffantes »)
 - "nomEn" : le même nom en anglais
 - "conseils" : 2 à 4 conseils courts de montage en français (ordre de couture, tissu, finitions), sans aucun chiffre de mesure
+- "conseilsEn" : les mêmes conseils traduits en anglais, dans le même ordre
 - "confiance" : nombre entre 0 et 1
 Si la photo ne montre pas de vêtement, mets "confiance": 0.
 Réponds UNIQUEMENT en JSON avec ces clés.`;
@@ -202,6 +203,7 @@ function nettoieModele(r){
   for(const k of ["volantBas","volantManche","peplum","ceinture","fente"]) o[k] = r[k] === true || r[k] === "true";
   o.nom = String(r.nom || "").slice(0, 80); o.nomEn = String(r.nomEn || "").slice(0, 80);
   o.conseils = (Array.isArray(r.conseils) ? r.conseils : []).map(x => String(x).slice(0, 160)).slice(0, 4);
+  o.conseilsEn = (Array.isArray(r.conseilsEn) ? r.conseilsEn : []).map(x => String(x).slice(0, 160)).slice(0, 4);
   const c = parseFloat(r.confiance); o.confiance = isFinite(c) ? Math.max(0, Math.min(1, c)) : 0.5;
   return o;
 }
