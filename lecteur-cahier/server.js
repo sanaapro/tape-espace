@@ -171,7 +171,7 @@ async function audioPourGemini(dataUrl){
 // Les chiffres sont calculés dans l'app avec les formules de coupe et les mesures de la cliente.
 const OPTS = {
   structure: ["robe","ensemble","haut","jupe","pantalon","boubou","kaftan"],
-  haut: ["ajuste","ample"],
+  haut: ["ajuste","corset","ample"],
   encolure: ["ronde","v","carree","bateau","coeur","col","sans"],
   manche: ["sans","courte","troisquarts","longue","bouffante","evasee","kimono"],
   jupe: ["droite","crayon","evasee","sirene","cercle","demicercle","froncee","plissee","portefeuille"],
@@ -182,7 +182,7 @@ function promptModele(genre){
   return `Tu es modéliste en Afrique de l'Ouest. Regarde la photo d'un vêtement (${genre === "homme" ? "pour homme" : "pour femme"}) qu'une cliente veut faire coudre.
 Décris seulement sa FORME, avec ces choix (une seule valeur par champ, exactement comme écrit) :
 - "structure" : ${OPTS.structure.join(" | ")}  (robe = une pièce ; ensemble = haut + bas séparés ; kaftan = tunique ou chemise longue AVEC de vraies manches montées (couture d'épaule visible, manche près du bras), souvent col officier, portée avec un pantalon ; boubou = grand vêtement très ample dont la manche fait partie du corps ou tombe largement de l'épaule, sans emmanchure marquée. Une tenue homme ajustée à manches longues avec pantalon est un kaftan, pas un boubou.)
-- "haut" : ${OPTS.haut.join(" | ")}  (corsage près du corps ou ample)
+- "haut" : ${OPTS.haut.join(" | ")}  (ajuste = corsage près du corps avec des pinces ; corset = corsage très ajusté coupé en panneaux, avec des découpes verticales qui passent sur la poitrine (découpes princesse), souvent baleiné, souvent avec péplum ; ample = loin du corps)
 - "encolure" : ${OPTS.encolure.join(" | ")}  (coeur = décolleté en cœur ; col = col chemise ou col montant)
 - "manche" : ${OPTS.manche.join(" | ")}
 - "bas" (seulement pour un ensemble) : ${OPTS.bas.join(" | ")}
