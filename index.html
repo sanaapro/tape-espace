@@ -1882,10 +1882,12 @@
         <img id="cp-ph-img" alt="" hidden style="display:block;max-width:100%;max-height:260px;margin:12px auto 0;border-radius:12px;border:1px solid var(--line)">
         <div class="msg" id="cp-ph-st" style="margin-top:8px"></div>
         <div id="cp-ph-name" style="font-family:var(--serif);font-size:18px;color:var(--gold);margin:8px 0 4px"></div>
-        <div id="cp-ph-opts" style="display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;margin-top:8px;font-size:13px"></div>
+        <details id="cp-ph-det" style="margin-top:8px"><summary id="cp-ph-sum" style="cursor:pointer;color:var(--muted);font-size:13px;padding:6px 0"></summary>
+        <div id="cp-ph-opts" style="display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;margin-top:8px;font-size:13px"></div></details>
         <ul id="cp-ph-tips" style="margin:12px 0 0;padding-left:18px;font-size:13px;color:var(--muted);line-height:1.5"></ul>
       </div>
       <p id="cp-hint" style="font-size:13px;color:var(--muted);margin:12px 0 4px"></p>
+      <div id="cp-tbl-t" style="font-family:var(--serif);font-size:20px;color:var(--gold);margin:16px 0 6px;scroll-margin-top:12px"></div>
       <div id="cp-table"></div>
     </div>
     <div class="card">
@@ -9229,6 +9231,11 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     CP_CK.filter(c=>(top||c[0]!=="volantManche"&&c[0]!=="peplum") && (sk||c[0]==="volantManche"||c[0]==="peplum")).forEach(c=>{
       const lb=document.createElement("label"); lb.className="ck"; const cb=document.createElement("input"); cb.type="checkbox"; cb.id="cp-o-"+c[0]; cb.checked=!!CP_OPT[c[0]];
       cb.addEventListener("change", ()=>{ CP_OPT[c[0]]=cb.checked; renderCoupe(); }); lb.appendChild(cb); lb.appendChild(document.createTextNode(cpEN()?c[2]:c[1])); box.appendChild(lb); });
+    const lblOf=k=>{ const L=CP_OL[k], v=L&&L.v[CP_OPT[k]]; return v ? (cpEN()?v[1]:v[0]) : null; };
+    const pick=keys.map(lblOf).filter(Boolean).concat(CP_CK.filter(c=>CP_OPT[c[0]]).map(c=>cpEN()?c[2]:c[1]));
+    $("cp-ph-sum").textContent = CP_AI ? cpL("Forme reconnue : ","Shape recognised: ")+pick.join(" · ")+cpL("  —  toucher pour corriger","  —  tap to correct")
+                                       : cpL("Choisir la forme du modèle","Choose the model's shape");
+    if(!CP_AI) $("cp-ph-det").open=true;
     const tips=$("cp-ph-tips"); tips.innerHTML="";
     (CP_AI&&CP_AI.conseils||[]).forEach(x=>{ const li=document.createElement("li"); li.textContent=x; tips.appendChild(li); });
   }
@@ -9254,8 +9261,9 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       if(!r.ok){ st.textContent = r.status===429 ? cpL("Limite de lectures du jour atteinte. Choisissez la forme ci-dessous.","Daily reading limit reached. Choose the shape below.") : cpL("Le modèle n'a pas pu être lu. Choisissez la forme ci-dessous.","The model could not be read. Choose the shape below."); st.style.color="var(--warn)"; return; }
       if(!j.confiance){ st.textContent=cpL("Aucun vêtement reconnu sur cette photo. Choisissez la forme ci-dessous.","No garment recognised in this photo. Choose the shape below."); st.style.color="var(--warn)"; return; }
       CP_AI=j; ["structure","haut","encolure","manche","bas","jupe","longueur","volantBas","volantManche","peplum","ceinture","fente"].forEach(k=>{ if(j[k]!==undefined) CP_OPT[k]=j[k]; });
-      st.textContent=cpL("✓ Modèle reconnu. Vérifiez la forme ci-dessous avant de couper : chaque choix se corrige.","✓ Model recognised. Check the shape below before cutting: every choice can be corrected.");
-      renderCoupe();
+      st.textContent=cpL("✓ Modèle reconnu. La coupe est juste en dessous ↓","✓ Model recognised. The cut is just below ↓");
+      $("cp-ph-det").open=false; renderCoupe();
+      setTimeout(()=>{ try{ $("cp-tbl-t").scrollIntoView({ behavior:"smooth", block:"start" }); }catch(e){} }, 250);
     }catch(err){ st.textContent=cpL("Pas de réponse du lecteur. Choisissez la forme ci-dessous.","No answer from the reader. Choose the shape below."); st.style.color="var(--warn)"; }
     finally{ clearTimeout(slow); clearTimeout(kill); }
   });
@@ -9277,6 +9285,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     $("cp-hint").textContent = cpL("Valeurs à craier sur le tissu PLIÉ (demi-pièces). Chaque numéro du croquis correspond à la ligne du même numéro, avec la division faite avec les mesures "+(c.genre==="homme"?"du client.":"de la cliente."),
                                    "Values to chalk on the FOLDED fabric (half pieces). Each number on the sketch matches the line with the same number, with the division worked out from the client's measurements.");
     const box=$("cp-table"); box.innerHTML="";
+    $("cp-tbl-t").textContent = "✂️ "+cpL("La coupe — ","The cut — ")+(CP_MODEL==="photo" ? cpPhotoName() : (cpEN()?M[CP_MODEL].en:M[CP_MODEL].fr).replace(/^\S+\s/,""));
     const rows=cpRows(c, CP_MODEL);
     if(!rows){ const p=document.createElement("p"); p.style.cssText="color:var(--warn);font-size:14px";
       p.textContent=cpL("Il manque la mesure de base de ce modèle (tour de poitrine, ou tour de bassin pour la jupe et le pantalon). Touchez « Modifier la fiche » pour la compléter.",
