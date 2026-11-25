@@ -234,6 +234,9 @@
   .cp-sk .fold{ stroke:currentColor; stroke-width:.8; stroke-dasharray:6 2 1 2; }
   .cp-sk .fl{ font-size:6.5px; fill:currentColor; writing-mode:vertical-rl; }
   .cp-sk .dm{ stroke:var(--gold); stroke-width:1; fill:none; }
+  .u-tg{ display:inline-flex; border:1px solid var(--line2); border-radius:999px; overflow:hidden; margin:-4px 0 10px; }
+  .u-tg button{ background:none; border:none; color:var(--muted); font-size:13px; padding:5px 14px; cursor:pointer; }
+  .u-tg button.on{ background:var(--gold); color:#0E0E0F; font-weight:600; }
   .cp-tr{ margin:12px 0 4px; } .cp-tr summary{ color:var(--gold); font-size:14px; cursor:pointer; padding:6px 0; }
   .cp-trs{ display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start; }
   .cp-trs figure{ flex:1 1 150px; margin:0; padding:6px; border:1px solid var(--line); border-radius:12px; background:rgba(255,255,255,.02); cursor:zoom-in; }
@@ -1832,7 +1835,7 @@
       </details>
     </div>
     <div class="card">
-      <h2 data-i18n="measures">Mesures (cm)</h2>
+      <h2 data-i18n="measures">Mesures</h2>
       <p style="margin:0 0 8px;font-size:13px;color:var(--muted)" data-i18n="measuresHint">Elles rejoignent automatiquement la fiche de la cliente.</p>
       <div class="ph-btns" style="margin:0 0 8px"><label><input type="file" id="cf-nb-file" accept="image/*" capture="environment"><span data-i18n="nbBtnCf">📷 Photographier la feuille de mesures</span></label></div>
       <div class="dict-st" id="cf-nb-st"></div>
@@ -1852,7 +1855,7 @@
       <div class="row" id="f-notes-row"><span class="k" data-i18n="notes">Notes</span><span class="v" id="f-notes"></span></div>
     </div>
     <div class="card">
-      <h2 data-i18n="measures">Mesures (cm)</h2>
+      <h2 data-i18n="measures">Mesures</h2>
       <div id="f-mesures"></div>
     </div>
     <div class="card">
@@ -1871,6 +1874,7 @@
   <div id="coupe" hidden>
     <div class="subtop"><button class="back" id="coupe-back">‹ Fiche</button><h1 id="cp-title">Fiche de coupe</h1></div>
     <div class="card">
+      <div class="u-tg" id="cp-unit" style="margin:0 0 10px"></div>
       <div id="cp-size" style="font-size:14px;margin:0 0 10px"></div>
       <div class="chips" id="cp-models"></div>
       <div id="cp-photo" hidden style="margin-top:14px">
@@ -1916,7 +1920,7 @@
       <div class="dict-st" id="in-nb-st"></div>
     </div>
     <div class="card">
-      <h2 data-i18n="measures">Mesures (cm)</h2>
+      <h2 data-i18n="measures">Mesures</h2>
       <div class="dict-bar"><button type="button" class="dict-btn" id="in-dict" data-i18n="dictBtn">🎤 Dicter les mesures</button><div class="dict-st" id="in-dict-st"></div></div>
       <div class="mgrid" id="in-mesures"></div>
     </div>
@@ -2308,7 +2312,7 @@
       noClients:"Aucune cliente pour le moment.", noOrders:"Aucune commande pour le moment.",
       newClient:"+ Nouvelle cliente", newOrder:"+ Nouvelle commande",
       contact:"Coordonnées", phone:"Téléphone", notes:"Notes",
-      measures:"Mesures (cm)", noMeasures:"Aucune mesure enregistrée.",
+      measures:"Mesures", noMeasures:"Aucune mesure enregistrée.",
       editClient:"Modifier la fiche", deleteClient:"Supprimer cette cliente",
       measuresToShop:"Envoyer ces mesures à la boutique",
       orderInfo:"La commande", client:"Cliente", garment:"Modèle", garmentPh:"Ex. Boubou, robe brodée, ensemble",
@@ -2619,7 +2623,7 @@
       noClients:"No clients yet.", noOrders:"No orders yet.",
       newClient:"+ New client", newOrder:"+ New order",
       contact:"Contact details", phone:"Phone", notes:"Notes",
-      measures:"Measurements (cm)", noMeasures:"No measurements saved.",
+      measures:"Measurements", noMeasures:"No measurements saved.",
       editClient:"Edit this client", deleteClient:"Delete this client",
       measuresToShop:"Send these measurements to the shop",
       orderInfo:"The order", client:"Client", garment:"Model", garmentPh:"e.g. Boubou, embroidered dress, suit",
@@ -3126,6 +3130,7 @@
   function applyLang(){
     document.documentElement.lang = LANG_UI;
     document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent = t(el.getAttribute("data-i18n")); });
+    try{ unitToggles(); }catch(e){}
     document.querySelectorAll("[data-i18n-ph]").forEach(el=>{ el.placeholder = t(el.getAttribute("data-i18n-ph")); });
     paintSegs();
     try{ paintArForm(); }catch(e){}
@@ -3180,7 +3185,7 @@
     const cur={};
     MESURES_F.concat(MESURES_H).forEach(mm=>{
       const el=$(prefix+mm[0]);
-      if(el && el.value!=="") cur[mm[0]]=el.value;
+      if(el && el.value!==""){ const c=cellCm(el); if(c!==null) cur[mm[0]]=c; }
     });
     return cur;
   }
@@ -3425,11 +3430,50 @@
     const w=window.open(url,"_blank");
     if(!w) location.href=url;
   }
+  // ---------- Unité des mesures : centimètre ou pouce (inch) ----------
+  // Les mesures sont TOUJOURS gardées en centimètres dans la base. On affiche et on saisit dans l'unité
+  // choisie sur ce téléphone ; une valeur que l'on n'a pas retouchée garde son chiffre d'origine exact.
+  const INCH = 2.54;
+  let UNIT = (()=>{ try{ return localStorage.getItem("sanaapro_unite")==="in" ? "in" : "cm"; }catch(e){ return "cm"; } })();
+  const uShort = () => UNIT==="in" ? "in" : "cm";
+  function inFrac(x){ const q=Math.round(x*4)/4, w=Math.floor(q+1e-9), f=Math.round((q-w)*4); const fr=["","¼","½","¾"][f]; return (w||!fr ? String(w) : "")+fr; }
+  function fmtU(cm, lang){ const n=parseFloat(cm); if(!isFinite(n)) return String(cm)+" "+uShort();
+    if(UNIT==="in") return inFrac(n/INCH)+" in";
+    const v=String(Math.round(n*10)/10); return (lang==="en" ? v : v)+" cm"; }
+  function inVal(cm){ const n=parseFloat(cm); if(!isFinite(n)) return ""; return UNIT==="in" ? String(Math.round(n/INCH*4)/4) : String(Math.round(n*100)/100); }
+  function fromU(v){ const n=parseFloat(String(v).replace(",",".")); if(!isFinite(n)) return null; return UNIT==="in" ? Math.round(n*INCH*1000)/1000 : n; }
+  // valeur d'une case de mesure → centimètres (le chiffre d'origine si la case n'a pas été retouchée)
+  function cellCm(el){ const v=el.value.trim(); if(v==="") return null;
+    if(el.dataset.o!==undefined && v===el.dataset.o && el.dataset.cm!==undefined && el.dataset.cm!=="") return parseFloat(el.dataset.cm);
+    return fromU(v); }
+  // mesures dictées ou lues sur une photo (dans l'unité affichée) → centimètres
+  function mesFromU(o){ const out={}; Object.keys(o||{}).forEach(k=>{ const c=fromU(o[k]); if(c!==null) out[k]=c; }); return out; }
+  function unitToggles(){
+    document.querySelectorAll('h2[data-i18n="measures"]').forEach(h=>{
+      let tg=h.nextElementSibling; if(!tg || !tg.classList.contains("u-tg")){ tg=document.createElement("div"); tg.className="u-tg"; h.after(tg); }
+      paintUnitToggle(tg); });
+    const cp=$("cp-unit"); if(cp) paintUnitToggle(cp);
+  }
+  function paintUnitToggle(tg){
+    tg.innerHTML="";
+    [["cm","cm"],["in","inch"]].forEach(u=>{ const b=document.createElement("button"); b.type="button"; b.textContent=u[1]; if(UNIT===u[0]) b.className="on";
+      b.addEventListener("click", ()=>setUnit(u[0])); tg.appendChild(b); });
+  }
+  function setUnit(u){
+    if(u===UNIT) return;
+    // les cases ouvertes gardent leur valeur : on la convertit au lieu de la réinterpréter
+    const open=Array.from(document.querySelectorAll("#in-mesures input, #cf-mesures input")).map(el=>[el, cellCm(el)]);
+    UNIT=u; try{ localStorage.setItem("sanaapro_unite", u); }catch(e){}
+    open.forEach(([el,cm])=>{ el.step = UNIT==="in" ? "0.25" : "0.5"; if(cm===null) return; el.value=inVal(cm); el.dataset.o=el.value; el.dataset.cm=String(cm); });
+    unitToggles();
+    try{ if(CLIDATA && !$("fiche").hidden) fillFiche(CLIDATA, currentCliente); }catch(e){}
+    try{ if(CLIDATA && !$("coupe").hidden) renderCoupe(); }catch(e){}
+  }
   function mesuresText(c){
     const m=c.mesures||{}, lines=[];
     mesuresShown(c.genre, m).forEach(mm=>{
       const v=m[mm[0]];
-      if(v!==undefined && v!==null && v!=="") lines.push(mlabel(mm, LANG_MSG)+" : "+v+" cm");
+      if(v!==undefined && v!==null && v!=="") lines.push(mlabel(mm, LANG_MSG)+" : "+fmtU(v, LANG_MSG));
     });
     return lines.length ? lines.join("\n") : tm("noMeasures");
   }
@@ -8565,7 +8609,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
         const row=document.createElement("div"); row.className="mline";
         row.innerHTML='<span class="k"></span><span class="v"></span>';
         row.querySelector(".k").textContent=mlabel(mm, LANG_UI);
-        row.querySelector(".v").textContent=m[k]+" cm";
+        row.querySelector(".v").textContent=fmtU(m[k], LANG_UI);
         box.appendChild(row);
       }
     });
@@ -8605,8 +8649,8 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       const wrap=document.createElement("div");
       const lab=document.createElement("label"); lab.textContent=mlabel(mm, LANG_UI); lab.setAttribute("for",prefix+k);
       const inp=document.createElement("input");
-      inp.id=prefix+k; inp.type="number"; inp.step="0.5"; inp.inputMode="decimal"; inp.placeholder="—";
-      if(m && m[k]!==undefined && m[k]!==null && m[k]!=="") inp.value=m[k];
+      inp.id=prefix+k; inp.type="number"; inp.step=UNIT==="in"?"0.25":"0.5"; inp.inputMode="decimal"; inp.placeholder="—";
+      if(m && m[k]!==undefined && m[k]!==null && m[k]!==""){ inp.value=inVal(m[k]); inp.dataset.o=inp.value; inp.dataset.cm=String(m[k]); }
       wrap.appendChild(lab); wrap.appendChild(inp); box.appendChild(wrap);
     });
   }
@@ -8617,8 +8661,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     keys.map(k=>[k]).forEach(mm=>{
       const el=$(prefix+mm[0]);
       if(!el) return;
-      const v=el.value.trim();
-      if(v!=="" && !isNaN(parseFloat(v.replace(",",".")))) out[mm[0]]=parseFloat(v.replace(",","."));
+      const c=cellCm(el); if(c!==null && !isNaN(c)) out[mm[0]]=c;
     });
     return out;
   }
@@ -8643,6 +8686,12 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
   const cpL = (fr,en) => cpEN() ? en : fr;
   const cpN1 = x => { const v=Math.round(x*10)/10; return cpEN() ? String(v) : String(v).replace(".",","); };
   const cpN = x => Array.isArray(x) ? x.map(cpN1).join(" / ") : cpN1(x);
+  // affichage dans l'unité choisie : les calculs restent en cm, seuls les chiffres montrés changent
+  const cpV = x => UNIT==="in" ? (Array.isArray(x)?x:[x]).map(v=>inFrac(v/INCH)).join(" / ")+" in" : cpN(x)+" cm";
+  const cpT = x => UNIT==="in" ? inFrac(x/INCH) : cpN1(x);
+  // formule : toutes les longueurs passent en pouces, les diviseurs (÷ 4, × 0,6) restent tels quels
+  const cpFx = f => UNIT!=="in" ? f : String(f).replace(/([÷×] )?(\d+(?:[.,]\d+)?)/g, (m,op,num)=> op ? m : inFrac(parseFloat(num.replace(",","."))/INCH));
+  const cpTx = s => UNIT!=="in" ? s : String(s).replace(/(\d+(?:[.,]\d+)?) cm\b/g, (m,num)=> inFrac(parseFloat(num.replace(",","."))/INCH)+" in");
   const cpOk = v => Array.isArray(v) ? v.every(x=>typeof x==="number" && isFinite(x)) : (typeof v==="number" && isFinite(v));
   function cpM(m){
     const n=k=>{ const x=parseFloat(m && m[k]); return x>0 ? x : 0; };
@@ -9033,8 +9082,9 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     let s='<svg class="cp-tr-svg" viewBox="'+cpF(vx)+' '+cpF(vy)+' '+cpF(vw)+' '+cpF(vh)+'" role="img" aria-label="'+escH(name)+'">';
     s+='<defs><clipPath id="'+id+'"><rect x="'+(p.fold?0:cpF(vx))+'" y="'+cpF(vy)+'" width="'+cpF(vw*2)+'" height="'+cpF(vh*2)+'"/></clipPath></defs>';
     // quadrillage de 10 cm pour lire l'échelle
-    for(let gx=Math.ceil(vx/10)*10; gx<vx+vw; gx+=10) s+='<line class="tr-gr" x1="'+gx+'" y1="'+cpF(vy)+'" x2="'+gx+'" y2="'+cpF(vy+vh)+'"/>';
-    for(let gy=Math.ceil(vy/10)*10; gy<vy+vh; gy+=10) s+='<line class="tr-gr" x1="'+cpF(vx)+'" y1="'+gy+'" x2="'+cpF(vx+vw)+'" y2="'+gy+'"/>';
+    const G = UNIT==="in" ? 4*INCH : 10;
+    for(let gx=Math.ceil(vx/G)*G; gx<vx+vw; gx+=G) s+='<line class="tr-gr" x1="'+gx+'" y1="'+cpF(vy)+'" x2="'+gx+'" y2="'+cpF(vy+vh)+'"/>';
+    for(let gy=Math.ceil(vy/G)*G; gy<vy+vh; gy+=G) s+='<line class="tr-gr" x1="'+cpF(vx)+'" y1="'+gy+'" x2="'+cpF(vx+vw)+'" y2="'+gy+'"/>';
     // marge de couture (bande autour de la pièce, sauf sur le pli) puis ourlet en bas
     if(M>0) s+='<path class="tr-sa" clip-path="url(#'+id+')" d="'+p.d+'" stroke-width="'+cpF(2*M)+'"/>';
     if(O>0 && p.hem){ const h=p.hem; s+='<path class="tr-hm" d="M'+cpF(h[0])+','+cpF(h[1])+' L'+cpF(h[2])+','+cpF(h[3])+' L'+cpF(h[2])+','+cpF(h[3]+O)+' L'+cpF(h[0])+','+cpF(h[1]+O)+' Z"/>'; }
@@ -9059,7 +9109,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     const AD=v.AD, L=v.L||v.WL||AD+20, WL=v.WL&&v.WL<L+0.1?v.WL:null, hemX=v.HW||W, cn=[[0,AD,W,AD]], dims=[], notes=[], darts=[];
     let d;
     const sideTo = ()=>{ let s=""; const ww = fit && v.WW!==undefined && WL ? cpA(v.WW, front?1:0)+(v.DA||0) : null;
-      if(WL){ s+=" L"+cpP([ww||W, WL]); cn.push([0,WL,ww||W,WL]); if(ww) dims.push([0,WL,ww,WL,cpN1(ww)+(v.DA?" ("+cpN1(cpA(v.WW,front?1:0))+" + "+cpL("pince","dart")+" "+cpN1(v.DA)+")":""),-0.9]); }
+      if(WL){ s+=" L"+cpP([ww||W, WL]); cn.push([0,WL,ww||W,WL]); if(ww) dims.push([0,WL,ww,WL,cpT(ww)+(v.DA?" ("+cpT(cpA(v.WW,front?1:0))+" + "+cpL("pince","dart")+" "+cpT(v.DA)+")":""),-0.9]); }
       if(!WL || L>WL+0.5) s+=" L"+cpP([hemX, L]);
       return s; };
     if(bustier){
@@ -9071,16 +9121,16 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       const yA=SL+(AD-SL)*0.62;
       const arm = " C"+cpP([SH-0.5,SL+(AD-SL)*0.3])+" "+cpP([C,SL+(AD-SL)*0.45])+" "+cpP([C,yA])+" Q"+cpP([C+(front?-0.4:0.2),AD])+" "+cpP([W,AD]);
       d="M"+cpP([0,nd])+neck+" L"+cpP([SH,SL])+arm+sideTo()+" L"+cpP([0,L])+" Z";
-      dims.push([0,0,SH,0,cpN1(SH),-1.4]);
-      notes.push([NW*0.15, nd+3.2, cpL("encolure ","neck ")+cpN1(NW)+" × "+cpN1(nd)]);
-      const xr=Math.max(W,hemX,SH); dims.push([xr,0,xr,AD,cpN1(AD),1.3]);
+      dims.push([0,0,SH,0,cpT(SH),-1.4]);
+      notes.push([NW*0.15, nd+3.2, cpL("encolure ","neck ")+cpT(NW)+" × "+cpT(nd)]);
+      const xr=Math.max(W,hemX,SH); dims.push([xr,0,xr,AD,cpT(AD),1.3]);
     }
     if(fit && v.DA && WL){ const x=v.BS||W*0.45, top = front ? Math.min(WL-6, (v.BP||AD+2)) : AD+2;
       darts.push("M"+cpP([x-v.DA/2,WL])+" L"+cpP([x,top])+" L"+cpP([x+v.DA/2,WL]));
       if(L>WL+3) darts.push("M"+cpP([x-v.DA/2,WL])+" L"+cpP([x,Math.min(L,WL+12)])+" L"+cpP([x+v.DA/2,WL])); }
-    dims.push([0,AD,W,AD,cpN1(W),-0.9]);
-    const xR=Math.max(W,hemX,bustier?0:(v.SH||W-4)); dims.push([xR,bustier?AD-8:0,xR,L,cpN1(L),bustier?1.3:3.4]);
-    dims.push([0,L,hemX,L,cpN1(hemX),1.6]);
+    dims.push([0,AD,W,AD,cpT(W),-0.9]);
+    const xR=Math.max(W,hemX,bustier?0:(v.SH||W-4)); dims.push([xR,bustier?AD-8:0,xR,L,cpT(L),bustier?1.3:3.4]);
+    dims.push([0,L,hemX,L,cpT(hemX),1.6]);
     const x1=Math.max(W,hemX, v.SH||0);
     return { d, box:[0,bustier?AD-9:0,x1,L], fold:true, hem:[0,L,hemX,L], cons:cn, dims, darts, notes };
   }
@@ -9089,13 +9139,13 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     const H=v.H, SW=v.SW, L=v.L, WR=v.WR||SW*0.72;
     const d="M0,0 C"+cpP([SW*0.45,0])+" "+cpP([SW*0.62,H*0.55])+" "+cpP([SW*0.8,H*0.82])+" Q"+cpP([SW*0.9,H])+" "+cpP([SW,H])+" L"+cpP([WR,L])+" L"+cpP([0,L])+" Z";
     return { d, box:[0,0,SW,L], fold:true, hem:[0,L,WR,L], cons:[[0,H,SW,H]],
-      dims:[[0,H,SW,H,cpN1(SW),-0.9],[SW,0,SW,H,cpN1(H),1.3],[SW,0,SW,L,cpN1(L),3.4],[0,L,WR,L,cpN1(WR),1.6]],
-      notes:[[SW*0.06,H+4.5,cpL("tête ","cap ")+cpN1(v.D?v.D:0)+cpL(" en diagonale"," diagonal")]] };
+      dims:[[0,H,SW,H,cpT(SW),-0.9],[SW,0,SW,H,cpT(H),1.3],[SW,0,SW,L,cpT(L),3.4],[0,L,WR,L,cpT(WR),1.6]],
+      notes:[[SW*0.06,H+4.5,cpL("tête ","cap ")+cpT(v.D?v.D:0)+cpL(" en diagonale"," diagonal")]] };
   }
   function cpTrCol(v){
     if(!v.K1 || !v.K2) return null; const K=v.K1, h=v.K2;
     const d="M0,0 L"+cpP([K-1.5,0])+" Q"+cpP([K,0])+" "+cpP([K,1.5])+" L"+cpP([K,h])+" L0,"+cpF(h)+" Z";
-    return { d, box:[0,0,K,h], fold:true, hem:null, dims:[[0,0,K,0,cpN1(K),-1.2],[K,0,K,h,cpN1(h),1.3]] };
+    return { d, box:[0,0,K,h], fold:true, hem:null, dims:[[0,0,K,0,cpT(K),-1.2],[K,0,K,h,cpT(h),1.3]] };
   }
   function cpTrJupe(v){
     if(!v.HW || !v.L) return null;
@@ -9103,8 +9153,8 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     const d="M0,0 Q"+cpP([ww*0.6,0])+" "+cpP([ww,-1])+" C"+cpP([ww+(v.HW-ww)*0.8,HD*0.3])+" "+cpP([v.HW,HD*0.6])+" "+cpP([v.HW,HD])+" L"+cpP([HM,L])+" L"+cpP([0,L])+" Z";
     const darts = DA>0.4 ? ["M"+cpP([ww*0.5-DA/2,-0.2])+" L"+cpP([ww*0.5,Math.min(12,HD-3)])+" L"+cpP([ww*0.5+DA/2,-0.3])] : [];
     return { d, box:[0,-1,Math.max(v.HW,HM),L], fold:true, hem:[0,L,HM,L], cons:[[0,HD,v.HW,HD]], darts,
-      dims:[[0,0,ww,0,cpN1(ww)+(DA?" ("+cpN1(v.WW)+" + "+cpL("pince","dart")+" "+cpN1(DA)+")":""),-1.6],[0,HD,v.HW,HD,cpN1(v.HW),-0.9],
-            [Math.max(v.HW,HM),0,Math.max(v.HW,HM),HD,cpN1(HD),1.3],[Math.max(v.HW,HM),0,Math.max(v.HW,HM),L,cpN1(L),3.4],[0,L,HM,L,cpN1(HM),1.6]] };
+      dims:[[0,0,ww,0,cpT(ww)+(DA?" ("+cpT(v.WW)+" + "+cpL("pince","dart")+" "+cpT(DA)+")":""),-1.6],[0,HD,v.HW,HD,cpT(v.HW),-0.9],
+            [Math.max(v.HW,HM),0,Math.max(v.HW,HM),HD,cpT(HD),1.3],[Math.max(v.HW,HM),0,Math.max(v.HW,HM),L,cpT(L),3.4],[0,L,HM,L,cpT(HM),1.6]] };
   }
   function cpTrPantalon(v, i){
     const HW=cpA(v.HW,i), CR=cpA(v.CR,i), MO=v.MO, L=v.L; if(!HW || !CR || !MO || !L) return null;
@@ -9117,8 +9167,8 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       +" C"+cpP([CR*0.55,MO])+" "+cpP([CR,MO-CR*0.35])+" "+cpP([CR,MO-CR*1.2])+" L"+cpP([cx,cy])+" Z";
     const darts = da ? ["M"+cpP([cx+(WW+da)*0.55-da/2,(cy+sy)/2])+" L"+cpP([cx+(WW+da)*0.55,i?12:9])+" L"+cpP([cx+(WW+da)*0.55+da/2,(cy+sy)/2])] : [];
     return { d, box:[0,cy,side,L], fold:false, hem:[xc-HM/2,L,xc+HM/2,L], cons:[[0,MO,side,MO],[xc-KW/2,KH,xc+KW/2,KH],[xc,0,xc,L]], darts,
-      dims:[[cx,cy,sx,sy,cpN1(WW+da),-1.6],[0,MO,side,MO,cpN1(HW+CR)+" ("+cpN1(CR)+" + "+cpN1(HW)+")",2],[side,0,side,MO,cpN1(MO),1.3],
-            [side,0,side,L,cpN1(L),3.4],[xc-KW/2,KH,xc+KW/2,KH,cpN1(KW),-0.9],[xc-HM/2,L,xc+HM/2,L,cpN1(HM),1.6]],
+      dims:[[cx,cy,sx,sy,cpT(WW+da),-1.6],[0,MO,side,MO,cpT(HW+CR)+" ("+cpT(CR)+" + "+cpT(HW)+")",2],[side,0,side,MO,cpT(MO),1.3],
+            [side,0,side,L,cpT(L),3.4],[xc-KW/2,KH,xc+KW/2,KH,cpT(KW),-0.9],[xc-HM/2,L,xc+HM/2,L,cpT(HM),1.6]],
       notes:[[xc+0.8,(MO+KH)/2,cpL("pli du pantalon","crease line")]] };
   }
   function cpTrBoubou(v){
@@ -9127,10 +9177,10 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     const darts=["M"+cpP([0,BD])+" Q"+cpP([NW*0.75,BD])+" "+cpP([NW,0])];
     if(v.FS) darts.push("M"+cpP([0.4,ND])+" L"+cpP([0.4,ND+v.FS]));
     return { d, box:[0,0,W,L], fold:true, hem:[0,L,W,L], cons:[[0,AO,W,AO]], darts,
-      dims:[[0,0,W,0,cpN1(W),-1.4],[W,0,W,AO,cpN1(AO),1.3],[W,0,W,L,cpN1(L),3.4]],
-      notes:[[NW*0.15,ND+3.2,cpL("devant ","front ")+cpN1(ND)+cpL(" · dos "," · back ")+cpN1(BD)],[W*0.05,AO+3.5,cpL("↑ ouverture de manche","↑ sleeve opening")]] };
+      dims:[[0,0,W,0,cpT(W),-1.4],[W,0,W,AO,cpT(AO),1.3],[W,0,W,L,cpT(L),3.4]],
+      notes:[[NW*0.15,ND+3.2,cpL("devant ","front ")+cpT(ND)+cpL(" · dos "," · back ")+cpT(BD)],[W*0.05,AO+3.5,cpL("↑ ouverture de manche","↑ sleeve opening")]] };
   }
-  function cpTrRect(w,h,fold){ return { d:"M0,0 L"+cpP([w,0])+" L"+cpP([w,h])+" L"+cpP([0,h])+" Z", box:[0,0,w,h], fold, hem:[0,h,w,h], dims:[[0,0,w,0,cpN1(w),-1.4],[w,0,w,h,cpN1(h),1.3]] }; }
+  function cpTrRect(w,h,fold){ return { d:"M0,0 L"+cpP([w,0])+" L"+cpP([w,h])+" L"+cpP([0,h])+" Z", box:[0,0,w,h], fold, hem:[0,h,w,h], dims:[[0,0,w,0,cpT(w),-1.4],[w,0,w,h,cpT(h),1.3]] }; }
   // Bloc du tableau → pièces à tracer, avec combien en couper.
   function cpTraceParts(b){
     const piece=b.sec&&b.sec[3]; if(!piece) return [];
@@ -9150,7 +9200,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
   function cpTraceBlock(b){
     const parts=cpTraceParts(b); if(!parts.length) return null;
     const det=document.createElement("details"); det.className="cp-tr"; det.open=true;
-    const sm=document.createElement("summary"); sm.textContent=cpL("📐 Tracé à l'échelle (cm) — courbes, pinces, marges","📐 Drawn to scale (cm) — curves, darts, allowances"); det.appendChild(sm);
+    const sm=document.createElement("summary"); sm.textContent=cpL("📐 Tracé à l'échelle ("+(UNIT==="in"?"inch":"cm")+") — courbes, pinces, marges","📐 Drawn to scale ("+(UNIT==="in"?"inch":"cm")+") — curves, darts, allowances"); det.appendChild(sm);
     const row=document.createElement("div"); row.className="cp-trs";
     parts.forEach(x=>{ const f=document.createElement("figure"); f.innerHTML=cpTraceSvg(x.name, x.p);
       const cap=document.createElement("figcaption"); const bb=document.createElement("b"); bb.textContent=x.name; cap.appendChild(bb); cap.appendChild(document.createTextNode(" · "+cpL("couper ","cut ")+x.n)); f.appendChild(cap);
@@ -9158,8 +9208,9 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       row.appendChild(f); });
     det.appendChild(row);
     const lg=document.createElement("p"); lg.className="cp-tr-lg";
-    lg.textContent=cpL("Trait doré = ligne de craie. Bande claire = marge de couture ("+cpN1(+CP_AIS.marge||0)+" cm), plus large en bas = ourlet ("+cpN1(+CP_AIS.ourlet||0)+" cm) : couper sur le bord extérieur. Pointillés = lignes de repère et pinces. Carreaux = 10 cm. Touchez un tracé pour l'agrandir.",
-      "Gold line = chalk line. Light band = seam allowance ("+cpN1(+CP_AIS.marge||0)+" cm), wider at the bottom = hem ("+cpN1(+CP_AIS.ourlet||0)+" cm): cut on the outer edge. Dotted = guide lines and darts. Squares = 10 cm. Tap a drawing to enlarge it.");
+    const uu=" "+uShort(), sq=UNIT==="in"?"4 in":"10 cm";
+    lg.textContent=cpL("Trait doré = ligne de craie. Bande claire = marge de couture ("+cpT(+CP_AIS.marge||0)+uu+"), plus large en bas = ourlet ("+cpT(+CP_AIS.ourlet||0)+uu+") : couper sur le bord extérieur. Pointillés = lignes de repère et pinces. Carreaux = "+sq+". Touchez un tracé pour l'agrandir.",
+      "Gold line = chalk line. Light band = seam allowance ("+cpT(+CP_AIS.marge||0)+uu+"), wider at the bottom = hem ("+cpT(+CP_AIS.ourlet||0)+uu+"): cut on the outer edge. Dotted = guide lines and darts. Squares = "+sq+". Tap a drawing to enlarge it.");
     det.appendChild(lg);
     return det;
   }
@@ -9217,7 +9268,8 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     $("cp-title").textContent = "✂️ "+(c.name||t("noName"));
     const tl=cpTaille(c), sz=$("cp-size"); sz.innerHTML="";
     if(tl){ const b=document.createElement("b"); b.style.color="var(--gold)"; b.textContent=cpL("Taille ","Size ")+tl.taille;
-      sz.appendChild(b); sz.appendChild(document.createTextNode("  ("+cpL(tl.poste==="poitrine"?"poitrine":"bassin", tl.poste==="poitrine"?"chest":"hips")+" "+tl.valeur+" cm)")); }
+      sz.appendChild(b); sz.appendChild(document.createTextNode("  ("+cpL(tl.poste==="poitrine"?"poitrine":"bassin", tl.poste==="poitrine"?"chest":"hips")+" "+fmtU(tl.valeur, LANG_UI)+")")); }
+    paintUnitToggle($("cp-unit"));
     const ch=$("cp-models"); ch.innerHTML="";
     list.forEach(k=>{ const b=document.createElement("button"); b.type="button"; b.className=(k===CP_MODEL?"on":""); b.textContent=cpEN()?M[k].en:M[k].fr;
       b.addEventListener("click", ()=>{ CP_MODEL=k; renderCoupe(); }); ch.appendChild(b); });
@@ -9238,18 +9290,18 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       if(sk){ const d=document.createElement("div"); d.className="cp-skw"; d.innerHTML=sk; grid.appendChild(d); } else grid.classList.add("nosk");
       const tb=document.createElement("table"); tb.style.cssText="width:100%;border-collapse:collapse";
       b.rows.forEach(r=>{ const tr=document.createElement("tr");
-        if(r[0]==="note"||r[0]==="warn"){ tr.className="cp-"+r[0]; const td=document.createElement("td"); td.colSpan=2; td.textContent=(r[0]==="warn"?"⚠ ":"ℹ︎ ")+(cpEN()?r[2]:r[1]); tr.appendChild(td); }
+        if(r[0]==="note"||r[0]==="warn"){ tr.className="cp-"+r[0]; const td=document.createElement("td"); td.colSpan=2; td.textContent=(r[0]==="warn"?"⚠ ":"ℹ︎ ")+cpTx(cpEN()?r[2]:r[1]); tr.appendChild(td); }
         else{ tr.className="cp-row"; const a=document.createElement("td");
           if(r.n){ const nb=document.createElement("span"); nb.className="cp-n"; nb.textContent=r.n; a.appendChild(nb); }
           a.appendChild(document.createTextNode(cpEN()?r[2]:r[1]));
-          const sm=document.createElement("small"); sm.textContent=cpEN()?String(r[4]).replace(/(\d),(\d)/g,"$1.$2"):r[4]; a.appendChild(sm);
-          const v=document.createElement("td"); v.className="v"; v.textContent=cpN(r[3])+" cm"; tr.appendChild(a); tr.appendChild(v); }
+          const sm=document.createElement("small"); sm.textContent=cpEN()?String(cpFx(r[4])).replace(/(\d),(\d)/g,"$1.$2"):cpFx(r[4]); a.appendChild(sm);
+          const v=document.createElement("td"); v.className="v"; v.textContent=cpV(r[3]); tr.appendChild(a); tr.appendChild(v); }
         tb.appendChild(tr); });
       grid.appendChild(tb); blk.appendChild(grid);
       const trc=cpTraceBlock(b); if(trc) blk.appendChild(trc);
       box.appendChild(blk);
     });
-    $("cp-ais-t").textContent = cpL("Aisances (cm)","Ease (cm)");
+    $("cp-ais-t").textContent = cpL("Aisances","Ease")+" ("+(UNIT==="in"?"inch":"cm")+")";
     $("cp-ais-h").textContent = cpL("Ce que vous ajoutez à la mesure du corps pour que le vêtement ne serre pas. Gardé sur ce téléphone.",
                                     "What you add to the body measurement so the garment is not tight. Saved on this phone.");
     const ai=$("cp-ais"); ai.innerHTML="";
@@ -9258,8 +9310,8 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
      ["poignet","Poignet","Wrist"],["boubou","Ampleur du boubou","Boubou fullness"],
      ["marge","Marge de couture (tracé)","Seam allowance (drawing)"],["ourlet","Ourlet en bas (tracé)","Hem allowance (drawing)"]].forEach(x=>{
       const lb=document.createElement("label"); lb.htmlFor="cp-a-"+x[0]; lb.textContent=cpEN()?x[2]:x[1];
-      const inp=document.createElement("input"); inp.id="cp-a-"+x[0]; inp.type="number"; inp.step="0.5"; inp.inputMode="decimal"; inp.value=CP_AIS[x[0]];
-      inp.addEventListener("change", ()=>{ const v=parseFloat(String(inp.value).replace(",",".")); if(!isNaN(v)){ CP_AIS[x[0]]=v;
+      const inp=document.createElement("input"); inp.id="cp-a-"+x[0]; inp.type="number"; inp.step=UNIT==="in"?"0.25":"0.5"; inp.inputMode="decimal"; inp.value=inVal(CP_AIS[x[0]]);
+      inp.addEventListener("change", ()=>{ const v=fromU(inp.value); if(v!==null && !isNaN(v)){ CP_AIS[x[0]]=v;
         try{ localStorage.setItem("sanaapro_aisances", JSON.stringify(CP_AIS)); }catch(e){} renderCoupe(); } });
       ai.appendChild(lb); ai.appendChild(inp); });
     $("cp-share-t").textContent = cpL("Envoyer la fiche par WhatsApp","Send the sheet on WhatsApp");
@@ -9269,7 +9321,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
     const M = CP_MODEL==="photo" ? { fr:cpPhotoName(), en:cpPhotoName() } : cpModels()[CP_MODEL];
     let s="✂️ "+(cpEN()?M.en:M.fr)+" — "+(c.name||"")+(tl?" · "+cpL("taille ","size ")+tl.taille:"")+"\n"+cpL("Tissu plié (demi-pièces)","Folded fabric (half pieces)")+"\n";
     cpBlocks(rows).forEach(b=>{ if(b.sec) s+="\n*"+(cpEN()?b.sec[2]:b.sec[1]).toUpperCase()+"*\n";
-      b.rows.forEach(r=>{ s += r[0]==="warn" ? "⚠ "+(cpEN()?r[2]:r[1])+"\n" : r[0]==="note" ? "" : (r.n?r.n+". ":"• ")+(cpEN()?r[2]:r[1])+" : "+cpN(r[3])+" cm  ("+r[4]+")\n"; }); });
+      b.rows.forEach(r=>{ s += r[0]==="warn" ? "⚠ "+cpTx(cpEN()?r[2]:r[1])+"\n" : r[0]==="note" ? "" : (r.n?r.n+". ":"• ")+(cpEN()?r[2]:r[1])+" : "+cpV(r[3])+"  ("+cpFx(r[4])+")\n"; }); });
     return s;
   }
   $("f-coupe").addEventListener("click", ()=>{ if(!CLIDATA) return; CP_MODEL=null; CP_PH=""; CP_AI=null; $("cp-ph-st").textContent=""; renderCoupe(); show("coupe"); });
@@ -9737,10 +9789,10 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
         if(r.livraison){ setV($("cf-liv"), r.livraison); lines.push((EN?"Delivery: ":"Livraison : ")+sayDate(r.livraison)); said.push(sayDate(r.livraison)); }
       }
       if(r.mesures){
-        const merged=Object.assign({}, currentMesuresFromForm(pfx), r.mesures);
+        const merged=Object.assign({}, currentMesuresFromForm(pfx), mesFromU(r.mesures));
         if(id==="in") buildInputs(merged); else buildCmdGrid(merged);
         const lab=k=>{ const mm=MESURES_F.concat(MESURES_H).find(x=>x[0]===k); return mm ? mlabel(mm, LANG_UI) : k; };
-        Object.keys(r.mesures).forEach(k=>{ const el=$(pfx+k); if(el){ el.classList.add("dict-hit"); total++; } lines.push(lab(k)+" : "+r.mesures[k]+" cm"); });
+        Object.keys(r.mesures).forEach(k=>{ const el=$(pfx+k); if(el){ el.classList.add("dict-hit"); total++; } lines.push(lab(k)+" : "+r.mesures[k]+" "+uShort()); });
         const ks=Object.keys(r.mesures); if(ks.length) { const last=$(pfx+ks[ks.length-1]); try{ last && last.scrollIntoView({ behavior:"smooth", block:"center" }); }catch(e){} }
         said.push(ks.length===1 ? lab(ks[0])+" "+r.mesures[ks[0]] : ks.length+(EN?" measurements":" mesures"));
       }
@@ -9859,7 +9911,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       const mark=(el,txt)=>{ el.classList.add("dict-hit"); try{ el.scrollIntoView({ behavior:"smooth", block:"center" }); }catch(e){} $("dp-last").textContent="✓ "+txt; };
       const setVal=(el,v,txt,spoken)=>{ if(!el) return; hist.push([el, el.value]); el.value=v; el.dispatchEvent(new Event("input",{ bubbles:true })); el.dispatchEvent(new Event("change",{ bubbles:true })); mark(el,txt); sp(spoken||txt); n++; };
       const fill=(k,v)=>{ const el=inputs().find(i=>i.id.replace(/^c?m-/,"")===k); if(!el) return false;
-        hist.push([el, el.value]); el.value=v; el.dispatchEvent(new Event("input",{ bubbles:true })); lastIdx=inputs().indexOf(el); n++; mark(el, label(k)+" : "+v+" cm"); sp((GUIDED?"":label(k)+" ")+String(v).replace(".", EN?" point ":" virgule ")); return true; };
+        hist.push([el, el.value]); el.value=v; el.dispatchEvent(new Event("input",{ bubbles:true })); lastIdx=inputs().indexOf(el); n++; mark(el, label(k)+" : "+v+" "+uShort()); sp((GUIDED?"":label(k)+" ")+String(v).replace(".", EN?" point ":" virgule ")); return true; };
       const undo=()=>{ const h=hist.pop(); if(!h) return; h[0].value=h[1]; if(!h[1]) h[0].classList.remove("dict-hit"); h[0].dispatchEvent(new Event("input",{ bubbles:true })); n=Math.max(0,n-1);
         $("dp-last").textContent = EN?"↩ Erased":"↩ Effacé"; return true; };
       const applyField=f=>{
@@ -10208,7 +10260,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       if(r.livraison) $("cf-liv").value=r.livraison;
       if(r.recu) $("cf-recu").value=r.recu;
       if(r.notes){ const n=$("cf-notes"); n.value=((n.value||"")+" "+r.notes).trim(); }
-      if(r.mesures){ const merged=Object.assign({}, currentMesuresFromForm("cm-"), r.mesures); buildCmdGrid(merged);
+      if(r.mesures){ const merged=Object.assign({}, currentMesuresFromForm("cm-"), mesFromU(r.mesures)); buildCmdGrid(merged);
         Object.keys(r.mesures).forEach(k=>{ const el=$("cm-"+k); if(el) el.classList.add("dict-hit"); }); }
       try{ artTotal(); }catch(e){}
       saveDraft("cf");
@@ -10238,7 +10290,7 @@ const ART_KW=["shirt","shirts","dress","dresses","bag","bags","backpack","purse"
       if(r.nom && !(existant && $("in-name").value.trim())) $("in-name").value=r.nom;
       if(r.telephone) $("in-phone").value=r.telephone;
       if(r.notes){ const n=$("in-notes"); n.value=((n.value||"")+" "+r.notes).trim(); }
-      if(r.mesures){ const merged=Object.assign({}, currentMesuresFromForm("m-"), r.mesures); buildInputs(merged);
+      if(r.mesures){ const merged=Object.assign({}, currentMesuresFromForm("m-"), mesFromU(r.mesures)); buildInputs(merged);
         Object.keys(r.mesures).forEach(k=>{ const el=$("m-"+k); if(el) el.classList.add("dict-hit"); }); }
       saveDraft("in");
       if(!$("in-name").value.trim()) return askMore(r.reponse, L("Quel est le nom du client ?","What is the client's name?"));
